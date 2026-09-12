@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -216,7 +216,9 @@ int LogBuf::sync()
 
 #ifdef _MSC_VER
             outline += "\n";
-            OutputDebugStringA(outline.c_str());
+            std::wstring wstr;
+            Utf8::toUtf16(outline.begin(), outline.end(), std::back_inserter(wstr));
+            OutputDebugStringW(/*outline.c_str()*/wstr.c_str());
 #endif //_MSC_VER
         }
 

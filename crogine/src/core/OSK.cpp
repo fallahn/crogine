@@ -64,34 +64,35 @@ namespace
     //we assign a scancode to each of the virtual keys
     //that way we automatically display the correct keys
     //based on the user's layout as well as render different
-    //characters is shift is locked.
+    //characters if shift is locked. Ofc this doesn't work
+    //for an emoji layout so we store those codepoints directly instead
     struct KeyInfo final
     {
         constexpr KeyInfo() {};
-        explicit constexpr KeyInfo(SDL_Scancode c, float w = ButtonWidth) : scancode(c), size(w) {}
-        explicit constexpr KeyInfo(std::uint32_t c, float w = ButtonWidth) : codePoint(c), size(w) {}
-        SDL_Scancode scancode = SDL_SCANCODE_UNKNOWN;
-        std::uint32_t codePoint = 0;
+        explicit constexpr KeyInfo(SDL_Scancode c, float w = ButtonWidth) : scancode(c), size(w), inUse(c != SDL_SCANCODE_UNKNOWN) {}
+        explicit constexpr KeyInfo(std::uint32_t c, float w = ButtonWidth) : codepoint(c), size(w), inUse(c != 0) {}
+        const SDL_Scancode scancode = SDL_SCANCODE_UNKNOWN;
+        const std::uint32_t codepoint = 0;
         const float size = ButtonWidth; //percentage of available width
-        bool active = false;
+        const bool inUse = false; //rather than test if we have a codepoint OR a scancode we set this flag on construction
     };
 
     constexpr std::array<std::array<KeyInfo, ButtonCols>, ButtonRows> ButtonLayout =
     {
-        std::array<KeyInfo, ButtonCols>{KeyInfo(SDL_SCANCODE_GRAVE, ButtonWidth / 2.f),KeyInfo(SDL_SCANCODE_1),KeyInfo(SDL_SCANCODE_2),KeyInfo(SDL_SCANCODE_3),KeyInfo(SDL_SCANCODE_4),KeyInfo(SDL_SCANCODE_5),KeyInfo(SDL_SCANCODE_6),KeyInfo(SDL_SCANCODE_7),KeyInfo(SDL_SCANCODE_8),KeyInfo(SDL_SCANCODE_9),KeyInfo(SDL_SCANCODE_0),KeyInfo(SDL_SCANCODE_MINUS),KeyInfo(SDL_SCANCODE_EQUALS),KeyInfo(SDL_SCANCODE_BACKSPACE, ButtonWidth + (ButtonWidth / 2.f))},
+        std::array<KeyInfo, ButtonCols>{KeyInfo(SDL_SCANCODE_GRAVE, ButtonWidth / 2.f),KeyInfo(SDL_SCANCODE_1),KeyInfo(SDL_SCANCODE_2),KeyInfo(SDL_SCANCODE_3),KeyInfo(SDL_SCANCODE_4),KeyInfo(SDL_SCANCODE_5),KeyInfo(SDL_SCANCODE_6),KeyInfo(SDL_SCANCODE_7),KeyInfo(SDL_SCANCODE_8),KeyInfo(SDL_SCANCODE_9),KeyInfo(SDL_SCANCODE_0),KeyInfo(SDL_SCANCODE_MINUS),KeyInfo(SDL_SCANCODE_EQUALS),KeyInfo(SDL_SCANCODE_BACKSPACE, ButtonWidth * 1.5f)},
         {KeyInfo(SDL_SCANCODE_TAB),KeyInfo(SDL_SCANCODE_Q),KeyInfo(SDL_SCANCODE_W),KeyInfo(SDL_SCANCODE_E),KeyInfo(SDL_SCANCODE_R),KeyInfo(SDL_SCANCODE_T),KeyInfo(SDL_SCANCODE_Y),KeyInfo(SDL_SCANCODE_U),KeyInfo(SDL_SCANCODE_I),KeyInfo(SDL_SCANCODE_O),KeyInfo(SDL_SCANCODE_P),KeyInfo(SDL_SCANCODE_LEFTBRACKET),KeyInfo(SDL_SCANCODE_RIGHTBRACKET),KeyInfo(SDL_SCANCODE_BACKSLASH)},
-        {KeyInfo(SDL_SCANCODE_CAPSLOCK, ButtonWidth + (ButtonWidth / 2.f)),KeyInfo(SDL_SCANCODE_A),KeyInfo(SDL_SCANCODE_S),KeyInfo(SDL_SCANCODE_D),KeyInfo(SDL_SCANCODE_F),KeyInfo(SDL_SCANCODE_G),KeyInfo(SDL_SCANCODE_H),KeyInfo(SDL_SCANCODE_J),KeyInfo(SDL_SCANCODE_K),KeyInfo(SDL_SCANCODE_L),KeyInfo(SDL_SCANCODE_SEMICOLON),KeyInfo(SDL_SCANCODE_APOSTROPHE),KeyInfo(SDL_SCANCODE_RETURN, ButtonWidth + (ButtonWidth / 2.f)),KeyInfo()},
+        {KeyInfo(SDL_SCANCODE_CAPSLOCK, ButtonWidth * 1.5f),KeyInfo(SDL_SCANCODE_A),KeyInfo(SDL_SCANCODE_S),KeyInfo(SDL_SCANCODE_D),KeyInfo(SDL_SCANCODE_F),KeyInfo(SDL_SCANCODE_G),KeyInfo(SDL_SCANCODE_H),KeyInfo(SDL_SCANCODE_J),KeyInfo(SDL_SCANCODE_K),KeyInfo(SDL_SCANCODE_L),KeyInfo(SDL_SCANCODE_SEMICOLON),KeyInfo(SDL_SCANCODE_APOSTROPHE),KeyInfo(SDL_SCANCODE_RETURN, ButtonWidth * 1.5f),KeyInfo()},
         {KeyInfo(SDL_SCANCODE_LSHIFT, ButtonWidth * 2.f),KeyInfo(SDL_SCANCODE_Z),KeyInfo(SDL_SCANCODE_X),KeyInfo(SDL_SCANCODE_C),KeyInfo(SDL_SCANCODE_V),KeyInfo(SDL_SCANCODE_B),KeyInfo(SDL_SCANCODE_N),KeyInfo(SDL_SCANCODE_M),KeyInfo(SDL_SCANCODE_COMMA),KeyInfo(SDL_SCANCODE_PERIOD),KeyInfo(SDL_SCANCODE_SLASH),KeyInfo(SDL_SCANCODE_RSHIFT, ButtonWidth * 2.f),KeyInfo(),KeyInfo()},
-        {KeyInfo(SDL_SCANCODE_LEFT),KeyInfo(SDL_SCANCODE_SPACE, ButtonWidth * 12.f),KeyInfo(/*would be switch to emoji*/),KeyInfo(/*would be Paste*/),KeyInfo(/*would be quit*/),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(SDL_SCANCODE_RIGHT)}
+        {KeyInfo(SDL_SCANCODE_LEFT, (ButtonWidth * 2.5f)),KeyInfo(SDL_SCANCODE_SPACE, ButtonWidth * 9.f),KeyInfo(/*would be switch to emoji*/),KeyInfo(/*would be Paste*/),KeyInfo(/*would be quit*/),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(SDL_SCANCODE_RIGHT, (ButtonWidth * 2.5f))}
     };
 
     constexpr std::array<std::array<KeyInfo, ButtonCols>, ButtonRows> EmojiLayout =
     {
-        std::array<KeyInfo, ButtonCols>{},
-        std::array<KeyInfo, ButtonCols>{},
-        std::array<KeyInfo, ButtonCols>{},
-        std::array<KeyInfo, ButtonCols>{},
-        std::array<KeyInfo, ButtonCols>{}
+        std::array<KeyInfo, ButtonCols>{KeyInfo(SDL_SCANCODE_NONUSBACKSLASH, ButtonWidth / 2.f),KeyInfo(EmSmiley),KeyInfo(EmGrinning),KeyInfo(EmLaughing),KeyInfo(EmStarEyed),KeyInfo(EmTonguePoke),KeyInfo(EmThinking),KeyInfo(EmChuckle),KeyInfo(EmPartyFace),KeyInfo(EmSunGlasses),KeyInfo(EmEyeRoll),KeyInfo(EmGrimace),KeyInfo(EmSurprised),KeyInfo(SDL_SCANCODE_BACKSPACE, ButtonWidth * 1.5f)},
+        {KeyInfo(EmEmbaressed),KeyInfo(EmDisappointed),KeyInfo(EmAngry),KeyInfo(EmHysterics),KeyInfo(EmClapping),KeyInfo(EmRedHeart),KeyInfo(EmBrokenHeart),KeyInfo(EmCat),KeyInfo(EmDog),KeyInfo(EmRabbit),KeyInfo(EmBear),KeyInfo(EmHorse),KeyInfo(EmCow),KeyInfo(EmFudge)},
+        {KeyInfo(EuroSign, ButtonWidth * 0.5f),KeyInfo(EmMist),KeyInfo(EmRainbow),KeyInfo(EmUmbrella),KeyInfo(EmRainCloud),KeyInfo(EmSnow),KeyInfo(EmSun),KeyInfo(EmMoon),KeyInfo(EmSparkles),KeyInfo(EmBalloon),KeyInfo(EmParty),KeyInfo(EmConfetti),KeyInfo(EmBullsEye),KeyInfo(SDL_SCANCODE_RETURN, ButtonWidth * 1.5f)},
+        {KeyInfo(EmGoldCup),KeyInfo(EmGoldMedal),KeyInfo(EmSilverMedal),KeyInfo(EmBronzeMedal),KeyInfo(EmGolfFlag),KeyInfo(EmHole),KeyInfo(EmExplosive),KeyInfo(EmWindy),KeyInfo(EmSleeping),KeyInfo(EmFriedEgg),KeyInfo(EmBirdie),KeyInfo(EmEagle),KeyInfo(EmSnake),KeyInfo(EmCrocodile)},
+        {KeyInfo(SDL_SCANCODE_LEFT, (ButtonWidth * 2.5f)),KeyInfo(SDL_SCANCODE_SPACE, ButtonWidth * 9.f),KeyInfo(/*would be switch to emoji*/),KeyInfo(/*would be Paste*/),KeyInfo(/*would be quit*/),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(),KeyInfo(SDL_SCANCODE_RIGHT, (ButtonWidth * 2.5f))}
     };
 
     std::array<std::array<FloatRect, ButtonCols>, ButtonRows> Hitboxes = {};
@@ -108,6 +109,7 @@ namespace
 
 
     SDL_Scancode lastActivated = SDL_SCANCODE_UNKNOWN; //if this is non-zero the key is briefly highlighted
+    std::uint32_t lastCodepoint = 0; //hmm this ought ot be able to take care of above also...
     constexpr Time ActivationTime = seconds(0.125f); //length of brief highlight
 }
 
@@ -160,16 +162,16 @@ OSK::OSK()
         }
 
         //controller icon font
-        ctx.codepointRange = {0x2190,0x21FF}; //controller input
+        ctx.codepointRange = { 0x2190,0x21FF }; //controller input
         m_textFont.appendFromFile("assets/fonts/promptfont.ttf", ctx);
-        ctx.codepointRange = {0x23F4,0x243A}; //keyboard icons, shift etc
+        ctx.codepointRange = { 0x23F4,0x243A }; //keyboard icons, shift etc
         m_textFont.appendFromFile("assets/fonts/promptfont.ttf", ctx);
-        ctx.codepointRange = { 0x2580,0x2590 }; //block icons - used for cursor
+        ctx.codepointRange = { 0x2580,0x25C0 }; //block icons - used for cursor
         m_textFont.appendFromFile("assets/fonts/promptfont.ttf", ctx);
 
 
 
-        //emoji fonts
+        //emoji font
         ctx.allowBold = false;
         ctx.allowFillColour = false;
         ctx.allowOutline = false;
@@ -177,7 +179,8 @@ OSK::OSK()
         static constexpr std::array Ranges =
         {
             CodePointRange::EmojiLower,
-            CodePointRange::EmojiMid,
+            std::array<std::uint32_t, 2u>{CodePointRange::EmojiMid[0], 0x257F}, //we have to split this because the icon font overlaps
+            std::array<std::uint32_t, 2u>{0x25C1, CodePointRange::EmojiMid[1]},
             CodePointRange::EmojiUpper,
         };
 
@@ -203,6 +206,7 @@ OSK::OSK()
                 m_textFont.appendFromFile(path, ctx);
             }
         }
+
 
 
         //prime the font with some texture pages to prevent GL errors
@@ -319,22 +323,22 @@ void OSK::updateVertices()
     //track the key info for placing icons
     struct KeyText final
     {
-        cro::String label;
+        //cro::String label;
         cro::FloatRect buttonSize = { 0.f };
         SDL_Keycode key = 0;
         SDL_Keycode keyXB = 0;
         SDL_Keycode keyPS = 0;
     };
-    std::vector<std::vector<KeyText>> centrePos;
+    std::vector<std::vector<KeyText>> keyText;
 
-    const auto& ButtonInfo = *KeyboardLayouts[0];
+    const auto& ButtonInfo = *KeyboardLayouts[m_layoutIndex];
 
     //NOTE key size x is actually keyWidth * Button.size - Padding
     float y = startY;
     for (auto j = 0u; j < ButtonRows; ++j)
     {
         float x = startX;
-        auto& centres = centrePos.emplace_back();
+        auto& text = keyText.emplace_back();
         for (auto i = 0u; i < ButtonCols; ++i)
         {
             const auto& buttonInf = ButtonInfo[j][i];
@@ -346,14 +350,17 @@ void OSK::updateVertices()
                 auto c = ButtonColourNormal;
                 std::uint32_t xb = 0;
                 std::uint32_t ps = 0;
-                cro::String label;
+                //cro::String label;
 
                 if (m_rowIndex == j && m_colIndex == i)
                 {
                     c = ButtonColourActive;
-                }                
-                /*else*/ if (((k & (SDLK_EXTENDED_MASK | SDLK_SCANCODE_MASK)) != 0)
-                    || k == SDLK_TAB || k == SDLK_RETURN || k == SDLK_BACKSPACE || k == SDLK_SPACE)
+                }
+                
+                //TODO we need a better filter than this...
+                if (((k & (SDLK_EXTENDED_MASK | SDLK_SCANCODE_MASK)) != 0)
+                    || k == SDLK_TAB || k == SDLK_RETURN || k == SDLK_BACKSPACE || k == SDLK_SPACE
+                    || k == SDLK_LEFT || k == SDLK_RIGHT)
                 {
                     //set to blue if this is a shift and mod mode is not none
                     if ((m_keymod & SDL_KMOD_SHIFT)
@@ -375,38 +382,48 @@ void OSK::updateVertices()
                         k = 0;
                         break;
                     case SDL_SCANCODE_TAB:
-                        k = 0;
-                        //k = IconTab;
+                        //k = 0;
+                        k = IconTab;
                         //label = "TAB";
                         break;
                     case SDL_SCANCODE_CAPSLOCK:
                         k = IconCaps;
                         xb = ps = LeftStick;
-                        label = "CAPS";
+                        //label = "CAPS";
                         break;
                     case SDL_SCANCODE_LSHIFT:
                     case SDL_SCANCODE_RSHIFT:
                         k = IconShift;
                         xb = ButtonLT;
                         ps = ButtonL2;
-                        label = "SHIFT";
+                        //label = "SHIFT";
                         break;
                     case SDL_SCANCODE_RETURN:
                         k = IconReturn;
                         xb = ButtonRT;
                         ps = ButtonR2;
-                        label = "ENTER";
+                        //label = "ENTER";
                         break;
                     case SDL_SCANCODE_BACKSPACE:
                         k = IconBackspace;
                         xb = ButtonX;
                         ps = ButtonSquare;
-                        label = "<";
+                        //label = "<";
                         break;
                     case SDL_SCANCODE_SPACE:
                         k = IconSpace;
                         xb = ButtonY;
                         ps = ButtonTriangle;
+                        break;
+                    case SDL_SCANCODE_LEFT:
+                        k = IconLeft; //hmmm I want to use CaretLeft/Right but these don't render even though they're mapped for some reason
+                        xb = ButtonLB;
+                        ps = ButtonL1;
+                        break;
+                    case SDL_SCANCODE_RIGHT:
+                        k = IconRight;
+                        xb = ButtonRB;
+                        ps = ButtonR1;
                         break;
                     }
                 }
@@ -431,20 +448,56 @@ void OSK::updateVertices()
                 
                 Hitboxes[j][i] = FloatRect(x, y, buttonWidth, keySize.y);
 
-                //centres.emplace_back().centre = { std::round(x + (buttonWidth / 2.f)), std::round(y + (keySize.y / 2.f)) };
-                //centres.back().corner = { x + (2.f * Scale), std::round(y + (keySize.y / 2.f)) };
-                centres.emplace_back().buttonSize = { x,y,farX - x, keySize.y };
-                centres.back().key = k;
-                centres.back().keyXB = xb;
-                centres.back().keyPS = ps;
-                centres.back().label = label;
+                text.emplace_back().buttonSize = { x,y,farX - x, keySize.y };
+                text.back().key = k;
+                text.back().keyXB = xb;
+                text.back().keyPS = ps;
+                //centres.back().label = label;
 
                 x += (buttonWidth + Padding);
             }
+            
+            else if (buttonInf.codepoint != 0)
+            {
+                //emoji key
+                auto c = ButtonColourNormal;
+
+                if (m_rowIndex == j && m_colIndex == i)
+                {
+                    c = ButtonColourActive;
+                }
+
+                //override the colour if the button was just activated
+                //TODO this ought to be shared with lastActive
+                if (lastCodepoint == buttonInf.codepoint)
+                {
+                    c = KeyActive;
+                }
+
+                const float farX = std::min(x + buttonWidth, keyWidth + startX - (Padding * 2.f));
+
+                verts.emplace_back(glm::vec2(x, y + keySize.y), c);
+                verts.emplace_back(glm::vec2(x, y), c);
+                verts.emplace_back(glm::vec2(farX, y + keySize.y), c);
+                verts.emplace_back(glm::vec2(farX, y + keySize.y), c);
+                verts.emplace_back(glm::vec2(x, y), c);
+                verts.emplace_back(glm::vec2(farX, y), c);
+
+                Hitboxes[j][i] = FloatRect(x, y, buttonWidth, keySize.y);
+
+                text.emplace_back().buttonSize = { x,y,farX - x, keySize.y };
+                text.back().key = buttonInf.codepoint;
+                //centres.back().keyXB = xb;
+                //centres.back().keyPS = ps;
+                //centres.back().label = label;
+
+                x += (buttonWidth + Padding);
+            }
+
             else
             {
                 Hitboxes[j][i] = FloatRect(0.f, 0.f, 0.f, 0.f);
-                centres.emplace_back().key = 0;
+                text.emplace_back().key = 0;
             }
         }
         y -= (keySize.y + Padding);
@@ -482,7 +535,7 @@ void OSK::updateVertices()
     {
         for (auto i = 0u; i < ButtonCols; ++i)
         {
-            const auto& [label, area, key, keyXB, keyPS] = centrePos[j][i];
+            const auto& [/*label,*/ area, key, keyXB, keyPS] = keyText[j][i];
             const auto c = (j == m_rowIndex && i == m_colIndex) ? Colour::Black : Colour::White;
 
             switch (key)
@@ -493,17 +546,20 @@ void OSK::updateVertices()
                 const auto centre = glm::vec2(area.left + std::round(area.width / 2.f), area.bottom + std::round(area.height / 2.f));
                 const auto glyph = m_textFont.getGlyph(key, keyTextSize);
                 Detail::Text::addQuad(verts, centre - glm::vec2(glyph.bounds.width / 2.f, glyph.bounds.height / 2.f), 
-                                    c, glyph, m_textFont.getTexture(keyTextSize).getSize());
+                                    glyph.useFillColour ? c : cro::Colour::White, glyph, m_textFont.getTexture(keyTextSize).getSize());
             }
                 break;
             case IconShift:
+            case IconTab:
             case IconSpace:
             case IconCaps:
             case IconBackspace:
             case IconReturn:
             case IconUp:
             case IconDown:
+            case IconCaretLeft:
             case IconLeft:
+            case IconCaretRight:
             case IconRight:
             {
                 static constexpr float ButtonPadding = 4.f;
@@ -586,9 +642,10 @@ void OSK::updateVertices()
     m_previewText.setPosition({ std::floor(WindowSize.x / 2.f), std::floor(BGHeight + (charSize / 2)) });
 }
 
-bool OSK::keypress(SDL_Scancode code)
+bool OSK::keypress(SDL_Scancode code, std::uint32_t codepoint)
 {
     lastActivated = code;
+    lastCodepoint = codepoint;
     m_activationTimer.restart();
 
     auto* msg = App::postMessage<Message::OSKEvent>(Message::OSKMessage);
@@ -601,7 +658,15 @@ bool OSK::keypress(SDL_Scancode code)
         return true;
     }
 
-    const auto k = SDL_GetKeyFromScancode(code, m_keymod, false);
+    if (code == SDL_SCANCODE_LEFT || code == SDL_SCANCODE_RIGHT)
+    {
+        //TODO if more pages are added this needs to account for direction
+        m_layoutIndex = (m_layoutIndex + 1) % 2;
+        updateVertices();
+        return true;
+    }
+
+    const auto k = codepoint ? codepoint :  SDL_GetKeyFromScancode(code, m_keymod, false);
     if ((k & (SDLK_EXTENDED_MASK | SDLK_SCANCODE_MASK)) == 0)
     {
         switch (k)
@@ -640,7 +705,7 @@ void OSK::moveLeft()
     do
     {
         m_colIndex = (m_colIndex + (ButtonCols - 1)) % ButtonCols;
-    } while (ButtonInfo[m_rowIndex][m_colIndex].scancode == SDL_SCANCODE_UNKNOWN);
+    } while (!ButtonInfo[m_rowIndex][m_colIndex].inUse);
 
     updateVertices();
 }
@@ -652,7 +717,7 @@ void OSK::moveRight()
     do
     {
         m_colIndex = (m_colIndex + 1) % ButtonCols;
-    } while (ButtonInfo[m_rowIndex][m_colIndex].scancode == SDL_SCANCODE_UNKNOWN);
+    } while (!ButtonInfo[m_rowIndex][m_colIndex].inUse);
 
     updateVertices();
 }
@@ -666,7 +731,7 @@ void OSK::moveUp()
 
     const auto& ButtonInfo = *KeyboardLayouts[m_layoutIndex];
 
-    while (ButtonInfo[m_rowIndex][m_colIndex].scancode == SDL_SCANCODE_UNKNOWN)
+    while (!ButtonInfo[m_rowIndex][m_colIndex].inUse)
     {
         m_colIndex = (m_colIndex + (ButtonCols - 1)) % ButtonCols;
     }
@@ -680,7 +745,7 @@ void OSK::moveDown()
 
     const auto& ButtonInfo = *KeyboardLayouts[m_layoutIndex];
 
-    while (ButtonInfo[m_rowIndex][m_colIndex].scancode == SDL_SCANCODE_UNKNOWN)
+    while (!ButtonInfo[m_rowIndex][m_colIndex].inUse)
     {
         m_colIndex = (m_colIndex + (ButtonCols - 1)) % ButtonCols;
     }
@@ -706,7 +771,7 @@ void OSK::mouseClick(glm::vec2 mousePos)
                 {
                     m_rowIndex = j;
                     m_colIndex = i;
-                    keypress(ButtonInfo[j][i].scancode);
+                    keypress(ButtonInfo[j][i].scancode, ButtonInfo[j][i].codepoint);
                     updateVertices();
                     return;
                 }
@@ -924,6 +989,12 @@ bool OSK::handleEvent(const Event& evt)
         switch (evt.gbutton.button)
         {
         default: break;
+        case cro::GameController::ButtonRightShoulder:
+            keypress(SDL_SCANCODE_RIGHT);
+            break;
+        case cro::GameController::ButtonLeftShoulder:
+            keypress(SDL_SCANCODE_LEFT);
+            break;
         case GameController::DPadLeft:
             moveLeft();
             break;
@@ -942,7 +1013,7 @@ bool OSK::handleEvent(const Event& evt)
         case GameController::ButtonA:
         {
             const auto& ButtonInfo = *KeyboardLayouts[m_layoutIndex];
-            keypress(ButtonInfo[m_rowIndex][m_colIndex].scancode);
+            keypress(ButtonInfo[m_rowIndex][m_colIndex].scancode, ButtonInfo[m_rowIndex][m_colIndex].codepoint);
         }
             break;
         case GameController::ButtonX:
@@ -1029,6 +1100,7 @@ bool OSK::handleEvent(const Event& evt)
         case SDLK_LSHIFT:
         case SDLK_RSHIFT:
             m_keymod = SDL_KMOD_SHIFT;
+            updateVertices();
             return true;
         }
         keypress(evt.key.scancode);
@@ -1071,10 +1143,12 @@ bool OSK::handleEvent(const Event& evt)
 
 void OSK::update()
 {
-    if (lastActivated != SDL_SCANCODE_UNKNOWN
+    if ((lastActivated != SDL_SCANCODE_UNKNOWN
+        || lastCodepoint != 0)
         && m_activationTimer.elapsed() > ActivationTime)
     {
         lastActivated = SDL_SCANCODE_UNKNOWN;
+        lastCodepoint = 0;
         updateVertices();
     }
 }

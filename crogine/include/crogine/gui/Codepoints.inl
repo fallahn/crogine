@@ -67,18 +67,20 @@ static constexpr inline std::uint32_t RightStick = 0x21C6;
 
 
 //keyboard
-static constexpr std::uint32_t IconLeft      = 0x23F4;
-static constexpr std::uint32_t IconRight     = 0x23F5;
-static constexpr std::uint32_t IconUp        = 0x23F6;
-static constexpr std::uint32_t IconDown      = 0x23F7;
-static constexpr std::uint32_t IconShift     = 0x2429;
-static constexpr std::uint32_t IconTab       = 0x242B;
-static constexpr std::uint32_t IconCaps      = 0x242C;
-static constexpr std::uint32_t IconBackspace = 0x242D;
-static constexpr std::uint32_t IconReturn    = 0x242E;
-static constexpr std::uint32_t IconSpace     = 0x243A;
+static constexpr std::uint32_t IconLeft       = 0x23F4;
+static constexpr std::uint32_t IconRight      = 0x23F5;
+static constexpr std::uint32_t IconUp         = 0x23F6;
+static constexpr std::uint32_t IconDown       = 0x23F7;
+static constexpr std::uint32_t IconShift      = 0x2429;
+static constexpr std::uint32_t IconTab        = 0x242B;
+static constexpr std::uint32_t IconCaps       = 0x242C;
+static constexpr std::uint32_t IconBackspace  = 0x242D;
+static constexpr std::uint32_t IconReturn     = 0x242E;
+static constexpr std::uint32_t IconSpace      = 0x243A;
 
-
+static constexpr std::uint32_t IconCaretLeft  = 0x25C0;
+static constexpr std::uint32_t IconCaretRight = 0x25B6;
+static constexpr std::uint32_t EuroSign       = 0x20AC;
 
 //------------------emojis------------------//
 
@@ -94,15 +96,28 @@ static constexpr inline std::uint32_t EmSunGlasses     = 0x1F60E;
 static constexpr inline std::uint32_t EmEyeRoll        = 0x1F644;
 static constexpr inline std::uint32_t EmGrimace        = 0x1F62C;
 static constexpr inline std::uint32_t EmSurprised      = 0x1F632;
+
 static constexpr inline std::uint32_t EmEmbaressed     = 0x1F633;
 static constexpr inline std::uint32_t EmDisappointed   = 0x1F629;
 static constexpr inline std::uint32_t EmAngry          = 0x1F624;
+static constexpr inline std::uint32_t EmHysterics      = 0x1F923;
+static constexpr inline std::uint32_t EmClapping       = 0x1F44F;
+static constexpr inline std::uint32_t EmRedHeart       = 0x2764;
+static constexpr inline std::uint32_t EmBrokenHeart    = 0x1F494;
+
+static constexpr inline std::uint32_t EmCat            = 0x1F408;
+static constexpr inline std::uint32_t EmDog            = 0x1F415;
+static constexpr inline std::uint32_t EmRabbit         = 0x1F407;
+static constexpr inline std::uint32_t EmBear           = 0x1F43B;
+static constexpr inline std::uint32_t EmHorse          = 0x1F40E;
+static constexpr inline std::uint32_t EmCow            = 0x1F404;
+static constexpr inline std::uint32_t EmFudge          = 0x1F4A9;
+
 static constexpr inline std::uint32_t EmGoldCup        = 0x1F3C6;
 static constexpr inline std::uint32_t EmGoldMedal      = 0x1F947;
 static constexpr inline std::uint32_t EmSilverMedal    = 0x1F948;
 static constexpr inline std::uint32_t EmBronzeMedal    = 0x1F949;
 static constexpr inline std::uint32_t EmGolfFlag       = 0x26F3;
-static constexpr inline std::uint32_t EmRedHeart       = 0x2764;
 static constexpr inline std::uint32_t EmHole           = 0x1F573;
 static constexpr inline std::uint32_t EmExplosive      = 0x1F4A5;
 static constexpr inline std::uint32_t EmWindy          = 0x1F4A8;
@@ -112,8 +127,6 @@ static constexpr inline std::uint32_t EmBirdie         = 0x1F426;
 static constexpr inline std::uint32_t EmEagle          = 0x1F985;
 static constexpr inline std::uint32_t EmSnake          = 0x1F40D;
 static constexpr inline std::uint32_t EmCrocodile      = 0x1F40A;
-static constexpr inline std::uint32_t EmClapping       = 0x1F44F;
-static constexpr inline std::uint32_t EmHysterics      = 0x1F923;
 
 static constexpr inline std::uint32_t EmMist           = 0x1F32B; //requires term
 static constexpr inline std::uint32_t EmRainbow        = 0x1F308;
@@ -124,4 +137,11 @@ static constexpr inline std::uint32_t EmSun            = 0x2600;  //requires ter
 static constexpr inline std::uint32_t EmMoon           = 0x1F319;
 static constexpr inline std::uint32_t EmCalendar       = 0x1F4C5;
 static constexpr inline std::uint32_t EmWarning        = 0x26A0;
+
+static constexpr inline std::uint32_t EmSparkles       = 0x2728;
+static constexpr inline std::uint32_t EmBalloon        = 0x1F388;
+static constexpr inline std::uint32_t EmParty          = 0x1F389;
+static constexpr inline std::uint32_t EmConfetti       = 0x1F38A;
+static constexpr inline std::uint32_t EmBullsEye       = 0x1F3AF;
+
 static constexpr inline std::uint32_t EmojiTerminate   = 0xFE0F;

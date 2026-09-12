@@ -714,7 +714,8 @@ glm::vec2 UISystem::toWorldCoords(std::int32_t x, std::int32_t y)
 
 glm::vec2 UISystem::toWorldCoords(float x, float y)
 {
-    assert(x <= 1 && y <= 1);
+    //is this strictly necessary? The mouse might be outside the window
+    //assert(x <= 1 && y <= 1);
 
     //invert Y
     y = 1.f - y;

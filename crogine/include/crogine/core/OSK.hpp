@@ -117,7 +117,7 @@ namespace cro
 
         void close(bool isSubmitted);
         void updateVertices();
-        bool keypress(SDL_Scancode);
+        bool keypress(SDL_Scancode, std::uint32_t codepoint = 0);
 
         void moveLeft();
         void moveRight();
