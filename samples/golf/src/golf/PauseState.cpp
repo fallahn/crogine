@@ -167,6 +167,12 @@ bool PauseState::handleEvent(const cro::Event& evt)
         cro::App::getWindow().setCursorVisible(true);
     }
 
+    //forward this to the game state in case it needs to apply controller settings
+    else if (evt.type == SDL_EVENT_GAMEPAD_ADDED)
+    {
+        return true;
+    }
+
     m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
     m_scene.forwardEvent(evt);
     return false;
@@ -267,6 +273,12 @@ void PauseState::buildScene()
                 m_scene.getSystem<cro::UISystem>()->selectByIndex(0);
 
                 Timeline::setGameMode(Timeline::GameMode::Menu);
+
+                //might be pushing this in freecam mode
+                if (cro::App::getWindow().getMouseCaptured())
+                {
+                    cro::App::getWindow().setMouseCaptured(false);
+                }
             }
             break;
         case RootCallbackData::FadeOut:

@@ -1312,6 +1312,37 @@ bool GolfState::handleEvent(const cro::Event& evt)
     {
         //hides labels
         m_emoteWheel.refreshLabels();
+
+
+        //needs a delay
+        auto ent = m_uiScene.createEntity();
+        ent.addComponent<cro::Callback>().active = true;
+        ent.getComponent<cro::Callback>().setUserData<cro::Clock>();
+        ent.getComponent<cro::Callback>().function =
+            [this](cro::Entity e, float)
+            {
+                if (e.getComponent<cro::Callback>().getUserData<cro::Clock>().elapsed() > cro::seconds(2.f))
+                {
+                    //apply trigger effect if needed
+                    cro::GameController::DSEffect eft;
+                    if (m_photoMode)
+                    {
+                        eft = cro::GameController::DSEffect::createFeedback(0, 1);
+                    }
+                    else
+                    {
+                        eft = cro::GameController::DSEffect::createWeapon(0, 1, 2);
+                    }
+
+                    for (auto i = 0; i < 4; ++i)
+                    {
+                        cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, eft);
+                    }
+
+                    e.getComponent<cro::Callback>().active = false;
+                    m_uiScene.destroyEntity(e);
+                }
+            };
     }
 
     else if (evt.type == SDL_EVENT_MOUSE_MOTION)
@@ -2514,6 +2545,11 @@ void GolfState::handleMessage(const cro::Message& msg)
             {
                 cro::App::getWindow().setCursorVisible(false);
 
+                if (m_photoMode)
+                {
+                    cro::App::getWindow().setMouseCaptured(true);
+                }
+
                 if (m_sharedData.tutorialIndex == TutorialID::LowerClubs)
                 {
                     m_sharedData.tutorialIndex = 0;
@@ -2774,13 +2810,6 @@ void GolfState::handleMessage(const cro::Message& msg)
                 cam.resizeCallback(cam);
 
                 Club::setFixedPuttingDistance(m_sharedData.fixedPuttingRange);
-
-                //this option ought to be deprecated
-                /*if (m_sharedData.nightTime)
-                {
-                    m_gameSceneMRTexture.setPrecision(m_sharedData.lightmapQuality);
-                }
-                m_overheadBuffer.setPrecision(m_sharedData.lightmapQuality);*/
 
                 updateFlagTexture(true);
             }

@@ -379,23 +379,27 @@ bool GameController::applyDSTriggerEffect(std::int32_t controllerIndex, std::int
         DataPacket() { std::fill(data.begin(), data.end(), 0); }
     };
 
-    if (auto* controller = SDL_GetGamepadFromID(controllerIndex); controller)
+    if (controllerIndex < App::m_instance->m_sortedGamepads.size())
     {
-        if (SDL_GetGamepadType(controller) == SDL_GAMEPAD_TYPE_PS5)
+        if (auto* controller = App::m_instance->m_sortedGamepads[controllerIndex]; controller)
         {
-            DataPacket dataPacket;
+            if (SDL_GetGamepadType(controller) == SDL_GAMEPAD_TYPE_PS5)
+            {
+                DataPacket dataPacket;
 
-            if (triggers & DSTriggerRight)
-            {
-                std::memcpy(&dataPacket.data[8], &settings, sizeof(DSEffect));
-                //dataPacket.data[17] = settings.actuationFrequency;
+                if (triggers & DSTriggerRight)
+                {
+                    std::memcpy(&dataPacket.data[8], &settings, sizeof(DSEffect));
+                    //dataPacket.data[17] = settings.actuationFrequency;
+                }
+                if (triggers & DSTriggerLeft)
+                {
+                    std::memcpy(&dataPacket.data[19], &settings, sizeof(DSEffect));
+                    //dataPacket.data[27] = settings.actuationFrequency;
+                }
+                return SDL_SendGamepadEffect(controller, &dataPacket, sizeof(DataPacket)) == 0;
             }
-            if (triggers & DSTriggerLeft)
-            {
-                std::memcpy(&dataPacket.data[19], &settings, sizeof(DSEffect));
-                //dataPacket.data[27] = settings.actuationFrequency;
-            }
-            return SDL_SendGamepadEffect(controller, &dataPacket, sizeof(DataPacket)) == 0;
+            return false;
         }
         return false;
     }

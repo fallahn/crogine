@@ -219,9 +219,14 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     Timeline::setTimelineDesc("Main Menu");
 
+    //reset controller and mouse status
     for (auto i = 0; i < 4; ++i)
     {
         cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, {});
+    }
+    if (cro::App::getWindow().getMouseCaptured())
+    {
+        cro::App::getWindow().setMouseCaptured(false);
     }
 
     checkCommandLine = false;
