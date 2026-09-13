@@ -191,7 +191,8 @@ namespace cro
             {
                 KeyEntered,
                 Opened,
-                Closed
+                Closed,
+                Navigated
             }type = KeyEntered;
             SDL_Scancode scancode = SDL_SCANCODE_UNKNOWN;
         };

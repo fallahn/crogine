@@ -708,6 +708,8 @@ void OSK::moveLeft()
     } while (!ButtonInfo[m_rowIndex][m_colIndex].inUse);
 
     updateVertices();
+
+    App::postMessage<Message::OSKEvent>(Message::OSKMessage)->type = Message::OSKEvent::Navigated;
 }
 
 void OSK::moveRight()
@@ -720,6 +722,8 @@ void OSK::moveRight()
     } while (!ButtonInfo[m_rowIndex][m_colIndex].inUse);
 
     updateVertices();
+
+    App::postMessage<Message::OSKEvent>(Message::OSKMessage)->type = Message::OSKEvent::Navigated;
 }
 
 void OSK::moveUp()
@@ -737,6 +741,8 @@ void OSK::moveUp()
     }
 
     updateVertices();
+
+    App::postMessage<Message::OSKEvent>(Message::OSKMessage)->type = Message::OSKEvent::Navigated;
 }
 
 void OSK::moveDown()
@@ -751,6 +757,8 @@ void OSK::moveDown()
     }
 
     updateVertices();
+
+    App::postMessage<Message::OSKEvent>(Message::OSKMessage)->type = Message::OSKEvent::Navigated;
 }
 
 void OSK::mouseClick(glm::vec2 mousePos)
@@ -977,7 +985,7 @@ bool OSK::handleEvent(const Event& evt)
         default: break;
         case GameController::ButtonB:
             close(false);
-            break;
+            return true;
         }
         return m_isActive;
     case SDL_EVENT_GAMEPAD_BUTTON_DOWN:

@@ -204,6 +204,9 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
         "assets/golf/sound/menu/accept.wav",
         "assets/golf/sound/menu/back.wav",
         "assets/golf/sound/menu/nope.wav",
+        "assets/sound/kb_enter.wav",
+        "assets/sound/kb_move.wav",
+        "assets/sound/kb_space.wav",
         "assets/golf/sound/menu/toot2.wav",
         "assets/golf/sound/menu/lobby_exit.wav",
         "assets/golf/sound/menu/start_game.wav",
@@ -250,6 +253,39 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         switch (msg.id)
         {
         default: break;
+        case cro::Message::OSKMessage:
+        {
+            const auto& data = msg.getData<cro::Message::OSKEvent>();
+            switch (data.type)
+            {
+            default: break;
+            case cro::Message::OSKEvent::Opened:
+                playSound(AudioID::Accept, glm::vec3(0.f), 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                break;
+            case cro::Message::OSKEvent::Closed:
+                playSound(AudioID::Back, glm::vec3(0.f), 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                break;
+            case cro::Message::OSKEvent::KeyEntered:
+                switch (data.scancode)
+                {
+                default:
+                    playSound(AudioID::KBEnter, glm::vec3(0.f), 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                    break;
+                case SDL_SCANCODE_SPACE:
+                case SDL_SCANCODE_BACKSPACE:
+                    playSound(AudioID::KBSpace, glm::vec3(0.f), 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                    break;
+                case SDL_SCANCODE_RETURN:
+                    //don't play a sound for these
+                    break;
+                }
+                break;
+            case cro::Message::OSKEvent::Navigated:
+                playSound(AudioID::Switch, glm::vec3(0.f), 0.15f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                break;
+            }
+        }
+        break;
         case cl::MessageID::MenuSoundMessage:
         {
             const auto& data = msg.getData<MenuSoundEvent>();

@@ -63,11 +63,14 @@ public:
             Fw01,
             Fw02,
             Fw03,
-//aounds before here are rate limited
+//sounds before here are rate limited
             Switch,
             Accept,
             Back,
             Denied,
+            KBEnter,
+            KBMove,
+            KBSpace,
 
 
             Bounce01,

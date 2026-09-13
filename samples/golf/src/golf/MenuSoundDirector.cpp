@@ -70,6 +70,10 @@ MenuSoundDirector::MenuSoundDirector(cro::AudioResource& ar, const std::size_t& 
         "assets/golf/sound/menu/back.wav",
         "assets/golf/sound/menu/nope.wav",
 
+        "assets/sound/kb_enter.wav",
+        "assets/sound/kb_move.wav",
+        "assets/sound/kb_space.wav",
+
         "assets/golf/sound/menu/bucket/bounce01.wav",
         "assets/golf/sound/menu/bucket/bounce02.wav",
         "assets/golf/sound/menu/bucket/bounce03.wav",
@@ -107,6 +111,39 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
         switch (msg.id)
         {
         default: break;
+        case cro::Message::OSKMessage:
+        {
+            const auto& data = msg.getData<cro::Message::OSKEvent>();
+            switch (data.type)
+            {
+            default: break;
+            case cro::Message::OSKEvent::Opened:
+                playSound(AudioID::Accept, 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                break;
+            case cro::Message::OSKEvent::Closed:
+                playSound(AudioID::Back, 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                break;
+            case cro::Message::OSKEvent::KeyEntered:
+                switch (data.scancode)
+                {
+                default:
+                    playSound(AudioID::KBEnter, 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                    break;
+                case SDL_SCANCODE_SPACE:
+                case SDL_SCANCODE_BACKSPACE:
+                    playSound(AudioID::KBSpace, 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                    break;
+                case SDL_SCANCODE_RETURN:
+                    //don't play a sound for these
+                    break;
+                }
+                break;
+            case cro::Message::OSKEvent::Navigated:
+                playSound(AudioID::Switch, 0.15f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                break;
+            }
+        }
+        break;
         case cl::MessageID::MenuSoundMessage:
         {
             const auto& data = msg.getData<MenuSoundEvent>();
