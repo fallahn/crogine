@@ -746,6 +746,11 @@ void TextChat::toggleWindow(bool showOSK, bool showQuickEmote, bool enableDeckIn
         && enableDeckInput
         /*&& !m_visible*/)
     {
+        for (auto i = 0; i < 4; ++i)
+        {
+            cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, {});
+        }
+
         beginChat();
 
         const auto cb =
@@ -767,6 +772,11 @@ void TextChat::toggleWindow(bool showOSK, bool showQuickEmote, bool enableDeckIn
     {
         if (showOSK && !Social::isSteamdeck()) //deck uses its own kb
         {
+            for (auto i = 0; i < 4; ++i)
+            {
+                cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, {});
+            }
+
             beginChat();
             cro::OSK::show([this](bool submitted, const cro::String& str)
                 {

@@ -1324,20 +1324,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 if (e.getComponent<cro::Callback>().getUserData<cro::Clock>().elapsed() > cro::seconds(2.f))
                 {
                     //apply trigger effect if needed
-                    cro::GameController::DSEffect eft;
-                    if (m_photoMode)
-                    {
-                        eft = cro::GameController::DSEffect::createFeedback(0, 1);
-                    }
-                    else
-                    {
-                        eft = cro::GameController::DSEffect::createWeapon(0, 1, 2);
-                    }
-
-                    for (auto i = 0; i < 4; ++i)
-                    {
-                        cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, eft);
-                    }
+                    applyDSTriggers();
 
                     e.getComponent<cro::Callback>().active = false;
                     m_uiScene.destroyEntity(e);
@@ -2844,6 +2831,15 @@ void GolfState::handleMessage(const cro::Message& msg)
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::AchievementGet, packet, net::NetFlag::Reliable);
     }
         break;
+    case cro::Message::OSKMessage:
+    {
+        const auto& data = msg.getData<cro::Message::OSKEvent>();
+        if (data.type == cro::Message::OSKEvent::Closed)
+        {
+            applyDSTriggers();
+        }
+    }
+    break;
 
     case MessageID::AIMessage:
     {
@@ -8790,6 +8786,24 @@ float GolfState::getDampening() const
     //TODO this is incorrect for bunker/rough
     //TODO input parser *already applies* Dampening / LieDampening why do we do it again here?
     return m_inputParser.getDampening() * Dampening[m_currentPlayer.terrain] * LieDampening[m_currentPlayer.terrain][m_inputParser.getLie()];//;
+}
+
+void GolfState::applyDSTriggers() const
+{
+    cro::GameController::DSEffect eft;
+    if (m_photoMode)
+    {
+        eft = cro::GameController::DSEffect::createFeedback(0, 1);
+    }
+    else
+    {
+        eft = cro::GameController::DSEffect::createWeapon(0, 1, 2);
+    }
+
+    for (auto i = 0; i < 4; ++i)
+    {
+        cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, eft);
+    }
 }
 
 void GolfState::gamepadNotify(std::int32_t type)

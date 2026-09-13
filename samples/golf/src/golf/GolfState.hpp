@@ -484,6 +484,7 @@ private:
     float getGroundRotation(glm::vec3 playerPos, float yRot, bool flipped) const; //rotates the player to reduce feet clipping/floating
     std::int32_t getClub() const;
     float getDampening() const;
+    void applyDSTriggers() const;
 
 
     struct ShadowQuality final

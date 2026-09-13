@@ -127,7 +127,7 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
                 switch (data.scancode)
                 {
                 default:
-                    playSound(AudioID::KBEnter, 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                    playSound(AudioID::KBEnter, 0.3f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
                     break;
                 case SDL_SCANCODE_SPACE:
                 case SDL_SCANCODE_BACKSPACE:

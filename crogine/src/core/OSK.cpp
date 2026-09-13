@@ -651,6 +651,12 @@ bool OSK::keypress(SDL_Scancode code, std::uint32_t codepoint)
     auto* msg = App::postMessage<Message::OSKEvent>(Message::OSKMessage);
     msg->scancode = code;
 
+    if (code == SDL_SCANCODE_RETURN)
+    {
+        close(true);
+        return false;
+    }
+
     if (code == SDL_SCANCODE_CAPSLOCK)
     {
         m_keymod = m_keymod == SDL_KMOD_NONE ? SDL_KMOD_SHIFT : SDL_KMOD_NONE;
@@ -860,8 +866,10 @@ bool OSK::handleEvent(const Event& evt)
                     updateVertices();
                 }
 
-                if (!testBits(m_prevControllerMask, ControllerBits::R2)
+                if ((!testBits(m_prevControllerMask, ControllerBits::R2)
                     && testBits(m_controllerMask, ControllerBits::R2))
+                    || (testBits(m_prevControllerMask, ControllerBits::R2)
+                        && !testBits(m_controllerMask, ControllerBits::R2)))
                 {
                     keypress(SDL_SCANCODE_RETURN);
                 }
@@ -965,12 +973,12 @@ bool OSK::handleEvent(const Event& evt)
             applyAxisMotion();
             break;
         case SDL_GAMEPAD_AXIS_RIGHT_TRIGGER:
-            if (evt.gaxis.value > GameController::TriggerDeadZone)
+            if (evt.gaxis.value >= GameController::TriggerDeadZone * 2)
             {
                 m_controllerMask |= ControllerBits::R2;
                 applyIconSet(icon);
             }
-            else if (evt.gaxis.value < GameController::TriggerDeadZone)
+            else if (evt.gaxis.value < GameController::TriggerDeadZone * 2)
             {
                 m_controllerMask &= ~ControllerBits::R2;
             }
