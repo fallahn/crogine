@@ -101,7 +101,7 @@ namespace
             FT_Done_FreeType(library);
         }
 
-        std::unordered_map<std::filesystem::path, std::vector<std::uint8_t>> fontData;
+        std::unordered_map<std::u8string, std::vector<std::uint8_t>> fontData;
 
         FontDataBuffer getFontData(const std::filesystem::path& path)
         {
@@ -111,7 +111,7 @@ namespace
                 return {};
             }
 
-            if (fontData.count(path) == 0)
+            if (fontData.count(path.u8string()) == 0)
             {
                 RaiiRWops fontFile;
                 fontFile.open(path, "r");
@@ -130,10 +130,10 @@ namespace
                 }
                 SDL_ReadIO(fontFile.filePtr(), buffer.data(), buffer.size());
 
-                fontData.insert(std::make_pair(path, buffer));
+                fontData.insert(std::make_pair(path.u8string(), buffer));
             }
 
-            const auto& data = fontData.at(path);
+            const auto& data = fontData.at(path.u8string());
             FontDataBuffer retVal;
             retVal.buffer = data.data();
             retVal.size = static_cast<FT_Long>(data.size());

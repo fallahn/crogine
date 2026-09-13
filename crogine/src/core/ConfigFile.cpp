@@ -813,7 +813,7 @@ bool ConfigObject::loadFromFile2(const std::filesystem::path& path)
                     else if (currentLine[i] == '"')
                     {
                         //stringOpen = !stringOpen;
-                        stringOpen = (i != currentLine.size() - 1);
+                        stringOpen = (i != currentLine.find_last_of('"'));
                         
                         //we need to store these so we can identify the value as a string
                         tokens[tokenIndex].push_back(currentLine[i]);

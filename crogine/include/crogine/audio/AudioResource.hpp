@@ -91,6 +91,6 @@ namespace cro
 
         std::unique_ptr<AudioSource> m_fallback;
         std::unordered_map<std::int32_t, std::unique_ptr<AudioSource>> m_sources;
-        std::unordered_map<std::filesystem::path, std::int32_t> m_usedPaths;
+        std::unordered_map<std::u8string, std::int32_t> m_usedPaths;
     };
 }

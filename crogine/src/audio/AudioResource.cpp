@@ -77,7 +77,7 @@ bool AudioResource::load(std::int32_t ID, const std::filesystem::path& path, boo
     if (result)
     {
         m_sources.insert(std::make_pair(ID, std::move(buffer)));
-        m_usedPaths.insert(std::make_pair(path, ID));
+        m_usedPaths.insert(std::make_pair(path.u8string(), ID));
     }
     else
     {
@@ -92,9 +92,9 @@ std::int32_t AudioResource::load(const std::filesystem::path& path, bool streami
     //cos, well, they're streaming
 
     if (!streaming &&
-        m_usedPaths.count(path) != 0)
+        m_usedPaths.count(path.u8string()) != 0)
     {
-        return m_usedPaths.at(path);
+        return m_usedPaths.at(path.u8string());
     }
 
     CRO_ASSERT(autoID > 0, "Something is very wrong if you've used this many IDs.");
