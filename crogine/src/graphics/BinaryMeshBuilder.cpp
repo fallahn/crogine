@@ -53,8 +53,8 @@ BinaryMeshBuilder::BinaryMeshBuilder(const std::filesystem::path& path, bool opt
     if (FileSystem::fileExists(m_path))
     {
         //calc a UID from the file path
-        std::hash<std::filesystem::path> hashAttack;
-        m_uid = hashAttack(path);
+        std::hash<std::u8string> hashAttack;
+        m_uid = hashAttack(path.u8string());
     }
     else
     {

@@ -42,8 +42,8 @@ StaticMeshBuilder::StaticMeshBuilder(const std::filesystem::path& path)
     : m_path    ((FileSystem::getResourcePath() / path)),
     m_uid       (0)
 {
-    std::hash<std::filesystem::path> hashAttack;
-    m_uid = hashAttack(path);
+    std::hash<std::u8string> hashAttack;
+    m_uid = hashAttack(path.u8string());
 }
 
 

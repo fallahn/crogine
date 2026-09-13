@@ -62,8 +62,8 @@ IqmBuilder::IqmBuilder(const std::filesystem::path& path)
     m_uid       (0),
     m_file      (nullptr)
 {
-    std::hash<std::filesystem::path> hashAttack;
-    m_uid = hashAttack(path);
+    std::hash<std::u8string> hashAttack;
+    m_uid = hashAttack(path.u8string());
 
     rootTransform = glm::toMat4(glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), -90.f * Util::Const::degToRad, glm::vec3(1.f, 0.f, 0.f)));
 }
