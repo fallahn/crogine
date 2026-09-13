@@ -812,7 +812,8 @@ bool ConfigObject::loadFromFile2(const std::filesystem::path& path)
                     //check to see if we open or close a string
                     else if (currentLine[i] == '"')
                     {
-                        stringOpen = !stringOpen;
+                        //stringOpen = !stringOpen;
+                        stringOpen = (i != currentLine.size() - 1);
                         
                         //we need to store these so we can identify the value as a string
                         tokens[tokenIndex].push_back(currentLine[i]);
