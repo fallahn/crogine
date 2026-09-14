@@ -467,6 +467,10 @@ void GolfGame::handleMessage(const cro::Message& msg)
             }
             break;
         case SystemEvent::PostProcessIndexChanged:
+            if (!m_postBuffer)
+            {
+                recreatePostProcess();
+            }
             applyPostProcess();
             break;
         }
@@ -640,7 +644,8 @@ void GolfGame::simulate(float dt)
         }
     }
 
-    if (m_sharedData.usePostProcess)
+    if (m_sharedData.usePostProcess
+        && m_postBuffer) //might not be created yet
     {
         //update optional uniforms (should be -1 if not loaded)
         static float accum = 0.f;
@@ -663,7 +668,8 @@ void GolfGame::simulate(float dt)
 
 void GolfGame::render()
 {
-    if (m_sharedData.usePostProcess)
+    if (m_sharedData.usePostProcess
+        && m_postBuffer)
     {
         m_postBuffer->clear();
         m_stateStack.render();
@@ -1178,59 +1184,6 @@ bool GolfGame::initialise()
     //icon for challenge progress
     m_progressIcon = std::make_unique<ProgressIcon>(m_sharedData.sharedResources->fonts.get(FontID::Label));
 
-    //set up the post process - TODO how much of this is
-    //repeated in recreatePostProcess() and can we avoid
-    //doing this at all if the user never invokes post processing?
-    auto windowSize = cro::App::getWindow().getSize();
-    m_postBuffer = std::make_unique<cro::RenderTexture>();
-    m_postBuffer->create(windowSize.x, windowSize.y, true);
-    m_postShader = std::make_unique<cro::Shader>();
-    if (!m_sharedData.customShaderPath.empty())
-    {
-        cro::RaiiRWops file;
-        file.open(m_sharedData.customShaderPath, "r");
-        if (file)
-        {
-            auto size = SDL_GetIOSize(file.filePtr());
-            std::vector<char> buffer(size);
-            if (SDL_ReadIO(file.filePtr(), buffer.data(), size))
-            {
-                //teminate the string!
-                buffer.push_back(0);
-                if (!m_postShader->loadFromString(PostVertex, buffer.data()))
-                {
-                    m_postShader->loadFromString(PostVertex, PostShaders[m_sharedData.postProcessIndex].fragmentString);
-                }
-            }
-            else
-            {
-                LogE << "Failed reading " << m_sharedData.customShaderPath << std::endl;
-                m_sharedData.customShaderPath.clear();
-            }
-        }
-        else
-        {
-            LogE << "Could not open " << m_sharedData.customShaderPath << std::endl;
-            m_sharedData.customShaderPath.clear();
-        }
-    }
-    else
-    {
-        m_postShader->loadFromString(PostVertex, PostShaders[m_sharedData.postProcessIndex].fragmentString);
-    }
-    auto shaderRes = glm::vec2(windowSize);
-    glCheck(glUseProgram(m_postShader->getGLHandle()));
-    glCheck(glUniform2f(m_postShader->getUniformID("u_resolution"), shaderRes.x, shaderRes.y));
-    float scale = getViewScale(shaderRes);
-    glCheck(glUniform2f(m_postShader->getUniformID("u_scale"), scale, scale));
-    m_uniformIDs[UniformID::Time] = m_postShader->getUniformID("u_time");
-    
-    m_postQuad = std::make_unique<cro::SimpleQuad>();
-    m_postQuad->setTexture(m_postBuffer->getTexture());
-    m_postQuad->setShader(*m_postShader);
-
-    m_activeIndex = m_sharedData.postProcessIndex;
-
 #ifdef CRO_DEBUG_
     m_stateStack.pushState(StateID::Menu);
     //m_stateStack.pushState(StateID::Bush);
@@ -1260,7 +1213,19 @@ bool GolfGame::initialise()
     //Discord::disconnect();
 #endif
     //cro::App::getWindow().setCursor(&m_cursor);
-
+    registerWindow([this]() 
+        {
+            ImGui::Begin("PP");
+            if (m_postBuffer)
+            {
+                ImGui::Text("Post buffer created");
+            }
+            else
+            {
+                ImGui::Text("Post buffer no available");
+            }
+            ImGui::End();
+        });
     return true;
 }
 
@@ -2505,6 +2470,60 @@ void GolfGame::loadMusic()
 
 void GolfGame::recreatePostProcess()
 {
+    if (!m_postBuffer)
+    {
+        //set up the post process
+        auto windowSize = cro::App::getWindow().getSize();
+        m_postBuffer = std::make_unique<cro::RenderTexture>();
+        m_postBuffer->create(windowSize.x, windowSize.y, true);
+        m_postShader = std::make_unique<cro::Shader>();
+        if (!m_sharedData.customShaderPath.empty())
+        {
+            cro::RaiiRWops file;
+            file.open(m_sharedData.customShaderPath, "r");
+            if (file)
+            {
+                auto size = SDL_GetIOSize(file.filePtr());
+                std::vector<char> buffer(size);
+                if (SDL_ReadIO(file.filePtr(), buffer.data(), size))
+                {
+                    //teminate the string!
+                    buffer.push_back(0);
+                    if (!m_postShader->loadFromString(PostVertex, buffer.data()))
+                    {
+                        m_postShader->loadFromString(PostVertex, PostShaders[m_sharedData.postProcessIndex].fragmentString);
+                    }
+                }
+                else
+                {
+                    LogE << "Failed reading " << m_sharedData.customShaderPath << std::endl;
+                    m_sharedData.customShaderPath.clear();
+                }
+            }
+            else
+            {
+                LogE << "Could not open " << m_sharedData.customShaderPath << std::endl;
+                m_sharedData.customShaderPath.clear();
+            }
+        }
+        else
+        {
+            m_postShader->loadFromString(PostVertex, PostShaders[m_sharedData.postProcessIndex].fragmentString);
+        }
+        /*auto shaderRes = glm::vec2(windowSize);
+        glCheck(glUseProgram(m_postShader->getGLHandle()));
+        glCheck(glUniform2f(m_postShader->getUniformID("u_resolution"), shaderRes.x, shaderRes.y));
+        float scale = getViewScale(shaderRes);
+        glCheck(glUniform2f(m_postShader->getUniformID("u_scale"), scale, scale));
+        m_uniformIDs[UniformID::Time] = m_postShader->getUniformID("u_time");*/
+
+        m_postQuad = std::make_unique<cro::SimpleQuad>();
+        m_postQuad->setShader(*m_postShader);
+        //m_postQuad->setTexture(m_postBuffer->getTexture());
+
+        m_activeIndex = m_sharedData.postProcessIndex;
+    }
+
     m_uniformIDs[UniformID::Time] = m_postShader->getUniformID("u_time");
     m_uniformIDs[UniformID::Scale] = m_postShader->getUniformID("u_scale");
 
