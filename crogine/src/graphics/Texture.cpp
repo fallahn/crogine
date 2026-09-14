@@ -545,7 +545,7 @@ bool Texture::saveToFile(const std::filesystem::path& path) const
     //flip row order
     stbi_flip_vertically_on_write(1);
 
-    RaiiRWops out;
+    IOStream out;
     out.open(filePath, "w");
     auto result = stbi_write_png_to_func(image_write_func, out.filePtr(), m_size.x, m_size.y, 4, buffer.data(), m_size.x * 4);
 

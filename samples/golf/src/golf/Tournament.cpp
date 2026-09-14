@@ -163,7 +163,7 @@ static inline std::filesystem::path getFilePath(std::int32_t index)
 
 void writeTournamentData(const Tournament& src, const char* p)
 {
-    cro::RaiiRWops file;
+    cro::IOStream file;
     if (!p)
     {
         auto path = getFilePath(src.id);
@@ -202,7 +202,7 @@ void readTournamentData(Tournament& dst, const char* p)
     }
     else
     {
-        cro::RaiiRWops file;
+        cro::IOStream file;
         file.open(path, "rb");
         if (file)
         {

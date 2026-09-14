@@ -1153,7 +1153,7 @@ void TerrainBuilder::readGrassData()
         GrassProcessor::Header header = {};
         std::fill(header.begin(), header.end(), 0);
 
-        cro::RaiiRWops file;
+        cro::IOStream file;
         file.open(path, "rb");
         if (file.file)
         {

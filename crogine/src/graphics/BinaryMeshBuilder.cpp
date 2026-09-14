@@ -87,7 +87,7 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
 {
     Mesh::Data meshData;
 
-    RaiiRWops file;
+    IOStream file;
     file.open(m_path, "rb");
     if (file)    
     {
@@ -448,7 +448,7 @@ Mesh::Data BinaryMeshBuilder::buildDefault() const
 {
     Mesh::Data meshData;
 
-    RaiiRWops file;
+    IOStream file;
     file.open(m_path, "rb");
     if (file)
     {
@@ -745,7 +745,7 @@ void BinaryMeshBuilder::calcBounds(Mesh::Data& meshData, const std::vector<float
     }
 }
 
-void BinaryMeshBuilder::parseSkeleton(RaiiRWops& file, const Detail::ModelBinary::Header& header) const
+void BinaryMeshBuilder::parseSkeleton(IOStream& file, const Detail::ModelBinary::Header& header) const
 {
     if (header.skeletonOffset)
     {

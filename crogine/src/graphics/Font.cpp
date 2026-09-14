@@ -113,7 +113,7 @@ namespace
 
             if (fontData.count(path.u8string()) == 0)
             {
-                RaiiRWops fontFile;
+                IOStream fontFile;
                 fontFile.open(path, "r");
                 if (!fontFile)
                 {

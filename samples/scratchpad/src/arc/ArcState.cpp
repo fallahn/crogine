@@ -445,7 +445,7 @@ void ArcState::plotArc()
 
 void ArcState::writeSettings()
 {
-    cro::RaiiRWops outFile;
+    cro::IOStream outFile;
     outFile.open("clubsettings.set", "wb");
     if (outFile)
     {
@@ -468,7 +468,7 @@ void ArcState::writeSettings()
 
 void ArcState::readSettings()
 {
-    cro::RaiiRWops inFile;
+    cro::IOStream inFile;
     inFile.open("clubsettings.set", "rb");
     if (inFile)
     {

@@ -117,7 +117,7 @@ namespace inv
             std::fill(items.begin(), items.end(), -1);
             const auto loadoutPath = Content::getUserContentPath(Content::UserContent::Profile) / profileID / "load.out";
 
-            cro::RaiiRWops file;
+            cro::IOStream file;
             file.open(loadoutPath, "rb");
             if (file)
             {
@@ -151,7 +151,7 @@ namespace inv
             }
             path /= "load.out";
 
-            cro::RaiiRWops file;
+            cro::IOStream file;
             file.open(path, "wb");
             if (file)
             {
@@ -198,7 +198,7 @@ namespace inv
         const std::filesystem::path fileName("equip.inv");
         const std::filesystem::path filePath = Content::getBaseContentPath() / fileName;
 
-        cro::RaiiRWops file;
+        cro::IOStream file;
         file.open(filePath, "rb");
         if (file)
         {
@@ -219,7 +219,7 @@ namespace inv
         const std::filesystem::path fileName("equip.inv");
         const std::filesystem::path filePath = Content::getBaseContentPath() / fileName;
 
-        cro::RaiiRWops file;
+        cro::IOStream file;
         file.open(filePath, "wb");
         if (file)
         {

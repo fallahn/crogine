@@ -498,7 +498,7 @@ bool Q3BspSystem::loadMap(const std::string& mapPath)
 
     const auto path = (cro::FileSystem::getResourcePath() / mapPath);
 
-    cro::RaiiRWops file;
+    cro::IOStream file;
     file.open(path, "rb");
     if (file)
     {

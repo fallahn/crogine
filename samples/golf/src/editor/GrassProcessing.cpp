@@ -96,7 +96,7 @@ bool GrassProcessor::process()
         auto outPath = m_modelPaths[m_currentPath];
         cro::Util::String::replace(outPath, ".cmb", ".gss");
 
-        cro::RaiiRWops file;
+        cro::IOStream file;
         file.open(outPath, "wb");
         if (file)
         {

@@ -62,7 +62,7 @@ void LeagueNames::read()
 
     std::size_t currName = 0;
 
-    cro::RaiiRWops rFile;
+    cro::IOStream rFile;
     rFile.open(path, "r");
     if (rFile)
     {
@@ -102,7 +102,7 @@ bool LeagueNames::write() const
 {
     const auto path = Content::getBaseContentPath() / FileName;
 
-    cro::RaiiRWops rFile;
+    cro::IOStream rFile;
     rFile.open(path, "w");
     if (rFile)
     {

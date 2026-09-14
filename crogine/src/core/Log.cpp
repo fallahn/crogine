@@ -94,7 +94,7 @@ void Logger::log(const std::string& message, Type type, Output output)
     if (output == Output::File || output == Output::All)
     {
         //output to a log file
-        RaiiRWops file;
+        IOStream file;
         const auto logPath = cro::App::getPreferencePath() / "output.log";
         file.open(logPath, "a");
         if (file)

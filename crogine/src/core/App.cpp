@@ -719,7 +719,7 @@ void App::saveScreenshot()
 
         filename = U8PATH_CAST((outPath / filename));
 
-        RaiiRWops out;
+        IOStream out;
         out.open(outPath / filename, "w");
         if (out)
         {

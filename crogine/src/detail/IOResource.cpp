@@ -59,9 +59,9 @@ void IOResource::addPath(const std::filesystem::path& path)
     }
 }
 
-RaiiRWops IOResource::open(const std::filesystem::path& path)
+IOStream IOResource::open(const std::filesystem::path& path)
 {
-    RaiiRWops retVal;
+    IOStream retVal;
 
     if (m_initOK)
     {
@@ -95,13 +95,13 @@ bool IOResource::exists(const std::filesystem::path& path)
 
 //--------------------------------------------
 
-RaiiRWops::RaiiRWops(RaiiRWops&& other) noexcept
+IOStream::IOStream(IOStream&& other) noexcept
 {
     file = other.file;
     other.file = nullptr;
 }
 
-RaiiRWops& RaiiRWops::operator = (RaiiRWops&& other) noexcept
+IOStream& IOStream::operator = (IOStream&& other) noexcept
 {
     if (&other != this)
     {

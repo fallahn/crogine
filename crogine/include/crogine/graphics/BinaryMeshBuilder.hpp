@@ -65,6 +65,6 @@ namespace cro
         Mesh::Data buildDefault() const;
 
         void calcBounds(Mesh::Data& target, const std::vector<float>& vertData) const;
-        void parseSkeleton(RaiiRWops& file, const Detail::ModelBinary::Header& header) const;
+        void parseSkeleton(IOStream& file, const Detail::ModelBinary::Header& header) const;
     };
 }

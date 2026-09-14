@@ -86,7 +86,7 @@ namespace cro
             std::uint64_t getSampleCount() const override { return m_sampleCount; }
 
         private:
-            RaiiRWops m_file;
+            IOStream m_file;
 
             struct WavHeader final
             {

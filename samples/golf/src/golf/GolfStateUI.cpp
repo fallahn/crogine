@@ -5061,7 +5061,7 @@ void GolfState::logCSV() const
 
         //fileName = U8PATH_CAST((Content::getBaseContentPath() / fileName));
 
-        cro::RaiiRWops out;
+        cro::IOStream out;
         out.open(Content::getBaseContentPath() / fileName, "w");
         if (out)
         {

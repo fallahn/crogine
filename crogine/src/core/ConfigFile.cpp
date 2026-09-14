@@ -527,7 +527,7 @@ bool ConfigObject::parseAsJson(SDL_IOStream* file)
 
 bool ConfigObject::save(const std::filesystem::path& p)
 {
-    RaiiRWops out;
+    IOStream out;
 #ifdef OLD_PARSER
     FS_ASSERT;
     out.file = SDL_IOFromFile(path.c_str(), "w");
@@ -692,7 +692,7 @@ std::size_t ConfigObject::write(SDL_IOStream* file, std::uint16_t depth)
 
 bool ConfigObject::loadFromFile2(const std::filesystem::path& path)
 {
-    RaiiRWops rr;
+    IOStream rr;
     rr.open(path, "rb");
 
     if (!rr)

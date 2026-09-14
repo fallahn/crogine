@@ -271,7 +271,7 @@ void VatFile::loadBinary(const std::string& path, std::vector<float>& dst, glm::
     dst.clear();
     dst.resize(dims.x * dims.y * 4);
 
-    cro::RaiiRWops file;
+    cro::IOStream file;
     file.open(path, "rb");
     if (file)
     {

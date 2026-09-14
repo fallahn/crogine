@@ -50,7 +50,7 @@ void PersonalBest::load()
     const auto path = Content::getBaseContentPath() / fileName;
     if (cro::FileSystem::fileExists(path))
     {
-        cro::RaiiRWops file;
+        cro::IOStream file;
         file.open(path, "rb");
         if (file)
         {
@@ -63,7 +63,7 @@ void PersonalBest::save() const
 {
     const auto path = Content::getBaseContentPath() / fileName;
 
-    cro::RaiiRWops file;
+    cro::IOStream file;
     file.open(path, "wb");
     if (file)
     {

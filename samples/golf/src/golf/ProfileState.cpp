@@ -5980,7 +5980,7 @@ void ProfileState::refreshBio()
             {
                 std::vector<char> buffer(MaxBioChars + 1);
 
-                cro::RaiiRWops inFile;
+                cro::IOStream inFile;
                 inFile.open(path, "r");
                 if (inFile)
                 {
@@ -5994,7 +5994,7 @@ void ProfileState::refreshBio()
                 //else set bio to random and write file
                 const std::string bio = generateRandomBio();
 
-                cro::RaiiRWops outfile;
+                cro::IOStream outfile;
                 outfile.open(path, "w");
                 if (outfile)
                 {

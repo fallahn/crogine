@@ -43,7 +43,7 @@ namespace cro::Detail
     {
         dst.clear();
 
-        RaiiRWops file;
+        IOStream file;
         file.open(path, "rb");
 
         if (!file)
@@ -96,7 +96,7 @@ namespace cro::Detail
     {
         dst.clear();
 
-        RaiiRWops file;
+        IOStream file;
         file.open(path, "rb");
         if (!file)
         {
@@ -148,7 +148,7 @@ namespace cro::Detail
     {
         dst.clear();
 
-        RaiiRWops file;
+        IOStream file;
         file.open(path, "rb");
         if (!file)
         {

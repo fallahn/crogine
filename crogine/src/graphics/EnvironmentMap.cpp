@@ -154,7 +154,7 @@ bool EnvironmentMap::loadFromFile(const std::filesystem::path& p)
         return false;
     }
 
-    RaiiRWops file;
+    IOStream file;
     file.open(path, "rb");
     if (!file)
     {

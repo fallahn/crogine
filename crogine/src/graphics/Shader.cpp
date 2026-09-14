@@ -552,7 +552,7 @@ std::string Shader::parseFile(const std::filesystem::path& path)
     retVal.reserve(1000);
 
     //open file and verify
-    RaiiRWops file;
+    IOStream file;
     file.open(path, "r");
     if (!file)
     {

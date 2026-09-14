@@ -4451,7 +4451,7 @@ void PlaylistState::saveCourse(bool createNew)
     //std::string fileName = ss.str();
     const auto fileName = exportDir / m_saveFiles[m_saveFileIndex];
 
-    cro::RaiiRWops file;
+    cro::IOStream file;
     file.open(fileName, "wb");
     if (file)
     {
@@ -4497,7 +4497,7 @@ void PlaylistState::loadCourse()
     const auto fileName = exportDir / m_saveFiles[m_saveFileIndex];
     LogI << "Loading: " << fileName << std::endl;
 
-    cro::RaiiRWops file;
+    cro::IOStream file;
     file.open(fileName, "rb");
     if (file)
     {

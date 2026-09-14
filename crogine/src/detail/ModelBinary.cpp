@@ -311,7 +311,7 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
     if (retVal)
     {
         //open the file
-        RaiiRWops file;
+        IOStream file;
         file.open(path, "wb");
 
         if (!file)
@@ -363,7 +363,7 @@ cro::Mesh::Data cro::Detail::ModelBinary::read(const std::filesystem::path& binP
 
     cro::Mesh::Data meshData;
 
-    cro::RaiiRWops file;
+    cro::IOStream file;
     file.open(binPath, "rb");
     if (file)
     {

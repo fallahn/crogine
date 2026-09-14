@@ -131,7 +131,7 @@ bool Palette::loadFromFile(const std::filesystem::path& path, bool append)
     }
 
     const auto fullPath = FileSystem::getResourcePath() / path;
-    RaiiRWops file;
+    IOStream file;
     file.open(fullPath, "rb");
 
     const auto fileName = FileSystem::getFileName(path);

@@ -872,7 +872,7 @@ bool GolfGame::initialise()
                 //std::replace(path.begin(), path.end(), '\\', '/');
                 if (!path.empty())
                 {
-                    cro::RaiiRWops file;
+                    cro::IOStream file;
                     file.open(path, "r");
                     if (file)
                     {
@@ -1915,7 +1915,7 @@ void GolfGame::loadPreferences()
 
     if (cro::FileSystem::fileExists(path))
     {
-        cro::RaiiRWops file;
+        cro::IOStream file;
         file.open(path, "rb");
         if (file)
         {
@@ -1973,7 +1973,7 @@ void GolfGame::loadPreferences()
         }
         LogI << "converted keybinds" << std::endl;
 
-        cro::RaiiRWops file;
+        cro::IOStream file;
         file.open(path, "wb");
         if (file)
         {
@@ -1984,7 +1984,7 @@ void GolfGame::loadPreferences()
     else
     {
         //load the file
-        cro::RaiiRWops file;
+        cro::IOStream file;
         file.open(path, "rb");
         if (file)
         {
@@ -2104,7 +2104,7 @@ void GolfGame::savePreferences()
 
     //keybinds
     path = Content::getBaseContentPath() / "codes.bind";
-    cro::RaiiRWops file;
+    cro::IOStream file;
     file.open(path, "wb");
     if (file)
     {
@@ -2466,7 +2466,7 @@ void GolfGame::recreatePostProcess()
         m_postShader = std::make_unique<cro::Shader>();
         if (!m_sharedData.customShaderPath.empty())
         {
-            cro::RaiiRWops file;
+            cro::IOStream file;
             file.open(m_sharedData.customShaderPath, "r");
             if (file)
             {

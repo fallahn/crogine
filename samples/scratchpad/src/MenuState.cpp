@@ -1693,7 +1693,7 @@ bool MenuState::createStub(const std::string& name) const
 void MenuState::fileToByteArray(const std::string& infile, const std::string& dst) const
 {
     //FS_ASSERT;
-    cro::RaiiRWops file;
+    cro::IOStream file;
     file.open(infile, "rb");
     if (file)
     {

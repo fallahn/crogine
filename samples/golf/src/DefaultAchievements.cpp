@@ -396,7 +396,7 @@ void DefaultAchievements::readFile()
 
     if (cro::FileSystem::fileExists(filePath))
     {
-        cro::RaiiRWops file;
+        cro::IOStream file;
         file.open(filePath, "rb");
 
         if (file
@@ -420,7 +420,7 @@ void DefaultAchievements::writeFile()
     const std::size_t timesize = sizeof(std::uint64_t) * m_timeStamps.size();
     const auto filePath = cro::App::getInstance().getPreferencePath() / FileName;
 
-    cro::RaiiRWops file;
+    cro::IOStream file;
     file.open(filePath, "wb");
     if (file)
     {

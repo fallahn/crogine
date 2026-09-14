@@ -121,7 +121,7 @@ namespace Progress
     static inline void write(std::int32_t leagueID, std::uint64_t holeIndex, const std::vector<std::uint8_t>& holeScores, std::int32_t mulliganCount)
     {
         auto path = getFilePath(leagueID);
-        cro::RaiiRWops file;
+        cro::IOStream file;
         file.open(path, "wb");
         if (file)
         {
@@ -149,7 +149,7 @@ namespace Progress
         std::fill(values.begin(), values.end(), 0);
 
         path = getFilePath(MulliganID);
-        cro::RaiiRWops file2;
+        cro::IOStream file2;
         file2.open(path, "rb");
 
         if (file2)
@@ -174,7 +174,7 @@ namespace Progress
         auto path = getFilePath(leagueID);
         if (cro::FileSystem::fileExists(path))
         {
-            cro::RaiiRWops file;
+            cro::IOStream file;
             file.open(path, "rb");
             if (file)
             {
@@ -210,7 +210,7 @@ namespace Progress
                 std::fill(values.begin(), values.end(), 0);
 
                 path = getFilePath(MulliganID);
-                cro::RaiiRWops file2;
+                cro::IOStream file2;
                 file2.open(path, "rb");
 
                 if (file2)

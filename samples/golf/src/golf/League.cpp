@@ -294,7 +294,7 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
 
         //write the data to a file
         const auto path = getFilePath(PrevFileName);
-        cro::RaiiRWops file;
+        cro::IOStream file;
         file.open(path, "wb");
         if (file)
         {
@@ -478,7 +478,7 @@ void League::readPreviousPlayers() const
     const auto path = getFilePath(PrevFileName);
     if (cro::FileSystem::fileExists(path))
     {
-        cro::RaiiRWops file;
+        cro::IOStream file;
         file.open(path, "rb");
         if (file)
         {
@@ -759,7 +759,7 @@ void League::read()
     const auto path = getFilePath(FileName);
     if (cro::FileSystem::fileExists(path))
     {
-        cro::RaiiRWops file;
+        cro::IOStream file;
         file.open(path, "rb");
         if (!file)
         {
@@ -869,7 +869,7 @@ void League::read()
         //read hole scores from DB
         const auto dbPath = Content::getBaseContentPath() / DBName;
         constexpr auto DBSize = LeagueRoundID::Count * sizeof(m_holeScores);
-        cro::RaiiRWops dbFile;
+        cro::IOStream dbFile;
         dbFile.open(dbPath, "rb");
         if (dbFile)
         {
@@ -931,7 +931,7 @@ void League::write()
 
     const auto path = getFilePath(FileName);
 
-    cro::RaiiRWops file;
+    cro::IOStream file;
     file.open(path, "wb");
     if (file)
     {
@@ -966,7 +966,7 @@ void League::assertDB()
         //hmm what do if we failed creating this? I guess the read/write ops
         //will fail anyway when they can't open the file, so no harm, just
         //no player scores either...
-        cro::RaiiRWops file;
+        cro::IOStream file;
         file.open(path, "wb");
         if (file)
         {
@@ -997,7 +997,7 @@ void League::updateDB()
     std::vector<std::uint8_t> temp(DBSize);
     std::fill(temp.begin(), temp.end(), 0);
 
-    cro::RaiiRWops dbFile;
+    cro::IOStream dbFile;
     dbFile.open(dbPath, "rb");
     if (dbFile)
     {

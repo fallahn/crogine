@@ -1320,7 +1320,7 @@ void GolfState::dumpBenchmark()
         "Classic", "Low", "High"
     };
 
-    cro::RaiiRWops file;
+    cro::IOStream file;
     file.open(outFile, "a");
     if (file)
     {

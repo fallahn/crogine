@@ -73,7 +73,7 @@ M3UPlaylist::M3UPlaylist(const std::filesystem::path& searchDir, std::uint32_t m
 //public
 bool M3UPlaylist::loadPlaylist(const std::filesystem::path& path)
 {
-    cro::RaiiRWops rFile;
+    cro::IOStream rFile;
     rFile.open(path, "r");
 
     if (!rFile)

@@ -40,18 +40,18 @@ source distribution.
 namespace cro
 {
     //used to automatically close SDL_IOStream files
-    struct RaiiRWops final
+    struct IOStream final
     {
-        ~RaiiRWops()
+        ~IOStream()
         {
             close();
         }
-        RaiiRWops() : file(nullptr) {}
-        RaiiRWops(const RaiiRWops&) = delete;
-        RaiiRWops& operator = (const RaiiRWops&) = delete;
+        IOStream() : file(nullptr) {}
+        IOStream(const IOStream&) = delete;
+        IOStream& operator = (const IOStream&) = delete;
 
-        RaiiRWops(RaiiRWops&&) noexcept;
-        RaiiRWops& operator = (RaiiRWops&&) noexcept;
+        IOStream(IOStream&&) noexcept;
+        IOStream& operator = (IOStream&&) noexcept;
 
         //ensures u8 filepaths are properly cast to a compatible type
         bool open(const std::filesystem::path& p, const char* mode)
@@ -78,7 +78,7 @@ namespace cro
         }
 
         //returns a copy of the file pointer - note that
-        //this is owned by RaiiRWops and should not be manually closed!
+        //this is owned by IOStream and should not be manually closed!
         //use the close() function instead.
         SDL_IOStream* filePtr() const { return file; }
 
@@ -108,7 +108,7 @@ namespace cro
         \param path The path to the resource to open
         \returns IOStream wrapper around an SDL_IOStream handle.
         */
-        static RaiiRWops open(const std::filesystem::path& path);
+        static IOStream open(const std::filesystem::path& path);
 
         /*!
         \brief Checks if a given file exists in the mounted file system.

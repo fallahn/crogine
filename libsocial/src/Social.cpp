@@ -643,7 +643,7 @@ void Social::refreshAwards()
     //check for awards file and load
     if (cro::FileSystem::fileExists(path))
     {
-        cro::RaiiRWops file;
+        cro::IOStream file;
         file.open(path, "rb");
         if (file)
         {
@@ -716,7 +716,7 @@ void Social::refreshAwards()
     //if list updated write file
     if (newAwards)
     {
-        cro::RaiiRWops file;
+        cro::IOStream file;
         file.open(path, "wb");
         if (file)
         {

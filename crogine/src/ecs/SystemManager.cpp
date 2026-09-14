@@ -68,7 +68,7 @@ SystemManager::SystemManager(Scene& scene, ComponentManager& cm, std::uint32_t i
                     std::replace(filename.begin(), filename.end(), '/', '-');
                     std::replace(filename.begin(), filename.end(), ':', '-');
 
-                    RaiiRWops file;
+                    IOStream file;
                     file.open(filename, "w");
 
                     if (file)
