@@ -18,6 +18,9 @@ endif()
 project(crogine)
 SET(PROJECT_NAME crogine)
 
+
+#----------------Configuration---------------
+
 if(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
 endif()
@@ -113,6 +116,8 @@ SET (CMAKE_CXX_STANDARD_REQUIRED ON)
 SET (OpenGL_GL_PREFERENCE "GLVND")
 
 
+#---------------Dependency Selection----------------
+
 if (NOT BUILD_SDL)
   find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
 else()
@@ -175,6 +180,8 @@ else()
 endif()
 
 
+#-------------------Include Directories-----------------
+
 include_directories(
   SDL3::Headers
   ${FREETYPE_INCLUDE_DIRS} 
@@ -209,6 +216,16 @@ else()
 endif()
 
 
+
+#---------------------source selection-------------------
+
+
+
+#add the physfs source
+include(${PROJECT_DIR}/detail/physfs/CMakeLists.txt)
+
+
+
 #add platform specific source files for enet
 if(WIN32)
   SET(PROJECT_SRC ${PROJECT_SRC} ${project_src_win32})
@@ -218,9 +235,9 @@ endif()
 
 #add the Resourcepath source, and GL41 loader for apple, else load GL46
 if (APPLE)
-  set(PROJECT_SRC ${PROJECT_SRC} ${project_src_macos})
+  set(PROJECT_SRC ${PROJECT_SRC} ${PHYSFS_SRC_macos} ${project_src_macos})
 else()
-  SET(PROJECT_SRC ${PROJECT_SRC} src/detail/glad.c)
+  SET(PROJECT_SRC ${PROJECT_SRC} ${PHYSFS_SRC} src/detail/glad.c)
 endif()
 
 #this might be built by a project using crogine
@@ -233,6 +250,7 @@ if(NOT TARGET crogine)
   endif()
 
 
+#-----------------linking configuration-----------------
 
   target_compile_definitions(${PROJECT_NAME} PUBLIC $<$<CONFIG:Debug>:CRO_DEBUG_ PARALLEL_GLOBAL_DISABLE>)
 
@@ -267,6 +285,8 @@ if(NOT TARGET crogine)
   target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 endif()
 
+
+#---------------------installation------------------
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/crogine DESTINATION include)
 

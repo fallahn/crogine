@@ -83,7 +83,11 @@ namespace cro
         /*!
         \brief Returns true if a file exists with the name at the given path
         Note that when calling this from an app running in a macOS bundle
-        that the path should be prefixed with a call to getResourcePath()
+        that the path should be prefixed with a call to getResourcePath() (Maybe.
+        I need to check this in the most recent version...)
+        This also searches any file systems mounted with physfs. If you know
+        you're not going to need to search such filesystems then prefer
+        std::filesystem::path::exists() for speed and brevity
         */
         static bool fileExists(const std::filesystem::path& path);
         

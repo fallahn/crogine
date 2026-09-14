@@ -164,8 +164,12 @@ std::filesystem::path FileSystem::getFilePath(const std::filesystem::path& path)
 
 bool FileSystem::fileExists(const std::filesystem::path& path)
 {
-    std::error_code ec;
-    return std::filesystem::exists(path, ec);
+    if (!IOResource::exists(path))
+    {
+        std::error_code ec;
+        return std::filesystem::exists(path, ec);
+    }
+    return true;
 }
 
 bool FileSystem::createDirectory(const std::filesystem::path& path)

@@ -1212,20 +1212,7 @@ bool GolfGame::initialise()
     }*/
     //Discord::disconnect();
 #endif
-    //cro::App::getWindow().setCursor(&m_cursor);
-    registerWindow([this]() 
-        {
-            ImGui::Begin("PP");
-            if (m_postBuffer)
-            {
-                ImGui::Text("Post buffer created");
-            }
-            else
-            {
-                ImGui::Text("Post buffer no available");
-            }
-            ImGui::End();
-        });
+
     return true;
 }
 

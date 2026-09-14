@@ -133,6 +133,12 @@
     <Filter Include="Source Files\graphics\drawables">
       <UniqueIdentifier>{ef4be14a-83f6-439b-bfed-3729f13ec06c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\detail\physfs">
+      <UniqueIdentifier>{a43799ea-77a8-42f5-8132-fe9e1349584c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\detail\physfs">
+      <UniqueIdentifier>{20a53fde-373b-4475-95ea-7818c19f3022}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\crogine\include\crogine\Config.hpp">
@@ -813,6 +819,30 @@
     <ClInclude Include="..\crogine\include\crogine\core\OSK.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\src\detail\physfs\physfs_platforms.h">
+      <Filter>Header Files\detail\physfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\detail\physfs\physfs_miniz.h">
+      <Filter>Header Files\detail\physfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\detail\physfs\physfs_lzmasdk.h">
+      <Filter>Header Files\detail\physfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\detail\physfs\physfs_internal.h">
+      <Filter>Header Files\detail\physfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\detail\physfs\physfs_casefolding.h">
+      <Filter>Header Files\detail\physfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\detail\physfs\physfs.h">
+      <Filter>Header Files\detail\physfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\detail\physfs\physfs_sdliostream.hpp">
+      <Filter>Header Files\detail\physfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\detail\IOStream.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -1369,6 +1399,75 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\core\OSK.cpp">
       <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\physfs\physfs.c">
+      <Filter>Source Files\detail\physfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\physfs\physfs_archiver_7z.c">
+      <Filter>Source Files\detail\physfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\physfs\physfs_archiver_dir.c">
+      <Filter>Source Files\detail\physfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\physfs\physfs_archiver_grp.c">
+      <Filter>Source Files\detail\physfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\physfs\physfs_archiver_hog.c">
+      <Filter>Source Files\detail\physfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\physfs\physfs_archiver_iso9660.c">
+      <Filter>Source Files\detail\physfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\physfs\physfs_archiver_mvl.c">
+      <Filter>Source Files\detail\physfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\physfs\physfs_archiver_qpak.c">
+      <Filter>Source Files\detail\physfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\physfs\physfs_archiver_slb.c">
+      <Filter>Source Files\detail\physfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\physfs\physfs_archiver_unpacked.c">
+      <Filter>Source Files\detail\physfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\physfs\physfs_archiver_vdf.c">
+      <Filter>Source Files\detail\physfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\physfs\physfs_archiver_wad.c">
+      <Filter>Source Files\detail\physfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\physfs\physfs_archiver_zip.c">
+      <Filter>Source Files\detail\physfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\physfs\physfs_byteorder.c">
+      <Filter>Source Files\detail\physfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\physfs\physfs_platform_android.c">
+      <Filter>Source Files\detail\physfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\physfs\physfs_platform_os2.c">
+      <Filter>Source Files\detail\physfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\physfs\physfs_platform_posix.c">
+      <Filter>Source Files\detail\physfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\physfs\physfs_platform_qnx.c">
+      <Filter>Source Files\detail\physfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\physfs\physfs_platform_unix.c">
+      <Filter>Source Files\detail\physfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\physfs\physfs_platform_windows.c">
+      <Filter>Source Files\detail\physfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\physfs\physfs_unicode.c">
+      <Filter>Source Files\detail\physfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\physfs\physfs_sdliostream.cpp">
+      <Filter>Source Files\detail\physfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\IOResource.cpp">
+      <Filter>Source Files\detail</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

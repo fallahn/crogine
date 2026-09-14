@@ -1,0 +1,30 @@
+#source files used by physfs
+set(PHYSFS_SRC
+  ${PROJECT_DIR}/detail/physfs/physfs.c
+  ${PROJECT_DIR}/detail/physfs/physfs_archiver_7z.c
+  ${PROJECT_DIR}/detail/physfs/physfs_archiver_dir.c
+  ${PROJECT_DIR}/detail/physfs/physfs_archiver_grp.c
+  ${PROJECT_DIR}/detail/physfs/physfs_archiver_hog.c
+  ${PROJECT_DIR}/detail/physfs/physfs_archiver_iso9660.c
+  ${PROJECT_DIR}/detail/physfs/physfs_archiver_mvl.c
+  ${PROJECT_DIR}/detail/physfs/physfs_archiver_qpak.c
+  ${PROJECT_DIR}/detail/physfs/physfs_archiver_slb.c
+  ${PROJECT_DIR}/detail/physfs/physfs_archiver_unpacked.c
+  ${PROJECT_DIR}/detail/physfs/physfs_archiver_vdf.c
+  ${PROJECT_DIR}/detail/physfs/physfs_archiver_wad.c
+  ${PROJECT_DIR}/detail/physfs/physfs_archiver_zip.c
+  ${PROJECT_DIR}/detail/physfs/physfs_byteorder.c
+  ${PROJECT_DIR}/detail/physfs/physfs_platform_android.c
+  ${PROJECT_DIR}/detail/physfs/physfs_platform_os2.c
+  ${PROJECT_DIR}/detail/physfs/physfs_platform_posix.c
+  ${PROJECT_DIR}/detail/physfs/physfs_platform_qnx.c
+  ${PROJECT_DIR}/detail/physfs/physfs_platform_unix.c
+  ${PROJECT_DIR}/detail/physfs/physfs_platform_windows.c
+  ${PROJECT_DIR}/detail/physfs/physfs_sdliostream.cpp
+  ${PROJECT_DIR}/detail/physfs/physfs_unicode.c
+  )
+
+SET(PHYSFS_SRC_macos
+  ${PHYSFS_SRC}
+  ${PROJECT_DIR}/detail/physfs/physfs_platform_apple.m
+  )

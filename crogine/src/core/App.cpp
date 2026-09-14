@@ -75,6 +75,7 @@ static void winFPE(int)
 #include "../detail/SDLImageRead.hpp"
 #include "../detail/fa-regular-400.hpp" //icon font for ImGui
 #include "../detail/IconsFontAwesome6.h"
+#include "../detail/physfs/physfs.h"
 #include "../imgui/imgui_impl_opengl3.h"
 #include "../imgui/imgui_impl_sdl.h"
 
@@ -261,7 +262,6 @@ App::App(std::uint32_t styleFlags)
 #endif
 #endif
 
-
 #ifdef DEBUG_NO_CONTROLLER
     //urg sometimes some USB driver or something crashes and causes SDL_Init to hang
     //until the PC is restarted - this hacks around it while debugging (but disables controllers)
@@ -306,6 +306,14 @@ App::App(std::uint32_t styleFlags)
             Logger::log("Failed to initialise audio renderer", Logger::Type::Error);
         }
 
+        if (PHYSFS_init(nullptr) == 0)
+        {
+            LogE << "Failed to init PHYSFS, reason: " << PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()) << std::endl;
+        }
+        else
+        {
+            IOResource::m_initOK = true;
+        }
 
 #ifdef WIN32
 #ifdef CRO_DEBUG_
