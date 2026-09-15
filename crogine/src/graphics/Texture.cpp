@@ -245,10 +245,25 @@ bool Texture::loadFromFile(const std::filesystem::path& filePath, bool createMip
         }
 
         ktxTexture* kTex = nullptr;
-        if (const auto result = ktxTexture_CreateFromNamedFile(U8PATH_CAST(path), KTX_TEXTURE_CREATE_NO_FLAGS, &kTex);
-            result != 0)
+        std::vector<std::uint8_t> temp; //this needs to exist as long as kTex because it points to this
+        IOStream f = IOResource::open(path);
+        if (f)
         {
-            LogE << "[KTX] " << FileSystem::getFileName(path) << " Failed to create ktx texture: " << KTXError[result] << std::endl;
+            const auto size = SDL_GetIOSize(f.filePtr());
+            temp.resize(size);
+            SDL_ReadIO(f.filePtr(), temp.data(), size);
+
+            //if (const auto result = ktxTexture_CreateFromNamedFile(U8PATH_CAST(path), KTX_TEXTURE_CREATE_NO_FLAGS, &kTex);
+            if (const auto result = ktxTexture_CreateFromMemory(temp.data(), size, KTX_TEXTURE_CREATE_NO_FLAGS, &kTex);
+                result != 0)
+            {
+                LogE << "[KTX] " << FileSystem::getFileName(path) << " Failed to create ktx texture: " << KTXError[result] << std::endl;
+                return false;
+            }
+        }
+        else
+        {
+            LogE << "[KTX] Failed to open " << path.filename() << std::endl;
             return false;
         }
 
