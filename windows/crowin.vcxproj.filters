@@ -1522,6 +1522,9 @@
     <None Include="..\crogine\include\crogine\gui\Codepoints.inl">
       <Filter>Header Files\gui</Filter>
     </None>
+    <None Include="..\crogine\src\detail\IO_MACRO.inl">
+      <Filter>Header Files\detail</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="crogine.rc">

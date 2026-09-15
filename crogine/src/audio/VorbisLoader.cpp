@@ -84,13 +84,14 @@ bool VorbisLoader::open(const std::filesystem::path& path)
 
     //read header
     //m_vorbisFile = stb_vorbis_open_file(m_file.file, 0, nullptr, nullptr);
-    m_vorbisFile = stb_vorbis_open_filename(U8PATH_CAST(path), nullptr, nullptr);
+    int err = 0;
+    m_vorbisFile = stb_vorbis_open_filename(U8PATH_CAST(path), &err, nullptr);
     if (!m_vorbisFile)
     {
         /*SDL_CloseIO(m_file.file);
         m_file.file = nullptr;*/
 
-        Logger::log("Failed opening vorbis file, error "/* + std::to_string(err)*/, Logger::Type::Error);
+        LogE << "Failed opening vorbis file, error " << std::to_string(err) << std::endl;
         return false;
     }
 

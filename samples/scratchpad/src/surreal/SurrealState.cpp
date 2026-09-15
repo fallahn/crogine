@@ -66,6 +66,23 @@ SurrealState::SurrealState(cro::StateStack& stack, cro::State::Context context)
         createScene();
         createUI();
     });
+
+    //defined in the detail folder of cro source...
+    //std::vector<std::uint8_t> temp(1024);
+
+    //auto* f = FOPEN("assets/pnp.png", "rb");
+    //LogI << "ftell begin " << FTELL(f) << std::endl;
+    //LogI << "fread " << FREAD(temp.data(), 1024, 1, f) << std::endl;
+    //LogI << "ftell middle " << FTELL(f) << std::endl;
+
+    //for (auto i = 0; i < 4; ++i)
+    //{
+    //    LogI << FGET(f) << std::endl;
+    //}
+
+    //LogI << "fseek: " << FSEEK(f, 0, IO_END) << std::endl;;
+    //LogI << "ftell end " << FTELL(f) << std::endl;
+    //FCLOSE(f);
 }
 
 //public

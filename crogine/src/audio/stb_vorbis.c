@@ -80,6 +80,10 @@
 
 #ifndef STB_VORBIS_NO_STDIO
 #include <stdio.h>
+
+#define SDL_IO
+#include "../detail/IO_MACRO.inl"
+
 #endif
 
 #ifdef __cplusplus
@@ -249,8 +253,8 @@ extern void stb_vorbis_flush_pushdata(stb_vorbis *f);
 #ifndef STB_VORBIS_NO_PULLDATA_API
 // This API assumes stb_vorbis is allowed to pull data from a source--
 // either a block of memory containing the _entire_ vorbis stream, or a
-// FILE * that you or it create, or possibly some other reading mechanism
-// if you go modify the source to replace the FILE * case with some kind
+// FHANDLE * that you or it create, or possibly some other reading mechanism
+// if you go modify the source to replace the FHANDLE * case with some kind
 // of callback to your code. (But if you don't support seeking, you may
 // just want to go ahead and use pushdata.)
 
@@ -276,20 +280,20 @@ extern stb_vorbis * stb_vorbis_open_filename(const char *filename,
 // create an ogg vorbis decoder from a filename via fopen(). on failure,
 // returns NULL and sets *error (possibly to VORBIS_file_open_failure).
 
-extern stb_vorbis * stb_vorbis_open_file(FILE *f, int close_handle_on_close,
+extern stb_vorbis * stb_vorbis_open_file(FHANDLE *f, int close_handle_on_close,
                                   int *error, const stb_vorbis_alloc *alloc_buffer);
-// create an ogg vorbis decoder from an open FILE *, looking for a stream at
-// the _current_ seek point (ftell). on failure, returns NULL and sets *error.
+// create an ogg vorbis decoder from an open FHANDLE *, looking for a stream at
+// the _current_ seek point (FTELL). on failure, returns NULL and sets *error.
 // note that stb_vorbis must "own" this stream; if you seek it in between
 // calls to stb_vorbis, it will become confused. Moreover, if you attempt to
 // perform stb_vorbis_seek_*() operations on this file, it will assume it
 // owns the _entire_ rest of the file after the start point. Use the next
 // function, stb_vorbis_open_file_section(), to limit it.
 
-extern stb_vorbis * stb_vorbis_open_file_section(FILE *f, int close_handle_on_close,
+extern stb_vorbis * stb_vorbis_open_file_section(FHANDLE *f, int close_handle_on_close,
                 int *error, const stb_vorbis_alloc *alloc_buffer, unsigned int len);
-// create an ogg vorbis decoder from an open FILE *, looking for a stream at
-// the _current_ seek point (ftell); the stream will be of length 'len' bytes.
+// create an ogg vorbis decoder from an open FHANDLE *, looking for a stream at
+// the _current_ seek point (FTELL); the stream will be of length 'len' bytes.
 // on failure, returns NULL and sets *error. note that stb_vorbis must "own"
 // this stream; if you seek it in between calls to stb_vorbis, it will become
 // confused.
@@ -434,7 +438,7 @@ enum STBVorbisError
 // #define STB_VORBIS_NO_PULLDATA_API
 
 // STB_VORBIS_NO_STDIO
-//     does not compile the code for the APIs that use FILE *s internally
+//     does not compile the code for the APIs that use FHANDLE *s internally
 //     or externally (implied by STB_VORBIS_NO_PULLDATA_API)
 // #define STB_VORBIS_NO_STDIO
 
@@ -798,7 +802,7 @@ struct stb_vorbis
 
   // input config
 #ifndef STB_VORBIS_NO_STDIO
-   FILE *f;
+   FHANDLE *f;
    uint32 f_start;
    int close_on_free;
 #endif
@@ -1343,7 +1347,7 @@ static uint8 get8(vorb *z)
 
    #ifndef STB_VORBIS_NO_STDIO
    {
-   int c = fgetc(z->f);
+   int c = FGET(z->f);
    if (c == EOF) { z->eof = TRUE; return 0; }
    return c;
    }
@@ -1370,7 +1374,7 @@ static int getn(vorb *z, uint8 *data, int n)
    }
 
    #ifndef STB_VORBIS_NO_STDIO
-   if (fread(data, n, 1, z->f) == 1)
+   if (FREAD(data, n, 1, z->f) == 1)
       return 1;
    else {
       z->eof = 1;
@@ -1388,8 +1392,8 @@ static void skip(vorb *z, int n)
    }
    #ifndef STB_VORBIS_NO_STDIO
    {
-      long x = ftell(z->f);
-      fseek(z->f, x+n, SEEK_SET);
+      long x = FTELL(z->f);
+      FSEEK(z->f, x+n, IO_SET);
    }
    #endif
 }
@@ -1417,10 +1421,10 @@ static int set_file_offset(stb_vorbis *f, unsigned int loc)
    } else {
       loc += f->f_start;
    }
-   if (!fseek(f->f, loc, SEEK_SET))
+   if (!FSEEK(f->f, loc, IO_SET))
       return 1;
    f->eof = 1;
-   fseek(f->f, f->f_start, SEEK_END);
+   FSEEK(f->f, f->f_start, IO_END);
    return 0;
    #endif
 }
@@ -4264,7 +4268,7 @@ static void vorbis_deinit(stb_vorbis *p)
       setup_free(p, p->bit_reverse[i]);
    }
    #ifndef STB_VORBIS_NO_STDIO
-   if (p->close_on_free) fclose(p->f);
+   if (p->close_on_free) FCLOSE(p->f);
    #endif
 }
 
@@ -4549,7 +4553,7 @@ unsigned int stb_vorbis_get_file_offset(stb_vorbis *f)
    #endif
    if (USE_MEMORY(f)) return (unsigned int) (f->stream - f->stream_start);
    #ifndef STB_VORBIS_NO_STDIO
-   return (unsigned int) (ftell(f->f) - f->f_start);
+   return (unsigned int) (FTELL(f->f) - f->f_start);
    #endif
 }
 
@@ -5049,12 +5053,12 @@ int stb_vorbis_get_frame_float(stb_vorbis *f, int *channels, float ***output)
 
 #ifndef STB_VORBIS_NO_STDIO
 
-stb_vorbis * stb_vorbis_open_file_section(FILE *file, int close_on_free, int *error, const stb_vorbis_alloc *alloc, unsigned int length)
+stb_vorbis * stb_vorbis_open_file_section(FHANDLE *file, int close_on_free, int *error, const stb_vorbis_alloc *alloc, unsigned int length)
 {
    stb_vorbis *f, p;
    vorbis_init(&p, alloc);
    p.f = file;
-   p.f_start = (uint32) ftell(file);
+   p.f_start = (uint32) FTELL(file);
    p.stream_len   = length;
    p.close_on_free = close_on_free;
    if (start_decoder(&p)) {
@@ -5070,24 +5074,24 @@ stb_vorbis * stb_vorbis_open_file_section(FILE *file, int close_on_free, int *er
    return NULL;
 }
 
-stb_vorbis * stb_vorbis_open_file(FILE *file, int close_on_free, int *error, const stb_vorbis_alloc *alloc)
+stb_vorbis * stb_vorbis_open_file(FHANDLE *file, int close_on_free, int *error, const stb_vorbis_alloc *alloc)
 {
    unsigned int len, start;
-   start = (unsigned int) ftell(file);
-   fseek(file, 0, SEEK_END);
-   len = (unsigned int) (ftell(file) - start);
-   fseek(file, start, SEEK_SET);
+   start = (unsigned int) FTELL(file);
+   FSEEK(file, 0, IO_END);
+   len = (unsigned int) (FTELL(file) - start);
+   FSEEK(file, start, IO_SET);
    return stb_vorbis_open_file_section(file, close_on_free, error, alloc, len);
 }
 
 stb_vorbis * stb_vorbis_open_filename(const char *filename, int *error, const stb_vorbis_alloc *alloc)
 {
-   FILE *f;
-#if defined(_WIN32) && defined(__STDC_WANT_SECURE_LIB__)
+   FHANDLE *f;
+#if defined(_WIN32) && defined(__STDC_WANT_SECURE_LIB__) && !defined(SDL_IO)
    if (0 != fopen_s(&f, filename, "rb"))
       f = NULL;
 #else
-   f = fopen(filename, "rb");
+   f = FOPEN(filename, "rb");
 #endif
    if (f)
       return stb_vorbis_open_file(f, TRUE, error, alloc);
@@ -5509,7 +5513,7 @@ int stb_vorbis_get_samples_float(stb_vorbis *f, int channels, float **buffer, in
     0.99991 - bugfix to stb_vorbis_get_samples_short by Bernhard Wodo
     0.9999 - (should have been 0.99990) fix no-CRT support, compiling as C++
     0.9998 - add a full-decode function with a memory source
-    0.9997 - fix a bug in the read-from-FILE case in 0.9996 addition
+    0.9997 - fix a bug in the read-from-FHANDLE case in 0.9996 addition
     0.9996 - query length of vorbis stream in samples/seconds
     0.9995 - bugfix to another optimization that only happened in certain files
     0.9994 - bugfix to one of the optimizations that caused significant (but inaudible?) errors
