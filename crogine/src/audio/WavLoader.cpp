@@ -83,8 +83,9 @@ bool WavLoader::open(const std::filesystem::path& path)
         m_sampleCount = 0;
     }
     
-    auto file = m_file.open(path, "rb");
-    if (file)
+    //auto file = m_file.open(path, "rb");
+    m_file = IOResource::open(path);
+    if (m_file)
     {
         //file opened, let's do stuff!
         auto read = SDL_ReadIO(m_file.filePtr(), &m_header, sizeof(m_header));

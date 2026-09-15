@@ -552,8 +552,8 @@ std::string Shader::parseFile(const std::filesystem::path& path)
     retVal.reserve(1000);
 
     //open file and verify
-    IOStream file;
-    file.open(path, "r");
+    IOStream file = IOResource::open(path);
+    //file.open(path, "rb");
     if (!file)
     {
         LogE << "Failed opening " << path << std::endl;

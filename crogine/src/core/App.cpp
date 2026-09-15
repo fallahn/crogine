@@ -252,6 +252,15 @@ App::App(std::uint32_t styleFlags)
 {
     CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
 
+    if (PHYSFS_init(nullptr) == 0)
+    {
+        LogE << "Failed to init PHYSFS, reason: " << PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()) << std::endl;
+    }
+    else
+    {
+        IOResource::m_initOK = true;
+    }
+
 #ifndef CRO_DEBUG_
 #ifndef __APPLE__ //mac actually gives a decent stack dump
     //register custom abort which prints the call stack
@@ -304,15 +313,6 @@ App::App(std::uint32_t styleFlags)
         if (!AudioRenderer::init())
         {
             Logger::log("Failed to initialise audio renderer", Logger::Type::Error);
-        }
-
-        if (PHYSFS_init(nullptr) == 0)
-        {
-            LogE << "Failed to init PHYSFS, reason: " << PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()) << std::endl;
-        }
-        else
-        {
-            IOResource::m_initOK = true;
         }
 
 #ifdef WIN32

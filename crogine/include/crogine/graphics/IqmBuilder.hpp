@@ -83,7 +83,7 @@ namespace cro
     private:
         std::filesystem::path m_path;
         std::size_t m_uid;
-        mutable SDL_IOStream* m_file;
+        mutable IOStream m_file;
         Mesh::Data build(AllocationResource*) const override;
         mutable Skeleton m_skeleton;
     };

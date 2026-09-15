@@ -106,8 +106,8 @@ bool Image::loadFromFile(const std::filesystem::path& p)
         path = (FileSystem::getResourcePath() / p);
     }
 
-    IOStream file;
-    file.open(path, "rb");
+    IOStream file = IOResource::open(path);
+    //file.open(path, "rb");
     if (!file)
     {
         LogE << "Image: Failed opening " << path << std::endl;

@@ -59,8 +59,8 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
 
 IqmBuilder::IqmBuilder(const std::filesystem::path& path)
     : m_path    ((FileSystem::getResourcePath() / path)),
-    m_uid       (0),
-    m_file      (nullptr)
+    m_uid       (0)/*,
+    m_file      (nullptr)*/
 {
     std::hash<std::u8string> hashAttack;
     m_uid = hashAttack(path.u8string());
@@ -70,10 +70,10 @@ IqmBuilder::IqmBuilder(const std::filesystem::path& path)
 
 IqmBuilder::~IqmBuilder()
 {
-    if (m_file)
+    /*if (m_file)
     {
         SDL_CloseIO(m_file);
-    }
+    }*/
 }
 
 //public
@@ -88,23 +88,23 @@ cro::Mesh::Data IqmBuilder::build(AllocationResource*) const
     cro::Mesh::Data returnData;
     returnData.primitiveType = GL_TRIANGLES;
 
-    m_file = SDL_IOFromFile(U8PATH_CAST(m_path), "rb");
+    m_file = IOResource::open(m_path);// SDL_IOFromFile(U8PATH_CAST(m_path), "rb");
     if (m_file)
     {
         //do some file checks
-        auto fileSize = SDL_GetIOSize(m_file);
+        auto fileSize = SDL_GetIOSize(m_file.filePtr());
         if (fileSize < static_cast<std::int32_t>(sizeof(Iqm::Header)))
         {
             LogE << m_path << ": Invalid file size" << std::endl;
-            SDL_CloseIO(m_file);
-            m_file = nullptr;
+            m_file.close();
+            //m_file = nullptr;
             return {};
         }
 
         std::vector<char> fileData(fileSize);
-        auto readCount = SDL_ReadIO(m_file, fileData.data(), fileSize);
-        SDL_CloseIO(m_file);
-        m_file = nullptr;
+        auto readCount = SDL_ReadIO(m_file.filePtr(), fileData.data(), fileSize);
+        m_file.close();
+        //m_file = nullptr;
 
         if (readCount == 0)
         {

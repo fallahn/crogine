@@ -87,8 +87,8 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
 {
     Mesh::Data meshData;
 
-    IOStream file;
-    file.open(m_path, "rb");
+    IOStream file = IOResource::open(m_path);
+    //file.open(m_path, "rb");
     if (file)    
     {
         Detail::ModelBinary::Header header;
@@ -448,8 +448,8 @@ Mesh::Data BinaryMeshBuilder::buildDefault() const
 {
     Mesh::Data meshData;
 
-    IOStream file;
-    file.open(m_path, "rb");
+    IOStream file = IOResource::open(m_path);
+    //file.open(m_path, "rb");
     if (file)
     {
         Detail::ModelBinary::Header header;

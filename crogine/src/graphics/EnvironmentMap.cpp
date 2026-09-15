@@ -154,8 +154,8 @@ bool EnvironmentMap::loadFromFile(const std::filesystem::path& p)
         return false;
     }
 
-    IOStream file;
-    file.open(path, "rb");
+    IOStream file = IOResource::open(path);
+    //file.open(path, "rb");
     if (!file)
     {
         LogE << "SDL_IOStream Failed opening " << p << std::endl;

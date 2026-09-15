@@ -692,8 +692,8 @@ std::size_t ConfigObject::write(SDL_IOStream* file, std::uint16_t depth)
 
 bool ConfigObject::loadFromFile2(const std::filesystem::path& path)
 {
-    IOStream rr;
-    rr.open(path, "rb");
+    IOStream rr = IOResource::open(path);
+    //rr.open(path, "rb");
 
     if (!rr)
     {

@@ -113,8 +113,8 @@ namespace
 
             if (fontData.count(path.u8string()) == 0)
             {
-                IOStream fontFile;
-                fontFile.open(path, "r");
+                IOStream fontFile = IOResource::open(path);
+                //fontFile.open(path, "rb");
                 if (!fontFile)
                 {
                     LogE << "Failed opening " << path << std::endl;

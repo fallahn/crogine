@@ -43,8 +43,8 @@ namespace cro::Detail
     {
         dst.clear();
 
-        IOStream file;
-        file.open(path, "rb");
+        IOStream file = IOResource::open(path);
+        //file.open(path, "rb");
 
         if (!file)
         {
@@ -96,8 +96,8 @@ namespace cro::Detail
     {
         dst.clear();
 
-        IOStream file;
-        file.open(path, "rb");
+        IOStream file = IOResource::open(path);
+        //file.open(path, "rb");
         if (!file)
         {
             LogE << "Failed opening " << path << std::endl;
@@ -148,8 +148,8 @@ namespace cro::Detail
     {
         dst.clear();
 
-        IOStream file;
-        file.open(path, "rb");
+        IOStream file = IOResource::open(path);
+        //file.open(path, "rb");
         if (!file)
         {
             LogE << "Failed opening " << path << std::endl;

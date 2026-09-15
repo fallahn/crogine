@@ -37,8 +37,8 @@ namespace cro::Detail
 {
     bool readCMF(const std::filesystem::path& path, MeshFile& output)
     {
-        IOStream file;
-        file.open(path, "rb");
+        IOStream file = IOResource::open(path);
+        //file.open(path, "rb");
 
         if (!file)
         {

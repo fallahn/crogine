@@ -219,7 +219,7 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
 
 bool Texture::loadFromFile(const std::filesystem::path& filePath, bool createMipMaps, bool useCompression)
 {
-    std::filesystem::path path = U8PATH_CAST(FileSystem::getResourcePath());
+    std::filesystem::path path = FileSystem::getResourcePath();
     //only add resource path if not done so already
     if (!filePath.is_absolute()/* &&
         filePath.find(path) == std::string::npos*/) //hmm how to do
