@@ -171,6 +171,8 @@ bool VideoPlayer::loadFromFile(const std::filesystem::path& path)
     {
         plm_destroy(m_plm);
         m_plm = nullptr;
+
+        m_file.close();
     }   
     
     
@@ -188,7 +190,15 @@ bool VideoPlayer::loadFromFile(const std::filesystem::path& path)
 
 
     //load the file
-    m_plm = plm_create_with_filename(U8PATH_CAST(fullPath));
+    m_file = IOResource::open(fullPath);
+
+    if (!m_file)
+    {
+        LogE << "Unable to open " << fullPath.filename() << std::endl;
+        return false;
+    }
+    m_plm = plm_create_with_file(m_file.filePtr(), FALSE);
+
 
     if (!m_plm)
     {
@@ -206,6 +216,8 @@ bool VideoPlayer::loadFromFile(const std::filesystem::path& path)
         LogE << cro::FileSystem::getFileName(path) << ": invalid file properties" << std::endl;
         plm_destroy(m_plm);
         m_plm = nullptr;
+
+        m_file.close();
 
         return false;
     }

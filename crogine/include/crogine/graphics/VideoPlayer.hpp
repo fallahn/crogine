@@ -172,6 +172,7 @@ namespace cro
 
     private:
 
+        IOStream m_file;
         plm_t* m_plm;
         bool m_looped;
 

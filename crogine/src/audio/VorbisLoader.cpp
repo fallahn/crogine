@@ -58,7 +58,14 @@ VorbisLoader::~VorbisLoader()
 //public
 bool VorbisLoader::open(const std::filesystem::path& path)
 {
-    //close any open files
+    //close any open files - close vorbis first
+    //as it contains a handle to the file stream!!
+    if (m_vorbisFile)
+    {
+        stb_vorbis_close(m_vorbisFile);
+        m_vorbisFile = nullptr;
+    }
+
     if (m_file)
     {
         m_file.close();
@@ -66,12 +73,6 @@ bool VorbisLoader::open(const std::filesystem::path& path)
         m_dataChunk = {};
         m_channelCount = 0;
         m_sampleCount = 0;
-    }
-
-    if (m_vorbisFile)
-    {
-        stb_vorbis_close(m_vorbisFile);
-        m_vorbisFile = nullptr;
     }
 
     m_file = IOResource::open(path);
@@ -99,10 +100,10 @@ bool VorbisLoader::open(const std::filesystem::path& path)
     auto info = stb_vorbis_get_info(m_vorbisFile);
     if (info.channels > 2)
     {
-        m_file.close();
-
         stb_vorbis_close(m_vorbisFile);
         m_vorbisFile = nullptr;
+
+        m_file.close();
 
         LogE << "Found " << std::to_string(info.channels) << " channels in " << path << ", currently only mono and stereo files are supported." << std::endl;
         LogE << path << ": not loaded." << std::endl;

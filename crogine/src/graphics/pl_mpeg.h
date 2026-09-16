@@ -165,6 +165,8 @@ See below for detailed the API documentation.
 #include <stdint.h>
 #include <stdio.h>
 
+#define SDL_IO
+#include "../detail/IO_MACRO.inl"
 
 #ifdef __cplusplus
 extern "C" {
@@ -279,9 +281,9 @@ plm_t *plm_create_with_filename(const char *filename);
 
 
 // Create a plmpeg instance with a file handle. Pass TRUE to close_when_done to
-// let plmpeg call fclose() on the handle when plm_destroy() is called.
+// let plmpeg call FCLOSE() on the handle when plm_destroy() is called.
 
-plm_t *plm_create_with_file(FILE *fh, int close_when_done);
+plm_t *plm_create_with_file(FHANDLE *fh, int close_when_done);
 
 
 // Create a plmpeg instance with a pointer to memory as source. This assumes the
@@ -475,9 +477,9 @@ plm_buffer_t *plm_buffer_create_with_filename(const char *filename);
 
 
 // Create a buffer instance with a file handle. Pass TRUE to close_when_done
-// to let plmpeg call fclose() on the handle when plm_destroy() is called.
+// to let plmpeg call FCLOSE() on the handle when plm_destroy() is called.
 
-plm_buffer_t *plm_buffer_create_with_file(FILE *fh, int close_when_done);
+plm_buffer_t *plm_buffer_create_with_file(FHANDLE *fh, int close_when_done);
 
 
 // Create a buffer instance with a pointer to memory as source. This assumes
@@ -852,7 +854,7 @@ plm_t *plm_create_with_filename(const char *filename) {
     return plm_create_with_buffer(buffer, TRUE);
 }
 
-plm_t *plm_create_with_file(FILE *fh, int close_when_done) {
+plm_t *plm_create_with_file(FHANDLE *fh, int close_when_done) {
     plm_buffer_t *buffer = plm_buffer_create_with_file(fh, close_when_done);
     return plm_create_with_buffer(buffer, TRUE);
 }
@@ -1330,7 +1332,7 @@ typedef struct plm_buffer_t {
     int has_ended;
     int free_when_done;
     int close_when_done;
-    FILE *fh;
+    FHANDLE *fh;
     plm_buffer_load_callback load_callback;
     void *load_callback_user_data;
     uint8_t *bytes;
@@ -1365,23 +1367,23 @@ int16_t plm_buffer_read_vlc(plm_buffer_t *self, const plm_vlc_t *table);
 uint16_t plm_buffer_read_vlc_uint(plm_buffer_t *self, const plm_vlc_uint_t *table);
 
 plm_buffer_t *plm_buffer_create_with_filename(const char *filename) {
-    FILE *fh = fopen(filename, "rb");
+    FHANDLE *fh = FOPEN(filename, "rb");
     if (!fh) {
         return NULL;
     }
     return plm_buffer_create_with_file(fh, TRUE);
 }
 
-plm_buffer_t *plm_buffer_create_with_file(FILE *fh, int close_when_done) {
+plm_buffer_t *plm_buffer_create_with_file(FHANDLE *fh, int close_when_done) {
     plm_buffer_t *self = plm_buffer_create_with_capacity(PLM_BUFFER_DEFAULT_SIZE);
     self->fh = fh;
     self->close_when_done = close_when_done;
     self->mode = PLM_BUFFER_MODE_FILE;
     self->discard_read_bytes = TRUE;
     
-    fseek(self->fh, 0, SEEK_END);
-    self->total_size = ftell(self->fh);
-    fseek(self->fh, 0, SEEK_SET);
+    FSEEK(self->fh, 0, SEEK_END);
+    self->total_size = FTELL(self->fh);
+    FSEEK(self->fh, 0, SEEK_SET);
 
     plm_buffer_set_load_callback(self, plm_buffer_load_file_callback, NULL);
     return self;
@@ -1420,7 +1422,7 @@ plm_buffer_t *plm_buffer_create_for_appending(size_t initial_capacity) {
 
 void plm_buffer_destroy(plm_buffer_t *self) {
     if (self->fh && self->close_when_done) {
-        fclose(self->fh);
+        FCLOSE(self->fh);
     }
     if (self->free_when_done) {
         free(self->bytes);
@@ -1488,7 +1490,7 @@ void plm_buffer_seek(plm_buffer_t *self, size_t pos) {
     self->has_ended = FALSE;
 
     if (self->mode == PLM_BUFFER_MODE_FILE) {
-        fseek(self->fh, pos, SEEK_SET);
+        FSEEK(self->fh, pos, SEEK_SET);
         self->bit_index = 0;
         self->length = 0;
     }
@@ -1508,7 +1510,7 @@ void plm_buffer_seek(plm_buffer_t *self, size_t pos) {
 
 size_t plm_buffer_tell(plm_buffer_t *self) {
     return self->mode == PLM_BUFFER_MODE_FILE
-        ? ftell(self->fh) + (self->bit_index >> 3) - self->length
+        ? FTELL(self->fh) + (self->bit_index >> 3) - self->length
         : self->bit_index >> 3;
 }
 
@@ -1533,7 +1535,7 @@ void plm_buffer_load_file_callback(plm_buffer_t *self, void *user) {
     }
 
     size_t bytes_available = self->capacity - self->length;
-    size_t bytes_read = fread(self->bytes + self->length, 1, bytes_available, self->fh);
+    size_t bytes_read = FREAD(self->bytes + self->length, 1, bytes_available, self->fh);
     self->length += bytes_read;
 
     if (bytes_read == 0) {
