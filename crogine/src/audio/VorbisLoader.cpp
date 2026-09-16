@@ -59,47 +59,47 @@ VorbisLoader::~VorbisLoader()
 bool VorbisLoader::open(const std::filesystem::path& path)
 {
     //close any open files
-    //if (m_file.file)
-    //{
-    //    SDL_CloseIO(m_file.file);
-    //    m_file.file = nullptr;
+    if (m_file)
+    {
+        m_file.close();
 
-    //    m_dataChunk = {};
-    //    m_channelCount = 0;
-    //    m_sampleCount = 0;
-    //}
+        m_dataChunk = {};
+        m_channelCount = 0;
+        m_sampleCount = 0;
+    }
+
     if (m_vorbisFile)
     {
         stb_vorbis_close(m_vorbisFile);
         m_vorbisFile = nullptr;
     }
 
-    //m_file.file = SDL_IOFromFile(path.c_str(), "rb");
-    //if (!m_file.file)
-    //{
-    //    Logger::log("Failed opening " + path, Logger::Type::Error);
-    //    return false;
-    //}
+    m_file = IOResource::open(path);
+    if (!m_file)
+    {
+        LogE << "Failed opening " << path.filename() << std::endl;
+        return false;
+    }
 
 
     //read header
-    //m_vorbisFile = stb_vorbis_open_file(m_file.file, 0, nullptr, nullptr);
-    int err = 0;
-    m_vorbisFile = stb_vorbis_open_filename(U8PATH_CAST(path), &err, nullptr);
+    std::int32_t err = 0;
+    m_vorbisFile = stb_vorbis_open_file(m_file.filePtr(), FALSE, &err, nullptr);
+    //m_vorbisFile = stb_vorbis_open_filename(U8PATH_CAST(path), &err, nullptr);
     if (!m_vorbisFile)
     {
-        /*SDL_CloseIO(m_file.file);
-        m_file.file = nullptr;*/
+        m_file.close();
 
         LogE << "Failed opening vorbis file, error " << std::to_string(err) << std::endl;
         return false;
     }
 
+    //TODO hmmm is there a reason we *can't* support more than 2 channels?
+    //how does OpenAL accept such buffers?
     auto info = stb_vorbis_get_info(m_vorbisFile);
     if (info.channels > 2)
     {
-        /*SDL_CloseIO(m_file.file);
-        m_file.file = nullptr;*/
+        m_file.close();
 
         stb_vorbis_close(m_vorbisFile);
         m_vorbisFile = nullptr;

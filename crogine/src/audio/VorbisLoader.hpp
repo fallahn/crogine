@@ -67,7 +67,7 @@ namespace cro
             std::uint64_t getSampleCount() const override { return m_sampleCount; }
 
         private:
-            //IOStream m_file;
+            IOStream m_file;
             stb_vorbis* m_vorbisFile;
             std::int32_t m_channelCount;
             std::uint64_t m_sampleCount;
