@@ -85,7 +85,7 @@ bool VorbisLoader::open(const std::filesystem::path& path)
 
     //read header
     std::int32_t err = 0;
-    m_vorbisFile = stb_vorbis_open_file(m_file.filePtr(), FALSE, &err, nullptr);
+    m_vorbisFile = stb_vorbis_open_file(m_file.filePtr(), 0, &err, nullptr);
     //m_vorbisFile = stb_vorbis_open_filename(U8PATH_CAST(path), &err, nullptr);
     if (!m_vorbisFile)
     {
