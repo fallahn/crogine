@@ -118,7 +118,9 @@ SET (OpenGL_GL_PREFERENCE "GLVND")
 
 #---------------Dependency Selection----------------
 
-if (NOT BUILD_SDL)
+#apple should always prefer brew as there's currently a bug in SDLs
+#cmake file which breaks configuration on mac
+if (NOT BUILD_SDL OR APPLE)
   find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
 else()
 

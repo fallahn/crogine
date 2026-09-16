@@ -1017,7 +1017,8 @@ int mp3dec_ex_open_cb(mp3dec_ex_t *dec, mp3dec_io_t *io, int flags)
 #ifndef MINIMP3_NO_STDIO
 
 //we want to use default stdio not linux special
-#if defined(__linux__) || defined(__FreeBSD__) && defined(LINIO)
+//#if defined(__linux__) || defined(__FreeBSD__) && defined(LINIO)
+#if defined(__FreeBSD__) && defined(LINIO)
 #include <errno.h>
 #include <sys/mman.h>
 #include <sys/types.h>
