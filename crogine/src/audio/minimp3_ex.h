@@ -111,12 +111,14 @@ int mp3dec_ex_seek(mp3dec_ex_t *dec, uint64_t position);
 size_t mp3dec_ex_read_frame(mp3dec_ex_t *dec, mp3d_sample_t **buf, mp3dec_frame_info_t *frame_info, size_t max_samples);
 size_t mp3dec_ex_read(mp3dec_ex_t *dec, mp3d_sample_t *buf, size_t samples);
 #ifndef MINIMP3_NO_STDIO
+#include <stdio.h>
 /* stdio versions of file detect, load, iterate and stream */
 int mp3dec_detect(const char *file_name);
 int mp3dec_load(mp3dec_t *dec, const char *file_name, mp3dec_file_info_t *info, MP3D_PROGRESS_CB progress_cb, void *user_data);
 int mp3dec_iterate(const char *file_name, MP3D_ITERATE_CB callback, void *user_data);
 int mp3dec_ex_open(mp3dec_ex_t *dec, const char *file_name, int flags);
-#ifdef _WIN32
+int mp3dec_ex_open_from_handle(mp3dec_ex_t *dec, FILE*, int flags); //this takes ownership of the file handle!!!
+#if defined (_WIN32) && defined (WINIO)
 int mp3dec_detect_w(const wchar_t *file_name);
 int mp3dec_load_w(mp3dec_t *dec, const wchar_t *file_name, mp3dec_file_info_t *info, MP3D_PROGRESS_CB progress_cb, void *user_data);
 int mp3dec_iterate_w(const wchar_t *file_name, MP3D_ITERATE_CB callback, void *user_data);
@@ -1008,7 +1010,8 @@ int mp3dec_ex_open_cb(mp3dec_ex_t *dec, mp3dec_io_t *io, int flags)
 
 #ifndef MINIMP3_NO_STDIO
 
-#if defined(__linux__) || defined(__FreeBSD__)
+//we want to use default stdio not linux special
+#if defined(__linux__) || defined(__FreeBSD__) && defined(LINIO)
 #include <errno.h>
 #include <sys/mman.h>
 #include <sys/types.h>
@@ -1156,7 +1159,7 @@ error:
 #endif
 }
 #endif /*MINIMP3_ENABLE_RING*/
-#elif defined(_WIN32)
+#elif defined(_WIN32) && defined(WINIO)
 #include <windows.h>
 
 static void mp3dec_close_file(mp3dec_map_info_t *map_info)
@@ -1214,7 +1217,6 @@ static int mp3dec_open_file_w(const wchar_t *file_name, mp3dec_map_info_t *map_i
     return mp3dec_open_file_h(file, map_info);
 }
 #else
-#include <stdio.h>
 
 static void mp3dec_close_file(mp3dec_map_info_t *map_info)
 {
@@ -1224,14 +1226,8 @@ static void mp3dec_close_file(mp3dec_map_info_t *map_info)
     map_info->size = 0;
 }
 
-static int mp3dec_open_file(const char *file_name, mp3dec_map_info_t *map_info)
+static int mp3dec_open_file_handle(FILE* file, mp3dec_map_info_t* map_info)
 {
-    if (!file_name)
-        return MP3D_E_PARAM;
-    memset(map_info, 0, sizeof(*map_info));
-    FILE *file = fopen(file_name, "rb");
-    if (!file)
-        return MP3D_E_IOERROR;
     int res = MP3D_E_IOERROR;
     long size = -1;
     if (fseek(file, 0, SEEK_END))
@@ -1257,6 +1253,18 @@ error:
     fclose(file);
     return res;
 }
+
+static int mp3dec_open_file(const char* file_name, mp3dec_map_info_t* map_info)
+{
+    if (!file_name)
+        return MP3D_E_PARAM;
+    memset(map_info, 0, sizeof(*map_info));
+    FILE* file = fopen(file_name, "rb");
+    if (!file)
+        return MP3D_E_IOERROR;
+    return mp3dec_open_file_handle(file, map_info);
+}
+
 #endif
 
 static int mp3dec_detect_mapinfo(mp3dec_map_info_t *map_info)
@@ -1326,6 +1334,16 @@ int mp3dec_ex_open(mp3dec_ex_t *dec, const char *file_name, int flags)
     return mp3dec_ex_open_mapinfo(dec, flags);
 }
 
+int mp3dec_ex_open_from_handle(mp3dec_ex_t* dec, FILE* file, int flags)
+{
+    int ret;
+    if (!dec)
+        return MP3D_E_PARAM;
+    if ((ret = mp3dec_open_file_handle(file, &dec->file)))
+        return ret;
+    return mp3dec_ex_open_mapinfo(dec, flags);
+}
+
 void mp3dec_ex_close(mp3dec_ex_t *dec)
 {
 #ifdef MINIMP3_HAVE_RING
@@ -1342,7 +1360,7 @@ void mp3dec_ex_close(mp3dec_ex_t *dec)
     memset(dec, 0, sizeof(*dec));
 }
 
-#ifdef _WIN32
+#if defined (_WIN32) && defined (WINIO)
 int mp3dec_detect_w(const wchar_t *file_name)
 {
     int ret;
