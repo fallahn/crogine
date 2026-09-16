@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/core/Log.hpp>
+#include <crogine/detail/IOStream.hpp>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -43,7 +44,6 @@ source distribution.
 #include <iostream>
 #include <sstream>
 
-#include <SDL3/SDL.h>
 
 //TODO check this macro works on all windows compilers
 //(only tested in VC right now)

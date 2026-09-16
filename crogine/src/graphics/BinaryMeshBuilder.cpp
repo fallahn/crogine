@@ -29,6 +29,7 @@ source distribution.
 
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/detail/AllocationResource.hpp>
+#include <crogine/detail/IOStream.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/graphics/BinaryMeshBuilder.hpp>
 #include <crogine/util/Maths.hpp>

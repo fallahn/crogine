@@ -29,7 +29,8 @@ source distribution.
 
 #pragma once
 
-#include <crogine/detail/IOStream.hpp>
+#include <crogine/Config.hpp>
+#include <SDL3/SDL.h>
 
 namespace cro
 {

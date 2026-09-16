@@ -690,6 +690,8 @@ void GolfGame::render()
 
 bool GolfGame::initialise()
 {
+    cro::IOResource::addPath("assets/arcade.zip", "assets");
+
     auto path = cro::App::getPreferencePath() / "user";
     if (!cro::FileSystem::directoryExists(path))
     {

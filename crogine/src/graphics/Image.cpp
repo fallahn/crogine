@@ -33,15 +33,14 @@ source distribution.
 #include "../detail/stb_image_write.h"
 #include "../detail/stb_image_resize2.h"
 #include "../detail/SDLImageRead.hpp"
-#include <SDL3/SDL_iostream.h>
 
+#include <crogine/core/FileSystem.hpp>
+#include <crogine/core/Log.hpp>
+#include <crogine/detail/Assert.hpp>
+#include <crogine/detail/IOStream.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/ImageArray.hpp>
 #include <crogine/graphics/Colour.hpp>
-
-#include <crogine/detail/Assert.hpp>
-#include <crogine/core/FileSystem.hpp>
-#include <crogine/core/Log.hpp>
 
 #include <array>
 #include <cstring>

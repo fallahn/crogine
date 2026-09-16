@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2025
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -41,6 +41,7 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/SysTime.hpp>
+#include <crogine/detail/IOStream.hpp>
 
 #include <ctime>
 #include <memory>

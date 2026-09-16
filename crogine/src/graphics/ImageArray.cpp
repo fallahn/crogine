@@ -31,6 +31,7 @@ source distribution.
 #include "../detail/SDLImageRead.hpp"
 
 #include <crogine/core/Log.hpp>
+#include <crogine/detail/IOStream.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/graphics/ImageArray.hpp>
 

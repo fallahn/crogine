@@ -32,7 +32,7 @@ source distribution.
 #include <crogine/audio/AudioResource.hpp>
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/core/Log.hpp>
-#include <crogine/detail/Types.hpp>
+#include <crogine/detail/IOStream.hpp>
 #include <crogine/util/Random.hpp>
 
 #include <array>

@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/audio/sound_system/SoundStream.hpp>
+#include <crogine/detail/IOStream.hpp>
 #include <crogine/detail/SDLResource.hpp>
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/graphics/RenderTexture.hpp>

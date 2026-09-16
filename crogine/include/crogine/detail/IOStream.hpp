@@ -31,16 +31,14 @@ source distribution.
 
 #include <crogine/Config.hpp>
 
-#include <SDL3/SDL_stdinc.h>
-#include <SDL3/SDL_events.h>
-#include <SDL3/SDL_iostream.h>
+#include <SDL3/SDL.h>
 
 #include <filesystem>
 
 namespace cro
 {
     //used to automatically close SDL_IOStream files
-    struct IOStream final
+    struct CRO_EXPORT_API IOStream final
     {
         ~IOStream()
         {
@@ -95,9 +93,14 @@ namespace cro
         /*!
         \brief Adds a resource path to search when calling classes with a loadFromFile() function.
         This includes adding archives such as zip files and uses PHSYFS behind the scenes.
-        \param path A utf8 encoded string containing the path to the resource directory or archive
+        \param path A utf8 encoded filesystem::path containing the path to the resource directory or archive
+        \param rootPath A utf8 encoded filesystem::path prepended to any of the mounted file paths
+        \begincode
+        IOResource::addPath("assets"); //adds a directory to search
+        IOResource::addPath("assets/images.zip", "assets"); //adds an archive to the search paths
+        \endcode
         */
-        static void addPath(const std::filesystem::path& path);
+        static void addPath(const std::filesystem::path& path, const std::filesystem::path& rootPath);
 
 
         /*!

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -30,6 +30,7 @@ source distribution.
 #include <crogine/core/Log.hpp>
 #include <crogine/graphics/Palette.hpp>
 
+#include <crogine/detail/IOStream.hpp>
 #include <crogine/detail/Types.hpp>
 
 #include <array>

@@ -31,7 +31,6 @@ source distribution.
 
 #include <crogine/core/Log.hpp>
 
-#include <SDL3/SDL_iostream.h>
 
 using namespace cro;
 using namespace cro::Detail;

@@ -32,12 +32,12 @@ source distribution.
 #include <crogine/graphics/ImageArray.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/detail/Assert.hpp>
+#include <crogine/detail/IOStream.hpp>
 
 #include "../detail/GLCheck.hpp"
 #include "../detail/stb_image.h"
 #include "../detail/stb_image_write.h"
 #include "../detail/SDLImageRead.hpp"
-#include <SDL3/SDL_iostream.h>
 
 #include <ktx.h>
 

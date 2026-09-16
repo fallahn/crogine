@@ -30,8 +30,7 @@ source distribution.
 #include "StaticMeshFile.hpp"
 
 #include <crogine/core/Log.hpp>
-
-#include <SDL3/SDL_iostream.h>
+#include <crogine/detail/IOStream.hpp>
 
 namespace cro::Detail
 {

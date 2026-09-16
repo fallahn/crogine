@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/FileSystem.hpp>
+#include <crogine/detail/IOStream.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/ImageArray.hpp>
 

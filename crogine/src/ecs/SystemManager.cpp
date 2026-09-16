@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -29,6 +29,7 @@ source distribution.
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/SysTime.hpp>
+#include <crogine/detail/IOStream.hpp>
 #include <crogine/ecs/InfoFlags.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/System.hpp>

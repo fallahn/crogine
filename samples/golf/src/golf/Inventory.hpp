@@ -31,7 +31,7 @@ source distribution.
 
 #include <Content.hpp>
 
-#include <crogine/detail/Types.hpp>
+#include <crogine/detail/IOStream.hpp>
 
 #include <array>
 #include <cstdint>

@@ -34,11 +34,12 @@ by Laurent Gomila et al https://github.com/SFML/SFML/blob/master/src/SFML/Graphi
 
 #include "../detail/DistanceField.hpp"
 
+#include <crogine/core/FileSystem.hpp>
+#include <crogine/detail/IOStream.hpp>
+#include <crogine/detail/Types.hpp>
 #include <crogine/graphics/Font.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/Colour.hpp>
-#include <crogine/detail/Types.hpp>
-#include <crogine/core/FileSystem.hpp>
 
 #include <array>
 #include <cstring>

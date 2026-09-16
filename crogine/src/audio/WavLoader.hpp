@@ -31,6 +31,8 @@ source distribution.
 
 #include "AudioFile.hpp"
 
+#include <crogine/detail/IOStream.hpp>
+
 #include <string>
 #include <array>
 #include <vector>

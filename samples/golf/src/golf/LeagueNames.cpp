@@ -33,7 +33,7 @@ source distribution.
 #include "Social.hpp"
 #include "Content.hpp"
 
-#include <crogine/detail/Types.hpp>
+#include <crogine/detail/IOStream.hpp>
 #include <crogine/core/Log.hpp>
 
 #include <filesystem>

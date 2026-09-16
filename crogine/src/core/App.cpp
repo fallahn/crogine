@@ -60,6 +60,7 @@ static void winFPE(int)
 #include <crogine/core/SysTime.hpp>
 #include <crogine/core/HiResTimer.hpp>
 #include <crogine/detail/Assert.hpp>
+#include <crogine/detail/IOStream.hpp>
 #include <crogine/detail/PoolLog.hpp>
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -259,6 +260,7 @@ App::App(std::uint32_t styleFlags)
     else
     {
         IOResource::m_initOK = true;
+        PHYSFS_permitSymbolicLinks(1);
     }
 
 #ifndef CRO_DEBUG_

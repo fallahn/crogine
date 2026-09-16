@@ -34,6 +34,7 @@ source distribution.
 #include "stb_vorbis.c"
 #include "AudioFile.hpp"
 
+#include <crogine/detail/IOStream.hpp>
 #include <vector>
 
 namespace cro

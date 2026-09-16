@@ -27,15 +27,14 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/core/Log.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/Console.hpp>
+#include <crogine/core/Log.hpp>
 #include <crogine/core/String.hpp>
 #include <crogine/core/SysTime.hpp>
+#include <crogine/detail/IOStream.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/graphics/Spatial.hpp>
-
-#include <SDL3/SDL_log.h>
 
 #include <sstream>
 

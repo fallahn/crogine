@@ -38,6 +38,7 @@ source distribution.
 #include "minimp3_ex.h"
 
 #include "Mp3Loader.hpp"
+#include <crogine/detail/IOStream.hpp>
 
 #include <algorithm>
 

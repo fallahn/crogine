@@ -39,7 +39,7 @@ using namespace cro::Detail::SDLFS;
 
 bool IOResource::m_initOK = false;
 
-void IOResource::addPath(const std::filesystem::path& path)
+void IOResource::addPath(const std::filesystem::path& path, const std::filesystem::path& rootPath)
 {
     //this will crash if PHYSFS_init() failed
     //in which case we need to test here first before adding the path
@@ -49,10 +49,7 @@ void IOResource::addPath(const std::filesystem::path& path)
         return;
     }
 
-    //TODO the third parameter to mount() causes the path to be
-    //prepended when 0 else appended to search list. We can make this a param
-    //though currently we search archives last so we can override these more easily during deleveopment
-    if (PHYSFS_mount(U8PATH_CAST(path), nullptr, 1) == 0)
+    if (PHYSFS_mount(U8PATH_CAST(path), U8PATH_CAST(rootPath), 1) == 0)
     {
         //PHYSFS_ErrorCode
         LogE << "Failed to add " << path << " to search paths, reason: " << PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()) << std::endl;
@@ -67,11 +64,12 @@ IOStream IOResource::open(const std::filesystem::path& path)
     {
         if (auto f = openRead(U8PATH_CAST(path)); f != nullptr)
         {
+            LogI << "Found " << path.filename() << " in mounted filesystem " << std::endl;
             retVal.file = f;
         }
         else
         {
-            //DLogW("{} was not found in the mounted filesystem, trying CWD instead...", path.string());
+            //LogI << path.filename() <<  " was not found in the mounted filesystem, trying CWD instead..." << std::endl;
             retVal.open(path, "rb");
         }
     }

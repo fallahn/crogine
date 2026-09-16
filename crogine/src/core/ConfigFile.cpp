@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/detail/Assert.hpp>
+#include <crogine/detail/IOStream.hpp>
 #include <crogine/util/String.hpp>
 #include <crogine/graphics/Colour.hpp>
 

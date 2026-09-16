@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -29,6 +29,7 @@ source distribution.
 
 #include "GLCheck.hpp"
 
+#include <crogine/detail/IOStream.hpp>
 #include <crogine/detail/ModelBinary.hpp>
 #include <crogine/graphics/MeshBuilder.hpp>
 #include <crogine/ecs/components/Model.hpp>

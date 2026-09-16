@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/core/Log.hpp>
 
+#include <crogine/detail/IOStream.hpp>
 #include <crogine/detail/glm/mat4x4.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 

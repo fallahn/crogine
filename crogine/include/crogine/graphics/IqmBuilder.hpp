@@ -29,10 +29,9 @@ source distribution.
 
 #pragma once
 
-#include <crogine/graphics/MeshBuilder.hpp>
+#include <crogine/detail/IOStream.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
-
-#include <SDL3/SDL_iostream.h>
+#include <crogine/graphics/MeshBuilder.hpp>
 
 #include <filesystem>
 

@@ -30,7 +30,7 @@ source distribution.
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/core/FileSystem.hpp>
 
-#include <crogine/detail/Types.hpp>
+#include <crogine/detail/IOStream.hpp>
 #include <crogine/util/String.hpp>
 
 #include "../detail/GLCheck.hpp"
