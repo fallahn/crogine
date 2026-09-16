@@ -34,6 +34,11 @@ source distribution.
 #ifdef SDL_IO
 #include <SDL3/SDL.h>
 
+#ifndef EOF
+#define UNDEF_EOF
+#define EOF -1
+#endif
+
 static size_t sdlRead(void* dst, size_t size, size_t count, SDL_IOStream* f)
 {
     //returns number of *objects* read
@@ -56,6 +61,10 @@ static int sdlGetc(SDL_IOStream* f)
     uint8_t c = 0;
     return SDL_ReadIO(f, &c, 1) == 0 ? EOF : c;
 }
+
+#ifdef UNDEF_EOF
+#undef EOF
+#endif
 
 #define FOPEN(x, y) SDL_IOFromFile(x, y)
 #define FCLOSE(x) SDL_CloseIO(x)

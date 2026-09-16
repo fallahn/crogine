@@ -80,11 +80,9 @@ bool Mp3Loader::open(const std::filesystem::path& path)
     //read header
     m_decoder = std::make_unique<mp3dec_ex_t>();
     
-    //note that this takes ownership of the file handle!!
-    auto f = fopen(U8PATH_CAST(path), "rb");
-    mp3dec_ex_open_from_handle(m_decoder.get(), f, MP3D_SEEK_TO_SAMPLE);
-    //mp3dec_ex_open(m_decoder.get(), U8PATH_CAST(path), MP3D_SEEK_TO_SAMPLE);
-    
+    auto f = IOResource::open(path);
+    mp3dec_ex_open_from_handle(m_decoder.get(), f.filePtr(), MP3D_SEEK_TO_SAMPLE);
+
     if (!m_decoder->samples)
     {
         Logger::log("Failed opening mp3 file, error "/* + std::to_string(err)*/, Logger::Type::Error);

@@ -8,6 +8,8 @@
 */
 #include <stddef.h>
 #include "minimp3.h"
+#define SDL_IO
+#include "../detail/IO_MACRO.inl"
 
 /* flags for mp3dec_ex_open_* functions */
 #define MP3D_SEEK_TO_BYTE   0      /* mp3dec_ex_seek seeks to byte in stream */
@@ -116,8 +118,12 @@ size_t mp3dec_ex_read(mp3dec_ex_t *dec, mp3d_sample_t *buf, size_t samples);
 int mp3dec_detect(const char *file_name);
 int mp3dec_load(mp3dec_t *dec, const char *file_name, mp3dec_file_info_t *info, MP3D_PROGRESS_CB progress_cb, void *user_data);
 int mp3dec_iterate(const char *file_name, MP3D_ITERATE_CB callback, void *user_data);
+//note that the entire file is opened, copied to memory then closed again
+//so be aware when loading very large MP3s!!
 int mp3dec_ex_open(mp3dec_ex_t *dec, const char *file_name, int flags);
-int mp3dec_ex_open_from_handle(mp3dec_ex_t *dec, FILE*, int flags); //this takes ownership of the file handle!!!
+//this copies the entire mp3 file to memory - so you can close the
+//file handle immediately after calling this function
+int mp3dec_ex_open_from_handle(mp3dec_ex_t *dec, FHANDLE*, int flags);
 #if defined (_WIN32) && defined (WINIO)
 int mp3dec_detect_w(const wchar_t *file_name);
 int mp3dec_load_w(mp3dec_t *dec, const wchar_t *file_name, mp3dec_file_info_t *info, MP3D_PROGRESS_CB progress_cb, void *user_data);
@@ -1226,17 +1232,17 @@ static void mp3dec_close_file(mp3dec_map_info_t *map_info)
     map_info->size = 0;
 }
 
-static int mp3dec_open_file_handle(FILE* file, mp3dec_map_info_t* map_info)
+static int mp3dec_open_file_handle(FHANDLE* file, mp3dec_map_info_t* map_info, int closeHandle)
 {
     int res = MP3D_E_IOERROR;
     long size = -1;
-    if (fseek(file, 0, SEEK_END))
+    if (FSEEK(file, 0, SEEK_END))
         goto error;
-    size = ftell(file);
+    size = FTELL(file);
     if (size < 0)
         goto error;
     map_info->size = (size_t)size;
-    if (fseek(file, 0, SEEK_SET))
+    if (FSEEK(file, 0, SEEK_SET))
         goto error;
     map_info->buffer = (uint8_t *)malloc(map_info->size);
     if (!map_info->buffer)
@@ -1244,13 +1250,13 @@ static int mp3dec_open_file_handle(FILE* file, mp3dec_map_info_t* map_info)
         res = MP3D_E_MEMORY;
         goto error;
     }
-    if (fread((void *)map_info->buffer, 1, map_info->size, file) != map_info->size)
+    if (FREAD((void *)map_info->buffer, 1, map_info->size, file) != map_info->size)
         goto error;
-    fclose(file);
+    if (closeHandle) FCLOSE(file);
     return 0;
 error:
     mp3dec_close_file(map_info);
-    fclose(file);
+    if (closeHandle) FCLOSE(file);
     return res;
 }
 
@@ -1259,10 +1265,10 @@ static int mp3dec_open_file(const char* file_name, mp3dec_map_info_t* map_info)
     if (!file_name)
         return MP3D_E_PARAM;
     memset(map_info, 0, sizeof(*map_info));
-    FILE* file = fopen(file_name, "rb");
+    FHANDLE* file = FOPEN(file_name, "rb");
     if (!file)
         return MP3D_E_IOERROR;
-    return mp3dec_open_file_handle(file, map_info);
+    return mp3dec_open_file_handle(file, map_info, 1);
 }
 
 #endif
@@ -1334,12 +1340,12 @@ int mp3dec_ex_open(mp3dec_ex_t *dec, const char *file_name, int flags)
     return mp3dec_ex_open_mapinfo(dec, flags);
 }
 
-int mp3dec_ex_open_from_handle(mp3dec_ex_t* dec, FILE* file, int flags)
+int mp3dec_ex_open_from_handle(mp3dec_ex_t* dec, FHANDLE* file, int flags)
 {
     int ret;
     if (!dec)
         return MP3D_E_PARAM;
-    if ((ret = mp3dec_open_file_handle(file, &dec->file)))
+    if ((ret = mp3dec_open_file_handle(file, &dec->file, 0)))
         return ret;
     return mp3dec_ex_open_mapinfo(dec, flags);
 }
