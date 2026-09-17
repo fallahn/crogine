@@ -253,13 +253,13 @@ App::App(std::uint32_t styleFlags)
 {
     CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
 
+    //TODO this expects argv[0] - is this a problem?
     if (PHYSFS_init(nullptr) == 0)
     {
         LogE << "Failed to init PHYSFS, reason: " << PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()) << std::endl;
     }
     else
     {
-        IOResource::m_initOK = true;
         PHYSFS_permitSymbolicLinks(1);
     }
 

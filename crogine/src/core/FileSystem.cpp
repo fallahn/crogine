@@ -227,22 +227,25 @@ bool FileSystem::directoryExists(const std::filesystem::path& path)
 
 std::vector<std::filesystem::path> FileSystem::listDirectories(const std::filesystem::path& path)
 {
-    std::vector<std::filesystem::path> retVal;
+    std::vector<std::filesystem::path> retVal = IOResource::listDirectories(path);
 
-    std::error_code ec;
-    std::filesystem::directory_iterator it(path, ec);
-
-    if (ec)
+    if (retVal.empty())
     {
-        LogW << "List directories: " << path << " " <<ec.message() << std::endl;
-        return retVal;
-    }
+        std::error_code ec;
+        std::filesystem::directory_iterator it(path, ec);
 
-    for (const auto& dir : it)
-    {
-        if (dir.is_directory())
+        if (ec)
         {
-            retVal.push_back(dir.path().filename());
+            LogW << "List directories: " << path << " " << ec.message() << std::endl;
+            return retVal;
+        }
+
+        for (const auto& dir : it)
+        {
+            if (dir.is_directory())
+            {
+                retVal.push_back(dir.path().filename());
+            }
         }
     }
     return retVal;

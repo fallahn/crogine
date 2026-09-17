@@ -113,6 +113,8 @@ namespace cro
         /*!
         \brief Returns a vector of std::filesystem::path containing the names
         of directories found in the given path.
+        This function first searchs any mounted file system then, if no
+        results are found, searches the physical file system.
         Note that when calling this from an app running in a macOS bundle
         that the path should be prefixed with a call to getResourcePath()
         */

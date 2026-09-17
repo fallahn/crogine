@@ -37,13 +37,46 @@ source distribution.
 using namespace cro;
 using namespace cro::Detail::SDLFS;
 
-bool IOResource::m_initOK = false;
+namespace
+{
+    std::vector<std::filesystem::path> listEntries(const std::filesystem::path& path, PHYSFS_FileType type)
+    {
+        if (!PHYSFS_isInit())
+        {
+            LogE << "[physfs] listEntries: Physfs is not initialised" << std::endl;
+            return {};
+        }
+
+        std::vector<std::filesystem::path> ret;
+
+        char** rc = PHYSFS_enumerateFiles(U8PATH_CAST(path));
+        if (rc)
+        {
+            char** i;
+            for (i = rc; *i != NULL; i++)
+            {
+                auto fullPath = path / *i;
+
+                PHYSFS_Stat st = {};
+                PHYSFS_stat(U8PATH_CAST(fullPath), &st);
+
+                if (st.filetype == type)
+                {
+                    ret.emplace_back(*i);
+                }
+            }
+            PHYSFS_freeList(rc);
+        }
+
+        return ret;
+    }
+}
 
 void IOResource::addPath(const std::filesystem::path& path, const std::filesystem::path& rootPath)
 {
     //this will crash if PHYSFS_init() failed
     //in which case we need to test here first before adding the path
-    if (!m_initOK)
+    if (!PHYSFS_isInit())
     {
         LogE << "PHYSFS was not successfully initialised - PHYSFS functions are unavailable." << std::endl;
         return;
@@ -61,7 +94,7 @@ IOStream IOResource::open(const std::filesystem::path& path)
 {
     IOStream retVal;
 
-    if (m_initOK)
+    if (PHYSFS_isInit())
     {
         if (auto f = openRead(U8PATH_CAST(path)); f != nullptr)
         {
@@ -83,7 +116,7 @@ IOStream IOResource::open(const std::filesystem::path& path)
 
 bool IOResource::exists(const std::filesystem::path& path)
 {
-    if (!m_initOK ||
+    if (!PHYSFS_isInit() ||
         !PHYSFS_exists(U8PATH_CAST(path)))
     {
         return false;
@@ -93,27 +126,12 @@ bool IOResource::exists(const std::filesystem::path& path)
 
 std::vector<std::filesystem::path> IOResource::listFiles(const std::filesystem::path& path)
 {
-    if (!m_initOK)
-    {
-        LogE << "[physfs] listFiles: Physfs is not initialised" << std::endl;
-        return {};
-    }
+    return listEntries(path, PHYSFS_FILETYPE_REGULAR);
+}
 
-    std::vector<std::filesystem::path> ret;
-
-    char** rc = PHYSFS_enumerateFiles(U8PATH_CAST(path));
-    if (rc)
-    {
-        char** i;
-        for (i = rc; *i != NULL; i++)
-        {
-            //printf(" * We've got [%s].\n", *i);
-            ret.emplace_back(*i);
-        }
-        PHYSFS_freeList(rc);
-    }
-
-    return ret;
+std::vector<std::filesystem::path> IOResource::listDirectories(const std::filesystem::path& path)
+{
+    return listEntries(path, PHYSFS_FILETYPE_DIRECTORY);
 }
 
 
