@@ -690,9 +690,36 @@ void GolfGame::render()
 
 bool GolfGame::initialise()
 {
-    cro::IOResource::addPath("assets/arcade.zip", "assets");
-    cro::IOResource::addPath("assets/fonts.zip", "assets");
-    cro::IOResource::addPath("assets/resource.zip", "assets");
+    cro::ConfigFile mntCfg;
+    if (mntCfg.loadFromFile("assets/mount.cfg"))
+    {
+        for (const auto& obj : mntCfg.getObjects())
+        {
+            if (obj.getName() == "resource")
+            {
+                std::filesystem::path file;
+                std::filesystem::path path;
+
+                for (const auto& prop : obj.getProperties())
+                {
+                    const auto& name = prop.getName();
+                    if (name == "file")
+                    {
+                        file = prop.getValue<std::u8string>();
+                    }
+                    else if (name == "mount_point")
+                    {
+                        path = prop.getValue<std::u8string>();
+                    }
+                }
+
+                if (!file.empty())
+                {
+                    cro::IOResource::addPath(path / file, path);
+                }
+            }
+        }
+    }
 
     auto path = cro::App::getPreferencePath() / "user";
     if (!cro::FileSystem::directoryExists(path))

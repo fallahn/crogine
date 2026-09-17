@@ -124,22 +124,25 @@ using namespace cro;
 
 std::vector<std::filesystem::path> FileSystem::listFiles(const std::filesystem::path& path)
 {
-    std::vector<std::filesystem::path> results;
+    std::vector<std::filesystem::path> results = IOResource::listFiles(path);
 
-    std::error_code ec;
-    std::filesystem::directory_iterator it(path, ec);
-    
-    if (ec)
+    if (results.empty())
     {
-        LogW << "List files: " << path << " " << ec.message() << std::endl;
-        return results;
-    }
+        std::error_code ec;
+        std::filesystem::directory_iterator it(path, ec);
 
-    for (const auto& dir : it)
-    {
-        if (dir.is_regular_file())
+        if (ec)
         {
-            results.push_back(dir.path().filename());
+            LogW << "List files: " << path << " " << ec.message() << std::endl;
+            return results;
+        }
+
+        for (const auto& dir : it)
+        {
+            if (dir.is_regular_file())
+            {
+                results.push_back(dir.path().filename());
+            }
         }
     }
     return results;

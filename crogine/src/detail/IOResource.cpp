@@ -54,6 +54,7 @@ void IOResource::addPath(const std::filesystem::path& path, const std::filesyste
         //PHYSFS_ErrorCode
         LogE << "Failed to add " << path << " to search paths, reason: " << PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()) << std::endl;
     }
+    //LogI << "added " << path.generic_string() << " at " << rootPath.generic_string() << std::endl;
 }
 
 IOStream IOResource::open(const std::filesystem::path& path)
@@ -64,7 +65,7 @@ IOStream IOResource::open(const std::filesystem::path& path)
     {
         if (auto f = openRead(U8PATH_CAST(path)); f != nullptr)
         {
-            LogI << "Found " << path.filename() << " in mounted filesystem " << std::endl;
+            //LogI << "Found " << path.filename() << " in mounted filesystem " << std::endl;
             retVal.file = f;
         }
         else
@@ -88,6 +89,31 @@ bool IOResource::exists(const std::filesystem::path& path)
         return false;
     }
     return true;
+}
+
+std::vector<std::filesystem::path> IOResource::listFiles(const std::filesystem::path& path)
+{
+    if (!m_initOK)
+    {
+        LogE << "[physfs] listFiles: Physfs is not initialised" << std::endl;
+        return {};
+    }
+
+    std::vector<std::filesystem::path> ret;
+
+    char** rc = PHYSFS_enumerateFiles(U8PATH_CAST(path));
+    if (rc)
+    {
+        char** i;
+        for (i = rc; *i != NULL; i++)
+        {
+            //printf(" * We've got [%s].\n", *i);
+            ret.emplace_back(*i);
+        }
+        PHYSFS_freeList(rc);
+    }
+
+    return ret;
 }
 
 

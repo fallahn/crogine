@@ -122,6 +122,13 @@ namespace cro
         */
         static bool exists(const std::filesystem::path& path);
 
+        /*!
+        \brief Lists all the files in the given mounted directory, if it exists.
+        \returns A vector of file names found in the directory, which will be
+        empty if no files exist or the directory doesn't exist
+        */
+        static std::vector<std::filesystem::path> listFiles(const std::filesystem::path& path);
+
     private:
 
         friend class App;

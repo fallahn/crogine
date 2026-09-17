@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -90,7 +90,7 @@ namespace cro
         \param x The x position of the cursor 'hotspot'
         \param y The y position of the cursor 'hotspot'
         */
-        Cursor(const std::string& path, std::int32_t x, std::int32_t y);
+        Cursor(const std::filesystem::path& path, std::int32_t x, std::int32_t y);
 
         ~Cursor();
 

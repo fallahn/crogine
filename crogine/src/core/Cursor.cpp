@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -51,7 +51,7 @@ Cursor::Cursor(SystemCursor type)
     }
 }
 
-Cursor::Cursor(const std::string& path, std::int32_t x, std::int32_t y)
+Cursor::Cursor(const std::filesystem::path& path, std::int32_t x, std::int32_t y)
     : m_surface (nullptr),
     m_cursor    (nullptr),
     m_inUse     (false)

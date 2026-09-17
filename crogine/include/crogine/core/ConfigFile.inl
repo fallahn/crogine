@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -35,6 +35,12 @@ inline std::string ConfigProperty::getValue<std::string>() const
 #else
     return m_utf8Values.empty() ? std::string("null") : std::string(m_utf8Values[0].begin(), m_utf8Values[0].end());
 #endif
+}
+
+template<>
+inline std::u8string ConfigProperty::getValue<std::u8string>() const
+{
+    return m_utf8Values.empty() ? std::u8string(u8"null") : m_utf8Values[0];
 }
 
 template<>

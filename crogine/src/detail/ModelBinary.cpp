@@ -364,8 +364,8 @@ cro::Mesh::Data cro::Detail::ModelBinary::read(const std::filesystem::path& binP
 
     cro::Mesh::Data meshData;
 
-    cro::IOStream file;
-    file.open(binPath, "rb");
+    cro::IOStream file = cro::IOResource::open(binPath);
+    //file.open(binPath, "rb");
     if (file)
     {
         cro::Detail::ModelBinary::Header header;

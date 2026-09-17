@@ -58,7 +58,9 @@ namespace cro
     public:
        
         /*!
-        \brief Lists all the files in the given directory
+        \brief Lists all the files in the given directory.
+        First searches mounted directories for the given path then,
+        if it is not found, searches the local filesystem
         */
         static std::vector<std::filesystem::path> listFiles(const std::filesystem::path& path);
         
