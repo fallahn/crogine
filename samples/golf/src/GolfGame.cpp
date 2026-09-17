@@ -131,6 +131,8 @@ source distribution.
 #include <crogine/util/Random.hpp>
 #include <crogine/util/String.hpp>
 
+#include <SDL3/SDL.h>
+
 #include <filesystem>
 
 using namespace cl;
@@ -214,7 +216,7 @@ cro::RenderTarget* GolfGame::m_renderTarget = nullptr;
 
 GolfGame::GolfGame(const std::vector<std::string>& args)
     : m_stateStack  ({*this, getWindow()}),
-    m_cursor        ("assets/images/cursor.png", 1, 1),
+    m_cursor        ("assets/cursor.png", 1, 1),
     m_activeIndex   (0)
 {
 #ifdef _WIN32
@@ -2607,71 +2609,84 @@ void GolfGame::createHowTo()
     pugi::xml_document doc;
     for (const auto& path : filePaths)
     {
-        if (const auto res = doc.load_file((rootPath / path).c_str(), 116, pugi::encoding_utf8); !res)
+        auto stream = cro::IOResource::open(rootPath / path);
+        if (stream)
         {
-            LogE << "Could not open guide doc " << path << std::endl;
-            LogE << res.description() << std::endl;
-        }
+            std::vector<pugi::char_t> buffer(SDL_SeekIO(stream.filePtr(), 0, SDL_IO_SEEK_END));
+            SDL_SeekIO(stream.filePtr(), 0, SDL_IO_SEEK_SET);
+            SDL_ReadIO(stream.filePtr(), buffer.data(), buffer.size());
 
-        auto& chapter = m_guideChapters.emplace_back();
-        for (const auto& c : doc.child("root").children())
-        {
-            //oh the fun of utf8 preservation in C++...
-            if (std::strcmp(c.name(), "text") == 0
-                || std::strcmp(c.name(),  "title") == 0
-                || std::strcmp(c.name(), "h") == 0)
+            //if (const auto res = doc.load_file((rootPath / path).c_str(), 116, pugi::encoding_utf8); !res)
+            if (const auto res = doc.load_string(buffer.data()/*, 116, pugi::encoding_utf8*/); !res)
             {
-                std::basic_string<std::uint8_t> s(reinterpret_cast<const std::uint8_t*>(c.text().as_string()));
-                
-                if (!s.empty())
+                LogE << "Could not open guide doc " << path << std::endl;
+                LogE << res.description() << std::endl;
+            }
+
+            auto& chapter = m_guideChapters.emplace_back();
+            for (const auto& c : doc.child("root").children())
+            {
+                //oh the fun of utf8 preservation in C++...
+                if (std::strcmp(c.name(), "text") == 0
+                    || std::strcmp(c.name(), "title") == 0
+                    || std::strcmp(c.name(), "h") == 0)
+                {
+                    std::basic_string<std::uint8_t> s(reinterpret_cast<const std::uint8_t*>(c.text().as_string()));
+
+                    if (!s.empty())
+                    {
+                        auto& item = chapter.items.emplace_back();
+                        item.type = std::strcmp(c.name(), "title") == 0 ? pg::Item::Title
+                            : std::strcmp(c.name(), "h") == 0 ? pg::Item::Header : pg::Item::Text;
+                        item.string.swap(s);
+
+                        if (item.type == pg::Item::Title)
+                        {
+                            chapter.title = item.string;
+                            helpNav.chapterCount++;
+                        }
+                    }
+                }
+                else if (std::strcmp(c.name(), "image") == 0)
+                {
+                    const std::string imgName = c.text().as_string();
+                    auto& img = m_guideTextures->get(imagePath / imgName);
+                    img.setSmooth(false); //hm this probably makes no odds to textures drawn with ImGui
+                    auto& item = chapter.items.emplace_back();
+                    item.type = pg::Item::Image;
+                    item.image = &img;
+                    item.frameSize = img.getSize();
+
+                    //if we have this attribute assume the image is animated
+                    if (c.attribute("w") && c.attribute("h"))
+                    {
+                        auto frameCount = item.frameSize;
+
+                        item.frameSize.x = c.attribute("w").as_float();
+                        item.frameSize.y = c.attribute("h").as_float();
+
+                        frameCount /= item.frameSize;
+
+                        item.animation.frameCount = frameCount;
+                        item.animation.frameSizeNorm = item.frameSize / glm::vec2(img.getSize());
+                        item.animation.active = true;
+
+                        if (c.attribute("fps"))
+                        {
+                            item.animation.FPS = 1.f / c.attribute("fps").as_float(1.f);
+                        }
+                    }
+                }
+                else if (std::strcmp(c.name(), "hr") == 0)
                 {
                     auto& item = chapter.items.emplace_back();
-                    item.type = std::strcmp(c.name(), "title") == 0 ? pg::Item::Title 
-                        : std::strcmp(c.name(), "h") == 0 ? pg::Item::Header : pg::Item::Text;
-                    item.string.swap(s);
-
-                    if (item.type == pg::Item::Title)
-                    {
-                        chapter.title = item.string;
-                        helpNav.chapterCount++;
-                    }
+                    item.type = pg::Item::Separator;
                 }
             }
-            else if (std::strcmp(c.name(), "image") == 0)
-            {
-                const std::string imgName = c.text().as_string();
-                auto& img = m_guideTextures->get(imagePath / imgName);
-                img.setSmooth(false);
-                auto& item = chapter.items.emplace_back();
-                item.type = pg::Item::Image;
-                item.image = &img;
-                item.frameSize = img.getSize();
-
-                //if we have this attribute assume the image is animated
-                if (c.attribute("w") && c.attribute("h"))
-                {
-                    auto frameCount = item.frameSize;
-
-                    item.frameSize.x = c.attribute("w").as_float();
-                    item.frameSize.y = c.attribute("h").as_float();
-
-                    frameCount /= item.frameSize;
-
-                    item.animation.frameCount = frameCount;
-                    item.animation.frameSizeNorm = item.frameSize / glm::vec2(img.getSize());
-                    item.animation.active = true;
-
-                    if (c.attribute("fps"))
-                    {
-                        item.animation.FPS = 1.f / c.attribute("fps").as_float(1.f);
-                    }
-                }
-            }
-            else if (std::strcmp(c.name(), "hr") == 0)
-            {
-                auto& item = chapter.items.emplace_back();
-                item.type = pg::Item::Separator;
-            }
+        }
+        else
+        {
+            //hmm IOResource should log a warning anyway
         }
     }
 

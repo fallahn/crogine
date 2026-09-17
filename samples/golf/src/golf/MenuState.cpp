@@ -5084,6 +5084,8 @@ void MenuState::applyCareerConnection()
 
 void MenuState::applyQuickPlayConnection()
 {
+    Achievements::awardAchievement(AchievementStrings[AchievementID::DiveIn]);
+
     //club set should have been set by the player
     m_sharedData.reverseCourse = cro::Util::Random::value(0, 1);
     m_sharedData.scoreType = ScoreType::Stroke;
