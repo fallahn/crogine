@@ -262,6 +262,19 @@ if(NOT TARGET crogine)
     ${OPUS_LIBRARIES}
     ${OPENGL_LIBRARIES})
 
+  if(APPLE)
+  #for physfs
+    target_link_libraries(${PROJECT_NAME} 
+        "-framework QuartzCore" 
+        "-framework Metal" 
+        "-framework Foundation" 
+        "-framework IOSurface" 
+        "-framework CoreGraphics" 
+        "-framework IOKit" 
+        "-framework AppKit"
+        )
+  endif()
+
   #if (APPLE OR BUILD_KTX)
     target_link_libraries(${PROJECT_NAME} ktx)
   #else()
