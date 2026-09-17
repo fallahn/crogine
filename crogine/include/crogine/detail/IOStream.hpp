@@ -34,6 +34,7 @@ source distribution.
 #include <SDL3/SDL.h>
 
 #include <filesystem>
+#include <vector>
 
 namespace cro
 {
