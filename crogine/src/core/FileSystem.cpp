@@ -221,8 +221,12 @@ bool FileSystem::createDirectory(const std::filesystem::path& path)
 
 bool FileSystem::directoryExists(const std::filesystem::path& path)
 {
-    std::filesystem::directory_entry d = std::filesystem::directory_entry(path);
-    return d.exists();
+    if (!IOResource::exists(path))
+    {
+        std::filesystem::directory_entry d = std::filesystem::directory_entry(path);
+        return d.exists();
+    }
+    return true;
 }
 
 std::vector<std::filesystem::path> FileSystem::listDirectories(const std::filesystem::path& path)

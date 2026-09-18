@@ -201,7 +201,7 @@ void MenuState::parseCourseDirectory(const std::filesystem::path& rootDir, bool 
         }
     }
 
-    if (!cro::FileSystem::directoryExists(root))
+    if (isUser && !cro::FileSystem::directoryExists(root))
     {
         cro::FileSystem::createDirectory(root);
     }

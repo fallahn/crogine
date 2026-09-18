@@ -142,7 +142,7 @@ namespace
         }
     }
 
-    std::pair<std::string, bool> getMapPath(const std::string& mapDir)
+    std::pair<std::filesystem::path, bool> getMapPath(const std::string& mapDir)
     {
         const auto installPaths = Content::getInstallPaths();
 
@@ -179,7 +179,7 @@ namespace
         }
 
 
-        return std::make_pair(U8PATH_CAST(mapPath), isUser);
+        return std::make_pair(mapPath, isUser);
     }
 }
 
@@ -346,6 +346,7 @@ void GolfState::loadMap()
     if (!courseFile.loadFromFile(mapPath, !isUser))
     {
         error = true;
+        LogI << "Could not load course file" << std::endl;
     }
 
     if (auto* title = courseFile.findProperty("title"); title)

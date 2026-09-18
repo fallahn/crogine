@@ -103,6 +103,8 @@ namespace cro
         
         /*!
         \brief Attempts to determine if a directory at the given path exists.
+        First searches any mounted directories, then the local file system
+        if no results are found.
         Note that when calling this from an app running in a macOS bundle
         that the path should be prefixed with a call to getResourcePath()
         \returns true if the directory exists, else false. Attempts to log any

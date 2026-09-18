@@ -30,6 +30,7 @@ source distribution.
 #include <Content.hpp>
 
 #include <crogine/core/App.hpp>
+#include <crogine/detail/IOStream.hpp>
 
 #include <cassert>
 
@@ -37,10 +38,26 @@ namespace
 {
     const std::array SearchPaths =
     {
-        std::filesystem::path("dlc/adventurer/"),
-        std::filesystem::path("dlc/island/"),
-        std::filesystem::path("dlc/craewall/"),
+        std::filesystem::path("dlc/adventurer"),
+        std::filesystem::path("dlc/island"),
+        std::filesystem::path("dlc/craewall"),
     };
+}
+
+void Content::mountDLC()
+{
+    for (const auto& p : SearchPaths)
+    {
+        auto path = p;
+        path.replace_extension(".dat");
+        if (cro::FileSystem::fileExists(path))
+        {
+            if (cro::IOResource::addPath(path, "dlc"))
+            {
+                LogI << "Mounted DLC " << cro::FileSystem::getRelativePath(p, "dlc") << std::endl;
+            }
+        }
+    }
 }
 
 std::vector<std::filesystem::path> Content::getInstallPaths()

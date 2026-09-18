@@ -722,6 +722,7 @@ bool GolfGame::initialise()
             }
         }
     }
+    Content::mountDLC();
 
     auto path = cro::App::getPreferencePath() / "user";
     if (!cro::FileSystem::directoryExists(path))

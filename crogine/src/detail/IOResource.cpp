@@ -72,22 +72,24 @@ namespace
     }
 }
 
-void IOResource::addPath(const std::filesystem::path& path, const std::filesystem::path& rootPath)
+bool IOResource::addPath(const std::filesystem::path& path, const std::filesystem::path& rootPath)
 {
     //this will crash if PHYSFS_init() failed
     //in which case we need to test here first before adding the path
     if (!PHYSFS_isInit())
     {
         LogE << "PHYSFS was not successfully initialised - PHYSFS functions are unavailable." << std::endl;
-        return;
+        return false;
     }
 
     if (PHYSFS_mount(U8PATH_CAST(path), U8PATH_CAST(rootPath), 1) == 0)
     {
         //PHYSFS_ErrorCode
         LogE << "Failed to add " << path << " to search paths, reason: " << PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()) << std::endl;
+        return false;
     }
     //LogI << "added " << path.generic_string() << " at " << rootPath.generic_string() << std::endl;
+    return true;
 }
 
 IOStream IOResource::open(const std::filesystem::path& path)

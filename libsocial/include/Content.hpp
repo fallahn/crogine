@@ -37,6 +37,7 @@ source distribution.
 class Content final
 {
 public:
+    static void mountDLC();
     static std::vector<std::filesystem::path> getInstallPaths();
 
     struct UserContent final

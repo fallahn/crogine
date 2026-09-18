@@ -101,7 +101,7 @@ namespace cro
         IOResource::addPath("assets/images.zip", "assets"); //adds an archive to the search paths
         \endcode
         */
-        static void addPath(const std::filesystem::path& path, const std::filesystem::path& rootPath);
+        static bool addPath(const std::filesystem::path& path, const std::filesystem::path& rootPath);
 
 
         /*!
@@ -116,6 +116,8 @@ namespace cro
 
         /*!
         \brief Checks if a given file exists in the mounted file system.
+        As physfs follows the 'everything is a file' idiom, this function
+        can also be used to check if a directory exists.
         NOTE this does not check the regular filesystem, in which case
         std::filesystem::path::exists() should be used. As a convenience
         cro::FileSystem::fileExists() searches both the mounted file system
@@ -126,7 +128,7 @@ namespace cro
         /*!
         \brief Lists all the files in the given mounted directory, if it exists.
         \returns A vector of file names found in the directory, which will be
-        empty if no files exist or the directory doesn't exist
+        empty if no files exist or the search directory doesn't exist
         */
         static std::vector<std::filesystem::path> listFiles(const std::filesystem::path& path);
 
