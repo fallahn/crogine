@@ -1157,7 +1157,11 @@ void ImGui::ImageWithBg(ImTextureRef tex_ref, const ImVec2& image_size, const Im
     if (rounding > 0.0f)
         window->DrawList->AddImageRounded(tex_ref, bb.Min + padding, bb.Max - padding, uv0, uv1, GetColorU32(tint_col), rounding);
     else
+    {
+        window->DrawList->AddCallback(GetPlatformIO().DrawCallback_SetSamplerNearest);
         window->DrawList->AddImage(tex_ref, bb.Min + padding, bb.Max - padding, uv0, uv1, GetColorU32(tint_col));
+        window->DrawList->AddCallback(GetPlatformIO().DrawCallback_SetSamplerLinear);
+    }
     if (g.Style.ImageBorderSize > 0.0f)
         window->DrawList->AddRect(bb.Min, bb.Max, GetColorU32(ImGuiCol_Border), rounding, g.Style.ImageBorderSize);
 }

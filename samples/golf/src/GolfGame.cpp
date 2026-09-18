@@ -2615,6 +2615,7 @@ void GolfGame::createHowTo()
             std::vector<pugi::char_t> buffer(SDL_SeekIO(stream.filePtr(), 0, SDL_IO_SEEK_END));
             SDL_SeekIO(stream.filePtr(), 0, SDL_IO_SEEK_SET);
             SDL_ReadIO(stream.filePtr(), buffer.data(), buffer.size());
+            buffer.push_back(0);
 
             //if (const auto res = doc.load_file((rootPath / path).c_str(), 116, pugi::encoding_utf8); !res)
             if (const auto res = doc.load_string(buffer.data()/*, 116, pugi::encoding_utf8*/); !res)
@@ -2713,8 +2714,8 @@ void GolfGame::createHowTo()
                 //chapter navigation
                 ImGui::BeginChild("##nav", { NavWidthScaled, 0.f }, true);
                 helpNav.scrollIndex = 0;
-                static constexpr std::array Offsets = { 0.f, 0.f, 0.4f };
-                ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, {0.5f, Offsets[viewSize]});
+                //static constexpr std::array Offsets = { 0.f, 0.f, 0.4f };
+                //ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, {0.5f, Offsets[viewSize]});
                 for (const auto& chapter : m_guideChapters)
                 {
                     if (helpNav.scrollIndex == helpNav.selectedScroll)
@@ -2736,7 +2737,7 @@ void GolfGame::createHowTo()
 
                     helpNav.scrollIndex++;
                 }
-                ImGui::PopStyleVar();
+                //ImGui::PopStyleVar();
 
                 //display controller input
                 if (cro::GameController::getControllerCount())
