@@ -1128,6 +1128,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
         switch (evt.key.scancode)
         {
+        default: break;
         case FixedKey::EmoteApplaud:
         //case SDLK_KP_7: //don't do this, people use it as keybinds
             m_textChat.quickEmote(TextChat::Applaud);
