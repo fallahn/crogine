@@ -102,7 +102,8 @@ GolfState::GolfState(SharedData& sd)
     m_gameStarted           (false),
     //m_eliminationStarted    (false),
     m_allMapsLoaded         (false),
-    m_skinsFinals           (false),
+    m_skinsTie              (false),
+    m_eliminationTie        (false),
     m_currentHole           (0),
     m_skinsPot              (1),
     m_currentBest           (MaxStrokes),
@@ -264,7 +265,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     }
                     break;
                 case ScoreType::Skins:
-                    if (m_skinsFinals)
+                    if (m_skinsTie)
                     {
                         maxStrokes *= 100;
                     }
@@ -1154,7 +1155,7 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
             //        });
             //}
         }
-        else if (m_sharedData.scoreType == ScoreType::Elimination)
+        else if (m_sharedData.scoreType == ScoreType::Elimination && !m_eliminationTie)
         {
             const auto predicate = [this](const PlayerStatus& a, const PlayerStatus& b)
                 {
@@ -1183,7 +1184,7 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
             std::sort(playerInfo.begin(), playerInfo.end(), predicate);
             std::sort(allPlayers.begin(), allPlayers.end(), predicate);
         }
-        else if (m_sharedData.scoreType == ScoreType::NearestThePin)
+        else if (m_sharedData.scoreType == ScoreType::NearestThePin || m_eliminationTie)
         {
             //make sure player hasn't completed all turns
             const auto& predicate = [this](const PlayerStatus& a, const PlayerStatus& b)
@@ -1212,7 +1213,7 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
         }
         else
         {
-            if (m_skinsFinals)
+            if (m_skinsTie)
             {
                 std::sort(playerInfo.begin(), playerInfo.end(), skinsPredicate);
                 std::sort(allPlayers.begin(), allPlayers.end(), skinsPredicate);
@@ -1249,7 +1250,7 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
     }
     else
     {
-        if (m_skinsFinals)
+        if (m_skinsTie)
         {
             std::sort(playerInfo.begin(), playerInfo.end(), skinsPredicate);
             std::sort(allPlayers.begin(), allPlayers.end(), skinsPredicate);
@@ -1311,6 +1312,7 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
         //TODO move this to some game rule check function
         if ((allPlayers[0].distanceToHole == 0 //all players must be in the hole
             || (m_sharedData.scoreType == ScoreType::NearestThePin && allPlayers[0].holeScore[m_currentHole] >= MaxNTPStrokes) //all players must have taken their turn
+            || (m_eliminationTie && allPlayers[0].holeScore[m_currentHole] >= MaxNTPStrokes) //all players must have taken their turn
             || playersForfeit //players have quit the game so attempt next hole
             || (m_sharedData.scoreType == ScoreType::Elimination && allPlayers[1].eliminated)) //(which triggers the rules to end the game)  
             && waitingCount >= m_playerInfo.size() - 1) //don't move on until all but this group are waiting
@@ -1415,7 +1417,7 @@ void GolfState::setNextHole()
     //broadcast all scores to make sure everyone is up to date
     //note that in skins games the above summary may have reduced
     //the current hole index if the hole needs repeating
-    auto scoreHole = m_skinsFinals ? std::min(m_currentHole + 1, std::uint8_t(m_holeData.size()) - 1) : m_currentHole;
+    auto scoreHole = m_skinsTie || m_eliminationTie ? std::min(m_currentHole + 1, std::uint8_t(m_holeData.size()) - 1) : m_currentHole;
     
     for (auto& group : m_playerInfo)
     {
@@ -2073,7 +2075,7 @@ void GolfState::initScene()
         {
             for (auto& player : group.playerInfo)
             {
-                player.skins = startLives;
+                player.lives = startLives;
             }
         }
     }

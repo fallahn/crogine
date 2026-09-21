@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -80,7 +80,11 @@ struct PlayerStatus final : public ActivePlayer
     std::vector<float> distanceScore;
     std::uint8_t previousBallScore = 0; //also used for mulligan
     std::uint8_t totalScore = 0;
-    std::uint8_t skins = 0; //stores number of lives in elimination mode
+    union
+    {
+        std::uint8_t skins = 0; 
+        std::uint8_t lives; //stores number of lives in elimination mode
+    };
     std::uint8_t matchWins = 0; //used as a 'life lost' flag in elimination
 
     std::int32_t teamIndex = -1; //indexes into the teams array so we can look up the other player
@@ -147,7 +151,7 @@ struct ScoreUpdate final
     std::uint8_t hole = 0;
     std::uint8_t score = 0; //running stroke player score
     std::uint8_t matchScore = 0; //hmm this could be a union?
-    std::uint8_t skinsScore = 0;
+    std::uint8_t skinsScore = 0; //lives in elimination mode
     std::uint8_t padding = 0;
 };
 

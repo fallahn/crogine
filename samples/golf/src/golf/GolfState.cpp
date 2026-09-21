@@ -6827,17 +6827,27 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 
 
     //if this is the final hole repeated then we're in skins sudden death
-    if (m_sharedData.gameMode != GameMode::Tutorial
-        && m_sharedData.scoreType == ScoreType::Skins)
+    //or elimination tie-break
+    if (m_sharedData.gameMode != GameMode::Tutorial)
     {
         //TODO this will show if we're playing a custom course with
         //only one hole in skins mode (for some reason)
+        //TODO we might also have a Tie Break when we're not on the last
+        //hole but have more lives remaining than holes to play
         if (hole == m_currentHole
             && hole == m_holeData.size() - 1)
         {
-            showNotification("Sudden Death Round!");
-            showNotification("First to hole wins!");
-            m_suddenDeath = true;
+            if (m_sharedData.scoreType == ScoreType::Skins)
+            {
+                showNotification("Sudden Death Round!");
+                showNotification("First to hole wins!");
+                m_suddenDeath = true;
+            }
+            else
+            {
+                showNotification("Tie Break!");
+                showNotification("Nearest To The Pin Wins!");
+            }
         }
     }
 
