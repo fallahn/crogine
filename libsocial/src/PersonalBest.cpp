@@ -37,7 +37,7 @@ source distribution.
 
 namespace
 {
-    const std::string fileName = "leaders.pbst";
+    const std::filesystem::path fileName = "leaders.pbst";
 }
 
 PersonalBest::PersonalBest()

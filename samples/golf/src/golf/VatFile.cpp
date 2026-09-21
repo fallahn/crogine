@@ -275,7 +275,7 @@ void VatFile::loadBinary(const std::filesystem::path& path, std::vector<float>& 
 {
     dst.clear();
     dst.resize(dims.x * dims.y * 4);
-
+    
     cro::IOStream file = cro::IOResource::open(path);
     if (file)
     {

@@ -145,7 +145,10 @@ void GolfState::updateLeaderboardScore(bool& personalBest, cro::String& bestStri
     }
 
     else if (m_sharedData.scoreType == ScoreType::Stroke
-        && Social::getLeaderboardsEnabled())
+#ifdef USE_GNS
+        && Social::getLeaderboardsEnabled()
+#endif
+        )
     {
         const auto& connectionData = m_sharedData.connectionData[m_sharedData.clientConnection.connectionID];
         for (auto k = 0u; k < connectionData.playerCount; ++k)
