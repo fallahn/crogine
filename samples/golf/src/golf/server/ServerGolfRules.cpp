@@ -450,7 +450,10 @@ bool GolfState::summariseRules()
             //all but player 1 are eliminated
             return true;
         }
-        return false;
+
+        //don't return here else we never hit the elimination
+        // //condition below...
+        //return false;
     }
 
 
@@ -485,6 +488,7 @@ bool GolfState::summariseRules()
 
 
     bool gameFinished = false;
+    const auto remainingHoles = static_cast<std::uint8_t>(m_holeData.size()) - (m_currentHole + 1);
 
     if (m_sharedData.scoreType == ScoreType::Elimination)
     {
@@ -498,6 +502,21 @@ bool GolfState::summariseRules()
                 }
                 return a.skins > b.skins;
             });
+
+        //end the game if there are more lives remaining
+        //than there are available holes - 
+        //although this doesn't account for tie-break
+        if (sortData[0].skins > remainingHoles)
+        {
+            //TODO
+            if (sortData.size() > 1 &&
+                sortData[0].skins == sortData[1].skins)
+            {
+                //enable tie-break;
+            }
+
+            return true;
+        }
     }
     else
     {
@@ -612,7 +631,7 @@ bool GolfState::summariseRules()
             });
 
 
-        auto remainingHoles = static_cast<std::uint8_t>(m_holeData.size()) - (m_currentHole + 1);
+        //const auto remainingHoles = static_cast<std::uint8_t>(m_holeData.size()) - (m_currentHole + 1);
         //if second place can't beat first even if they win all the remaining holes it's game over
         if (sortData[1].matchWins + remainingHoles < sortData[0].matchWins)
         {
