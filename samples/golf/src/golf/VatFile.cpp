@@ -58,7 +58,7 @@ VatFile::VatFile()
 }
 
 //public
-bool VatFile::loadFromFile(const std::string& path)
+bool VatFile::loadFromFile(const std::filesystem::path& path)
 {
     reset();
 
@@ -82,7 +82,7 @@ bool VatFile::loadFromFile(const std::string& path)
             if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / filepath))
             {
                 resultFlags |= Model;
-                m_modelPath = U8PATH_CAST(filepath);
+                m_modelPath = filepath;
             }
             else
             {
@@ -176,13 +176,16 @@ bool VatFile::loadFromFile(const std::string& path)
         {
             if (!m_dataPaths[i].empty())
             {
-                const auto ext = cro::FileSystem::getFileExtension(m_dataPaths[i]);
-                const std::string u8p = U8PATH_CAST(m_dataPaths[i]);
-                const auto binPath = u8p.substr(0, u8p.find(ext.string())) + ".bin";
+                auto binPath = m_dataPaths[i];
+                binPath.replace_extension(".bin");
 
                 if (cro::FileSystem::fileExists(binPath))
                 {
                     loadBinary(binPath, m_binaryData[i], imageSize);
+                }
+                else
+                {
+                    LogE << "Couldn't find VAT bin at " << binPath << std::endl;
                 }
             }
         }
@@ -273,8 +276,7 @@ void VatFile::loadBinary(const std::filesystem::path& path, std::vector<float>& 
     dst.clear();
     dst.resize(dims.x * dims.y * 4);
 
-    cro::IOStream file;
-    file.open(path, "rb");
+    cro::IOStream file = cro::IOResource::open(path);
     if (file)
     {
         auto read = SDL_ReadIO(file.filePtr(), dst.data(), dst.size() * sizeof(float));

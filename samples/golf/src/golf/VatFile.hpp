@@ -43,7 +43,7 @@ class VatFile final
 public:
     VatFile();
 
-    bool loadFromFile(const std::string&);
+    bool loadFromFile(const std::filesystem::path&);
 
     const std::filesystem::path& getModelPath() const { return m_modelPath; }
     const std::filesystem::path& getPositionPath() const;

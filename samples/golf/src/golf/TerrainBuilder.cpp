@@ -438,7 +438,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     std::int32_t i = 0;
 
     //TODO scan the directory for definition files?
-    const std::array<std::string, 4u> spectatorPaths =
+    const std::array<std::filesystem::path, 4u> spectatorPaths =
     {
         "assets/golf/crowd/spectator01.vat",
         "assets/golf/crowd/spectator02.vat",
@@ -699,6 +699,10 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                 entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
 
                 m_crowdEntities[i].push_back(childEnt);
+            }
+            else
+            {
+                LogE << "Failed loading VAT file " << p << std::endl;
             }
         }
 
