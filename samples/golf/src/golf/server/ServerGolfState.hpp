@@ -114,5 +114,6 @@ namespace sv
         bool summariseRules();
 
         void doServerCommand(const net::NetEvent&);
+        void sendServerTextMessage(const std::u8string&);
     };
 }

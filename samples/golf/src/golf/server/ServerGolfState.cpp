@@ -2141,8 +2141,6 @@ void GolfState::buildWorld()
 
 
     
-    
-    
     //if this is a career league look for a progress file
     //TODO what are the chances of this overlapping with the client?
     if (m_sharedData.leagueID != 0)
@@ -2355,4 +2353,13 @@ void GolfState::doServerCommand(const net::NetEvent& evt)
 #endif
         }
     }
+}
+
+void GolfState::sendServerTextMessage(const std::u8string& m)
+{
+    TextMessage msg;
+    msg.client = ConstVal::MaxClients; //marks this as being from the server
+    std::memcpy(msg.messageData.data(), m.data(), m.size());
+    msg.messageData[m.size()] = 0;
+    m_sharedData.host.broadcastPacket(PacketID::ChatMessage, msg, net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 }

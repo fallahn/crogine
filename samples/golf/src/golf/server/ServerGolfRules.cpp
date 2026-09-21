@@ -557,6 +557,8 @@ bool GolfState::summariseRules()
                 m_eliminationTie = true;
                 m_scene.getSystem<BallSystem>()->setGimmeRadius(0);
 
+                sendServerTextMessage(u8"Tie Break! Nearest the pin in 2 strokes wins!");
+                
                 //make sure we repeat the hole
                 if (m_currentHole)
                 {

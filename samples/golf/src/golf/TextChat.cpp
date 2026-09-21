@@ -552,7 +552,28 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 
     const auto msg = pkt.as<TextMessage>();
 
-    if (msg.client >= ConstVal::MaxClients)
+    bool playSound = true;
+    const auto msgText = msg.getString();// cro::String::fromUtf8(msg.messageData.begin(), std::find(msg.messageData.begin(), msg.messageData.end(), 0));
+    if (msg.client == ConstVal::MaxClients)
+    {
+        //MaxClients means this is a Server message
+        const auto outStr = "Server: " + msgText;
+
+        playSound = !speak(msgText);
+        m_displayBuffer.emplace_back(outStr, ImVec4(TextHighlightColour));
+
+        if (m_displayBuffer.size() > MaxLines)
+        {
+            m_displayBuffer.pop_front();
+        }
+        m_scrollToEnd = true;
+
+        printToScreen(outStr, TextHighlightColour);
+
+        return playSound;
+    }
+
+    if (msg.client > ConstVal::MaxClients)
     {
         LogE << "Recieved message from client " << (int)msg.client << ": Invalid client ID!!" << std::endl;
         return false;
@@ -560,14 +581,13 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 
     if (m_sharedData.connectionData[msg.client].playerCount == 0)
     {
-        LogW << "Recieved message from client " << (int)msg.client << ": This client is no connected!" << std::endl;
+        LogW << "Recieved message from client " << (int)msg.client << ": This client is not connected!" << std::endl;
         return false;
     }
 
     //only one person can type on a connected computer anyway
     //so we'll always assume it's player 0
     auto outStr = m_sharedData.connectionData[msg.client].playerData[0].name;
-    auto msgText = msg.getString();// cro::String::fromUtf8(msg.messageData.begin(), std::find(msg.messageData.begin(), msg.messageData.end(), 0));
 
 #ifdef USE_GNS
     Social::filterString(msgText);
@@ -575,7 +595,7 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 
     cro::Colour chatColour = TextNormalColour;
     cro::Colour listColour = TextNormalColour;
-    bool playSound = true;
+
 
     //process any emotes such as /me and choose colour
     if (auto p = msgText.find("/me"); p == 0
@@ -593,6 +613,8 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
         idx = (idx + 1) % 2;
         listColour = idx == 0 ? TextNormalColour : CD32::Colours[CD32::GreyLight];
     }
+
+    //TODO stick this in a function as it's repeated from Server Message, above
     m_displayBuffer.emplace_back(outStr, ImVec4(listColour));
 
     if (m_displayBuffer.size() > MaxLines)
@@ -912,8 +934,9 @@ void TextChat::sendTextChat()
         TextMessage msg;
         msg.client = m_sharedData.clientConnection.connectionID;
 
-        auto len = std::min(m_inputBuffer.size(), TextMessage::MaxBytes);
+        const auto len = std::min(m_inputBuffer.size(), TextMessage::MaxBytes);
         std::memcpy(msg.messageData.data(), m_inputBuffer.data(), len);
+        msg.messageData[len] = 0;
 
         m_inputBuffer.clear();
 
