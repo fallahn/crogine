@@ -553,7 +553,8 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     const auto msg = pkt.as<TextMessage>();
 
     bool playSound = true;
-    const auto msgText = msg.getString();// cro::String::fromUtf8(msg.messageData.begin(), std::find(msg.messageData.begin(), msg.messageData.end(), 0));
+    //not const because it's modified by string filter
+    auto msgText = msg.getString();// cro::String::fromUtf8(msg.messageData.begin(), std::find(msg.messageData.begin(), msg.messageData.end(), 0));
     if (msg.client == ConstVal::MaxClients)
     {
         //MaxClients means this is a Server message
