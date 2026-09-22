@@ -122,10 +122,10 @@ bool RSSFeed::parseFeed(const std::vector<std::uint8_t>& src)
     {
         try
         {
-            std::scoped_lock<std::mutex> lock(m_mutex);
+            //std::scoped_lock<std::mutex> lock(m_mutex);
             const std::regex matchTags("\\<.*?\\>");
 
-            for (const auto item : channel.children("item"))
+            for (const auto& item : channel.children("item"))
             {
                 auto& i = m_items.emplace_back();
 
@@ -156,7 +156,8 @@ bool RSSFeed::parseFeed(const std::vector<std::uint8_t>& src)
 
                 //steam puts this odd message in on items when first posted - this
                 //hacks around getting rid of it
-                if (i.description.find("A lil somethin") != cro::String::InvalidPos)
+                if (i.description.find("A lil somethin") != cro::String::InvalidPos
+                    || i.title.find("Double XP") != cro::String::InvalidPos)
                 {
                     m_items.pop_back();
                 }

@@ -86,7 +86,7 @@ private:
     std::atomic_bool m_fetchComplete = false;
 
     std::thread m_thread;
-    std::mutex m_mutex;
+    //std::mutex m_mutex;
     
     std::vector<Item> m_items;
     bool parseFeed(const std::vector<std::uint8_t>&);

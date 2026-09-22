@@ -3883,7 +3883,7 @@ void GolfState::buildScene()
                 ct -= dt;
                 if (ct < 0)
                 {
-                    LogI << "Retrying flag texture after 10 seconds " << m_sharedData.flagPath << std::endl;
+                    LogI << "Retrying flag texture after 10 seconds "/* << m_sharedData.flagPath*/ << std::endl;
                     //m_flagTexture.create(FlagTextureSize.x, FlagTextureSize.y, false);
                     updateFlagTexture(true);
 
