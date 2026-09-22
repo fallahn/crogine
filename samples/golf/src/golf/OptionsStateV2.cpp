@@ -137,6 +137,7 @@ OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
 
     m_flagPreview.init(sd.flagPath);
     m_flagPreview.setText(m_sharedData.flagText);
+    sd.flagPath = U8PATH_CAST(m_flagPreview.getPath()); //path may have been corrected if we sync'd the Steam Deck path for example
 
     std::fill(m_controllerMasks.begin(), m_controllerMasks.end(), 0);
     std::fill(m_controllerPrevMasks.begin(), m_controllerPrevMasks.end(), 0);
