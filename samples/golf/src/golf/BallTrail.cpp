@@ -107,36 +107,44 @@ void BallTrail::create(cro::Scene& scene, cro::ResourceCollection& resources, st
         boundingBox = { glm::vec3(-rangeSize.x, /*100.f*/0.f, rangeSize.y), glm::vec3(rangeSize.x, 100.f, -rangeSize.y) };
     }
 
+    const auto createEntity = [&]()
+        {
+            const auto meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP, GL_UNSIGNED_SHORT));
+            auto meshData = resources.meshes.getMesh(meshID);
+            meshData.attributes[cro::Mesh::Attribute::Colour].glType = GL_UNSIGNED_BYTE;
+            meshData.attributes[cro::Mesh::Attribute::Colour].glNormalised = GL_TRUE;
+            meshData.vertexSize = cro::MeshBuilder::getVertexSize(meshData.attributes);
+
+            meshData.boundingBox = boundingBox;
+            meshData.boundingSphere = meshData.boundingBox;
+
+            auto entity = scene.createEntity();
+            entity.addComponent<cro::Transform>();
+            entity.addComponent<cro::Model>(meshData, material);
+            entity.addComponent<cro::CommandTarget>().ID = CommandID::BeaconColour;
+            entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::FlightCam));
+
+            //entity.addComponent<cro::Callback>().active = true;
+            //entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+            //entity.getComponent<cro::Callback>().function =
+            //    [](cro::Entity e, float dt)
+            //    {
+            //        auto& r = e.getComponent<cro::Callback>().getUserData<float>();
+            //        r += dt / 3.f;
+
+            //        e.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", r);
+            //    };
+            return entity;
+        };
+
     for (auto i = 0u; i < BufferCount; ++i)
     {
-        const auto meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP, GL_UNSIGNED_SHORT));
-        auto meshData = resources.meshes.getMesh(meshID);
-        meshData.attributes[cro::Mesh::Attribute::Colour].glType = GL_UNSIGNED_BYTE;
-        meshData.attributes[cro::Mesh::Attribute::Colour].glNormalised = GL_TRUE;
-        meshData.vertexSize = cro::MeshBuilder::getVertexSize(meshData.attributes);
-
-        meshData.boundingBox = boundingBox;
-        meshData.boundingSphere = meshData.boundingBox;
-
-        auto entity = scene.createEntity();
-        entity.addComponent<cro::Transform>();
-        entity.addComponent<cro::Model>(meshData, material);
-        entity.addComponent<cro::CommandTarget>().ID = CommandID::BeaconColour;
-        entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::FlightCam));
-
-        //entity.addComponent<cro::Callback>().active = true;
-        //entity.getComponent<cro::Callback>().setUserData<float>(0.f);
-        //entity.getComponent<cro::Callback>().function =
-        //    [](cro::Entity e, float dt)
-        //    {
-        //        auto& r = e.getComponent<cro::Callback>().getUserData<float>();
-        //        r += dt / 3.f;
-
-        //        e.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", r);
-        //    };
-
-        m_trails[i].meshData = &entity.getComponent<cro::Model>().getMeshData();
+        m_trails[i].meshData = &createEntity().getComponent<cro::Model>().getMeshData();
     }
+
+    m_previousEnt = createEntity();
+    m_previousTrail.meshData = &m_previousEnt.getComponent<cro::Model>().getMeshData();
+    m_previousEnt.getComponent<cro::Model>().setHidden(true);
 }
 
 void BallTrail::setNext()
@@ -148,7 +156,14 @@ void BallTrail::setNext()
     m_bufferIndex = (m_bufferIndex + 1) % BufferCount;
 }
 
-void BallTrail::addPoint(glm::vec3 position, std::uint32_t callerIndex)
+void BallTrail::resetPrevious()
+{
+    m_previousTrail.vertexData.clear();
+    m_previousTrail.indices.clear();
+    m_previousEnt.getComponent<cro::Model>().setHidden(true);
+}
+
+void BallTrail::addPoint(glm::vec3 position, std::uint32_t /*callerIndex*/)
 {
     m_trails[m_bufferIndex].vertexData.emplace_back(position, m_baseColour);
     m_trails[m_bufferIndex].indices.push_back(static_cast<std::uint32_t>(m_trails[m_bufferIndex].indices.size()));
@@ -160,10 +175,29 @@ void BallTrail::addPoint(glm::vec3 position, std::uint32_t callerIndex)
         //TODO track parent entity and set to shown
     }
 
+    m_previousTrail.vertexData.emplace_back(position, m_baseColour);
+    m_previousTrail.indices.push_back(static_cast<std::uint32_t>(m_previousTrail.indices.size()));
+
     //insertedIndex = m_bufferIndex;
     //insertCount++;
     //debugPoints.push_back(callerIndex);
     //m_insertTime = m_insertTimer.restart();
+}
+
+void BallTrail::showPrevious(bool show)
+{
+    m_previousEnt.getComponent<cro::Model>().setHidden(!show);
+
+    if (show)
+    {
+        //update the buffers
+        m_previousTrail.meshData->vertexCount = m_previousTrail.indices.size();
+        cro::DynamicMeshBuilder::setVertexData(*m_previousTrail.meshData, cro::DataArray(m_previousTrail.vertexData.data(), m_previousTrail.vertexData.size()));
+
+        auto* submesh = &m_previousTrail.meshData->indexData[0];
+        submesh->indexCount = static_cast<std::uint32_t>(m_previousTrail.indices.size());
+        cro::DynamicMeshBuilder::setIndexData(*m_previousTrail.meshData, { cro::DataArray(m_previousTrail.indices.data(), submesh->indexCount) });
+    }
 }
 
 void BallTrail::update()

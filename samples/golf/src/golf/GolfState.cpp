@@ -1793,6 +1793,10 @@ void GolfState::handleMessage(const cro::Message& msg)
             }
             //reset the stroke timer for timeline - set this to a couple of seconds to allow for wind-up
             m_strokeTimer = 3.f;
+
+            //TODO this needs to reset the trail of
+            //the group to which this event belongs...
+            m_ballTrails[m_serverGroup]->resetPrevious();
         }
         else if (data.userType == SpriteAnimID::Swoosh)
         {

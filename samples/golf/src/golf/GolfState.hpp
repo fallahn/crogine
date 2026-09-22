@@ -148,7 +148,7 @@ public:
 
 private:
     //std::vector<float> m_debugCurve;
-    GroupID m_groupID;
+    GroupID m_groupID; //this isn't anything to do with playing in groups, it groups the rich presence on Steam
 
     struct ConnectRetry final
     {
@@ -411,6 +411,7 @@ private:
         std::size_t ballMeshID = 0;
         std::size_t shadowMeshID = 0;
     }m_ballResources;
+    //one trail for each player group - so usually only one.
     std::vector<std::unique_ptr<BallTrail>> m_ballTrails;
 
     std::string m_audioPath;

@@ -56,7 +56,9 @@ public:
     void create(cro::Scene&, cro::ResourceCollection&, std::int32_t, bool courseSize = true);
 
     void setNext();
+    void resetPrevious();
     void addPoint(glm::vec3, std::uint32_t = 0);
+    void showPrevious(bool);
 
     void update();
     void reset();
@@ -77,6 +79,10 @@ private:
     static constexpr std::size_t BufferCount = 2;
     std::array<Trail, BufferCount> m_trails = {};
     std::size_t m_bufferIndex;
+
+    //used to display the previous trail in free look mode
+    Trail m_previousTrail;
+    cro::Entity m_previousEnt;
 
     glm::vec4 m_baseColour;
 
