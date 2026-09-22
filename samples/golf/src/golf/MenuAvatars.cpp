@@ -2070,9 +2070,9 @@ void MenuState::updateLobbyAvatars()
         cro::SimpleText simpleText(font);
         simpleText.setCharacterSize(LabelTextSize);
         simpleText.setFillColour(TextNormalColour);
-        simpleText.setShadowOffset({ 1.f, -1.f });
-        simpleText.setShadowColour(LeaderboardTextDark);
-        //simpleText.setBold(true);
+        //simpleText.setShadowOffset({ 1.f, -1.f });
+        //simpleText.setShadowColour(LeaderboardTextDark);
+
 
         cro::Image img;
         img.create(1, 1, cro::Colour::White);

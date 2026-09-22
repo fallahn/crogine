@@ -5196,8 +5196,9 @@ void GolfState::spawnBall(const ActorInfo& info)
     const auto clientID = info.clientID;
     const auto depthOffset = ((clientID * ConstVal::MaxPlayers) + playerID) + 1; //must be at least 1 (if you change this, note that it breaks anything which refers to this uid)
     const cro::FloatRect textureRect(0.f, playerID * (texSize.y / ConstVal::MaxPlayers), texSize.x, texSize.y / ConstVal::MaxPlayers);
-    const cro::FloatRect uvRect(0.f, textureRect.bottom / static_cast<float>(LabelTextureSize.y),
-                            1.f, textureRect.height / static_cast<float>(LabelTextureSize.y));
+    /*const cro::FloatRect uvRect(0.f, textureRect.bottom / static_cast<float>(LabelTextureSize.y),
+                            1.f, textureRect.height / static_cast<float>(LabelTextureSize.y));*/
+    const cro::FloatRect uvRect(0.f, textureRect.bottom / static_cast<float>(LabelTextureSize.y), 1.f, 0.00000f);
 
     constexpr glm::vec2 AvatarSize(16.f);
     const glm::vec2 AvatarOffset((textureRect.width - AvatarSize.x) / 2.f, textureRect.height + 2.f);
@@ -5235,10 +5236,24 @@ void GolfState::spawnBall(const ActorInfo& info)
             cro::Vertex2D(AvatarOffset + glm::vec2(0.f), glm::vec2(avatarUV.left, avatarUV.bottom), BaseColour),
             cro::Vertex2D(AvatarOffset + glm::vec2(AvatarSize.x, 0.f), glm::vec2(avatarUV.left + avatarUV.width, avatarUV.bottom), BaseColour),
         });
+
+    auto textEnt = m_uiScene.createEntity();
+    textEnt.addComponent<cro::Transform>().setPosition({ texSize.x / 2.f, textureRect.height - 2.f, 0.25f });
+    textEnt.addComponent<cro::Drawable2D>();
+    textEnt.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Label)).setString(m_sharedData.connectionData[clientID].playerData[playerID].name);
+    textEnt.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    textEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    textEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    textEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+
+    entity.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
+
+
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
-        [&, ballEnt, playerID, clientID](cro::Entity e, float dt)
+        [&, ballEnt, textEnt, playerID, clientID](cro::Entity e, float dt) mutable
     {
         if (ballEnt.destroyed())
         {
@@ -5253,7 +5268,9 @@ void GolfState::spawnBall(const ActorInfo& info)
         auto position = ballEnt.getComponent<cro::Transform>().getPosition();
         position.y += Ball::Radius * 3.f;
 
-        const auto labelPos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(position, m_renderTarget.getSize());
+        auto labelPos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(position, m_renderTarget.getSize());
+        labelPos.x = std::round(labelPos.x);
+        labelPos.y = std::round(labelPos.y);
         const float halfWidth = m_renderTarget.getSize().x / 2.f;
 
         e.getComponent<cro::Transform>().setPosition(labelPos);
@@ -5315,13 +5332,32 @@ void GolfState::spawnBall(const ActorInfo& info)
             v.colour.setAlpha(colour);
         }
 
+        auto textCol = TextNormalColour;
+        textCol.setAlpha(colour);
+        textEnt.getComponent<cro::Text>().setFillColour(textCol);
+        textCol = LeaderboardTextDark;
+        textCol.setAlpha(colour);
+        textEnt.getComponent<cro::Text>().setShadowColour(textCol);
 
         const float scale = m_sharedData.pixelScale ? 1.f : m_viewScale.x;
         e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+
+        //force cull the drawables if they are invisible
+        if (colour == 0)
+        {
+            e.getComponent<cro::Drawable2D>().setRenderFlags(0);
+            textEnt.getComponent<cro::Drawable2D>().setRenderFlags(0);
+        }
+        else
+        {
+            e.getComponent<cro::Drawable2D>().setRenderFlags(cro::Drawable2D::DefaultRenderFlag);
+            textEnt.getComponent<cro::Drawable2D>().setRenderFlags(cro::Drawable2D::DefaultRenderFlag);
+        }
     };
     //childList.push_back(entity); //don't do this it belongs to a different scene
     m_courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto labelEnt = entity;
+
 
     //miniball for player
     entity = m_uiScene.createEntity();

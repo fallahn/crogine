@@ -1302,7 +1302,7 @@ void GolfGame::initFonts()
     m_sharedData.sharedResources->fonts.load(FontID::Info, "assets/golf/fonts/MCPixel.otf");
     m_sharedData.sharedResources->fonts.load(FontID::Label, "assets/golf/fonts/ProggyClean.ttf");
 
-    m_sharedData.sharedResources->fonts.load(FontID::OSK, "assets/fonts/VeraMono.ttf");
+    //m_sharedData.sharedResources->fonts.load(FontID::OSK, "assets/fonts/VeraMono.ttf");
 
     //international fonts - these mappings are those used in DearImGui
     cro::FontAppendmentContext ctx;
@@ -1339,7 +1339,7 @@ void GolfGame::initFonts()
         m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile(path, ctx);
         m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile(path, ctx);
 
-        m_sharedData.sharedResources->fonts.get(FontID::OSK).appendFromFile(path, ctx);
+        //m_sharedData.sharedResources->fonts.get(FontID::OSK).appendFromFile(path, ctx);
     }
 
     //controller icon font
@@ -1372,10 +1372,10 @@ void GolfGame::initFonts()
             ctx.density = 4.f;
             ctx.scale = 1.2f;
             m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile(winPath, ctx);
-            ctx.density = 1.f;
             ctx.scale = 0.85f;
-            m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile(winPath, ctx);
             m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile(winPath, ctx);
+            ctx.density = 1.f;
+            m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile(winPath, ctx);
 
             //m_sharedData.sharedResources->fonts.get(FontID::OSK).appendFromFile(winPath, ctx);
         }
@@ -1392,10 +1392,10 @@ void GolfGame::initFonts()
             ctx.density = 4.f;
             ctx.scale = 1.2f;
             m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile(path, ctx);
-            ctx.density = 1.f;
             ctx.scale = 0.85f;
-            m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile(path, ctx);
             m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile(path, ctx);
+            ctx.density = 1.f;
+            m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile(path, ctx);
 
             //m_sharedData.sharedResources->fonts.get(FontID::OSK).appendFromFile(path, ctx);
         }

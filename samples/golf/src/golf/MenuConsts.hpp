@@ -64,7 +64,7 @@ struct FontID final
         Info,
         Label,
 
-        OSK
+        //OSK
     };
 };
 

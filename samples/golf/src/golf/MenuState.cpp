@@ -5029,10 +5029,15 @@ void MenuState::createDebugWindows()
 //
 //        for (auto i = 0u; i < 8u; ++i)
 //        {
-//            ImGui::Image(m_sharedData.avatarTextures[0][i], { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
-//            if ((i % 2) == 0)
+//            //ImGui::Image(m_sharedData.avatarTextures[0][i], { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
+//            
+//            if (m_sharedData.nameTextures[i].available())
 //            {
-//                ImGui::SameLine();
+//                ImGui::Image(m_sharedData.nameTextures[i].getTexture(), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
+//                if ((i % 2) == 0)
+//                {
+//                    ImGui::SameLine();
+//                }
 //            }
 //        }
 //
