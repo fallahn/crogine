@@ -121,6 +121,7 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
 
     if (data.type == GolfBallEvent::TurnEnded)
     {
+        LogI << "Server: Turn ended" << std::endl;
         const auto updateNTP = 
             [&]()
             {
@@ -526,9 +527,21 @@ bool GolfState::summariseRules()
             //else we have to play again *sigh*
             if (sortData.size() > 1 && sortData[0].distanceScore[m_currentHole] < sortData[1].distanceScore[m_currentHole])
             {
+                //TODO if we return true here we need to sort the actual player
+                //data by distance instead of score to choose the correct winner
                 return true;
             }
-            m_currentHole--; //repeate the hole again
+
+            //reset the score for this hole
+            for (auto& group : m_playerInfo)
+            {
+                for (auto& p : group.playerInfo)
+                {
+                    p.holeScore[m_currentHole] = 0;
+                }
+            }
+
+            m_currentHole--; //repeat the hole again
             return false;
         }
         else
@@ -559,6 +572,17 @@ bool GolfState::summariseRules()
 
                 sendServerTextMessage(u8"Tie Break! Nearest the pin in 2 strokes wins!");
                 
+                //reset all the scores because if we took more than MaxNNTP strokes last turn
+                //we get stuck restarting the hole...
+                for (auto& group : m_playerInfo)
+                {
+                    for (auto& p : group.playerInfo)
+                    {
+                        p.holeScore[m_currentHole] = 0;
+                    }
+                }
+
+
                 //make sure we repeat the hole
                 if (m_currentHole)
                 {

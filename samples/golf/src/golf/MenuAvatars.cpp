@@ -2137,8 +2137,8 @@ void MenuState::updateLobbyAvatars()
                     auto bounds = simpleText.getLocalBounds();
                     simpleText.setPosition({ std::round((textureSize.x - bounds.width) / 2.f), (i * (textureSize.y / ConstVal::MaxPlayers)) + 4.f });
 
-                    simpleQuad.setPosition({ simpleText.getPosition().x - 2.f,(i * (textureSize.y / ConstVal::MaxPlayers)) });
-                    simpleQuad.setScale({ (bounds.width + 5.f), 14.f });
+                    simpleQuad.setPosition({ simpleText.getPosition().x - 2.f,(i * (textureSize.y / ConstVal::MaxPlayers)) - 1.f });
+                    simpleQuad.setScale({ (bounds.width + 5.f), 16.f });
                     simpleQuad.draw();
                     simpleText.draw();
                 }

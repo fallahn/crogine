@@ -5202,7 +5202,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     const cro::FloatRect textureRect(0.f, playerID * (texSize.y / ConstVal::MaxPlayers), texSize.x, texSize.y / ConstVal::MaxPlayers);
     /*const cro::FloatRect uvRect(0.f, textureRect.bottom / static_cast<float>(LabelTextureSize.y),
                             1.f, textureRect.height / static_cast<float>(LabelTextureSize.y));*/
-    const cro::FloatRect uvRect(0.f, textureRect.bottom / static_cast<float>(LabelTextureSize.y), 1.f, 0.00000f);
+    const cro::FloatRect uvRect(0.f, textureRect.bottom / static_cast<float>(LabelTextureSize.y), 1.f, 0.00001f);
 
     constexpr glm::vec2 AvatarSize(16.f);
     const glm::vec2 AvatarOffset((textureRect.width - AvatarSize.x) / 2.f, textureRect.height + 2.f);

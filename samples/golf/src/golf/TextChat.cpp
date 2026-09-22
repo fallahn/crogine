@@ -569,7 +569,7 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
         }
         m_scrollToEnd = true;
 
-        printToScreen(outStr, TextHighlightColour);
+        printToScreen(outStr, TextHighlightColour, 7, TextGoldColour);
 
         return playSound;
     }
@@ -629,7 +629,7 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     return playSound;
 }
 
-void TextChat::printToScreen(cro::String outStr, cro::Colour chatColour)
+void TextChat::printToScreen(cro::String outStr, cro::Colour chatColour, std::uint32_t colourIndex, cro::Colour c2)
 {
     //create an entity to temporarily show the message on screen
 
@@ -645,6 +645,10 @@ void TextChat::printToScreen(cro::String outStr, cro::Colour chatColour)
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString(outStr);
     entity.getComponent<cro::Text>().setFillColour(chatColour);
+    if (colourIndex != 0)
+    {
+        entity.getComponent<cro::Text>().setFillColour(c2, colourIndex);
+    }
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ viewScale, -viewScale });
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize * viewScale);

@@ -60,7 +60,7 @@ public:
 
     bool handlePacket(const net::NetEvent::Packet&); //returns true if a notification sound should play
 
-    void printToScreen(cro::String, cro::Colour);
+    void printToScreen(cro::String, cro::Colour, std::uint32_t colourIndex = 0, cro::Colour c2 = cro::Colour::White);
 
     void toggleWindow(bool showOSK, bool showQuickEmote, bool enableDeckInput = true);
 
