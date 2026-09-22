@@ -711,7 +711,7 @@ static inline void togglePixelScale(SharedStateData& sharedData, bool on)
         auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
         msg->data0 = size.x;
         msg->data1 = size.y;
-        msg->event = SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED;
+        msg->event = SDL_EVENT_WINDOW_RESIZED;
     }
 }
 
