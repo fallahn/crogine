@@ -2873,8 +2873,6 @@ void OptionsStateV2::createAudioItems()
     //disconnect events which indexes this directly!! Don't chage the index!
     item = &m_uiLayout.menuLayout.items[TabID::Audio].emplace_back();
     item->title = "Audio Device";
-    //item->description = "Enable text to speech playback for in-game chat";
-    //cro::Util::String::wordWrap(item->description, 36);
     item->activated = [&](Menu::Item& it)
         {
             const auto& devices = cro::AudioDevice::getDeviceList();
@@ -3240,8 +3238,8 @@ void OptionsStateV2::refreshAudioDevices(Menu::Item& item)
 {
     item.labels.clear();
 
-    std::string str;
-    auto deviceList = cro::AudioDevice::getDeviceList();
+    cro::String str;
+    const auto& deviceList = cro::AudioDevice::getDeviceList();
     if (deviceList.empty())
     {
         //hmmm how do we have both the count set to zero but labels set to one?
@@ -3257,22 +3255,30 @@ void OptionsStateV2::refreshAudioDevices(Menu::Item& item)
         }
         else*/
         {
-            str = cro::AudioDevice::getActiveDevice();
+            str = cro::String::fromUtf8(cro::AudioDevice::getActiveDevice().begin(), cro::AudioDevice::getActiveDevice().end());
         }
     }
 
-    static const std::string RemoveMe("OpenAL Soft on ");
-    if (str.find(RemoveMe) != std::string::npos)
+    static const cro::String RemoveMe("OpenAL Soft on ");
+    if (str.find(RemoveMe) != cro::String::InvalidPos)
     {
         str = str.substr(RemoveMe.size());
     }
+
+
     for (auto& d : deviceList)
     {
-        if (d.find(RemoveMe) != std::string::npos)
+        
+        auto s = cro::String::fromUtf8(d.begin(), d.end());
+        if (s.find(RemoveMe) != cro::String::InvalidPos)
         {
-            d = d.substr(RemoveMe.size());
+            s = s.substr(RemoveMe.size());
         }
-        item.labels.push_back(cro::String::fromUtf8(d.begin(), d.end()));
+
+        item.labels.push_back(s.substr(0, 42));
+
+        //hmmmm trouble is we can't crop this as we pre/append the <> icons to it
+        //item.labels.push_back("very very very long text label for soundcard so that it needs to be cropped");
     }
 
     //item.count = static_cast<std::int32_t>(deviceList.size());
