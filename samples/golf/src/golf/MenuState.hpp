@@ -70,6 +70,8 @@ static const std::uint32_t BallRenderFlags = (1 << 22);
 
 #define INTERP_TYPE InterpolationType::Hermite
 
+//#define NEW_LOBBY
+
 namespace cro
 {
     struct NetEvent;
@@ -489,7 +491,8 @@ private:
     friend struct MainMenuContext;
 
 
-
+    //TODO this probably wants to be reused
+    //when updating the roster menu...
     struct LobbyMenu final
     {
         explicit LobbyMenu(MenuState& ms, SharedStateData& sd)
@@ -528,6 +531,8 @@ private:
         void createCourseTab();
         void createRulesTab();
         void createScoresTab();
+
+        void resized(std::uint32_t, std::uint32_t);
     }m_lobbyMenu;
     friend struct LobbyMenu;
 };

@@ -49,6 +49,9 @@ namespace
 
     static constexpr cro::Time RepeatTimeLong = cro::seconds(0.5f);
     static constexpr cro::Time RepeatTimeShort = cro::seconds(0.05f);
+
+    static constexpr std::uint32_t WordWrapSize = 36; //TODO move this to a const header and share across all menus
+    glm::uvec2 lastWindowSize = { 0u,0u };
 }
 
 void MenuState::LobbyMenu::handleEvent(const cro::Event& evt)
@@ -320,20 +323,19 @@ void MenuState::LobbyMenu::resetRepeatTimer(std::int32_t i, cro::Time resetTime)
     m_repeatTimes[i] = resetTime;
 }
 
-void MenuState::LobbyMenu::create(cro::Entity)
+void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
 {
     m_uiLayout.loadAssets(*m_sharedData.sharedResources);
 
-    //TODO replace this with passed in parameter
     auto rootNode = m_menuState.m_uiScene.createEntity();
-    rootNode.addComponent<cro::Transform>();
-    rootNode.addComponent<cro::Callback>().active = true;
-    rootNode.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float)
-        {
-            const auto pos = glm::vec2(cro::App::getWindow().getSize()) / 2.f;
-            e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, 1.f));
-        };
+    rootNode.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    rootNode.addComponent<cro::Callback>().setUserData<MenuData>();
+    rootNode.getComponent<cro::Callback>().function = MenuCallback(MainMenuContext(&m_menuState));
+    rootNode.addComponent<cro::UIElement>(cro::UIElement::Position, true).relativePosition = { 0.5f, 0.5f };
+    m_menuState.m_menuEntities[MenuID::LobbyV2] = rootNode;
+    
+    //don't add to the parent else we get scaled up to the view scale on window resize...
+    //parent.getComponent<cro::Transform>().addChild(rootNode.getComponent<cro::Transform>());
 
     //tab bar
     m_uiLayout.tabBar.background = m_menuState.m_uiScene.createEntity();
@@ -705,6 +707,8 @@ void MenuState::LobbyMenu::createPlayerTab()
     item->displayType = Menu::Item::Heading;
     //item->description = "Customise in-game display settings";
 
+
+    //ready-up / start game
     item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
     item->title = "Start Game";
     item->description = "Press and Hold to Start";
@@ -721,6 +725,71 @@ void MenuState::LobbyMenu::createPlayerTab()
         };
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.showBeacon ? 1 : 0;
+
+
+
+    //select player
+    item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
+    item->title = "Select Player";
+    item->description = "Add me";
+    item->activated = [&](Menu::Item& i)
+        {
+
+        };
+    item->labels = { "1", "2" };
+    item->selectedIndex = 0;
+
+
+    //teams mode
+    item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
+    item->title = "Teams";
+    item->description = "Add me";
+    item->activated = [&](Menu::Item& i)
+        {
+
+        };
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = 0;
+
+
+    //move selected
+    item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
+    item->title = "Move Selected Player";
+    item->description = "Add me";
+    item->activated = [&](Menu::Item& i)
+        {
+
+        };
+    item->labels = { "1", "2" };
+    item->selectedIndex = 0;
+
+
+    //TODO only if hosting
+    if (true)
+    {
+        //poke selected
+        item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
+        item->title = "Poke Player";
+        item->description = "Add me";
+        item->activated = [&](Menu::Item& i)
+            {
+
+            };
+        item->labels = { "1" };
+        item->selectedIndex = 0;
+
+
+        //kick selected - TODO press/hold
+        item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
+        item->title = "Kick Player";
+        item->description = "Add me";
+        item->activated = [&](Menu::Item& i)
+            {
+
+            };
+        item->labels = { "1" };
+        item->selectedIndex = 0;
+    }
 }
 
 void MenuState::LobbyMenu::createCourseTab()
@@ -728,8 +797,9 @@ void MenuState::LobbyMenu::createCourseTab()
     auto* item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
     item->title = "Course Selection";
     item->displayType = Menu::Item::Heading;
-    //item->description = "Customise in-game display settings";
 
+    
+    //course selection
     item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
     item->title = "Select Course";
     //item->description = "Draws a beacon at the pin position, visible from a distance";
@@ -744,6 +814,90 @@ void MenuState::LobbyMenu::createCourseTab()
         };
     item->labels = { "No", "Yes" };
     item->selectedIndex = 0;
+
+
+    //hole count
+    item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
+    item->title = "Hole Count";
+    item->description = "Add me";
+    item->activated = [&](Menu::Item& i)
+        {
+
+        };
+    item->labels = { "All 18", "Front 9", " Back 9" };
+    item->selectedIndex = 0;
+
+
+    //revers course
+    item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
+    item->title = "Play in Reverse";
+    item->description = "Add me";
+    item->activated = [&](Menu::Item& i)
+        {
+
+        };
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = 0;
+
+
+    //user courses
+    item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
+    item->title = "User Courses";
+    item->description = "Add me";
+    item->activated = [&](Menu::Item& i)
+        {
+
+        };
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = 0;
+
+
+    //night mode
+    item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
+    item->title = "Night";
+    item->description = "Add me";
+    item->activated = [&](Menu::Item& i)
+        {
+
+        };
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = 0;
+
+
+    //weather
+    item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
+    item->title = "Weather";
+    item->description = "Add me";
+    item->activated = [&](Menu::Item& i)
+        {
+
+        };
+    item->labels = { "Clear", "Rain", "Showers", "Mist", "Random"};
+    item->selectedIndex = 0;
+
+
+    //random wind
+    item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
+    item->title = "Randomise Wind";
+    item->description = "Add me";
+    item->activated = [&](Menu::Item& i)
+        {
+
+        };
+    item->labels = { "No", "Yes" };
+    item->selectedIndex = 0;
+
+
+    //wind strength
+    item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
+    item->title = "Enable Snek";
+    item->description = "Add me";
+    item->activated = [&](Menu::Item& i)
+        {
+
+        };
+    item->labels = { "Normal", "Medium", "High"};
+    item->selectedIndex = 0;
 }
 
 void MenuState::LobbyMenu::createRulesTab()
@@ -753,6 +907,7 @@ void MenuState::LobbyMenu::createRulesTab()
     item->displayType = Menu::Item::Heading;
     //item->description = "Customise in-game display settings";
 
+    //choose rules / game mode
     item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
     item->title = "Scoring";
     //item->description = "Draws a beacon at the pin position, visible from a distance";
@@ -767,6 +922,55 @@ void MenuState::LobbyMenu::createRulesTab()
         };
     item->labels = { "No", "Yes" };
     item->selectedIndex = 0;
+
+
+
+    //set gimme radius
+    item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
+    item->title = "Gimme Radius";
+    item->description = "Add me";
+    item->activated = [&](Menu::Item& i)
+        {
+
+        };
+    item->labels = { "None", "Under the Leather", "Under the Putter" };
+    item->selectedIndex = 0;
+
+
+    //choose club set
+    item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
+    item->title = "Clubs";
+    item->description = "Add me";
+    item->activated = [&](Menu::Item& i)
+        {
+
+        };
+    item->labels = { "Casual", "Regular", "Pro" };
+    item->selectedIndex = 0;
+
+
+    //enable snek
+    item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
+    item->title = "Enable Snek";
+    item->description = "Add me";
+    item->activated = [&](Menu::Item& i)
+        {
+
+        };
+    item->labels = { "No", "Yes"};
+    item->selectedIndex = 0;
+
+
+    //enable big balls
+    item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
+    item->title = "Enable Big Balls";
+    item->description = "Add me";
+    item->activated = [&](Menu::Item& i)
+        {
+
+        };
+    item->labels = { "No", "Yes"};
+    item->selectedIndex = 0;
 }
 
 void MenuState::LobbyMenu::createScoresTab()
@@ -775,54 +979,85 @@ void MenuState::LobbyMenu::createScoresTab()
     auto* item = &m_uiLayout.menuLayout.items[TabID::Scores].emplace_back();
     item->title = "View Scores";
     item->displayType = Menu::Item::Heading;
-    //item->description = "Customise in-game display settings";
 
+    cro::String desc = "Browse the online leaderboards. Friends only filters can be enabled in the Options menu.";
+#ifdef USE_GNS
+    cro::Util::String::wordWrap(desc, WordWrapSize);
     item = &m_uiLayout.menuLayout.items[TabID::Scores].emplace_back();
     item->title = "View Leaderboards";
-    //item->description = "Draws a beacon at the pin position, visible from a distance";
-    item->selected =
-        [&](const Menu::Item&)
-        {
-
-        };
+    item->description = desc;
     item->activated = [&](Menu::Item& i)
         {
-            //TODO push leaderboard state
+            m_menuState.requestStackPush(StateID::Leaderboard);
         };
-    item->labels = { "No", "Yes" };
+    item->labels = { "OK" };
     item->selectedIndex = 0;
+#endif
+
 
 
     //view leagues
+    desc = "Browse the current League standings.";
+    cro::Util::String::wordWrap(desc, WordWrapSize);
+
     item = &m_uiLayout.menuLayout.items[TabID::Scores].emplace_back();
     item->title = "View Leagues";
-    //item->description = "Draws a beacon at the pin position, visible from a distance";
-    item->selected =
-        [&](const Menu::Item&)
-        {
-
-        };
+    item->description = desc;
     item->activated = [&](Menu::Item& i)
         {
-            //TODO push league state
+#ifdef USE_GNS
+            //hmm I had this set to 7 for some reason - I think just trying to default
+            //to the global league. This is why we need enums.
+            m_sharedData.leagueTable = 9;//7
+#else
+            m_sharedData.leagueTable = 0;
+#endif
+            m_menuState.requestStackPush(StateID::League);
         };
-    item->labels = { "No", "Yes" };
+    item->labels = { "OK" };
     item->selectedIndex = 0;
 
 
-    //view previous rounds scores
-    item = &m_uiLayout.menuLayout.items[TabID::Scores].emplace_back();
-    item->title = "View Last Round's Scores";
-    //item->description = "Draws a beacon at the pin position, visible from a distance";
-    item->selected =
-        [&](const Menu::Item&)
-        {
+    //view previous rounds scores - this entity won't exist if the
+    //lobby wasn't opened from a previous round.
+    if (m_menuState.m_lobbyWindowEntities[LobbyEntityID::Scorecard].isValid())
+    {
+        item = &m_uiLayout.menuLayout.items[TabID::Scores].emplace_back();
+        item->title = "View Last Round's Scores";
+            item->selected =
+            [&](const Menu::Item&)
+            {
 
-        };
-    item->activated = [&](Menu::Item& i)
-        {
-            //TODO push scores
-        };
-    item->labels = { "No", "Yes" };
-    item->selectedIndex = 0;
+            };
+            item->activated = [this](Menu::Item& i)
+                {
+                    m_menuState.togglePreviousScoreCard();
+                };
+            item->labels = { "OK" };
+            item->selectedIndex = 0;
+    }
+}
+
+void MenuState::LobbyMenu::resized(std::uint32_t x, std::uint32_t y)
+{
+    if (const auto newSize = glm::uvec2(x, y);
+        newSize != lastWindowSize)
+    {
+        //hack to force the texture to resize properly
+        m_uiLayout.menuLayout.texture.create(1, 1, false);
+        m_uiLayout.updateTabBar();
+
+        //realigns the current menu to the new screen size
+        cro::Entity entity = m_menuState.m_uiScene.createEntity();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [this](cro::Entity e, float)
+            {
+                m_uiLayout.activateTab(m_uiLayout.tabBar.activeIndex);
+                e.getComponent<cro::Callback>().active = false;
+                m_menuState.m_uiScene.destroyEntity(e);
+            };
+
+        lastWindowSize = newSize;
+    }
 }

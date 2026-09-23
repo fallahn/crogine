@@ -448,7 +448,11 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             cmd.action = [&](cro::Entity e, float)
                 {
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+#ifdef NEW_LOBBY
+                    m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::LobbyV2;
+#else
                     m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Lobby;
+#endif
                     m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
 
                     //we also want to delay this so let's do it here
@@ -566,7 +570,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         refreshDisplayMembers();
     }
 
-#ifndef SDL_PLATFORM_APPLE
+#ifndef __APPLE__
 #ifndef DEMO
     registerCommand("tree_ed", [&](const std::string&)
         {
@@ -1296,10 +1300,10 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 }
             }
             break;
-        case SDLK_F3:
+        /*case SDLK_F3:
             m_lobbyMenu.create({});
             m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::LobbyV2);
-            break;
+            break;*/
 #ifdef CRO_DEBUG_
 //#ifdef USE_GNS
 //        case SDLK_PAGEUP:
@@ -1442,14 +1446,22 @@ bool MenuState::handleEvent(const cro::Event& evt)
             }
             break;
         case SDLK_F4:
+#ifdef NEW_LOBBY
+            if (m_currentMenu == MenuID::LobbyV2)
+#else
             if (m_currentMenu == MenuID::Lobby)
+#endif
             {
                 m_textChat.toggleWindow(false, false, false);
             }
             break;
         case SDLK_F8:
             if ((evt.key.mod & SDL_KMOD_SHIFT)
+#ifdef NEW_LOBBY
+                && m_currentMenu == MenuID::LobbyV2)
+#else
                 && m_currentMenu == MenuID::Lobby)
+#endif
             {
                 m_textChat.toggleWindow(false, false);
             }
@@ -1472,7 +1484,11 @@ bool MenuState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
+#ifdef NEW_LOBBY
+        if (m_currentMenu == MenuID::LobbyV2)
+#else
         if (m_currentMenu == MenuID::Lobby)
+#endif
         {
             switch (evt.gbutton.button)
             {
@@ -1522,7 +1538,11 @@ bool MenuState::handleEvent(const cro::Event& evt)
         }
 
         //we have to do this separately because it should be allowed when chat window is open
+#ifdef NEW_LOBBY
+        if (m_currentMenu == MenuID::LobbyV2)
+#else
         if (m_currentMenu == MenuID::Lobby)
+#endif
         {
             switch (evt.gbutton.button)
             {
@@ -1945,7 +1965,20 @@ void MenuState::handleMessage(const cro::Message& msg)
         }
     }
 
+    else if (msg.id == cro::Message::WindowMessage)
+    {
+        const auto& data = msg.getData<cro::Message::WindowEvent>();
+        if (data.event == SDL_EVENT_WINDOW_RESIZED)
+        {
+            m_lobbyMenu.resized(data.data0, data.data1);
+        }
+    }
+
+#ifdef NEW_LOBBY
+    if (m_currentMenu == MenuID::LobbyV2)
+#else
     if (m_currentMenu == MenuID::Lobby)
+#endif
     {
         m_textChat.handleMessage(msg);
     }
@@ -4125,7 +4158,11 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     cmd.action = [&](cro::Entity e, float)
                     {
                         m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+#ifdef NEW_LOBBY
+                        m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::LobbyV2;
+#else
                         m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Lobby;
+#endif
                         m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
                     };
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

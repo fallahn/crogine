@@ -216,7 +216,11 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
         case cro::Message::SpriteAnimationMessage:
         {
             const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
+#ifdef NEW_LOBBY
+            if (m_currentMenu == MenuState::MenuID::LobbyV2)
+#else
             if (m_currentMenu == MenuState::MenuID::Lobby)
+#endif
             {
                 //these are raised by the small ball animations
                 switch (data.userType)

@@ -504,7 +504,18 @@ void MenuState::createUI()
 #endif
 
     //TODO replace this with creating new menu
+#ifdef NEW_LOBBY
+    //we still need to create the old menu for now just to handle some cases where
+    //info is targetted, so we'll put it way off screen
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 100000.f, 100000.f });
+    createLobbyMenu(entity, mouseEnterCallback, mouseExitCallback);
+
+    //also the new menu expects the root to be centre of the screen...
+    m_lobbyMenu.create(rootNode);
+#else
     createLobbyMenu(rootNode, mouseEnterCallback, mouseExitCallback);
+#endif
 
     //diplays version number
     entity = m_uiScene.createEntity();
@@ -5810,12 +5821,21 @@ void MenuState::createPreviousScoreCard()
             if (pos.y == OffscreenPos)
             {
                 //only set the active menu if the dest is Lobby
+#ifdef NEW_LOBBY
+                if (dest == MenuID::LobbyV2)
+                {
+                    m_currentMenu = MenuID::LobbyV2;
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::LobbyV2);
+                    dest = MenuID::Dummy;
+                }
+#else
                 if (dest == MenuID::Lobby)
                 {
                     m_currentMenu = MenuID::Lobby;
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Lobby);
                     dest = MenuID::Dummy;
                 }
+#endif
                 e.getComponent<cro::Callback>().active = false;
             }
         }
@@ -5827,9 +5847,14 @@ void MenuState::createPreviousScoreCard()
             if (pos.y == targetPos)
             {
                 m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Scorecard);
-                dest = MenuID::Lobby;
                 e.getComponent<cro::Callback>().active = false;
+#ifdef NEW_LOBBY
+                dest = MenuID::LobbyV2;
+                m_currentMenu = MenuID::LobbyV2;
+#else
+                dest = MenuID::Lobby;
                 m_currentMenu = MenuID::Lobby;// needs to be set to this to correctly resize the window TODO find out where resize is handled and include correct menu IDs in the condition...
+#endif
             }
         }
         m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
@@ -6905,9 +6930,17 @@ void MenuState::togglePreviousScoreCard()
     if (m_lobbyWindowEntities[LobbyEntityID::Scorecard].isValid()
         && !m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Callback>().active)
     {
+#ifdef NEW_LOBBY
+        if (m_currentMenu == MenuID::LobbyV2)
+#else
         if (m_currentMenu == MenuID::Lobby)
+#endif
         {
+#ifdef NEW_LOBBY
+            if (m_uiScene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::LobbyV2)
+#else
             if (m_uiScene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::Lobby)
+#endif
             {
                 m_currentMenu = MenuID::Dummy;
                 m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
