@@ -348,16 +348,6 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
                     playerInfo[i].distanceToHole = 0.f;
                     playerInfo[i].holeScore[m_currentHole] = currPlayer.holeScore[m_currentHole] + 1;
                 }
-
-                /*for (auto& d : allData)
-                {
-                    if (d != currPlayer)
-                    {
-                        auto player = playerFromInfo(d);
-                        player->distanceToHole = 0.f;
-                        player->holeScore[m_currentHole] = currPlayer.holeScore[m_currentHole] + 1;
-                    }
-                }*/
             }
             else
             {
@@ -371,15 +361,6 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
                         currPlayer.distanceToHole = 0.f;
                     }
                 }
-                /*for (auto& d : allData)
-                {
-                    if (d != currPlayer
-                        && d.distanceToHole == 0
-                        && d.holeScore[m_currentHole] < currPlayer.holeScore[m_currentHole])
-                    {
-                        m_playerInfo[groupID].playerInfo[0].distanceToHole = 0.f;
-                    }
-                }*/
             }
             break;
         }
@@ -633,7 +614,7 @@ bool GolfState::summariseRules()
                 !m_skinsTie2 &&
                 sortData[0].holeScore[m_currentHole] != sortData[1].holeScore[m_currentHole])
                 || (m_skinsTie && m_currentHole == m_holeData.size() - 1) //this was the sudden death hole
-                || (m_skinsTie2 && m_currentHole == m_holeData.size() - 1)) //this was the sudden death hole
+                || (m_skinsTie2 && sortData[0].distanceToHole < sortData[1].distanceToHole)) //this was the tie break
             {
                 for (auto& group : m_playerInfo)
                 {
