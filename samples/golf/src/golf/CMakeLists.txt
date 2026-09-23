@@ -68,6 +68,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/MenuCallbacks.cpp
   ${PROJECT_DIR}/golf/MenuCreation.cpp
   ${PROJECT_DIR}/golf/MenuCustomisation.cpp
+  ${PROJECT_DIR}/golf/MenuLobbyV2.cpp
   ${PROJECT_DIR}/golf/MenuSoundDirector.cpp
   ${PROJECT_DIR}/golf/MenuState.cpp
   ${PROJECT_DIR}/golf/MenuStateCan.cpp

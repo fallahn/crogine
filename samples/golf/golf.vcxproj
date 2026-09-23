@@ -753,6 +753,7 @@
     <ClCompile Include="src\golf\MenuCallbacks.cpp" />
     <ClCompile Include="src\golf\MenuCreation.cpp" />
     <ClCompile Include="src\golf\MenuCustomisation.cpp" />
+    <ClCompile Include="src\golf\MenuLobbyV2.cpp" />
     <ClCompile Include="src\golf\MenuSoundDirector.cpp" />
     <ClCompile Include="src\golf\MenuState.cpp" />
     <ClCompile Include="src\golf\MenuStateCan.cpp" />

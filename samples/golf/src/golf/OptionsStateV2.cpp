@@ -802,7 +802,7 @@ void OptionsStateV2::buildScene()
     rootNode.getComponent<cro::Transform>().addChild(m_uiLayout.tabBar.background.getComponent<cro::Transform>());
 
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info); 
-    const float Spacing = 1.f / std::int32_t(TabID::Count/* + 1*/); //leave equivalent of half a tab either end
+    const float Spacing = 1.f / std::int32_t(TabID::Count/* + 1*/);
     for (auto i = 0; i < TabID::Count; ++i)
     {
         auto& item = m_uiLayout.tabBar.items[i];

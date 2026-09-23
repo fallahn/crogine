@@ -490,6 +490,11 @@ void MenuState::createUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Dummy);
 
+    //consumes input when new lobby menu is open
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::UIInput>().setGroup(MenuID::LobbyV2);
+
     createMainMenu(rootNode, mouseEnterCallback, mouseExitCallback);
     createAvatarMenu(rootNode);
 #ifdef USE_GNS
@@ -497,6 +502,8 @@ void MenuState::createUI()
 #else
     createJoinMenu(rootNode, mouseEnterCallback, mouseExitCallback);
 #endif
+
+    //TODO replace this with creating new menu
     createLobbyMenu(rootNode, mouseEnterCallback, mouseExitCallback);
 
     //diplays version number

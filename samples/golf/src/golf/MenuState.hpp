@@ -43,6 +43,7 @@ source distribution.
 #include "VoiceChat.hpp"
 #include "HoleData.hpp"
 #include "GroupID.hpp"
+#include "ui/MenuLayout.hpp"
 
 #include <MatchMaking.hpp>
 
@@ -109,6 +110,7 @@ public:
         ProfileFlyout, ConfirmQuit,
         Scorecard, Weather, CareerSelect,
 
+        LobbyV2,
         Count
     };
 
@@ -485,4 +487,47 @@ private:
     void applyProLeagueConnection();
 
     friend struct MainMenuContext;
+
+
+
+    struct LobbyMenu final
+    {
+        explicit LobbyMenu(MenuState& ms, SharedStateData& sd)
+            : m_menuState(ms),
+            m_sharedData(sd),
+            m_uiLayout(TabID::Count, sd) { }
+
+        void handleEvent(const cro::Event&);
+
+        MenuState& m_menuState;
+        SharedStateData& m_sharedData;
+        UILayout m_uiLayout;
+
+        std::array<cro::Clock, 4u> m_inputRepeatClocks = {};
+        std::array<cro::Time, 4u> m_repeatTimes = {};
+        std::array<std::uint8_t, 4u> m_controllerMasks = {};
+        std::array<std::uint8_t, 4u> m_controllerPrevMasks = {};
+        void resetRepeatTimer(std::int32_t, cro::Time);
+
+        cro::Entity m_infoString;
+        cro::Entity m_infoSprite;
+        std::array<cro::FloatRect, 2u> m_infoRects = {};
+
+        struct TabID final
+        {
+            enum
+            {
+                Players, Course, Rules, Scores,
+                Count
+            };
+        };
+
+
+        void create(cro::Entity rootNode);
+        void createPlayerTab();
+        void createCourseTab();
+        void createRulesTab();
+        void createScoresTab();
+    }m_lobbyMenu;
+    friend struct LobbyMenu;
 };

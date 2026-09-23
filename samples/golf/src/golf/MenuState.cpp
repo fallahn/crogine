@@ -101,6 +101,7 @@ source distribution.
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
+#include <crogine/ecs/systems/UIElementSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
@@ -210,7 +211,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_viewScale             (1.f),
     m_scrollSpeed           (1.f),
     m_serverMapAvailable    (true),
-    m_avUpdateCount         (0)
+    m_avUpdateCount         (0),
+    m_lobbyMenu             (*this, sd)
 {
     m_uiScene.setTitle("Menu UI");
     m_backgroundScene.setTitle("Menu Background");
@@ -1294,6 +1296,10 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 }
             }
             break;
+        case SDLK_F3:
+            m_lobbyMenu.create({});
+            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::LobbyV2);
+            break;
 #ifdef CRO_DEBUG_
 //#ifdef USE_GNS
 //        case SDLK_PAGEUP:
@@ -1596,9 +1602,18 @@ bool MenuState::handleEvent(const cro::Event& evt)
         }
     }
 
+    const auto activeUI = m_uiScene.getSystem<cro::UISystem>()->getActiveGroup();
     if (!m_textChat.isVisible())
     {
-        m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);
+        switch (activeUI)
+        {
+        default:
+            m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);
+            break;
+        case MenuID::LobbyV2:
+            m_lobbyMenu.handleEvent(evt);
+            break;
+        }
     }
 
     m_uiScene.forwardEvent(evt);
@@ -2126,6 +2141,7 @@ void MenuState::addSystems()
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<InterpolationSystem<INTERP_TYPE>>(mb);
     m_uiScene.addSystem<NameScrollSystem>(mb);
+    m_uiScene.addSystem<cro::UIElementSystem>(mb);
     m_uiScene.addSystem<cro::UISystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::SpriteAnimator>(mb);
