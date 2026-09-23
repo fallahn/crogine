@@ -447,7 +447,7 @@ void GolfState::buildUI()
     //zoom amount text
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(m_freecamMenuEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 132.f, 0.1f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(m_freecamMenuEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 146.f, 0.1f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString("Zoom: 100%");
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
@@ -470,7 +470,7 @@ void GolfState::buildUI()
 
     //up/down button text
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(m_freecamMenuEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 132.f, 0.1f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(m_freecamMenuEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 146.f, 0.1f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Text>().setFillColour(TextGoldColour);

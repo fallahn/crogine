@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include <crogine/detail/IOStream.hpp>
 #include <crogine/detail/ModelBinary.hpp>
 #include <crogine/graphics/MeshBuilder.hpp>
 
