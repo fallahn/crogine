@@ -68,7 +68,8 @@ namespace sv
         bool m_gameStarted;
         //bool m_eliminationStarted; //< allows playing X holes before elimination starts
         bool m_allMapsLoaded;
-        bool m_skinsTie;
+        bool m_skinsTie; //TODO remove this if NTP is working
+        bool m_skinsTie2;
         bool m_eliminationTie;
         std::uint8_t m_currentHole;
 

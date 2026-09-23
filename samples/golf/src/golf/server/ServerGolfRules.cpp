@@ -178,11 +178,18 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
             break;
         case ScoreType::Match:
         case ScoreType::Skins:
-            //forfeit this hole if we can't beat the best score
-            if (m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] >= m_currentBest)
+            if (m_skinsTie2)
             {
-                m_playerInfo[groupID].playerInfo[0].distanceToHole = 0;
-                m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole]++;
+                updateNTP();
+            }
+            else
+            {
+                //forfeit this hole if we can't beat the best score
+                if (m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] >= m_currentBest)
+                {
+                    m_playerInfo[groupID].playerInfo[0].distanceToHole = 0;
+                    m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole]++;
+                }
             }
             break;
         case ScoreType::NearestThePin:
@@ -216,28 +223,25 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
         case ScoreType::Match:
         case ScoreType::Skins:
         {
-            //auto allData = getAllData();
             auto& playerInfo = m_playerInfo[groupID].playerInfo;
             //if this is skins sudden death then make everyone else the loser
-            if (m_skinsTie)
+            //if (m_skinsTie)
+            //{
+            //    //skins and match play are always in a single group
+            //    //so we don't consider other players here
+            //    const auto& currPlayer = playerInfo[0];
+            //    for (auto i = 1u; i < playerInfo.size(); ++i)
+            //    {
+            //        playerInfo[i].distanceToHole = 0.f;
+            //        playerInfo[i].holeScore[m_currentHole] = currPlayer.holeScore[m_currentHole] + 1;
+            //    }
+            //}
+            //else
+            if (m_skinsTie2)
             {
-                //skins and match play are always in a single group
-                //so we don't consider other players here
-                const auto& currPlayer = playerInfo[0];
-                for (auto i = 1u; i < playerInfo.size(); ++i)
-                {
-                    playerInfo[i].distanceToHole = 0.f;
-                    playerInfo[i].holeScore[m_currentHole] = currPlayer.holeScore[m_currentHole] + 1;
-                }
-                /*for (const auto& d : allData)
-                {
-                    if (d != currPlayer)
-                    {
-                        auto player = playerFromInfo(d);
-                        player->distanceToHole = 0.f;
-                        player->holeScore[m_currentHole] = currPlayer.holeScore[m_currentHole] + 1;
-                    }
-                }*/
+                //forfeit
+                m_playerInfo[groupID].playerInfo[0].distanceScore[m_currentHole] = NTPPenalty;
+                m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] = MaxNTPStrokes + 1;
             }
             else
             {
@@ -256,24 +260,6 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
                     }
                 }
 
-                //for (auto& d : allData)
-                //{
-                //    if (d != currPlayer &&
-                //        d.holeScore[m_currentHole] >= currPlayer.holeScore[m_currentHole])
-                //    {
-                //        if (d.distanceToHole > 0) //not already holed
-                //        {
-                //            auto player = playerFromInfo(d);
-                //            player->distanceToHole = 0.f;
-                //            player->holeScore[m_currentHole]++;
-
-                //            //also update the sorted data as we rely on the results below
-                //            d.distanceToHole = 0.f;
-                //            d.holeScore[m_currentHole]++; //therefore they lose a stroke and don't draw
-                //        }
-                //    }
-                //}
-
                 //if this is the second hole and it has the same as the current best
                 //force a draw by eliminating anyone who can't beat it
                 if (currPlayer.holeScore[m_currentHole] == m_currentBest)
@@ -286,20 +272,6 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
                             playerInfo[i].holeScore[m_currentHole] = std::min(m_currentBest, std::uint8_t(playerInfo[i].holeScore[m_currentHole] + 1));
                         }
                     }
-
-                    /*for (auto& d : allData)
-                    {
-                        if (d != currPlayer &&
-                            d.holeScore[m_currentHole] + 1 >= m_currentBest)
-                        {
-                            if (d.distanceToHole > 0)
-                            {
-                                auto player = playerFromInfo(d);
-                                player->distanceToHole = 0.f;
-                                player->holeScore[m_currentHole] = std::min(m_currentBest, std::uint8_t(d.holeScore[m_currentHole] + 1));
-                            }
-                        }
-                    }*/
                 }
             }
         }
@@ -359,6 +331,9 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
         case ScoreType::Match:
         case ScoreType::Skins:
         {
+            //when tie break enabled gimmies are disabled
+            //so we don't need to handle it here
+
             //auto allData = getAllData();
             auto& playerInfo = m_playerInfo[groupID].playerInfo;
 
@@ -608,15 +583,20 @@ bool GolfState::summariseRules()
     //check if we tied the last hole in skins
     if (m_sharedData.scoreType == ScoreType::Skins
         && !m_skinsTie
+        && !m_skinsTie2
         && ((m_currentHole + 1) == m_holeData.size()))
     {
         if (sortData[0].holeScore[m_currentHole] == sortData[1].holeScore[m_currentHole])
         {
             //this is used to make sure we send the correct score update to the client when this function returns
             //and employ sudden death on the final hole
-            m_skinsTie = true;
+            //m_skinsTie = true;
+            m_skinsTie2 = true;
+            sendServerTextMessage(u8"Tie Break! Nearest the pin in 2 strokes wins the pot!");
             m_scene.getSystem<BallSystem>()->setGimmeRadius(0);
 
+            //reset the score for the hole else
+            //we can't track how many NTP strokes we took
             for (auto& group : m_playerInfo)
             {
                 for (auto& p : group.playerInfo)
@@ -650,8 +630,10 @@ bool GolfState::summariseRules()
         {
             //only score if no player tied
             if ((!m_skinsTie && //we have to check this flag because if it was set m_currentHole was probably modified and the score check is the old hole.
+                !m_skinsTie2 &&
                 sortData[0].holeScore[m_currentHole] != sortData[1].holeScore[m_currentHole])
-                || (m_skinsTie && m_currentHole == m_holeData.size() - 1)) //this was the sudden death hole
+                || (m_skinsTie && m_currentHole == m_holeData.size() - 1) //this was the sudden death hole
+                || (m_skinsTie2 && m_currentHole == m_holeData.size() - 1)) //this was the sudden death hole
             {
                 for (auto& group : m_playerInfo)
                 {
@@ -684,7 +666,7 @@ bool GolfState::summariseRules()
             }
             else //increase the skins pot, but only if not repeating the final hole
             {
-                if (!m_skinsTie)
+                if (!m_skinsTie && !m_skinsTie2)
                 {
                     m_skinsPot++;
                     
