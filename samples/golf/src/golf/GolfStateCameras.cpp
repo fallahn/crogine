@@ -821,7 +821,7 @@ void GolfState::toggleFreeCam()
     m_photoMode = !m_photoMode;
     if (m_photoMode)
     {
-        m_ballTrails[m_serverGroup]->showPrevious(true); //TODO this needs to be false if the overlay isn't visible (or disabled in options)
+        m_ballTrails[m_serverGroup]->showPrevious(m_showTrailHistory);
 
         m_defaultCam = m_gameScene.setActiveCamera(m_freeCam);
         m_defaultCam.getComponent<cro::Camera>().active = false;

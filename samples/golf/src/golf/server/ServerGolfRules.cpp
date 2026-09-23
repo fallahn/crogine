@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -121,7 +121,6 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
 
     if (data.type == GolfBallEvent::TurnEnded)
     {
-        LogI << "Server: Turn ended" << std::endl;
         const auto updateNTP = 
             [&]()
             {
@@ -529,6 +528,7 @@ bool GolfState::summariseRules()
             {
                 //TODO if we return true here we need to sort the actual player
                 //data by distance instead of score to choose the correct winner
+                //although this *should* have been done by setNextPlayer()
                 return true;
             }
 
@@ -558,13 +558,13 @@ bool GolfState::summariseRules()
                 });
         }
         //end the game if there are more lives remaining
-        //than there are available holes - 
-        //although this doesn't account for tie-break
+        //than there are available holes
         if (sortData[0].lives > remainingHoles)
         {
             //TODO - this needs to be duplicated on the final hole (although surely we would have 0 holes remaining anyway?)
             if (sortData.size() > 1 &&
-                sortData[0].lives == sortData[1].lives)
+                sortData[0].lives == sortData[1].lives
+                && sortData[0].totalScore == sortData[1].totalScore) //this is an actual tie - else we break by score
             {
                 //enable tie-break;
                 m_eliminationTie = true;

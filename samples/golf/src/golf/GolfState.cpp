@@ -221,6 +221,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_idleCameraIndex       (0),
     m_lastSpectatePosition  (0.f),
     m_photoMode             (false),
+    m_showTrailHistory      (true),
     m_useDOF                (false),
     m_restoreInput          (false),
     m_activeAvatar          (nullptr),
@@ -786,6 +787,15 @@ bool GolfState::handleEvent(const cro::Event& evt)
             }
         };
 
+    const auto toggleTrailHistory = [this]()
+        {
+            if (m_photoMode)
+            {
+                m_showTrailHistory = !m_showTrailHistory;
+                m_ballTrails[m_serverGroup]->showPrevious(m_showTrailHistory);
+            }
+        };
+
     const auto toggleDOF = [&](bool isKey)
         {
             if (m_photoMode)
@@ -837,13 +847,15 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 toggleFreeCam();
             }
             break;
+        /*case SDL_SCANCODE_F10:
+            toggleTrailHistory();
+            break;*/
         }
 
         switch (evt.key.key)
         {
         default: break;
-
-            //3&4 rotate camera
+        //TODO these should probably be scancodes??
         case SDLK_TAB:
             showScoreboard(false);
             toggleFreecamMenu();
@@ -877,7 +889,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             auto& cam = m_cameras[CameraID::Player].getComponent<cro::Camera>();
             cam.resizeCallback(cam);
         }
-        break;
+            break;
         case SDLK_F7:
             m_terrainBuilder.setSlopeVisible(!m_terrainBuilder.getSlopeVisible());
             break;
@@ -905,6 +917,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
         case SDLK_F10:
         {
+            toggleTrailHistory();
+
             /*if (evt.key.mod & SDL_KMOD_SHIFT)
             {
                 cro::Command cmd;
@@ -1165,9 +1179,14 @@ bool GolfState::handleEvent(const cro::Event& evt)
             m_textChat.toggleWindow(false, true, false);
             break;
         case cro::GameController::ButtonBack:
-            if (!m_textChat.isVisible())
+            if (!m_textChat.isVisible()
+                && !m_photoMode)
             {
                 showScoreboard(true);
+            }
+            else
+            {
+                toggleTrailHistory();
             }
             break;
         case cro::GameController::ButtonB:

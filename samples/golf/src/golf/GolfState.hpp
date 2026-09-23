@@ -616,6 +616,7 @@ private:
     cro::Entity m_defaultCam;
     cro::Entity m_freeCam;
     bool m_photoMode;
+    bool m_showTrailHistory;
     bool m_useDOF;
     bool m_restoreInput;
     void toggleFreeCam();
