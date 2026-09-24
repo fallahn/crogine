@@ -50,7 +50,6 @@ namespace
     static constexpr cro::Time RepeatTimeLong = cro::seconds(0.5f);
     static constexpr cro::Time RepeatTimeShort = cro::seconds(0.05f);
 
-    static constexpr std::uint32_t WordWrapSize = 36; //TODO move this to a const header and share across all menus
     glm::uvec2 lastWindowSize = { 0u,0u };
 }
 
@@ -998,7 +997,7 @@ void MenuState::LobbyMenu::createScoresTab()
 
     //view leagues
     desc = "Browse the current League standings.";
-    cro::Util::String::wordWrap(desc, WordWrapSize);
+    cro::Util::String::wordWrap(desc, WordWrapSmall);
 
     item = &m_uiLayout.menuLayout.items[TabID::Scores].emplace_back();
     item->title = "View Leagues";

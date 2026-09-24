@@ -4252,7 +4252,7 @@ void ProfileStateV2::setBioString(const std::string& str)
     //TODO measure space and word wrap
 
     cro::String s = str;
-    cro::Util::String::wordWrap(s, 36);
+    cro::Util::String::wordWrap(s, WordWrapSmall);
 
     m_uiLayout.detailsPane.optionalEntities[ExtraDetail::BioString].getComponent<cro::Text>().setString(s);
 

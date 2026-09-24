@@ -1835,7 +1835,7 @@ void OptionsStateV2::createSettingsItems()
     item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Download Remote Content";
     item->description = "Allow downloading remote content eg Workshop items in multiplayer";
-    cro::Util::String::wordWrap(item->description, 36);
+    cro::Util::String::wordWrap(item->description, WordWrapSmall);
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.remoteContent = i.selectedIndex == 1;
@@ -2031,7 +2031,7 @@ void OptionsStateV2::createAccesibilityItems()
     item = &m_uiLayout.menuLayout.items[TabID::Accessibility].emplace_back();
     item->title = "Use Text To Speech for Chat";
     item->description = "Enable text to speech playback for in-game chat";
-    cro::Util::String::wordWrap(item->description, 36);
+    cro::Util::String::wordWrap(item->description, WordWrapSmall);
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.useTTS = i.selectedIndex == 0 ? false : true;
@@ -2052,7 +2052,7 @@ void OptionsStateV2::createKeyboardItems()
     //item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     //item->title = "Use Left Mouse as Action Button";
     //item->description = "Clicking left mouse button performs the same as the Action key";
-    //cro::Util::String::wordWrap(item->description, 36);
+    //cro::Util::String::wordWrap(item->description, WordWrapSmall);
     //item->activated = [&](Menu::Item& i)
     //    {
     //        m_sharedData.useMouseAction = i.selectedIndex == 0 ? false : true;
@@ -2065,7 +2065,7 @@ void OptionsStateV2::createKeyboardItems()
     //item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     //item->title = "Hold Action For Power";
     //item->description = "Press and hold the Action key to choose swing power instead of the traditional 3-click system";
-    //cro::Util::String::wordWrap(item->description, 36);
+    //cro::Util::String::wordWrap(item->description, WordWrapSmall);
     //item->activated = [&](Menu::Item& i)
     //    {
     //        m_sharedData.pressHold = i.selectedIndex == 0 ? false : true;
@@ -2479,7 +2479,7 @@ void OptionsStateV2::createControllerItems()
     item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Thumbstick Deadzone";
     item->description = "Adjusts the minimum movement of the thumbstick before input is accepted by the game: larger values require more movement.";
-    cro::Util::String::wordWrap(item->description, 36);
+    cro::Util::String::wordWrap(item->description, WordWrapSmall);
     item->activated = [&](Menu::Item& i)
         {
             const float amt = 0.1f * (i.selectedIndex + 1);
@@ -2569,9 +2569,9 @@ void OptionsStateV2::createControllerItems()
                     m_uiLayout.menuLayout.items[TabID::Controller][yItem].description = "Invert the controller Y axis when in camera mode";
                     m_uiLayout.menuLayout.items[TabID::Controller][swingItem].description = "With either trigger held, pull back on a thumbstick to charge the power. Push forward on the stick to take your shot.";
                 }
-                cro::Util::String::wordWrap(m_uiLayout.menuLayout.items[TabID::Controller][xItem].description, 36);
-                cro::Util::String::wordWrap(m_uiLayout.menuLayout.items[TabID::Controller][yItem].description, 36);
-                cro::Util::String::wordWrap(m_uiLayout.menuLayout.items[TabID::Controller][swingItem].description, 36);
+                cro::Util::String::wordWrap(m_uiLayout.menuLayout.items[TabID::Controller][xItem].description, WordWrapSmall);
+                cro::Util::String::wordWrap(m_uiLayout.menuLayout.items[TabID::Controller][yItem].description, WordWrapSmall);
+                cro::Util::String::wordWrap(m_uiLayout.menuLayout.items[TabID::Controller][swingItem].description, WordWrapSmall);
             }
             lastInput = m_sharedData.activeInput;
         };
@@ -2580,7 +2580,7 @@ void OptionsStateV2::createControllerItems()
     item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Use Vibration";
     item->description = "Enable vibration effects on supported controllers";
-    cro::Util::String::wordWrap(item->description, 36);
+    cro::Util::String::wordWrap(item->description, WordWrapSmall);
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.enableRumble = i.selectedIndex;
@@ -2592,7 +2592,7 @@ void OptionsStateV2::createControllerItems()
     item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Rebind Buttons";
     item->description = "Review a Steam guide on rebinding the controller buttons with Steam Input";
-    cro::Util::String::wordWrap(item->description, 36);
+    cro::Util::String::wordWrap(item->description, WordWrapSmall);
     item->activated = [&](Menu::Item& i)
         {
             Social::showControllerBinding();
@@ -2622,7 +2622,7 @@ void OptionsStateV2::createDisplayItems()
     item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Antialiasing";
     //item->description = "Switch between billboard and 3D trees. Classic trees are applied when the game is loaded";
-    //cro::Util::String::wordWrap(item->description, 36);
+    //cro::Util::String::wordWrap(item->description, WordWrapSmall);
     item->activated = [&](Menu::Item& i)
         {
             //sets shared data value
@@ -2718,7 +2718,7 @@ void OptionsStateV2::createDisplayItems()
     item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Use Pixel Scaling (Default: OFF)";
     item->description = "Renders the game at a low resolution and then scales the output for a pixelated, retro look. Shortcut +/- on numpad";
-    cro::Util::String::wordWrap(item->description, 36);
+    cro::Util::String::wordWrap(item->description, WordWrapSmall);
     item->activated = [&](Menu::Item& i)
         {
             //this func toggles the actual property...
@@ -2731,7 +2731,7 @@ void OptionsStateV2::createDisplayItems()
     item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Use Vertex Snapping (Default: OFF)";
     item->description = "Usually used in conjunction with Pixel Scaling. May cause z-fighting. Requires restart.";
-    cro::Util::String::wordWrap(item->description, 36);
+    cro::Util::String::wordWrap(item->description, WordWrapSmall);
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.vertexSnap = i.selectedIndex == 1;
@@ -2744,7 +2744,7 @@ void OptionsStateV2::createDisplayItems()
     item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Enable Full Screen";
     item->description = "Shortcut: F11 or Alt+Enter";
-    cro::Util::String::wordWrap(item->description, 36);
+    cro::Util::String::wordWrap(item->description, WordWrapSmall);
     item->activated = [&](Menu::Item& i)
         {
             cro::App::getWindow().setFullScreen(i.selectedIndex == 1);
@@ -2757,7 +2757,7 @@ void OptionsStateV2::createDisplayItems()
     item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Full Screen Mode";
     item->description = "When in full screen run the game in a borderless window at the desktop resolution, or exclusive full screen at the window resolution.";
-    cro::Util::String::wordWrap(item->description, 36);
+    cro::Util::String::wordWrap(item->description, WordWrapSmall);
     item->activated = [&](Menu::Item& i)
         {
             cro::App::getWindow().setExclusiveFullscreen(i.selectedIndex == 1);
@@ -2776,7 +2776,7 @@ void OptionsStateV2::createDisplayItems()
     item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Show Window Border";
     item->description = "Display a border around the game window when not in full screen.";
-    cro::Util::String::wordWrap(item->description, 36);
+    cro::Util::String::wordWrap(item->description, WordWrapSmall);
     item->activated = [&](Menu::Item& i)
         {
             cro::App::getWindow().setBorderVisible(i.selectedIndex == 1);
@@ -2789,7 +2789,7 @@ void OptionsStateV2::createDisplayItems()
     item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Enable VSync";
     item->description = "Synchronises the game's refresh rate with your monitor";
-    cro::Util::String::wordWrap(item->description, 36);
+    cro::Util::String::wordWrap(item->description, WordWrapSmall);
     item->activated = [&](Menu::Item& i)
         {
             cro::App::getWindow().setVsyncEnabled(i.selectedIndex == 1);
@@ -2801,7 +2801,7 @@ void OptionsStateV2::createDisplayItems()
     item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Tree Quality";
     item->description = "Switch between billboard and 3D trees. Classic trees are applied when the game is loaded";
-    cro::Util::String::wordWrap(item->description, 36);
+    cro::Util::String::wordWrap(item->description, WordWrapSmall);
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.treeQuality = i.selectedIndex;
@@ -2816,7 +2816,7 @@ void OptionsStateV2::createDisplayItems()
     item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Shadow Quality";
     item->description = "NOTE Toggling Classic shadows requires a restart and may cause visual artifacts until done so";
-    cro::Util::String::wordWrap(item->description, 36);
+    cro::Util::String::wordWrap(item->description, WordWrapSmall);
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.shadowQuality = i.selectedIndex;
@@ -2831,7 +2831,7 @@ void OptionsStateV2::createDisplayItems()
     item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Crowd Density";
     item->description = "NOTE Very high density crowds may cause a drop in performance";
-    cro::Util::String::wordWrap(item->description, 36);
+    cro::Util::String::wordWrap(item->description, WordWrapSmall);
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.crowdDensity = i.selectedIndex;
@@ -2848,7 +2848,7 @@ void OptionsStateV2::createDisplayItems()
         item->title = "Grass Density";
         //item->description = "Changes the appearance of the grass in the rough. Setting this to Low can improve performance";
         item->description = "Changes the density of the grass in the rough. Setting this to Low can improve performance. Takes affect when the next hole loads.";
-        cro::Util::String::wordWrap(item->description, 36);
+        cro::Util::String::wordWrap(item->description, WordWrapSmall);
         item->activated = [&](Menu::Item& i)
             {
                 m_sharedData.grassDensity = i.selectedIndex;
@@ -2904,7 +2904,7 @@ void OptionsStateV2::createAudioItems()
     //item = &m_uiLayout.menuLayout.items[TabID::Audio].emplace_back();
     //item->title = "Use Text To Speech for Chat";
     //item->description = "Enable text to speech playback for in-game chat";
-    //cro::Util::String::wordWrap(item->description, 36);
+    //cro::Util::String::wordWrap(item->description, WordWrapSmall);
     //item->activated = [&](Menu::Item& i)
     //    {
     //        m_sharedData.useTTS = i.selectedIndex == 0 ? false : true;
@@ -3169,7 +3169,7 @@ void OptionsStateV2::updateKeybind(SDL_Scancode key)
     if (auto result = std::find(std::begin(LockedKeys), std::end(LockedKeys), key); result != std::end(LockedKeys))
     {
         cro::String msg("This key cannot be assigned. Press a key.");
-        cro::Util::String::wordWrap(msg, 36);
+        cro::Util::String::wordWrap(msg, WordWrapSmall);
         m_uiLayout.detailsPane.text.getComponent<cro::Text>().setString(msg);
 
         return;
