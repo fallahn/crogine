@@ -1,6 +1,6 @@
 ﻿/*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -2111,8 +2111,8 @@ void MenuState::updateLobbyAvatars()
         glm::vec2 textureSize(LabelTextureSize);
         textureSize.y -= LabelIconSize.y * 4.f;
 
-        auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
-        auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+        const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+        const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
         cro::String nameString;
 
@@ -2201,7 +2201,7 @@ void MenuState::updateLobbyAvatars()
                 auto entity = m_uiScene.createEntity();
                 entity.addComponent<cro::Transform>().setPosition({ 100.f, (RankSpacing * clientCount) + 180.f, 0.3f });
                 entity.addComponent<cro::Drawable2D>();
-                entity.addComponent<cro::Text>(smallFont).setString("Level");
+                entity.addComponent<cro::Text>(smallFont);// .setString("Level");
                 entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
                 entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
                 entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
@@ -2250,7 +2250,7 @@ void MenuState::updateLobbyAvatars()
                     else
                     {
                         ent.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                        auto index = std::min(5, m_sharedData.connectionData[h].level / 10);
+                        const auto index = std::min(5, m_sharedData.connectionData[h].level / 10);
                         ent.getComponent<cro::SpriteAnimation>().play(index);
                     }
                 };
@@ -2263,9 +2263,9 @@ void MenuState::updateLobbyAvatars()
                 entity.getComponent<cro::Transform>().setScale({ 0.2f, 0.2f });
                 entity.addComponent<cro::Drawable2D>();
                 entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[h].getTexture());
-                cro::FloatRect bounds = { 0.f, LabelTextureSize.y - (LabelIconSize.y * 4.f), LabelIconSize.x, LabelIconSize.y };
+                const cro::FloatRect bounds = { 0.f, LabelTextureSize.y - (LabelIconSize.y * 4.f), LabelIconSize.x, LabelIconSize.y };
                 entity.getComponent<cro::Sprite>().setTextureRect(bounds);
-                entity.addComponent<cro::SpriteAnimation>();
+                entity.addComponent<cro::SpriteAnimation>(); //TODO what's the animtion for?
                 rankEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
                 children.push_back(entity);
 
@@ -2306,7 +2306,7 @@ void MenuState::updateLobbyAvatars()
                     entity = m_uiScene.createEntity();
                     entity.addComponent<cro::Transform>().setPosition({ (BarWidth / 2.f) - 2.f, -4.f, -0.15f });
 
-                    const auto CornerColour = cro::Colour(std::uint8_t(58), 57, 65); //grey
+                    constexpr auto CornerColour = cro::Colour(std::uint8_t(58), 57, 65); //grey
                     //const auto CornerColour = cro::Colour(std::uint8_t(152), 122, 104); //beige
 
                     const auto progress = Social::getLevelProgress();

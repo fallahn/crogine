@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/SpriteAnimation.hpp>
 #include <crogine/ecs/components/UIElement.hpp>
 #include <crogine/ecs/systems/UIElementSystem.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
@@ -330,6 +331,22 @@ void MenuState::LobbyMenu::resetRepeatTimer(std::int32_t i, cro::Time resetTime)
 void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
 {
     m_uiLayout.loadAssets(*m_sharedData.sharedResources);
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+
+    m_infoText.setFont(smallFont);
+    m_infoText.setCharacterSize(InfoTextSize);
+    m_infoText.setFillColour(TextNormalColour);
+    m_infoText.setShadowColour(LeaderboardTextDark);
+    m_infoText.setShadowOffset({ 1.f, -1.f });
+
+    m_uiText.setFont(largeFont);
+    m_uiText.setCharacterSize(UITextSize);
+    m_uiText.setFillColour(TextNormalColour);
+    m_uiText.setShadowColour(LeaderboardTextDark);
+    m_uiText.setShadowOffset({ 1.f, -1.f });
+
+    m_infoArray.setPrimitiveType(GL_TRIANGLES);
 
     auto rootNode = m_menuState.m_uiScene.createEntity();
     rootNode.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
@@ -351,7 +368,6 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     m_uiLayout.tabBar.background.getComponent<cro::UIElement>().absolutePosition = { 0.f, -(TabBarHeight * 2.f) };
     rootNode.getComponent<cro::Transform>().addChild(m_uiLayout.tabBar.background.getComponent<cro::Transform>());
 
-    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     const float Spacing = 1.f / std::int32_t(TabID::Count/* + 1*/);
     for (auto i = 0; i < TabID::Count; ++i)
     {
@@ -378,7 +394,6 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
         m_uiLayout.tabBar.background.getComponent<cro::Transform>().addChild(item.text.getComponent<cro::Transform>());
     }
 
-    const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
     
     //title text
     auto entity = m_menuState.m_uiScene.createEntity();
@@ -508,7 +523,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     m_uiLayout.detailsPane.text.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     m_uiLayout.detailsPane.text.getComponent<cro::Text>().setFillColour(TextNormalColour);
     m_uiLayout.detailsPane.text.addComponent<cro::UIElement>(cro::UIElement::Text, true);
-    m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundOffset, -82.f }; //90
+    m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundOffset, -104.f }; //90
     m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().characterSize = UITextSize;
     m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().verticalSpacing = 3.f;
     m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().depth = 0.2f;
@@ -1068,19 +1083,19 @@ void MenuState::LobbyMenu::createScoresTab()
     //tab selection callback
     m_uiLayout.tabBar.items[TabID::Scores].selected = std::bind(&LobbyMenu::applyScoresTabDetails, this);
 
-    updateScoresTab();
 
     //create a specific entity to display the scores tab background
     auto entity = m_menuState.m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-    entity.addComponent<cro::Sprite>(m_scoresTabTexture.getTexture());
+    entity.addComponent<cro::Sprite>(/*m_scoresTabTexture.getTexture()*/);
     entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, false);
     entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().absolutePosition.y + 8.f };
     entity.getComponent<cro::UIElement>().depth = 0.1f;
     m_scoresTabEntity = entity;
     m_uiLayout.detailsPane.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    updateScoresTab();
 }
 
 void MenuState::LobbyMenu::updateScoresTab(bool resized)
@@ -1097,14 +1112,172 @@ void MenuState::LobbyMenu::updateScoresTab(bool resized)
             m_scoresTabTexture.create(size.x - (BorderSize * 2), ((size.y / 2) - BorderSize) + Offset, false);
             m_scoresTabEntity.getComponent<cro::Sprite>().setTexture(m_scoresTabTexture.getTexture());
         }
-        //m_scoresTabTexture.create(384, 408, false);
-        //LogI << "Created texture" << std::endl;
     }
 
+    for (auto e : m_networkIcons)
+    {
+        m_menuState.m_uiScene.destroyEntity(e);
+    }
+    m_networkIcons.clear();
 
+
+
+    //update the texture
     m_scoresTabTexture.clear(CD32::Colours[CD32::GreyDark]);
 
+    std::int32_t h = 0;
+    std::int32_t clientCount = 0;
+    const float TextureWidth = static_cast<float>(m_scoresTabTexture.getSize().x);
+    const float TextureHeight = static_cast<float>(m_scoresTabTexture.getSize().y) - 22.f;
+    static constexpr float RankSpacing = -14.f;
+
+    m_uiText.setString("Connected Clients");
+    m_uiText.setAlignment(cro::SimpleText::Alignment::Centre);
+    m_uiText.setPosition({TextureWidth / 2.f, TextureHeight + 12.f});
+    m_uiText.draw();
+
+    for (const auto& c : m_sharedData.connectionData)
+    {
+        if (c.playerCount != 0)
+        {
+            //rank text - I've done this a weird-ass way by positioning this first then placing everything
+            //else relative to it...
+            std::string str = "Level " + std::to_string(c.level);
+            str += "               " + std::to_string(c.playerCount) + " player(s)";
+            m_infoText.setString(str);
+            m_infoText.setPosition({ (TextureWidth / 2.f) - 56.f, (RankSpacing * clientCount) + TextureHeight });
+            //m_infoText.draw(); //draw this last as it might need to render over the level bar
+
+            //rank badge
+            //this uses animation 0-5 based on level / 10
+            const auto index = std::min(5, m_sharedData.connectionData[h].level / 10);
+            m_infoQuad = m_menuState.m_sprites[SpriteID::LevelBadge];
+            m_infoQuad.setTextureRect(m_menuState.m_sprites[SpriteID::LevelBadge].getAnimations()[index].frames[0].frame);
+            m_infoQuad.setScale(glm::vec2(1.f));
+            m_infoQuad.setPosition(m_infoText.getPosition() + glm::vec2(-18.f, -5.f));
+            m_infoQuad.draw();
+
+            //avatar icon
+            const cro::FloatRect bounds = { 0.f, LabelTextureSize.y - (LabelIconSize.y * 4.f), LabelIconSize.x, LabelIconSize.y };
+            m_infoQuad.setTexture(m_sharedData.nameTextures[h].getTexture());
+            m_infoQuad.setTextureRect(bounds);
+            m_infoQuad.setPosition(m_infoText.getPosition() + glm::vec2(-62.f, -4.f));
+            m_infoQuad.setScale(glm::vec2(0.2f)); //hmm this mangles things even more when scaled up - but then 0.2 isn't a multiple of view scales anyway...
+            m_infoQuad.draw();
+
+            //network icon - actually an ent as it's dynamic
+            auto entity = m_menuState.m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(glm::vec3(m_infoText.getPosition() - glm::vec2(46.f, 6.f), 0.1f));
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Sprite>() = m_menuState.m_sprites[SpriteID::NetStrength];
+            entity.addComponent<cro::SpriteAnimation>();
+
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [this, h](cro::Entity ent, float)
+                {
+                    ent.getComponent<cro::Drawable2D>().setFacing(m_scoresTabEntity.getComponent<cro::Drawable2D>().getFacing());
+                    if (m_sharedData.connectionData[h].playerCount == 0)
+                    {
+                        ent.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                    }
+                    else
+                    {
+                        ent.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                        const auto index = std::min(4u, m_sharedData.connectionData[h].pingTime / 60);
+                        ent.getComponent<cro::SpriteAnimation>().play(index);
+                    }
+                };
+            m_scoresTabEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            m_networkIcons.push_back(entity);
+
+
+
+            //if this is our local client then add the current xp level
+            if (h == m_sharedData.clientConnection.connectionID)
+            {
+                //level progress
+                constexpr float BarWidth = 80.f;
+                constexpr float BarHeight = 10.f;
+
+                m_infoArray.setPosition(m_infoText.getPosition()  + glm::vec2((BarWidth / 2.f) - 3.f, 3.f));
+
+                constexpr auto CornerColour = cro::Colour(std::uint8_t(58), 57, 65); //grey
+                //const auto CornerColour = cro::Colour(std::uint8_t(152), 122, 104); //beige
+
+                const auto progress = Social::getLevelProgress();
+                m_infoArray.setVertexData(
+                    {
+                        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, BarHeight / 2.f), TextHighlightColour),
+                        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, -BarHeight / 2.f), TextHighlightColour),
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress.progress), BarHeight / 2.f), TextHighlightColour),
+
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress.progress), BarHeight / 2.f), TextHighlightColour),
+                        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, -BarHeight / 2.f), TextHighlightColour),
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress.progress), -BarHeight / 2.f), TextHighlightColour),
+
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress.progress), BarHeight / 2.f), LeaderboardTextDark),
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress.progress), -BarHeight / 2.f), LeaderboardTextDark),
+                        cro::Vertex2D(glm::vec2(BarWidth / 2.f, BarHeight / 2.f), LeaderboardTextDark),
+
+                        cro::Vertex2D(glm::vec2(BarWidth / 2.f, BarHeight / 2.f), LeaderboardTextDark),
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress.progress), -BarHeight / 2.f), LeaderboardTextDark),
+                        cro::Vertex2D(glm::vec2(BarWidth / 2.f, -BarHeight / 2.f), LeaderboardTextDark),
+
+                        //corners
+                        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, BarHeight / 2.f), CornerColour),
+                        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, (BarHeight / 2.f) - 1.f), CornerColour),
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, BarHeight / 2.f), CornerColour),
+
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, BarHeight / 2.f), CornerColour),
+                        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, (BarHeight / 2.f) - 1.f), CornerColour),
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, (BarHeight / 2.f) - 1.f), CornerColour),
+
+                        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+                        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, -BarHeight / 2.f), CornerColour),
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+                        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, -BarHeight / 2.f), CornerColour),
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, -BarHeight / 2.f), CornerColour),
+
+
+                        cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, BarHeight / 2.f), CornerColour),
+                        cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, (BarHeight / 2.f) - 1.f), CornerColour),
+                        cro::Vertex2D(glm::vec2(BarWidth / 2.f, BarHeight / 2.f), CornerColour),
+
+                        cro::Vertex2D(glm::vec2(BarWidth / 2.f, BarHeight / 2.f), CornerColour),
+                        cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, (BarHeight / 2.f) - 1.f), CornerColour),
+                        cro::Vertex2D(glm::vec2(BarWidth / 2.f, (BarHeight / 2.f) - 1.f), CornerColour),
+
+                        cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+                        cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, -BarHeight / 2.f), CornerColour),
+                        cro::Vertex2D(glm::vec2(BarWidth / 2.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+
+                        cro::Vertex2D(glm::vec2(BarWidth / 2.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+                        cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, -BarHeight / 2.f), CornerColour),
+                        cro::Vertex2D(glm::vec2(BarWidth / 2.f, -BarHeight / 2.f), CornerColour),
+                    });
+                m_infoArray.draw();
+            }
+
+            m_infoText.draw();
+            clientCount++;
+        }
+        /*else
+        {
+            m_infoText.setString("I am placeholder" + std::to_string(h));
+            m_infoText.setPosition({ 64.f, (RankSpacing * h) + TextureHeight + 6.f });
+            m_infoText.draw();
+        }*/
+        h++;
+    }
     m_scoresTabTexture.display();
+
+
+
+
+
 
     if (m_uiLayout.tabBar.activeIndex == TabID::Scores)
     {
