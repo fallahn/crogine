@@ -2549,4 +2549,8 @@ void MenuState::updateLobbyAvatars()
         const auto scale = m_sharedData.scoreType == ScoreType::Stroke ? 1.f : 0.f;
         m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setScale(glm::vec2(scale));
     }
+
+#ifdef NEW_LOBBY
+    m_lobbyMenu.clientStatusChanged();
+#endif
 }

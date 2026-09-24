@@ -55,7 +55,7 @@ namespace cro
         until display() is called. Both clear AND display() *must* be called either side of 
         drawing to prevent undefined results.
         */
-        RenderTexture();
+        RenderTexture(const std::string& debugString = "");
         ~RenderTexture();
 
         RenderTexture(const RenderTexture&) = delete;
@@ -168,7 +168,10 @@ namespace cro
 
         std::uint32_t getFrameBufferID() const override { return m_fboID; }
 
+
+        const std::string& getDebugString() const { return m_debugString; }
     private:
+        std::string m_debugString;
 
         std::uint32_t m_fboID;
         std::uint32_t m_rboID;

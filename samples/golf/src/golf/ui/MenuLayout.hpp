@@ -220,6 +220,11 @@ struct DetailsPane final
     std::vector<cro::Entity> tabDetails;
     cro::Entity root;
     cro::Entity text;
+    //note that this is *always* set to Facing::Back unless 
+    //a menu item specifically sets it otherwise. For per-tab
+    //images you probably want to create a separate ent and parent
+    //it to the root where you can control it manuallu (and
+    //optionally store it in the optionalEntities field)
     cro::Entity image;
     cro::Entity background;
     cro::Entity applyButton;

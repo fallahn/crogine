@@ -70,7 +70,7 @@ static const std::uint32_t BallRenderFlags = (1 << 22);
 
 #define INTERP_TYPE InterpolationType::Hermite
 
-//#define NEW_LOBBY
+#define NEW_LOBBY
 
 namespace cro
 {
@@ -498,9 +498,10 @@ private:
         explicit LobbyMenu(MenuState& ms, SharedStateData& sd)
             : m_menuState(ms),
             m_sharedData(sd),
-            m_uiLayout(TabID::Count, sd) { }
+            m_uiLayout(TabID::Count, sd), m_scoresTabTexture("Scores Texture") { }
 
         void handleEvent(const cro::Event&);
+        void clientStatusChanged(); //client added or removed
 
         MenuState& m_menuState;
         SharedStateData& m_sharedData;
@@ -531,6 +532,11 @@ private:
         void createCourseTab();
         void createRulesTab();
         void createScoresTab();
+
+        cro::RenderTexture m_scoresTabTexture;
+        cro::Entity m_scoresTabEntity;
+        void updateScoresTab(bool resized = false); //called on resize and player join/leave
+        void applyScoresTabDetails();
 
         void resized(std::uint32_t, std::uint32_t);
     }m_lobbyMenu;

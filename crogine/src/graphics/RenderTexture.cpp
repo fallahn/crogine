@@ -33,8 +33,9 @@ source distribution.
 
 using namespace cro;
 
-RenderTexture::RenderTexture()
-    : m_fboID           (0),
+RenderTexture::RenderTexture(const std::string& dbs)
+    : m_debugString     (dbs),
+    m_fboID             (0),
     m_rboID             (0),
     m_clearBits         (0),
     m_msfboID           (0),
@@ -79,6 +80,7 @@ RenderTexture::~RenderTexture()
 RenderTexture::RenderTexture(RenderTexture&& other) noexcept
     : RenderTexture()
 {
+    m_debugString = std::move(other.m_debugString);
     m_fboID = other.m_fboID;
     m_rboID = other.m_rboID;
     m_clearBits = other.m_clearBits;
@@ -106,6 +108,8 @@ RenderTexture::RenderTexture(RenderTexture&& other) noexcept
 
     other.setViewport({ 0, 0, 0, 0 });
     other.setView({ 0.f, 0.f });
+
+    //LogI << "Move constructed " << m_debugString << " FBO: " << m_fboID << std::endl;
 }
 
 RenderTexture& RenderTexture::operator=(RenderTexture&& other) noexcept
@@ -139,7 +143,7 @@ RenderTexture& RenderTexture::operator=(RenderTexture&& other) noexcept
             glCheck(glDeleteRenderbuffers(1, &m_rboID));
         }
 
-
+        m_debugString = std::move(other.m_debugString);
         m_fboID = other.m_fboID;
         m_rboID = other.m_rboID;
         m_clearBits = other.m_clearBits;
@@ -168,6 +172,7 @@ RenderTexture& RenderTexture::operator=(RenderTexture&& other) noexcept
         other.setViewport({ 0, 0, 0, 0 });
         other.setView({ 0.f, 0.f });
     }
+    //LogI << "Move assigned " << m_debugString << " FBO: " << m_fboID << std::endl;
     return *this;
 }
 
