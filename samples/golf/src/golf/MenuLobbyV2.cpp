@@ -1025,7 +1025,7 @@ void MenuState::LobbyMenu::createScoresTab()
 
     cro::String desc = "Browse the online leaderboards. Friends only filters can be enabled in the Options menu.";
 #ifdef USE_GNS
-    cro::Util::String::wordWrap(desc, WordWrapSize);
+    cro::Util::String::wordWrap(desc, WordWrapSmall);
     item = &m_uiLayout.menuLayout.items[TabID::Scores].emplace_back();
     item->title = "View Leaderboards";
     item->description = desc;
