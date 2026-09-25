@@ -28,11 +28,13 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "MenuState.hpp"
+#include "PacketIDs.hpp"
 
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/SpriteAnimation.hpp>
 #include <crogine/ecs/components/UIElement.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/UIElementSystem.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 
@@ -40,6 +42,8 @@ using namespace UI;
 
 namespace
 {
+#include "shaders/ProgressShader.inl"
+
     const std::array ItemLabels =
     {
         "Players", "Course", "Rules", "Scores"
@@ -145,8 +149,11 @@ void MenuState::LobbyMenu::handleEvent(const cro::Event& evt)
             //TODO nothing?
             break;
         case SDLK_LALT:
-            LogI << "Implement me!" << std::endl;
-            //TODO show options
+            m_buttonFlags &= ~ButtonFlags::Options;
+            break;
+        case SDLK_ESCAPE:
+        case SDLK_BACKSPACE:
+            m_buttonFlags &= ~ButtonFlags::Quit;
             break;
         }
 
@@ -171,6 +178,20 @@ void MenuState::LobbyMenu::handleEvent(const cro::Event& evt)
         else if (evt.key.key == SDLK_RIGHT)
         {
             m_uiLayout.activateRight();
+        }
+
+        switch (evt.key.key)
+        {
+        default: break;
+        case SDLK_LALT:
+            m_buttonFlags |= ButtonFlags::Options;
+            setProgressColour(CD32::Colours[CD32::BlueLight]);
+            break;
+        case SDLK_ESCAPE:
+        case SDLK_BACKSPACE:
+            m_buttonFlags |= ButtonFlags::Quit;
+            setProgressColour(CD32::Colours[CD32::Red]);
+            break;
         }
     }
     else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
@@ -197,6 +218,17 @@ void MenuState::LobbyMenu::handleEvent(const cro::Event& evt)
             m_uiLayout.activateRight();
             resetRepeatTimer(controllerID, RepeatTimeLong);
             break;
+        case cro::GameController::ButtonA:
+            m_uiLayout.activate();
+            break;
+        case cro::GameController::ButtonB:
+            m_buttonFlags |= ButtonFlags::Quit;
+            setProgressColour(CD32::Colours[CD32::Red]);
+            break;
+        case cro::GameController::ButtonX:
+            m_buttonFlags |= ButtonFlags::Options;
+            setProgressColour(CD32::Colours[CD32::BlueLight]);
+            break;
         }
     }
     else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
@@ -210,24 +242,19 @@ void MenuState::LobbyMenu::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonRightShoulder:
             m_uiLayout.nextTab();
             break;
-        case cro::GameController::ButtonX:
-            LogI << "Implement me!" << std::endl;
-            //TODO show options menu
-            break;
         case cro::GameController::ButtonY:
-            LogI << "Implement me!" << std::endl;
-            //TODO chat window
-            break;
-        case cro::GameController::ButtonA:
-            m_uiLayout.activate();
+            //chat window is handled by MenuState event
             break;
         case cro::GameController::ButtonB:
-            LogI << "Implement me!" << std::endl;
+            m_buttonFlags &= ~ButtonFlags::Quit;
+            break;
+        case cro::GameController::ButtonX:
+            m_buttonFlags &= ~ButtonFlags::Options;
             break;
         }
     }
 
-    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
     {
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
@@ -235,7 +262,20 @@ void MenuState::LobbyMenu::handleEvent(const cro::Event& evt)
         }
         else if (evt.button.button == SDL_BUTTON_RIGHT)
         {
-            LogI << "Implement me!" << std::endl;
+            m_buttonFlags |= ButtonFlags::Quit;
+            setProgressColour(CD32::Colours[CD32::Red]);
+        }
+    }
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP)
+    {
+        if (evt.button.button == SDL_BUTTON_LEFT)
+        {
+            //m_uiLayout.doMouseClick({ evt.motion.x, evt.motion.y }, m_menuState.m_uiScene.getActiveCamera().getComponent<cro::Camera>());
+            m_buttonFlags &= ~ButtonFlags::Action;
+        }
+        else if (evt.button.button == SDL_BUTTON_RIGHT)
+        {
+            m_buttonFlags &= ~ButtonFlags::Quit;
         }
     }
 
@@ -317,9 +357,125 @@ void MenuState::LobbyMenu::handleEvent(const cro::Event& evt)
 
 }
 
+void MenuState::LobbyMenu::simulate(float dt)
+{
+    //press/hold to exit or show options
+    static constexpr float MaxHoldTime = 0.35f;
+    if (m_buttonFlags)
+    {
+        m_buttonHoldTimer = std::min(m_buttonHoldTimer + dt, MaxHoldTime);
+
+        if (m_buttonHoldTimer >= MaxHoldTime)
+        {
+            switch (m_buttonFlags)
+            {
+            default:
+                //mode than one button held, so invalid
+                m_buttonHoldTimer = 0.f;
+                break;
+            case ButtonFlags::Quit:
+                m_menuState.quitLobby();
+                break;
+            case ButtonFlags::Options:
+                m_menuState.requestStackPush(StateID::Options);
+                break;
+            case ButtonFlags::Action:
+                if (m_timeoutCallback)
+                {
+                    m_timeoutCallback();
+                }
+                break;
+            }
+            m_buttonFlags = 0;
+        }
+    }
+    else
+    {
+        m_buttonHoldTimer = 0.f;
+    }
+
+    glUseProgram(m_progressShader.getGLHandle());
+    glUniform1f(m_progressUniform, m_buttonHoldTimer / MaxHoldTime);
+}
+
 void MenuState::LobbyMenu::clientStatusChanged()
 {
     updateScoresTab();
+}
+
+void MenuState::LobbyMenu::readyStart()
+{
+    //make sure we've definitely sent the sever our selected clubset
+    const std::uint16_t data = (m_sharedData.clientConnection.connectionID << 8) | std::uint8_t(Social::getClubLevel());
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLevel, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    if (m_sharedData.hosting)
+    {
+        //prevents starting the game if a game mode requires a certain number of players
+        //or team play is not allowed
+        if (m_menuState.m_connectedPlayerCount < ScoreType::MinPlayerCount[m_sharedData.scoreType]
+            || m_menuState.m_connectedPlayerCount > ScoreType::MaxPlayerCount[m_sharedData.scoreType]
+            || (m_menuState.m_sharedData.teamMode && !ScoreType::CanTeamPlay[m_sharedData.scoreType]))
+        {
+            LogI << FILE_LINE << " Implement correct drawing!" << std::endl;
+            m_menuState.m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Callback>().active = true;
+            //m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().play();
+            //m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(0.f));
+        }
+        else
+        {
+            //check all members ready
+            bool ready = true;
+            std::int32_t clientCount = 0;
+            for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+            {
+                if (m_sharedData.connectionData[i].playerCount != 0)
+                {
+                    clientCount++;
+                    if (!m_menuState.m_readyState[i])
+                    {
+                        ready = false;
+                        break;
+                    }
+                }
+            }
+
+            if (ready && m_sharedData.clientConnection.connected
+                && m_sharedData.serverInstance.running()) //not running if we're not hosting :)
+            {
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                //m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+        }
+    }
+    else
+    {
+        //toggle readyness but only if the selected course is locally available
+        if (m_menuState.m_serverMapAvailable)
+        {
+            //this waits for the ready state to come back from the server
+            //to set m_readyState to our request.
+            const std::uint8_t ready = m_menuState.m_readyState[m_sharedData.clientConnection.connectionID] ? 0 : 1;
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::LobbyReady,
+                std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | ready),
+                net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+            /*if (ready)
+            {
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+            else
+            {
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }*/
+        }
+        else
+        {
+            LogI << "Shared Data Map Directory Is Empty" << std::endl;
+
+            //m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().play();
+        }
+    }
 }
 
 void MenuState::LobbyMenu::resetRepeatTimer(std::int32_t i, cro::Time resetTime)
@@ -330,6 +486,12 @@ void MenuState::LobbyMenu::resetRepeatTimer(std::int32_t i, cro::Time resetTime)
 
 void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
 {
+    if (m_progressShader.loadFromString(cro::RenderSystem2D::getDefaultVertexShader(), ProgressFrag))
+    {
+        m_progressUniform = m_progressShader.getUniformID("u_progress");
+        m_progressColourUniform = m_progressShader.getUniformID("u_colour");
+    }
+
     m_uiLayout.loadAssets(*m_sharedData.sharedResources);
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
@@ -669,6 +831,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     m_uiLayout.updateTabBar(); //this also updates the menu items
 
     //info string at the bottom
+    static constexpr glm::vec2 InfoPos = glm::vec2(26.f, 21.f);
     entity = m_menuState.m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
@@ -676,7 +839,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).characterSize = UITextSize;
     entity.getComponent<cro::UIElement>().depth = 0.1f;
-    entity.getComponent<cro::UIElement>().absolutePosition = { 12.f, 21.f };
+    entity.getComponent<cro::UIElement>().absolutePosition = InfoPos;
     entity.getComponent<cro::UIElement>().resizeCallback =
         [&](cro::Entity e)
         {
@@ -694,7 +857,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("info_xbox");
     entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
     entity.getComponent<cro::UIElement>().depth = 0.1f;
-    entity.getComponent<cro::UIElement>().absolutePosition = { 12.f, 2.f };
+    entity.getComponent<cro::UIElement>().absolutePosition = InfoPos;
     entity.getComponent<cro::UIElement>().resizeCallback =
         [&](cro::Entity e)
         {
@@ -716,6 +879,38 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
             m_menuState.m_uiScene.destroyEntity(e);
         };
 
+
+
+
+    //progress for hold-to-quit
+    entity = m_menuState.m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setShader(&m_progressShader);
+    //entity.getComponent<cro::Drawable2D>().setTexture(m_uiLayout.uiTexture);
+    //hmm theres a bug here preventing the coords being forwarded to the
+    //shader so we'll fudge coords in the colour channel
+    entity.getComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, 16.f), cro::Colour(0.f, 1.f, 1.f, 1.f)),
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour(0.f, 0.f, 1.f, 1.f)),
+            cro::Vertex2D(glm::vec2(16.f), cro::Colour(1.f, 1.f, 1.f, 1.f)),
+            cro::Vertex2D(glm::vec2(16.f, 0.f), cro::Colour(1.f, 0.f, 1.f, 1.f)),
+        });
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
+    entity.getComponent<cro::UIElement>().depth = 0.1f;
+    entity.getComponent<cro::UIElement>().absolutePosition = { 2.f, 12.f };
+    entity.getComponent<cro::UIElement>().resizeCallback =
+        [&](cro::Entity e)
+        {
+            auto o = (glm::vec2(cro::App::getWindow().getSize()) / 2.f) / cro::UIElementSystem::getViewScale();
+            o.x = std::round(o.x);
+            o.y = std::round(o.y);
+            e.getComponent<cro::Transform>().setOrigin(o);
+        };
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
     //m_menuState.registerWindow([this]()
     //    {
     //        ImGui::Begin("sdfg");
@@ -734,21 +929,24 @@ void MenuState::LobbyMenu::createPlayerTab()
 
     //ready-up / start game
     item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
-    item->title = "Start Game";
-    item->description = "Press and Hold to Start";
+    item->title = m_sharedData.hosting ?  "Start Game" : "Ready Up";
+    item->description = m_sharedData.hosting ? "Press and Hold to Start" : "Press and Hold to Ready Up";
     item->selected =
         [&](const Menu::Item&)
         {
-            /*m_uiLayout.detailsPane.image.getComponent<cro::Sprite>() = m_optionIcons[OptionIcon::BeaconColour];
-            m_uiLayout.detailsPane.image.getComponent<cro::Transform>().setOrigin({ m_optionIcons[OptionIcon::BeaconColour].getTextureBounds().width / 2.f, 0.f });
-            m_uiLayout.detailsPane.image.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);*/
+
         };
-    item->activated = [&](Menu::Item& i)
+    item->activated = [this](Menu::Item& i)
         {
-            //TODO press / hold to start or ready up
+            //press / hold to start or ready up
+            m_buttonFlags |= ButtonFlags::Action;
+            setProgressColour(CD32::Colours[CD32::GreenLight]);
+
+            //set a callback to be activaed when timer expires
+            m_timeoutCallback = std::bind(&LobbyMenu::readyStart, this);
         };
-    item->labels = { "No", "Yes" };
-    item->selectedIndex = m_sharedData.showBeacon ? 1 : 0;
+    item->labels = { "Let\'s Go!" };
+    item->selectedIndex = 0;
 
 
 
@@ -788,8 +986,7 @@ void MenuState::LobbyMenu::createPlayerTab()
     item->selectedIndex = 0;
 
 
-    //TODO only if hosting
-    if (true)
+    if (m_sharedData.hosting)
     {
         //poke selected
         item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
@@ -859,7 +1056,7 @@ void MenuState::LobbyMenu::createCourseTab()
     item->selectedIndex = 0;
 
 
-    //revers course
+    //reverse course
     item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
     item->title = "Play in Reverse";
     item->description = "Add me";
@@ -965,49 +1162,70 @@ void MenuState::LobbyMenu::createRulesTab()
     //set gimme radius
     item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
     item->title = "Gimme Radius";
-    item->description = "Add me";
+    item->description = "For brevity of play the ball is automatically holed when it is less than this distance from the pin.";
+    cro::Util::String::wordWrap(item->description, WordWrapSmall);
     item->activated = [&](Menu::Item& i)
         {
-
+            m_sharedData.gimmeRadius = item->selectedIndex;
         };
     item->labels = { "None", "Under the Leather", "Under the Putter" };
-    item->selectedIndex = 0;
+    item->selectedIndex = m_sharedData.gimmeRadius;
 
 
     //choose club set
     item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
     item->title = "Clubs";
-    item->description = "Add me";
+    item->description = "Choose a clubset with which to play";
+    cro::Util::String::wordWrap(item->description, WordWrapSmall);
     item->activated = [&](Menu::Item& i)
         {
-
+            m_sharedData.clubSet = m_sharedData.preferredClubSet = item->selectedIndex;
         };
     item->labels = { "Casual", "Regular", "Pro" };
-    item->selectedIndex = 0;
+    item->selectedIndex = m_sharedData.clubSet;
 
 
-    //enable snek
-    item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
-    item->title = "Enable Snek";
-    item->description = "Add me";
-    item->activated = [&](Menu::Item& i)
-        {
+    if (m_sharedData.hosting)
+    {
+        //enable snek
+        item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
+        item->title = "Enable Snek";
+        item->description = "The player who last misses a putt is left holding the snek";
+        cro::Util::String::wordWrap(item->description, WordWrapSmall);
+        item->activated = [&](Menu::Item& i)
+            {
+                if (m_sharedData.hosting
+                    && m_sharedData.clientConnection.connected)
+                {
+                    const std::uint16_t d = (std::uint8_t(RuleMod::Snek) << 8) | std::uint8_t(item->selectedIndex);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RuleMod, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-        };
-    item->labels = { "No", "Yes"};
-    item->selectedIndex = 0;
+                    cro::Console::print("snek enabled");
+                }
+            };
+        item->labels = { "No", "Yes" };
+        item->selectedIndex = 0;
 
 
-    //enable big balls
-    item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
-    item->title = "Enable Big Balls";
-    item->description = "Add me";
-    item->activated = [&](Menu::Item& i)
-        {
+        //enable big balls
+        item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
+        item->title = "Enable Big Balls";
+        item->description = "Player balls grow larger the further in the lead a player is";
+        cro::Util::String::wordWrap(item->description, WordWrapSmall);
+        item->activated = [&](Menu::Item& i)
+            {
+                if (m_sharedData.hosting
+                    && m_sharedData.clientConnection.connected)
+                {
+                    const std::uint16_t d = (std::uint8_t(RuleMod::BigBalls) << 8) | std::uint8_t(item->selectedIndex);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RuleMod, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-        };
-    item->labels = { "No", "Yes"};
-    item->selectedIndex = 0;
+                    cro::Console::print("Big Balls enabled");
+                }
+            };
+        item->labels = { "No", "Yes" };
+        item->selectedIndex = 0;
+    }
 
     m_uiLayout.tabBar.items[TabID::Rules].selected =
         [this]()
@@ -1067,17 +1285,17 @@ void MenuState::LobbyMenu::createScoresTab()
     {
         item = &m_uiLayout.menuLayout.items[TabID::Scores].emplace_back();
         item->title = "View Last Round's Scores";
-            item->selected =
-            [&](const Menu::Item&)
-            {
+        item->selected =
+        [&](const Menu::Item&)
+        {
 
+        };
+        item->activated = [this](Menu::Item& i)
+            {
+                m_menuState.togglePreviousScoreCard();
             };
-            item->activated = [this](Menu::Item& i)
-                {
-                    m_menuState.togglePreviousScoreCard();
-                };
-            item->labels = { "OK" };
-            item->selectedIndex = 0;
+        item->labels = { "OK" };
+        item->selectedIndex = 0;
     }
 
     //tab selection callback
@@ -1291,6 +1509,12 @@ void MenuState::LobbyMenu::applyScoresTabDetails()
     const glm::vec2 size = m_scoresTabTexture.getSize();
     m_scoresTabEntity.getComponent<cro::Transform>().setOrigin({ std::round(size.x / 2.f), 0.f});
     m_scoresTabEntity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+}
+
+void MenuState::LobbyMenu::setProgressColour(cro::Colour c)
+{
+    glUseProgram(m_progressShader.getGLHandle());
+    glUniform4f(m_progressColourUniform, c.getRed(), c.getGreen(), c.getBlue(), c.getAlpha());
 }
 
 void MenuState::LobbyMenu::resized(std::uint32_t x, std::uint32_t y)

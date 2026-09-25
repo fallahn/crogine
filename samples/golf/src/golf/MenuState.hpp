@@ -70,7 +70,7 @@ static const std::uint32_t BallRenderFlags = (1 << 22);
 
 #define INTERP_TYPE InterpolationType::Hermite
 
-//#define NEW_LOBBY
+#define NEW_LOBBY
 
 namespace cro
 {
@@ -496,12 +496,18 @@ private:
     struct LobbyMenu final
     {
         explicit LobbyMenu(MenuState& ms, SharedStateData& sd)
-            : m_menuState(ms),
-            m_sharedData(sd),
-            m_uiLayout(TabID::Count, sd), m_scoresTabTexture("Scores Texture") { }
+            : m_menuState           (ms),
+            m_sharedData            (sd),
+            m_uiLayout              (TabID::Count, sd),
+            m_progressUniform       (-1),
+            m_progressColourUniform (-1),
+            m_buttonHoldTimer       (0.f),
+            m_buttonFlags           (0) { }
 
         void handleEvent(const cro::Event&);
+        void simulate(float);
         void clientStatusChanged(); //client added or removed
+        void readyStart();
 
         MenuState& m_menuState;
         SharedStateData& m_sharedData;
@@ -543,6 +549,25 @@ private:
         std::vector<cro::Entity> m_networkIcons; //contains the connection info icons
         void updateScoresTab(bool resized = false); //called on resize and player join/leave
         void applyScoresTabDetails();
+
+
+        cro::Shader m_progressShader;
+        std::int32_t m_progressUniform;
+        std::int32_t m_progressColourUniform;
+        void setProgressColour(cro::Colour);
+
+        struct ButtonFlags final
+        {
+            enum
+            {
+                Action = 1, //activates selected item, if applicable
+                Quit = 2,
+                Options = 4
+            };
+        };
+        std::function<void()> m_timeoutCallback; //called when action button times out
+        float m_buttonHoldTimer;
+        std::uint8_t m_buttonFlags;
 
         void resized(std::uint32_t, std::uint32_t);
     }m_lobbyMenu;

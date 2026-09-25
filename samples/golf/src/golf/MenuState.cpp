@@ -1493,7 +1493,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             switch (evt.gbutton.button)
             {
             default:  break;
-            case cro::GameController::ButtonX:
+            case cro::GameController::ButtonRightStick:
                 if (cro::GameController::controllerID(evt.gbutton.which) == 0)
                 {
                     startCan();
@@ -1554,7 +1554,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 //just shows chat history
                 m_textChat.toggleWindow(false, false, false);
                 break;
-            case cro::GameController::ButtonX:
+            case cro::GameController::ButtonRightStick:
                 if (cro::GameController::controllerID(evt.gbutton.which) == 0)
                 {
                     endCan();
@@ -2057,6 +2057,7 @@ bool MenuState::simulate(float dt)
     wind.elapsedTime = accumTime;
     m_windBuffer.setData(wind);
 
+    m_lobbyMenu.simulate(dt);
     m_backgroundScene.simulate(dt);
     //processing these with options open only slows things down.
 #ifdef CRO_DEBUG_

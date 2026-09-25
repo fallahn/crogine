@@ -3959,7 +3959,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                         {
                             //this waits for the ready state to come back from the server
                             //to set m_readyState to our request.
-                            std::uint8_t ready = m_readyState[m_sharedData.clientConnection.connectionID] ? 0 : 1;
+                            const std::uint8_t ready = m_readyState[m_sharedData.clientConnection.connectionID] ? 0 : 1;
                             m_sharedData.clientConnection.netClient.sendPacket(PacketID::LobbyReady,
                                 std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | ready),
                                 net::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -6927,6 +6927,12 @@ void MenuState::createPreviousScoreCard()
 
 void MenuState::togglePreviousScoreCard()
 {
+#ifdef NEW_LOBBY
+    LogI << FILE_LINE << " update createPreviousScoreCard()" << std::endl;
+    return;
+#endif
+
+
     if (m_lobbyWindowEntities[LobbyEntityID::Scorecard].isValid()
         && !m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Callback>().active)
     {

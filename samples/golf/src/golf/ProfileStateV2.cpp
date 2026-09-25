@@ -651,7 +651,7 @@ void ProfileStateV2::handleMessage(const cro::Message& msg)
 
 bool ProfileStateV2::simulate(float dt)
 {
-    //press/hold to exist
+    //press/hold to exit
     static constexpr float MaxHoldTime = 0.35f;
     if (m_exitFlags)
     {
