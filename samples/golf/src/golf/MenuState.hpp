@@ -70,7 +70,7 @@ static const std::uint32_t BallRenderFlags = (1 << 22);
 
 #define INTERP_TYPE InterpolationType::Hermite
 
-#define NEW_LOBBY
+//#define NEW_LOBBY
 
 namespace cro
 {
@@ -544,11 +544,17 @@ private:
         cro::SimpleQuad m_infoQuad;
         cro::SimpleVertexArray m_infoArray;
 
-        cro::RenderTexture m_scoresTabTexture;
-        cro::Entity m_scoresTabEntity;
+
+        std::array<cro::Entity, TabID::Count> m_detailEntities = {};
+        std::array<cro::RenderTexture, TabID::Count> m_detailTextures = {};
+
+        void updatePlayersTab(bool resized = false);
+        void updateCourseTab(bool resized = false);
+        void updateRulesTab(bool resized = false);
+
         std::vector<cro::Entity> m_networkIcons; //contains the connection info icons
         void updateScoresTab(bool resized = false); //called on resize and player join/leave
-        void applyScoresTabDetails();
+        void applyDetails(std::int32_t);
 
 
         cro::Shader m_progressShader;
