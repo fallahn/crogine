@@ -6897,12 +6897,12 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
             && hole == m_holeData.size() - 1)
         {
             if (m_sharedData.scoreType == ScoreType::Skins)
-            {
+            /*{
                 showNotification("Sudden Death Round!");
                 showNotification("First to hole wins!");
                 m_suddenDeath = true;
             }
-            else
+            else*/
             {
                 showNotification("Tie Break!");
                 showNotification("Nearest To The Pin Wins!");

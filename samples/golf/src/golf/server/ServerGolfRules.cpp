@@ -391,7 +391,10 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
 bool GolfState::summariseRules()
 {
     //this only gets called on setNextHole() to determine
-    //if the game has ended yet
+    //if the game has ended yet. Note that this can adjust scores
+    //based on the outcome, and those scores are sent by
+    //setNextHole() - though the scoreboard sorting is all
+    //client side.
 
     //concat all the player info and do a single sort/compare on the total results
     std::vector<PlayerStatus> sortData;
@@ -461,8 +464,89 @@ bool GolfState::summariseRules()
     }
 
 
+    const auto repeatHole = [this]()
+        {
+            //reset the score for the hole else
+            //we can't track how many NTP strokes we took
+            for (auto& group : m_playerInfo)
+            {
+                for (auto& p : group.playerInfo)
+                {
+                    p.holeScore[m_currentHole] = 0;
+                }
+            }
 
+            if (m_currentHole)
+            {
+                //we might be on a custom course with one
+                //hole in which case don't negate.
+                m_currentHole--;
+            }
+        };
 
+    const auto findLeader = [this, &sortData]()
+        {
+            for (auto& group : m_playerInfo)
+            {
+                auto player = std::find_if(group.playerInfo.begin(), group.playerInfo.end(),
+                    [&sortData](const PlayerStatus& p)
+                    {
+                        return p.client == sortData[0].client && p.player == sortData[0].player;
+                    });
+
+                if (player != group.playerInfo.end())
+                {
+                    return player;
+                }
+            }
+            return m_playerInfo.back().playerInfo.end();
+        };
+
+    const auto awardSkinsPot = [this, &sortData, &findLeader]()
+        {
+            if (auto player = findLeader();
+                player != m_playerInfo.back().playerInfo.end())
+            {
+                player->matchWins++;
+                player->skins += m_skinsPot;
+
+                m_skinsPot = 1;
+                sortData[0].matchWins++; //this is used to test to see if we won the majority of match points
+
+                //send notification packet to clients that player won the hole
+                std::uint16_t data = (player->client << 8) | player->player;
+                m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+
+            //for (auto& group : m_playerInfo)
+            //{
+            //    auto player = std::find_if(group.playerInfo.begin(), group.playerInfo.end(),
+            //        [&sortData](const PlayerStatus& p)
+            //        {
+            //            return p.client == sortData[0].client && p.player == sortData[0].player;
+            //        });
+
+            //    if (player != group.playerInfo.end())
+            //    {
+            //        player->matchWins++;
+            //        player->skins += m_skinsPot;
+
+            //        m_skinsPot = 1;
+
+            //        /*if (m_holeData.size() > 2)
+            //        {
+            //            m_skinsPot += (m_currentHole / (m_holeData.size() / 3));
+            //        }*/
+            //        sortData[0].matchWins++; //this is used to test to see if we won the majority of match points
+
+            //        //send notification packet to clients that player won the hole
+            //        std::uint16_t data = (player->client << 8) | player->player;
+            //        m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+            //        break;
+            //    }
+            //}
+        };
 
     bool gameFinished = false;
     const auto remainingHoles = static_cast<std::uint8_t>(m_holeData.size()) - (m_currentHole + 1);
@@ -478,26 +562,24 @@ bool GolfState::summariseRules()
                     return a.distanceScore[m_currentHole] < b.distanceScore[m_currentHole];
                 });
 
-            //if there's a winner return game ended
-            //else we have to play again *sigh*
             if (sortData.size() > 1 && sortData[0].distanceScore[m_currentHole] < sortData[1].distanceScore[m_currentHole])
             {
-                //TODO if we return true here we need to sort the actual player
-                //data by distance instead of score to choose the correct winner
-                //although this *should* have been done by setNextPlayer()
+                //if there's a winner return game ended
+                //else we have to play again *sigh*
+                if (auto player = findLeader();
+                    player != m_playerInfo.back().playerInfo.end())
+                {
+                    //we award a life to the winner so they have a distinctive score
+                    player->lives++;
+                    std::uint16_t packet = ((player->client << 8) | player->player);
+                    m_sharedData.host.broadcastPacket(PacketID::LifeGained, packet, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
+
                 return true;
             }
 
             //reset the score for this hole
-            for (auto& group : m_playerInfo)
-            {
-                for (auto& p : group.playerInfo)
-                {
-                    p.holeScore[m_currentHole] = 0;
-                }
-            }
-
-            m_currentHole--; //repeat the hole again
+            repeatHole();
             return false;
         }
         else
@@ -528,24 +610,7 @@ bool GolfState::summariseRules()
 
                 sendServerTextMessage(u8"Tie Break! Nearest the pin in 2 strokes wins!");
                 
-                //reset all the scores because if we took more than MaxNNTP strokes last turn
-                //we get stuck restarting the hole...
-                for (auto& group : m_playerInfo)
-                {
-                    for (auto& p : group.playerInfo)
-                    {
-                        p.holeScore[m_currentHole] = 0;
-                    }
-                }
-
-
-                //make sure we repeat the hole
-                if (m_currentHole)
-                {
-                    //we might be on a custom course with one
-                    //hole in which case don't negate.
-                    m_currentHole--;
-                }
+                repeatHole();
                 return false;
             }
 
@@ -554,12 +619,39 @@ bool GolfState::summariseRules()
     }
     else
     {
+        //if this was a skins tiebreak see if someone won
+        //else repeat the hole (both players managed to hole-out...)
+        if (m_skinsTie2)
+        {
+            std::sort(sortData.begin(), sortData.end(),
+                [&](const PlayerStatus& a, const PlayerStatus& b)
+                {
+                    return a.distanceScore[m_currentHole] < b.distanceScore[m_currentHole];
+                });
+
+            if (sortData.size() > 1 && sortData[0].distanceScore < sortData[1].distanceScore)
+            {
+                //we have a clear winner - award the pot
+                awardSkinsPot();
+                return true;
+            }
+            else
+            {
+                //repeat the hole
+                repeatHole();
+                return false;
+            }
+        }
+
+
+        //regular sort based on hole score
         std::sort(sortData.begin(), sortData.end(),
             [&](const PlayerStatus& a, const PlayerStatus& b)
             {
                 return a.holeScore[m_currentHole] < b.holeScore[m_currentHole];
             });
     }
+
 
     //check if we tied the last hole in skins
     if (m_sharedData.scoreType == ScoreType::Skins
@@ -576,24 +668,10 @@ bool GolfState::summariseRules()
             sendServerTextMessage(u8"Tie Break! Nearest the pin in 2 strokes wins the pot!");
             m_scene.getSystem<BallSystem>()->setGimmeRadius(0);
 
-            //reset the score for the hole else
-            //we can't track how many NTP strokes we took
-            for (auto& group : m_playerInfo)
-            {
-                for (auto& p : group.playerInfo)
-                {
-                    p.holeScore[m_currentHole] = 0;
-                }
-            }
-
-            if (m_currentHole)
-            {
-                //we might be on a custom course with one
-                //hole in which case don't negate.
-                m_currentHole--;
-            }
+            repeatHole();
         }
     }
+
 
     //hmm this used to apply to ALL score types before 
     //elimination mode shanghaid some of the playerInfo fields
@@ -613,37 +691,9 @@ bool GolfState::summariseRules()
             if ((!m_skinsTie && //we have to check this flag because if it was set m_currentHole was probably modified and the score check is the old hole.
                 !m_skinsTie2 &&
                 sortData[0].holeScore[m_currentHole] != sortData[1].holeScore[m_currentHole])
-                || (m_skinsTie && m_currentHole == m_holeData.size() - 1) //this was the sudden death hole
-                || (m_skinsTie2 && sortData[0].distanceToHole < sortData[1].distanceToHole)) //this was the tie break
+                || (m_skinsTie && m_currentHole == m_holeData.size() - 1)) //this was the sudden death hole
             {
-                for (auto& group : m_playerInfo)
-                {
-                    auto player = std::find_if(group.playerInfo.begin(), group.playerInfo.end(),
-                        [&sortData](const PlayerStatus& p)
-                        {
-                            return p.client == sortData[0].client && p.player == sortData[0].player;
-                        });
-
-                    if (player != group.playerInfo.end())
-                    {
-                        player->matchWins++;
-                        player->skins += m_skinsPot;
-                        
-                        m_skinsPot = 1;
-
-                        /*if (m_holeData.size() > 2)
-                        {
-                            m_skinsPot += (m_currentHole / (m_holeData.size() / 3));
-                        }*/
-                        sortData[0].matchWins++; //this is used to test to see if we won the majority of match points
-
-                        //send notification packet to clients that player won the hole
-                        std::uint16_t data = (player->client << 8) | player->player;
-                        m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
-                        break;
-                    }
-                }
+                awardSkinsPot();
             }
             else //increase the skins pot, but only if not repeating the final hole
             {
@@ -651,10 +701,6 @@ bool GolfState::summariseRules()
                 {
                     m_skinsPot++;
                     
-                    /*if (m_holeData.size() > 2)
-                    {
-                        m_skinsPot += m_currentHole / (m_holeData.size() / 3);
-                    }*/
                     std::uint16_t data = 0xff00 | m_skinsPot;
                     m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
@@ -671,8 +717,6 @@ bool GolfState::summariseRules()
                 return a.matchWins > b.matchWins;
             });
 
-
-        //const auto remainingHoles = static_cast<std::uint8_t>(m_holeData.size()) - (m_currentHole + 1);
         //if second place can't beat first even if they win all the remaining holes it's game over
         if (sortData[1].matchWins + remainingHoles < sortData[0].matchWins)
         {
