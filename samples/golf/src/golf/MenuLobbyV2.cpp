@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant - 2026
+Matt Marchant 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.

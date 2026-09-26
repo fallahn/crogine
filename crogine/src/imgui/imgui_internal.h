@@ -53,6 +53,7 @@ Index of this file:
 #ifndef IMGUI_VERSION
 #include <crogine/gui/detail/imgui.h>
 #endif
+#include "ImGuiIOStream.hpp" //custom file loading via IOStream and physfs
 
 #include <stdio.h>      // FILE*, sscanf
 #include <stdlib.h>     // NULL, malloc, free, qsort, atoi, atof

@@ -45,6 +45,11 @@ static size_t sdlRead(void* dst, size_t size, size_t count, SDL_IOStream* f)
     return SDL_ReadIO(f, dst, size * count) / size;
 }
 
+static size_t sdlWrite(const void* src, size_t size, size_t count, SDL_IOStream* f)
+{
+    return SDL_WriteIO(f, src, size * count) / size;
+}
+
 static int sdlSeek(SDL_IOStream* f, long origin, int whence)
 {
     return SDL_SeekIO(f, origin, (SDL_IOWhence)whence) == -1 ? -1 : 0;
@@ -69,6 +74,7 @@ static int sdlGetc(SDL_IOStream* f)
 #define FOPEN(x, y) SDL_IOFromFile(x, y)
 #define FCLOSE(x) SDL_CloseIO(x)
 #define FREAD(x,y,z,w) sdlRead(x,y,z,w)
+#define FWRITE(x,y,z,w) sdlWrite(x,y,z,w)
 #define FSEEK(x,y,z) sdlSeek(x,y,z)
 #define FTELL(x) sdlTell(x)
 #define FGET(x) sdlGetc(x)
@@ -82,6 +88,7 @@ static int sdlGetc(SDL_IOStream* f)
 #define FOPEN(x, y) fopen(x,y)
 #define FCLOSE(x) fclose(x)
 #define FREAD(x,y,z,w) fread(x,y,z,w)
+#define FWRITE(x,y,z,w) fwrite(x,y,z,w)
 #define FSEEK(x,y,z) fseek(x,y,z)
 #define FTELL(x) ftell(x)
 #define FGET(x) fgetc(x)

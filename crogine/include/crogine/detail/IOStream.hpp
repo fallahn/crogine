@@ -81,6 +81,17 @@ namespace cro
         //use the close() function instead.
         SDL_IOStream* filePtr() const { return file; }
 
+        //releases ownership of the file pointer which must then
+        //be manually closed. This struct will now be an invalid
+        //handle. May also return a nullptr if this handle has
+        //not been opened.
+        SDL_IOStream* release()
+        {
+            auto ret = file;
+            file = nullptr;
+            return ret;
+        }
+
         operator bool() { return file != nullptr; }
 
     private:

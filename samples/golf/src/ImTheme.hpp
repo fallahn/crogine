@@ -1,3 +1,32 @@
+/*-----------------------------------------------------------------------
+
+Matt Marchant 2024 - 2026
+http://trederia.blogspot.com
+
+Super Video Golf - zlib licence.
+
+This software is provided 'as-is', without any express or
+implied warranty.In no event will the authors be held
+liable for any damages arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute
+it freely, subject to the following restrictions :
+
+1. The origin of this software must not be misrepresented;
+you must not claim that you wrote the original software.
+If you use this software in a product, an acknowledgment
+in the product documentation would be appreciated but
+is not required.
+
+2. Altered source versions must be plainly marked as such,
+and must not be misrepresented as being the original software.
+
+3. This notice may not be removed or altered from any
+source distribution.
+
+-----------------------------------------------------------------------*/
+
 #pragma once
 
 #include "Colordome-32.hpp"
@@ -121,6 +150,11 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     const auto rp = cro::FileSystem::getResourcePath();
     auto* defaultFont = fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/ProggyClean.ttf")), 0.f, &config);
 
+    if (!defaultFont)
+    {
+        LogI << "[ImGui] Failed loading default font - this can and will lewad to crashes!" << std::endl;
+    }
+
     fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/NotoSans-Regular.ttf")), 0.f, &config); //cyrillic, greek, vietnamese
     //fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/NotoSans-Regular.ttf")), 0.f, &config/*, fonts->GetGlyphRangesGreek()*/);
     //fonts->AddFontFromFileTTF(U8PATH_CAST((rp / "assets/golf/fonts/NotoSans-Regular.ttf")), 0.f, &config/*, fonts->GetGlyphRangesVietnamese()*/);
@@ -148,7 +182,10 @@ static inline void applyImGuiStyle(SharedStateData& sd)
 #endif
     {
         emojiFontPath = rp / "assets/golf/fonts/TwemojiCOLRv0.ttf";
-        fonts->AddFontFromFileTTF(U8PATH_CAST(emojiFontPath), 0.f, &config);
+        if (!fonts->AddFontFromFileTTF(U8PATH_CAST(emojiFontPath), 0.f, &config))
+        {
+            LogW << "failed loading emoji font - this will probably cause a crash when trying to send chat messages!" << std::endl;
+        }
         sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF(U8PATH_CAST(emojiFontPath), 28.f, &configB);
         sd.chatFonts.buttonHeight = 24.f;// 30.f;
     }

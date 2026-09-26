@@ -755,7 +755,7 @@ std::uint32_t Font::getTextureID(std::uint32_t charSize) const
 {
     //TODO this gets called every frame by the text
     //system to see if the texture ID has changed
-    //when the text hack is active (currently not)
+    //when the text hack is active
     return m_pages.count(charSize) != 0 ? m_pages.at(charSize).texture.getGLHandle() : 0;
 }
 
