@@ -1062,11 +1062,11 @@ void App::refreshGamepads(const SDL_Gamepad* toRemove)
             }), m_sortedGamepads.end());
     }
 
-    std::sort(m_sortedGamepads.begin(), m_sortedGamepads.end(),
-        [](SDL_Gamepad* a, SDL_Gamepad* b)
-        {
-            return SDL_GetGamepadPlayerIndex(a) < SDL_GetGamepadPlayerIndex(b);
-        });
+    //std::sort(m_sortedGamepads.begin(), m_sortedGamepads.end(),
+    //    [](SDL_Gamepad* a, SDL_Gamepad* b)
+    //    {
+    //        return SDL_GetGamepadPlayerIndex(a) < SDL_GetGamepadPlayerIndex(b);
+    //    });
 
     for (auto i = 0; i < static_cast<std::int32_t>(m_sortedGamepads.size()); ++i)
     {

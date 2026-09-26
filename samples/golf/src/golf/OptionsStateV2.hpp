@@ -41,10 +41,11 @@ source distribution.
 #include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/SimpleText.hpp>
 #include <crogine/graphics/SimpleVertexArray.hpp>
+//#include <crogine/gui/GuiClient.hpp>
 
 struct SharedStateData;
 
-class OptionsStateV2 final : public cro::State
+class OptionsStateV2 final : public cro::State//, public cro::GuiClient
 {
 public:
     OptionsStateV2(cro::StateStack&, cro::State::Context, SharedStateData&);
@@ -138,7 +139,8 @@ private:
 
     cro::String m_controllerString;
     std::array<cro::Colour, 4u> m_activityColours = {};
-    void refreshControllerDevices();
+    std::int32_t m_activeController;
+    void refreshControllerDevices(bool redraw = true);
 
     void refreshAudioDevices(Menu::Item&);
     void quitState();

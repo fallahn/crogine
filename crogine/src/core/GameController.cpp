@@ -81,7 +81,6 @@ std::int32_t GameController::moveControllerIndexDown(std::int32_t index)
 std::int32_t GameController::moveControllerIndexUp(std::int32_t index)
 {
     auto& gamepads = App::getInstance().m_sortedGamepads;
-
     if (gamepads.size() > 1u &&
         index < static_cast<std::int32_t>(gamepads.size()) - 1)
     {

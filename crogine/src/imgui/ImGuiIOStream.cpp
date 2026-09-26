@@ -36,6 +36,8 @@ source distribution.
 
 #include <crogine/detail/IOStream.hpp>
 
+#include <cstring>
+
 ImFileHandle ImFileOpen(const char* filename, const char* mode)
 {
     cro::IOStream file;

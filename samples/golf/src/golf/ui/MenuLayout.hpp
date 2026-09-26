@@ -137,6 +137,11 @@ struct Menu final
             Heading //only displays the title, with half height background
         }displayType = Default;
 
+        enum
+        {
+            Left, Right, None
+        }activationDirection = None;
+
         //float-rect in menu space to test click against
         cro::FloatRect hitbox;
 
@@ -165,6 +170,7 @@ struct Menu final
                     : std::max(selectedIndex - 1, 0);
 
                 valueChangedOnActivate = true;
+                activationDirection = Left;
                 activated(*this);
                 return true;
             }
@@ -183,6 +189,7 @@ struct Menu final
                     : std::min(selectedIndex + 1, count - 1);
 
                 valueChangedOnActivate = true;
+                activationDirection = Right;
                 activated(*this);
                 return true;
             }
@@ -198,6 +205,7 @@ struct Menu final
                 || alwaysActivate)
             {
                 valueChangedOnActivate = false;
+                activationDirection = None;
                 activated(*this);
                 return true;
             }

@@ -125,7 +125,8 @@ OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_sharedData        (sd),
     m_uiLayout          (TabID::Count, sd),
     m_keybindIndex      (-1),
-    m_keybindItemIndex  (-1)
+    m_keybindItemIndex  (-1),
+    m_activeController  (0)
 {
     //sigh, the window resized event might not necessarily mean
     //that the window resized (I know, I know,) so we track the
@@ -634,7 +635,7 @@ bool OptionsStateV2::simulate(float dt)
         }
 
         if (cro::GameController::isButtonPressed(i, cro::GameController::DPadLeft)
-            /*|| (m_controllerMasks[i] & InputFlag::Down)*/)
+            /*|| (m_controllerMasks[i] & InputFlag::Left)*/)
         {
             if (m_inputRepeatClocks[i].elapsed() > m_repeatTimes[i])
             {
@@ -644,7 +645,7 @@ bool OptionsStateV2::simulate(float dt)
         }
 
         if (cro::GameController::isButtonPressed(i, cro::GameController::DPadRight)
-            /*|| (m_controllerMasks[i] & InputFlag::Up)*/)
+            /*|| (m_controllerMasks[i] & InputFlag::Right)*/)
         {
             if (m_inputRepeatClocks[i].elapsed() > m_repeatTimes[i])
             {
@@ -1165,6 +1166,178 @@ void OptionsStateV2::buildScene()
                 cro::Drawable2D::Facing::Front : cro::Drawable2D::Facing::Back);
         };
     msgRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+
+    //info for connected controllers
+    auto ent = m_scene.createEntity();
+    ent.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    m_uiLayout.detailsPane.root.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+    m_uiLayout.detailsPane.tabDetails[TabID::Controller] = ent;
+
+    //set detail image based on input activity
+    cro::SpriteSheet controllerSprites;
+    controllerSprites.loadFromFile("assets/golf/sprites/control_layout.spt", m_sharedData.sharedResources->textures);
+
+    struct SpriteData final
+    {
+        enum
+        {
+            Deck, Xbox, PS,
+            Count
+        };
+        std::array<cro::FloatRect, SpriteData::Count> bounds = {};
+    }spriteData;
+    spriteData.bounds[SpriteData::Deck] = controllerSprites.getSprite("deck").getTextureRect();
+    spriteData.bounds[SpriteData::Xbox] = controllerSprites.getSprite("xbox").getTextureRect();
+    spriteData.bounds[SpriteData::PS] = controllerSprites.getSprite("ps").getTextureRect();
+
+    ent = m_scene.createEntity();
+    ent.addComponent<cro::Transform>().setOrigin({ std::floor(spriteData.bounds[0].width / 2.f) - DetailBackgroundOffset, std::floor(spriteData.bounds[0].height / 5.f) - 2.f });
+    ent.addComponent<cro::Drawable2D>();
+    ent.addComponent<cro::Sprite>() = controllerSprites.getSprite("deck");
+    ent.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
+    ent.getComponent<cro::UIElement>().depth = 0.1f;
+    ent.addComponent<cro::Callback>().active = true;
+    ent.getComponent<cro::Callback>().setUserData<SpriteData>(spriteData);
+    ent.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            const auto& data = e.getComponent<cro::Callback>().getUserData<SpriteData>();
+            if (Social::isSteamdeck())
+            {
+                e.getComponent<cro::Sprite>().setTextureRect(data.bounds[SpriteData::Deck]);
+            }
+            else
+            {
+                if (m_sharedData.activeInput == SharedStateData::ActiveInput::PS)
+                {
+                    e.getComponent<cro::Sprite>().setTextureRect(data.bounds[SpriteData::PS]);
+                }
+                else if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
+                {
+                    if (cro::GameController::getControllerCount())
+                    {
+                        const auto idx = cro::GameController::hasPSLayout(0) ? SpriteData::PS : SpriteData::Xbox;
+                        e.getComponent<cro::Sprite>().setTextureRect(data.bounds[idx]);
+                    }
+                    else
+                    {
+                        e.getComponent<cro::Sprite>().setTextureRect(data.bounds[SpriteData::Xbox]);
+                    }
+                }
+                else
+                {
+                    //TODO cro::GameController::getPrintableName(0) == "Steam Controller"
+                    e.getComponent<cro::Sprite>().setTextureRect(data.bounds[SpriteData::Xbox]);
+                }
+            }
+        };
+    m_uiLayout.detailsPane.tabDetails[TabID::Controller].getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+
+
+    //set detail text to controller list
+    ent = m_scene.createEntity();
+    ent.addComponent<cro::Transform>();
+    ent.addComponent<cro::Drawable2D>();
+    ent.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
+    ent.getComponent<cro::Text>();// .setString("1 Buns Flaps\n2 Game Controller\n3 Super awesome arcade stick\n4 this is made up y'know");
+    ent.addComponent<cro::UIElement>(cro::UIElement::Text, true);
+    ent.getComponent<cro::UIElement>().depth = 0.2f;
+    ent.getComponent<cro::UIElement>().characterSize = InfoTextSize;
+    ent.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundPadding / 2.f, -std::floor((spriteData.bounds[0].height / 5.f) + 4.f) };
+    ent.addComponent<cro::Callback>().active = true;
+    ent.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            if (cro::GameController::getControllerCount())
+            {
+                e.getComponent<cro::Text>().setString(m_controllerString);
+            }
+            else
+            {
+                e.getComponent<cro::Text>().setString("No Controllers Connected");
+            }
+            auto bounds = cro::Text::getLocalBounds(e);
+            auto posX = std::round(bounds.width / 2.f) + 4.f;
+            e.getComponent<cro::Transform>().setOrigin({ posX, 0.f });
+        };
+    m_uiLayout.detailsPane.tabDetails[TabID::Controller].getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+    auto textEnt = ent;
+
+    //activity icons next to description
+    ent = m_scene.createEntity();
+    ent.addComponent<cro::Transform>();
+    ent.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    ent.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
+    ent.getComponent<cro::UIElement>().absolutePosition = { -12.f, -8.f };
+    ent.addComponent<cro::Callback>().active = true;
+    ent.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            static constexpr float Height = 8.f;
+            const auto addQuad =
+                [&](glm::vec2 pos, cro::Colour c, std::vector<cro::Vertex2D>& dst)
+                {
+                    dst.emplace_back(glm::vec2(pos.x, pos.y + Height), c);
+                    dst.emplace_back(pos, c);
+                    dst.emplace_back(glm::vec2(pos.x + Height, pos.y + Height), c);
+                    dst.emplace_back(glm::vec2(pos.x + Height, pos.y + Height), c);
+                    dst.emplace_back(pos, c);
+                    dst.emplace_back(glm::vec2(pos.x + Height, pos.y), c);
+                };
+
+            if (cro::GameController::getControllerCount())
+            {
+                std::vector<cro::Vertex2D> verts;
+                glm::vec2 pos(0.f);
+                for (auto i = 0; i < cro::GameController::getControllerCount(); ++i)
+                {
+                    addQuad(pos, m_activityColours[i], verts);
+                    pos.y -= Height + 4.f;
+                    m_activityColours[i] = CD32::Colours[CD32::BlueDarkest];
+                }
+                e.getComponent<cro::Drawable2D>().setVertexData(verts);
+                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            }
+            else
+            {
+                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            }
+        };
+    textEnt.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+
+    //points to selected controller index
+    static constexpr float ArrowSize = 8.f;
+    ent = m_scene.createEntity();
+    ent.addComponent<cro::Transform>();
+    ent.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    ent.getComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, ArrowSize), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.f, 0.f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(6.f, ArrowSize / 2.f), TextGoldColour),
+        });
+    ent.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
+    ent.getComponent<cro::UIElement>().absolutePosition = { -22.f, -8.f };
+    ent.addComponent<cro::Callback>().active = true;
+    ent.getComponent<cro::Callback>().function =
+        [this](cro::Entity e, float)
+        {
+            if (cro::GameController::getControllerCount() > 1)
+            {
+                static constexpr float offset = 12.f;
+                e.getComponent<cro::Transform>().setOrigin({ 0.f, offset * m_activeController });
+                
+                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            }
+            else
+            {
+                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            }
+        };
+    textEnt.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
 
 
     //menu layouts
@@ -2311,147 +2484,8 @@ void OptionsStateV2::createKeyboardItems()
 
 void OptionsStateV2::createControllerItems()
 {
-    auto ent = m_scene.createEntity();
-    ent.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    m_uiLayout.detailsPane.root.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
-    m_uiLayout.detailsPane.tabDetails[TabID::Controller] = ent;
-
-    //set detail image based on input activity
-    cro::SpriteSheet controllerSprites;
-    controllerSprites.loadFromFile("assets/golf/sprites/control_layout.spt", m_sharedData.sharedResources->textures);
-
-    struct SpriteData final
-    {
-        enum
-        {
-            Deck, Xbox, PS,
-            Count
-        };
-        std::array<cro::FloatRect, SpriteData::Count> bounds = {};
-    }spriteData;
-    spriteData.bounds[SpriteData::Deck] = controllerSprites.getSprite("deck").getTextureRect();
-    spriteData.bounds[SpriteData::Xbox] = controllerSprites.getSprite("xbox").getTextureRect();
-    spriteData.bounds[SpriteData::PS] = controllerSprites.getSprite("ps").getTextureRect();
-
-    ent = m_scene.createEntity();
-    ent.addComponent<cro::Transform>().setOrigin({ std::floor(spriteData.bounds[0].width / 2.f) - DetailBackgroundOffset, std::floor(spriteData.bounds[0].height / 5.f) - 2.f });
-    ent.addComponent<cro::Drawable2D>();
-    ent.addComponent<cro::Sprite>() = controllerSprites.getSprite("deck");
-    ent.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
-    ent.getComponent<cro::UIElement>().depth = 0.1f;
-    ent.addComponent<cro::Callback>().active = true;
-    ent.getComponent<cro::Callback>().setUserData<SpriteData>(spriteData);
-    ent.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-        {
-            const auto& data = e.getComponent<cro::Callback>().getUserData<SpriteData>();
-            if (Social::isSteamdeck())
-            {
-                e.getComponent<cro::Sprite>().setTextureRect(data.bounds[SpriteData::Deck]);
-            }
-            else
-            {
-                if (m_sharedData.activeInput == SharedStateData::ActiveInput::PS)
-                {
-                    e.getComponent<cro::Sprite>().setTextureRect(data.bounds[SpriteData::PS]);
-                }
-                else if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
-                {
-                    if (cro::GameController::getControllerCount())
-                    {
-                        const auto idx = cro::GameController::hasPSLayout(0) ? SpriteData::PS : SpriteData::Xbox;
-                        e.getComponent<cro::Sprite>().setTextureRect(data.bounds[idx]);
-                    }
-                    else
-                    {
-                        e.getComponent<cro::Sprite>().setTextureRect(data.bounds[SpriteData::Xbox]);
-                    }
-                }
-                else
-                {
-                    //TODO cro::GameController::getPrintableName(0) == "Steam Controller"
-                    e.getComponent<cro::Sprite>().setTextureRect(data.bounds[SpriteData::Xbox]);
-                }
-            }
-        };
-    m_uiLayout.detailsPane.tabDetails[TabID::Controller].getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
-
-
-    //set detail text to controller list
-    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
-    ent = m_scene.createEntity();
-    ent.addComponent<cro::Transform>();
-    ent.addComponent<cro::Drawable2D>();
-    ent.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
-    ent.getComponent<cro::Text>();// .setString("1 Buns Flaps\n2 Game Controller\n3 Super awesome arcade stick\n4 this is made up y'know");
-    ent.addComponent<cro::UIElement>(cro::UIElement::Text, true);
-    ent.getComponent<cro::UIElement>().depth = 0.2f;
-    ent.getComponent<cro::UIElement>().characterSize = InfoTextSize;
-    ent.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundPadding / 2.f, -std::floor((spriteData.bounds[0].height / 5.f) + 4.f) };
-    ent.addComponent<cro::Callback>().active = true;
-    ent.getComponent<cro::Callback>().function = 
-        [&](cro::Entity e, float)
-        {
-            if (cro::GameController::getControllerCount())
-            {
-                e.getComponent<cro::Text>().setString(m_controllerString);
-            }
-            else
-            {
-                e.getComponent<cro::Text>().setString("No Controllers Connected");
-            }
-            auto bounds = cro::Text::getLocalBounds(e);
-            auto posX = std::round(bounds.width / 2.f) + 4.f;
-            e.getComponent<cro::Transform>().setOrigin({ posX, 0.f });            
-        };
-    m_uiLayout.detailsPane.tabDetails[TabID::Controller].getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
-    auto textEnt = ent;
-
-    //activity icons next to description
-    ent = m_scene.createEntity();
-    ent.addComponent<cro::Transform>();
-    ent.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
-    ent.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
-    ent.getComponent<cro::UIElement>().absolutePosition = { -12.f, -8.f };
-    ent.addComponent<cro::Callback>().active = true;
-    ent.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-        {
-            static constexpr float Height = 8.f;
-            const auto addQuad = 
-                [&](glm::vec2 pos, cro::Colour c, std::vector<cro::Vertex2D>& dst)
-                {
-                    dst.emplace_back(glm::vec2(pos.x, pos.y + Height), c);
-                    dst.emplace_back(pos, c);
-                    dst.emplace_back(glm::vec2(pos.x + Height, pos.y + Height), c);
-                    dst.emplace_back(glm::vec2(pos.x + Height, pos.y + Height), c);
-                    dst.emplace_back(pos, c);
-                    dst.emplace_back(glm::vec2(pos.x + Height, pos.y), c);
-                };
-
-            if (cro::GameController::getControllerCount())
-            {
-                std::vector<cro::Vertex2D> verts;
-                glm::vec2 pos(0.f);
-                for (auto i = 0; i < cro::GameController::getControllerCount(); ++i)
-                {
-                    addQuad(pos, m_activityColours[i], verts);
-                    pos.y -= Height + 4.f;
-                    m_activityColours[i] = CD32::Colours[CD32::BlueDarkest];
-                }
-                e.getComponent<cro::Drawable2D>().setVertexData(verts);
-                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-            }
-            else
-            {
-                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-            }
-        };
-    textEnt.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
-
-
-
     //menu items
+    m_uiLayout.menuLayout.items[TabID::Controller].clear();
 
     auto* item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
     item->title = "Input Settings";
@@ -2587,6 +2621,56 @@ void OptionsStateV2::createControllerItems()
         };
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.enableRumble;
+
+    if (cro::GameController::getControllerCount() > 1)
+    {
+        //select which controller to move
+        item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
+        item->title = "Controller Index";
+        item->description = "Select a controller to move up or down";
+        cro::Util::String::wordWrap(item->description, WordWrapSmall);
+        item->activated = [this](Menu::Item& i)
+            {
+                m_activeController = i.selectedIndex % cro::GameController::getControllerCount();
+                i.selectedIndex = m_activeController;
+            };
+        item->labels = { "1", "2", "3", "4" };
+        item->selectedIndex = m_activeController;
+
+        //we need to copy this to the callback below so we can refresh its output
+        const auto itemIndex = m_uiLayout.menuLayout.items[TabID::Controller].size() - 1;
+
+        //move the selected controller
+        item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
+        item->title = "Move Controller";
+        item->description = "Move the selected controller up or down";
+        cro::Util::String::wordWrap(item->description, WordWrapSmall);
+        item->activated = [this, itemIndex](Menu::Item& i)
+            {
+                if (i.activationDirection == Menu::Item::Left)
+                {
+                    //move down
+                    m_activeController = cro::GameController::moveControllerIndexDown(m_activeController);
+                }
+                else if (i.activationDirection == Menu::Item::Right)
+                {
+                    //move up
+                    m_activeController = cro::GameController::moveControllerIndexUp(m_activeController);
+                }
+
+                //reset t he timer for the new index else we immediately get a repeat press
+                resetRepeatTimer(m_activeController, RepeatTimeLong);
+
+                auto& item = m_uiLayout.menuLayout.items[TabID::Controller][itemIndex];
+                item.selectedIndex = m_activeController;
+
+                refreshControllerDevices(false);
+            };
+        item->labels = { "Move", "Move" }; //Seems silly but we want movement arrows without the label changing
+        item->selectedIndex = 0;
+        item->wrapValue = false;
+    }
+
 
 #ifdef USE_GNS
     item = &m_uiLayout.menuLayout.items[TabID::Controller].emplace_back();
@@ -3222,7 +3306,7 @@ void OptionsStateV2::cancelKeybind()
     m_keybindItemIndex = -1;
 }
 
-void OptionsStateV2::refreshControllerDevices()
+void OptionsStateV2::refreshControllerDevices(bool redraw)
 {
     cro::String str;
     for (auto i = 0; i < std::min(4, cro::GameController::getControllerCount()); ++i)
@@ -3232,6 +3316,14 @@ void OptionsStateV2::refreshControllerDevices()
         str += "\n";
     }
     m_controllerString = str;
+
+    m_activeController = std::min(m_activeController, cro::GameController::getControllerCount() - 1);
+
+    if (redraw)
+    {
+        createControllerItems();
+        m_uiLayout.activateTab(m_uiLayout.tabBar.activeIndex);
+    }
 }
 
 void OptionsStateV2::refreshAudioDevices(Menu::Item& item)
