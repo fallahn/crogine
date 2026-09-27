@@ -102,7 +102,6 @@ GolfState::GolfState(SharedData& sd)
     m_gameStarted           (false),
     //m_eliminationStarted    (false),
     m_allMapsLoaded         (false),
-    m_skinsTie              (false),
     m_skinsTie2             (false),
     m_eliminationTie        (false),
     m_currentHole           (0),
@@ -265,12 +264,12 @@ void GolfState::handleMessage(const cro::Message& msg)
                         reason = MaxStrokeID::Forfeit;
                     }
                     break;
-                case ScoreType::Skins:
+                /*case ScoreType::Skins:
                     if (m_skinsTie)
                     {
                         maxStrokes *= 100;
                     }
-                    break;
+                    break;*/
                 }
 
                 if (playerInfo[0].holeScore[m_currentHole] >= maxStrokes)
@@ -1418,7 +1417,7 @@ void GolfState::setNextHole()
     //broadcast all scores to make sure everyone is up to date
     //note that in skins games the above summary may have reduced
     //the current hole index if the hole needs repeating
-    auto scoreHole = m_skinsTie || m_skinsTie2 || m_eliminationTie ? std::min(m_currentHole + 1, std::uint8_t(m_holeData.size()) - 1) : m_currentHole;
+    auto scoreHole = m_skinsTie2 || m_eliminationTie ? std::min(m_currentHole + 1, std::uint8_t(m_holeData.size()) - 1) : m_currentHole;
     
     for (auto& group : m_playerInfo)
     {

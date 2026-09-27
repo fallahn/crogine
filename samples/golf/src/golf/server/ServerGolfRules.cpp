@@ -339,17 +339,17 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
 
             //if this is skins sudden death then make everyone else the loser
             //ACTUALLY gimmes should never occur on sudden death rounds
-            if (m_skinsTie)
-            {
-                //skins / match play should always be in the same group
-                const auto& currPlayer = m_playerInfo[groupID].playerInfo[0];
-                for (auto i = 1u; i < playerInfo.size(); ++i)
-                {
-                    playerInfo[i].distanceToHole = 0.f;
-                    playerInfo[i].holeScore[m_currentHole] = currPlayer.holeScore[m_currentHole] + 1;
-                }
-            }
-            else
+            //if (m_skinsTie)
+            //{
+            //    //skins / match play should always be in the same group
+            //    const auto& currPlayer = m_playerInfo[groupID].playerInfo[0];
+            //    for (auto i = 1u; i < playerInfo.size(); ++i)
+            //    {
+            //        playerInfo[i].distanceToHole = 0.f;
+            //        playerInfo[i].holeScore[m_currentHole] = currPlayer.holeScore[m_currentHole] + 1;
+            //    }
+            //}
+            //else
             {
                 //check if our score is even with anyone holed already and forfeit
                 auto& currPlayer = m_playerInfo[groupID].playerInfo[0];
@@ -585,6 +585,7 @@ bool GolfState::summariseRules()
         else
         {
             //elimination should prefer those with most lives remaining
+            //tie-break by hole score
             std::sort(sortData.begin(), sortData.end(),
                 [&](const PlayerStatus& a, const PlayerStatus& b)
                 {
@@ -596,10 +597,18 @@ bool GolfState::summariseRules()
                 });
         }
         //end the game if there are more lives remaining
-        //than there are available holes
-        if (sortData[0].lives > remainingHoles)
+        //than there are available holes (although is this true,
+        //second place might gain a life while first places loses
+        //and then we're back into a draw state...
+        if (sortData.size() > 1 &&
+            ((sortData[0].lives - sortData[1].lives) / 2)> remainingHoles)
         {
-            //TODO - this needs to be duplicated on the final hole (although surely we would have 0 holes remaining anyway?)
+            return true;
+        }
+
+        //else if we're on the last hole look for a tie break
+        if (remainingHoles == 0)
+        {
             if (sortData.size() > 1 &&
                 sortData[0].lives == sortData[1].lives
                 && sortData[0].totalScore == sortData[1].totalScore) //this is an actual tie - else we break by score
@@ -609,12 +618,10 @@ bool GolfState::summariseRules()
                 m_scene.getSystem<BallSystem>()->setGimmeRadius(0);
 
                 sendServerTextMessage(u8"Tie Break! Nearest the pin in 2 strokes wins!");
-                
+
                 repeatHole();
                 return false;
             }
-
-            return true;
         }
     }
     else
@@ -655,7 +662,6 @@ bool GolfState::summariseRules()
 
     //check if we tied the last hole in skins
     if (m_sharedData.scoreType == ScoreType::Skins
-        && !m_skinsTie
         && !m_skinsTie2
         && ((m_currentHole + 1) == m_holeData.size()))
     {
@@ -688,16 +694,15 @@ bool GolfState::summariseRules()
         else*/
         {
             //only score if no player tied
-            if ((!m_skinsTie && //we have to check this flag because if it was set m_currentHole was probably modified and the score check is the old hole.
-                !m_skinsTie2 &&
+            if ((!m_skinsTie2 && //we have to check this flag because if it was set m_currentHole was probably modified and the score check is the old hole.
                 sortData[0].holeScore[m_currentHole] != sortData[1].holeScore[m_currentHole])
-                || (m_skinsTie && m_currentHole == m_holeData.size() - 1)) //this was the sudden death hole
+                /*|| (m_skinsTie && m_currentHole == m_holeData.size() - 1)*/) //this was the sudden death hole
             {
                 awardSkinsPot();
             }
             else //increase the skins pot, but only if not repeating the final hole
             {
-                if (!m_skinsTie && !m_skinsTie2)
+                if (!m_skinsTie2)
                 {
                     m_skinsPot++;
                     
