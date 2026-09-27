@@ -83,6 +83,10 @@ struct PlayerData final
     std::int8_t voicePitch = 0;
     bool flipped = false; //whether or not avatar flipped/southpaw
     bool isCPU = false; //these bools are flagged as bits in a single byte when serialised
+    
+    //this should probably come from the server to ensure sync
+    bool activeTeamMember = false; //set this on player change so we know if we should draw the ball
+    std::int32_t teamIndex = -1;
 
     struct HeadwearOffset final
     {
@@ -108,9 +112,6 @@ struct PlayerData final
     cro::Colour ballTint;
     cro::Colour ballColour = cro::Colour::White;
 
-    //this should probably come from the server to ensure sync
-    std::int32_t teamIndex = -1;
-    bool activeTeamMember = false; //set this on player change so we know if we should draw the ball
 
     //this is client side profile specific data
     cro::ImageArray<std::uint8_t> mugshotData; //pixel data of the mugshot for avatar icon
@@ -120,6 +121,7 @@ struct PlayerData final
     bool saveProfile() const;
     bool loadProfile(const std::filesystem::path& path, const std::string& uid);
 
+    bool retired = false;
     bool isSteamID = false;
     mutable bool isCustomName = false; //if not true and is a steam profile use the current steam name
 

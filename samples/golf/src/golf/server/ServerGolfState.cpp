@@ -2248,6 +2248,23 @@ void GolfState::doServerCommand(const net::NetEvent& evt)
                 m_sharedData.host.sendPacket(m_sharedData.clients[target].peer, PacketID::Poke, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             break;
+        case ServerCommand::RetirePlayer:
+            if (m_gameStarted && !m_playerInfo[groupID].playerInfo.empty())
+            {
+                const std::uint16_t packetData = std::uint16_t(m_playerInfo[groupID].playerInfo[0].client) << 8 | m_playerInfo[groupID].playerInfo[0].player;
+                m_playerInfo[groupID].playerInfo.erase(m_playerInfo[groupID].playerInfo.begin());
+                //TODO make sure to update the player count for the client info
+                setNextPlayer(groupID);
+
+                for (auto c : m_playerInfo[groupID].clientIDs)
+                {
+                    m_sharedData.host.sendPacket(m_sharedData.clients[c].peer, PacketID::PlayerRetired, packetData, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
+                //broadcast hole complete message so clients can update scoreboards
+                std::uint16_t pkt = (m_playerInfo[groupID].playerInfo[0].client << 8) | m_playerInfo[groupID].playerInfo[0].player;
+                m_sharedData.host.broadcastPacket(PacketID::HoleComplete, pkt, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            break;
         case ServerCommand::ForfeitClient:
             //if (target != 0/* && target < ConstVal::MaxClients*/)
             {

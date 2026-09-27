@@ -274,6 +274,7 @@ namespace PacketID
         RuleMod, //< (uint8 ID |uint8 0 or 1)
         SnekUpdate, //< uint16 client|player has been given the snek
         BigBallUpdate, //< uint16(client|player) | uint16 scale 0-11 (rescaled on client to +/-5)
+        PlayerRetired, //< uint16(client|player)
 
         //special cases for websocket
         RichPresence = 127
@@ -295,6 +296,7 @@ namespace ServerCommand
         KickClient,
         PokeClient,
         ForfeitClient,
+        RetirePlayer,
         SpawnCan,
 
         //billiards

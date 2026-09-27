@@ -5615,6 +5615,32 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::PlayerRetired:
+        {
+            const auto info = evt.packet.as<std::uint16_t>();
+            const std::int32_t client = (info & 0xff00) >> 8;
+            const std::int32_t player = info & 0x00ff;
+            auto& playerData = m_sharedData.connectionData[client].playerData[player];
+            
+            //ugh signedness
+            auto i = m_currentHole;
+            if (m_currentHole != 0)
+            {
+                m_currentHole -= 1;
+            }
+            for (i; i < m_holeData.size(); ++i)
+            {
+                playerData.holeScores[i] = 12;
+                playerData.distanceScores[i] = 1000.f;
+            }
+            playerData.matchScore = 0;
+            playerData.skinScore = 0;
+            playerData.retired = true;
+            
+            showNotification(playerData.name + " Retired From The Game");
+            m_gameScene.getDirector<GolfSoundDirector>()->playSound(GolfSoundDirector::AudioID::PlayerQuit, glm::vec3(0.f));
+        }
+            break;
         case PacketID::BigBallUpdate:
         {
             const auto data = evt.packet.as<std::uint32_t>();

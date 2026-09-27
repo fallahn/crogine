@@ -94,7 +94,6 @@ namespace sv
         };
         std::vector<PlayerGroup> m_playerInfo;
 
-
         //this is the group IDs indexed by client ID so we can look up a group for a given client
         std::array<std::int32_t, ConstVal::MaxClients> m_groupAssignments = {};
 

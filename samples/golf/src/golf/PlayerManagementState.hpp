@@ -95,7 +95,7 @@ private:
     {
         enum
         {
-            Poke, Forfeit, Kick
+            Poke, Forfeit, Retire, Kick
         };
     };
     std::int32_t m_confirmType;

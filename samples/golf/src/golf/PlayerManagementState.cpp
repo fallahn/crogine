@@ -99,13 +99,14 @@ namespace
 
     constexpr std::size_t PokeIndex    = 100;
     constexpr std::size_t ForfeitIndex = 101;
-    constexpr std::size_t KickIndex    = 102;
-    constexpr std::size_t QuitIndex    = 103;
-    constexpr std::size_t GroupIndex   = 104;
-    constexpr std::size_t HelpIndex    = 105;
+    constexpr std::size_t RetireIndex = 102;
+    constexpr std::size_t KickIndex    = 103;
+    constexpr std::size_t QuitIndex    = 104;
+    constexpr std::size_t GroupIndex   = 105;
+    constexpr std::size_t HelpIndex    = 106;
 
-    //constexpr std::size_t PrevGroupID  = 106;
-    //constexpr std::size_t NextGroupID  = 107;
+    //constexpr std::size_t PrevGroupID  = 107;
+    //constexpr std::size_t NextGroupID  = 108;
 
     constexpr glm::vec2 MenuNodePosition(112.f, -76.f);
     constexpr glm::vec2 MenuHiddenPosition(-10000.f);
@@ -747,7 +748,7 @@ void PlayerManagementState::buildScene()
     if (m_sharedData.baseState != StateID::Menu)
     {
         //poke button
-        entity = createItem(glm::vec2(0.f, 30.f), "Poke Selected Player", menuEntity);
+        entity = createItem(glm::vec2(0.f, 42.f), "Poke Selected Player", menuEntity);
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
         entity.getComponent<cro::UIInput>().setSelectionIndex(PokeIndex);
         entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, ForfeitIndex);
@@ -770,10 +771,10 @@ void PlayerManagementState::buildScene()
                 });
 
         //forfeit button
-        entity = createItem(glm::vec2(0.f, 18.f), "Forfeit Current Player", menuEntity);
+        entity = createItem(glm::vec2(0.f, 30.f), "Forfeit Current Player", menuEntity);
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
         entity.getComponent<cro::UIInput>().setSelectionIndex(ForfeitIndex);
-        entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, KickIndex);
+        entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, RetireIndex);
         entity.getComponent<cro::UIInput>().setPrevIndex(BaseSelectionIndex, PokeIndex);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
             uiSystem.addCallback([&, setConfirmMessage](cro::Entity e, cro::ButtonEvent evt) mutable
@@ -784,6 +785,29 @@ void PlayerManagementState::buildScene()
                         {
                             m_cooldownTimer.restart();
                             setConfirmMessage("Forfeit current player's hole?", ConfirmType::Forfeit);
+                        }
+                        else
+                        {
+                            m_audioEnts[AudioID::Denied].getComponent<cro::AudioEmitter>().play();
+                        }
+                    }
+                });
+
+        //retire button
+        entity = createItem(glm::vec2(0.f, 18.f), "Retire Current Player", menuEntity);
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(RetireIndex);
+        entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, KickIndex);
+        entity.getComponent<cro::UIInput>().setPrevIndex(BaseSelectionIndex, ForfeitIndex);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&, setConfirmMessage](cro::Entity e, cro::ButtonEvent evt) mutable
+                {
+                    if (activated(evt))
+                    {
+                        if (m_cooldownTimer.elapsed() > CooldownTime)
+                        {
+                            m_cooldownTimer.restart();
+                            setConfirmMessage("Retire current player's game?", ConfirmType::Retire);
                         }
                         else
                         {
@@ -823,7 +847,7 @@ void PlayerManagementState::buildScene()
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().setSelectionIndex(KickIndex);
     entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, QuitIndex);
-    entity.getComponent<cro::UIInput>().setPrevIndex(BaseSelectionIndex, m_sharedData.baseState == StateID::Menu ? PokeIndex : ForfeitIndex);
+    entity.getComponent<cro::UIInput>().setPrevIndex(BaseSelectionIndex, m_sharedData.baseState == StateID::Menu ? PokeIndex : RetireIndex);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&, setConfirmMessage](cro::Entity e, cro::ButtonEvent evt) mutable
             {
@@ -866,6 +890,9 @@ void PlayerManagementState::buildScene()
                     default: return;
                     case ConfirmType::Forfeit:
                         data = std::uint16_t(ServerCommand::ForfeitClient) | ((m_playerList.selectedClient) << 8);
+                        break;
+                    case ConfirmType::Retire:
+                        data = std::uint16_t(ServerCommand::RetirePlayer) | ((m_playerList.selectedClient) << 8);
                         break;
                     case ConfirmType::Poke:
                         data = std::uint16_t(ServerCommand::PokeClient) | ((m_playerList.selectedClient) << 8);

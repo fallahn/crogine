@@ -3895,163 +3895,166 @@ void GolfState::updateScoreboard(bool updateParDiff)
 
         for (auto i = 0u; i < client.playerCount; ++i)
         {
-            auto& entry = scores.emplace_back();
-            entry.name = client.playerData[i].name;
-            entry.client = clientID; //used to display whether or not this is CPU or a netstrength icon
-            entry.player = i; //see above
-            entry.lives = client.playerData[i].skinScore; //mostly ignored, except in Elimination
-            entry.teamIndex = client.playerData[i].teamIndex;
-
-            bool overPar = false;
-
-            //stupid bug in league play meant that holescores size could be too big when playing 9 holes...
-            for (auto j = 0u; j < /*client.playerData[i].holeScores*/m_holeData.size(); ++j)
+            //if (!client.playerData[i].retired)
             {
-                auto s = client.playerData[i].holeScores[j];
-                entry.holes.push_back(s);
-                entry.holeComplete.push_back(client.playerData[i].holeComplete[j]);
+                auto& entry = scores.emplace_back();
+                entry.name = client.playerData[i].name;
+                entry.client = clientID; //used to display whether or not this is CPU or a netstrength icon
+                entry.player = i; //see above
+                entry.lives = client.playerData[i].skinScore; //mostly ignored, except in Elimination
+                entry.teamIndex = client.playerData[i].teamIndex;
 
-                auto f = client.playerData[i].distanceScores[j];
-                entry.distances.push_back(f);
+                bool overPar = false;
 
-                std::int32_t stableScore = 0;
-
-                //this needs to ignore the current hole
-                //as the mid-point score looks confusing... however
-                //we still want to count the current number of strokes...
-                if (s)
-                {                    
-                    if (updateParDiff 
-                        || j < (m_currentHole)
-                        || entry.holeComplete.back())
-                    {
-                        auto diff = static_cast<std::int32_t>(s) - m_holeData[j].par;
-                        stableScore = 2 - diff;
-
-                        entry.parDiff += diff;
-                        overPar = (diff > 0);
-                    }
-                }
-
-                if (j < 9)
+                //stupid bug in league play meant that holescores size could be too big when playing 9 holes...
+                for (auto j = 0u; j < /*client.playerData[i].holeScores*/m_holeData.size(); ++j)
                 {
-                    switch (m_sharedData.scoreType)
+                    auto s = client.playerData[i].holeScores[j];
+                    entry.holes.push_back(s);
+                    entry.holeComplete.push_back(client.playerData[i].holeComplete[j]);
+
+                    auto f = client.playerData[i].distanceScores[j];
+                    entry.distances.push_back(f);
+
+                    std::int32_t stableScore = 0;
+
+                    //this needs to ignore the current hole
+                    //as the mid-point score looks confusing... however
+                    //we still want to count the current number of strokes...
+                    if (s)
                     {
-                    default: //dear future me: the default type should *ALWAYS* be the same as stroke type. Everywhere.
-                    case ScoreType::Elimination:
-                    case ScoreType::MultiTarget:
-                    case ScoreType::Stroke:
-                    case ScoreType::ShortRound:
-                        entry.frontNine += client.playerData[i].holeScores[j];
-                        break;
-                    case ScoreType::Stableford:
-                        stableScore = std::max(0, stableScore);
-                        entry.frontNine += stableScore;
-                        entry.holes.back() = stableScore;
-                        break;
-                    case ScoreType::StablefordPro:
-                        if (stableScore < 2
-                            && entry.holeComplete.back())
+                        if (updateParDiff
+                            || j < (m_currentHole)
+                            || entry.holeComplete.back())
                         {
-                            stableScore -= 2;
+                            auto diff = static_cast<std::int32_t>(s) - m_holeData[j].par;
+                            stableScore = 2 - diff;
+
+                            entry.parDiff += diff;
+                            overPar = (diff > 0);
                         }
-                        entry.frontNine += stableScore;
-                        entry.holes.back() = stableScore;
-                        break;
-                    case ScoreType::Match:
-                        entry.frontNine = client.playerData[i].matchScore;
-                        break;
-                    case ScoreType::Skins:
-                        entry.frontNine = client.playerData[i].skinScore;
-                        break;
-                    case ScoreType::NearestThePin:
-                        entry.frontNineDistance += f;
-                        entry.frontNine = client.playerData[i].matchScore; //displayed if playing pro mode
-                        break;
                     }
 
-                }
-                else
-                {
-                    switch (m_sharedData.scoreType)
+                    if (j < 9)
                     {
-                    default:
-                    case ScoreType::Elimination:
-                    case ScoreType::MultiTarget:
-                    case ScoreType::Stroke:
-                    case ScoreType::ShortRound:
-                        entry.backNine += client.playerData[i].holeScores[j];
-                        break;
-                    case ScoreType::Stableford:
-                        stableScore = std::max(0, stableScore);
-                        entry.backNine += stableScore;
-                        entry.holes.back() = stableScore;
-                        break;
-                    case ScoreType::StablefordPro:
-                        if (stableScore < 2
-                            && entry.holeComplete.back())
+                        switch (m_sharedData.scoreType)
                         {
-                            stableScore -= 2;
+                        default: //dear future me: the default type should *ALWAYS* be the same as stroke type. Everywhere.
+                        case ScoreType::Elimination:
+                        case ScoreType::MultiTarget:
+                        case ScoreType::Stroke:
+                        case ScoreType::ShortRound:
+                            entry.frontNine += client.playerData[i].holeScores[j];
+                            break;
+                        case ScoreType::Stableford:
+                            stableScore = std::max(0, stableScore);
+                            entry.frontNine += stableScore;
+                            entry.holes.back() = stableScore;
+                            break;
+                        case ScoreType::StablefordPro:
+                            if (stableScore < 2
+                                && entry.holeComplete.back())
+                            {
+                                stableScore -= 2;
+                            }
+                            entry.frontNine += stableScore;
+                            entry.holes.back() = stableScore;
+                            break;
+                        case ScoreType::Match:
+                            entry.frontNine = client.playerData[i].matchScore;
+                            break;
+                        case ScoreType::Skins:
+                            entry.frontNine = client.playerData[i].skinScore;
+                            break;
+                        case ScoreType::NearestThePin:
+                            entry.frontNineDistance += f;
+                            entry.frontNine = client.playerData[i].matchScore; //displayed if playing pro mode
+                            break;
                         }
-                        entry.backNine += stableScore;
-                        entry.holes.back() = stableScore;
-                        break;
-                    case ScoreType::Match:
-                        entry.backNine = client.playerData[i].matchScore;
-                        break;
-                    case ScoreType::Skins:
-                        entry.backNine = client.playerData[i].skinScore;
-                        break;
-                    case ScoreType::NearestThePin:
-                        entry.backNineDistance += f;
-                        entry.backNine = client.playerData[i].matchScore;
-                        break;
+
+                    }
+                    else
+                    {
+                        switch (m_sharedData.scoreType)
+                        {
+                        default:
+                        case ScoreType::Elimination:
+                        case ScoreType::MultiTarget:
+                        case ScoreType::Stroke:
+                        case ScoreType::ShortRound:
+                            entry.backNine += client.playerData[i].holeScores[j];
+                            break;
+                        case ScoreType::Stableford:
+                            stableScore = std::max(0, stableScore);
+                            entry.backNine += stableScore;
+                            entry.holes.back() = stableScore;
+                            break;
+                        case ScoreType::StablefordPro:
+                            if (stableScore < 2
+                                && entry.holeComplete.back())
+                            {
+                                stableScore -= 2;
+                            }
+                            entry.backNine += stableScore;
+                            entry.holes.back() = stableScore;
+                            break;
+                        case ScoreType::Match:
+                            entry.backNine = client.playerData[i].matchScore;
+                            break;
+                        case ScoreType::Skins:
+                            entry.backNine = client.playerData[i].skinScore;
+                            break;
+                        case ScoreType::NearestThePin:
+                            entry.backNineDistance += f;
+                            entry.backNine = client.playerData[i].matchScore;
+                            break;
+                        }
                     }
                 }
-            }
-            client.playerData[i].parScore = entry.parDiff;
+                client.playerData[i].parScore = entry.parDiff;
 
-            
-            switch (m_sharedData.scoreType)
-            {
-            default:
-            case ScoreType::Elimination:
-            case ScoreType::MultiTarget:
-            case ScoreType::Stroke:
-            case ScoreType::ShortRound:
-                //track achievement make no mistake
-                if (client.connectionID == m_sharedData.localConnectionData.connectionID
-                    && !client.playerData[i].isCPU
-                    && overPar)
+
+                switch (m_sharedData.scoreType)
                 {
-                    m_achievementTracker.noHolesOverPar = false;
+                default:
+                case ScoreType::Elimination:
+                case ScoreType::MultiTarget:
+                case ScoreType::Stroke:
+                case ScoreType::ShortRound:
+                    //track achievement make no mistake
+                    if (client.connectionID == m_sharedData.localConnectionData.connectionID
+                        && !client.playerData[i].isCPU
+                        && overPar)
+                    {
+                        m_achievementTracker.noHolesOverPar = false;
+                    }
+
+                    [[fallthrough]];
+                case ScoreType::Stableford:
+                case ScoreType::StablefordPro:
+                    entry.total = entry.frontNine + entry.backNine;
+                    break;
+                case ScoreType::Skins:
+                    entry.total = client.playerData[i].skinScore;
+                    break;
+                case ScoreType::Match:
+                    //entry.total = entry.frontNine;
+                    entry.total = client.playerData[i].matchScore;
+                    break;
+                case ScoreType::NearestThePin:
+                    entry.totalDistance = entry.frontNineDistance + entry.backNineDistance;
+                    entry.total = client.playerData[i].matchScore;
+                    break;
                 }
 
-                [[fallthrough]];
-            case ScoreType::Stableford:
-            case ScoreType::StablefordPro:
-                entry.total = entry.frontNine + entry.backNine;
-                break;
-            case ScoreType::Skins:
-                entry.total = client.playerData[i].skinScore;
-                break;
-            case ScoreType::Match:
-                //entry.total = entry.frontNine;
-                entry.total = client.playerData[i].matchScore;
-                break;
-            case ScoreType::NearestThePin:
-                entry.totalDistance = entry.frontNineDistance + entry.backNineDistance;
-                entry.total = client.playerData[i].matchScore;
-                break;
+                //for stat/achievment tracking
+                auto& leaderboardEntry = m_statBoardScores.emplace_back();
+                leaderboardEntry.client = clientID;
+                leaderboardEntry.player = i;
+                leaderboardEntry.score = entry.total;
+                leaderboardEntry.distance = entry.totalDistance;
+                leaderboardEntry.team = entry.teamIndex;
             }
-
-            //for stat/achievment tracking
-            auto& leaderboardEntry = m_statBoardScores.emplace_back();
-            leaderboardEntry.client = clientID;
-            leaderboardEntry.player = i;
-            leaderboardEntry.score = entry.total;
-            leaderboardEntry.distance = entry.totalDistance;
-            leaderboardEntry.team = entry.teamIndex;
         }
         clientID++;
     }
