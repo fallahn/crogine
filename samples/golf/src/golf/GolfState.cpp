@@ -5261,7 +5261,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         });
 
     auto textEnt = m_uiScene.createEntity();
-    textEnt.addComponent<cro::Transform>().setPosition({ texSize.x / 2.f, textureRect.height - 2.f, 0.25f });
+    textEnt.addComponent<cro::Transform>().setPosition({ texSize.x / 2.f, textureRect.height - 2.f, 0.5f });
     textEnt.addComponent<cro::Drawable2D>();
     textEnt.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Label)).setString(m_sharedData.connectionData[clientID].playerData[playerID].name);
     textEnt.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
@@ -5621,24 +5621,13 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             const std::int32_t client = (info & 0xff00) >> 8;
             const std::int32_t player = info & 0x00ff;
             auto& playerData = m_sharedData.connectionData[client].playerData[player];
-            
-            //ugh signedness
-            auto i = m_currentHole;
-            if (m_currentHole != 0)
-            {
-                m_currentHole -= 1;
-            }
-            for (i; i < m_holeData.size(); ++i)
-            {
-                playerData.holeScores[i] = 12;
-                playerData.distanceScores[i] = 1000.f;
-            }
-            playerData.matchScore = 0;
-            playerData.skinScore = 0;
             playerData.retired = true;
+            playerData.isCPU = true;
             
             showNotification(playerData.name + " Retired From The Game");
             m_gameScene.getDirector<GolfSoundDirector>()->playSound(GolfSoundDirector::AudioID::PlayerQuit, glm::vec3(0.f));
+
+            m_avatars[client][player].ballModel.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
         }
             break;
         case PacketID::BigBallUpdate:
