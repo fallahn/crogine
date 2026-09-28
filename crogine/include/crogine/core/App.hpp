@@ -254,6 +254,7 @@ namespace cro
         std::string m_orgString;
         std::string m_appString;
         std::filesystem::path m_prefPath;
+        std::filesystem::path m_imguiIni;
         
         struct WindowSettings final
         {

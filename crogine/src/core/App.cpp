@@ -310,6 +310,9 @@ App::App(std::uint32_t styleFlags)
         char* pp = SDL_GetPrefPath(m_orgString.c_str(), m_appString.c_str());
         m_prefPath = pp;
         SDL_free(pp);
+
+        m_imguiIni = m_prefPath / "imgui.ini";
+        ImGui::GetIO().IniFilename = U8PATH_CAST(m_imguiIni);
         //std::replace(m_prefPath.begin(), m_prefPath.end(), '\\', '/');
 
         if (!AudioRenderer::init())
@@ -786,6 +789,9 @@ void App::setApplicationStrings(const std::string& organisation, const std::stri
     m_prefPath = pp;
     SDL_free(pp);
     //std::replace(m_prefPath.begin(), m_prefPath.end(), '\\', '/');
+
+    m_imguiIni = m_prefPath / "imgui.ini";
+    ImGui::GetIO().IniFilename = U8PATH_CAST(m_imguiIni);
 }
 
 //private
