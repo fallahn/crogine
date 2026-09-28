@@ -311,8 +311,9 @@ App::App(std::uint32_t styleFlags)
         m_prefPath = pp;
         SDL_free(pp);
 
-        m_imguiIni = m_prefPath / "imgui.ini";
-        ImGui::GetIO().IniFilename = U8PATH_CAST(m_imguiIni);
+        //urrrrrggh
+        auto temp = m_prefPath / "imgui.ini";
+        m_imguiIni = U8PATH_CAST(temp);
         //std::replace(m_prefPath.begin(), m_prefPath.end(), '\\', '/');
 
         if (!AudioRenderer::init())
@@ -378,6 +379,7 @@ void App::run(bool resetSettings)
         m_window.setMultisamplingEnabled(glIsEnabled(GL_MULTISAMPLE));
 
         ImGui::CreateContext();
+        ImGui::GetIO().IniFilename = m_imguiIni.c_str();
         setImguiStyle(&ImGui::GetStyle());
         //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad | ImGuiConfigFlags_NavEnableKeyboard;
         ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
@@ -790,8 +792,12 @@ void App::setApplicationStrings(const std::string& organisation, const std::stri
     SDL_free(pp);
     //std::replace(m_prefPath.begin(), m_prefPath.end(), '\\', '/');
 
-    m_imguiIni = m_prefPath / "imgui.ini";
-    ImGui::GetIO().IniFilename = U8PATH_CAST(m_imguiIni);
+    auto temp = m_prefPath / "imgui.ini";
+    m_imguiIni = U8PATH_CAST(temp);
+    if (ImGui::GetCurrentContext())
+    {
+        ImGui::GetIO().IniFilename = m_imguiIni.c_str();
+    }
 }
 
 //private
