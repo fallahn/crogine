@@ -349,7 +349,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                     ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar))
                 {
                     if (m_showShortcuts
-                        && !Social::isSteamdeck())
+                        /*&& !Social::isSteamdeck()*/)
                     {
                         ImGui::Text("Quick Emotes: ");
                         ImGui::SameLine();
@@ -395,10 +395,10 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                     }
                     
                     std::int32_t flags = 0;// ImGuiWindowFlags_AlwaysUseWindowPadding;
-                    if (Social::isSteamdeck())
+                    /*if (Social::isSteamdeck())
                     {
                         flags |= ImGuiWindowFlags_NoScrollbar;
-                    }
+                    }*/
 
                     const float reserveHeight = (ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing());// *2.f;
                     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.f,0.f,0.f,0.4f));
@@ -424,8 +424,8 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                     ImGui::EndChild();
                     ImGui::Separator();
 
-                    if (!Social::isSteamdeck()
-                        || cro::GameController::getControllerCount() == 0) //big picture but with no controllers
+                    /*if (!Social::isSteamdeck()
+                        || cro::GameController::getControllerCount() == 0)*/ //big picture but with no controllers
                     {
                         if (ImGui::InputText("##ip", &m_inputBuffer, 
                             ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackHistory, &historyCallback))
@@ -492,10 +492,10 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                             ImGui::EndPopup();
                         }
                     }
-                    else
+                    /*else
                     {
                         ImGui::Text("Chat History");
-                    }
+                    }*/
                 }
                 ImGui::End();
 
