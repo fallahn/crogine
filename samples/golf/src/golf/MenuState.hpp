@@ -508,6 +508,7 @@ private:
         void simulate(float);
         void clientStatusChanged(); //client added or removed
         void readyStart();
+        void kickPlayer();
 
         MenuState& m_menuState;
         SharedStateData& m_sharedData;
@@ -539,15 +540,19 @@ private:
         void createRulesTab();
         void createScoresTab();
 
-        cro::SimpleText m_uiText;
-        cro::SimpleText m_infoText;
-        cro::SimpleQuad m_infoQuad;
-        cro::SimpleVertexArray m_infoArray;
+        cro::SimpleText m_uiText; //uses UI Font
+        cro::SimpleText m_infoText; //uses Info Font
+
+        cro::SimpleVertexArray m_detailArray; //used when updating a detail panel - verts are set at draw time
+
+        cro::SimpleQuad m_infoQuad; //used on scores tab
+        cro::SimpleVertexArray m_infoArray; //used on scores tab
 
 
         std::array<cro::Entity, TabID::Count> m_detailEntities = {};
         std::array<cro::RenderTexture, TabID::Count> m_detailTextures = {};
 
+        //redraws the detail pane for corresponding tab
         void updatePlayersTab(bool resized = false);
         void updateCourseTab(bool resized = false);
         void updateRulesTab(bool resized = false);
@@ -568,7 +573,8 @@ private:
             {
                 Action = 1, //activates selected item, if applicable
                 Quit = 2,
-                Options = 4
+                Options = 4,
+                Kick = 8
             };
         };
         std::function<void()> m_timeoutCallback; //called when action button times out

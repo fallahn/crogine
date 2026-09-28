@@ -481,6 +481,11 @@ void MenuState::LobbyMenu::readyStart()
     }
 }
 
+void MenuState::LobbyMenu::kickPlayer()
+{
+    LogI << "Player is kicked!" << std::endl;
+}
+
 void MenuState::LobbyMenu::resetRepeatTimer(std::int32_t i, cro::Time resetTime)
 {
     m_inputRepeatClocks[i].restart();
@@ -512,6 +517,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     m_uiText.setShadowOffset({ 1.f, -1.f });
 
     m_infoArray.setPrimitiveType(GL_TRIANGLES);
+    m_detailArray.setPrimitiveType(GL_TRIANGLES);
 
     auto rootNode = m_menuState.m_uiScene.createEntity();
     rootNode.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
@@ -520,6 +526,24 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     rootNode.addComponent<cro::UIElement>(cro::UIElement::Position, true).relativePosition = { 0.5f, 0.5f };
     m_menuState.m_menuEntities[MenuID::LobbyV2] = rootNode;
     
+    constexpr auto c = cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha);
+    auto bgNode = m_menuState.m_uiScene.createEntity();
+    bgNode.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.5f });
+    bgNode.addComponent<cro::Drawable2D>().setVertexData({
+        cro::Vertex2D(glm::vec2(-0.5f, 0.5f), c),
+        cro::Vertex2D(glm::vec2(-0.5f), c),
+        cro::Vertex2D(glm::vec2(0.5f), c),
+        cro::Vertex2D(glm::vec2(0.5f, -0.5f), c),
+        });
+    bgNode.addComponent<cro::Callback>().active = true;
+    bgNode.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float)
+        {
+            e.getComponent<cro::Transform>().setScale(glm::vec2(cro::App::getWindow().getSize()));
+        };
+    rootNode.getComponent<cro::Transform>().addChild(bgNode.getComponent<cro::Transform>());
+
+
     //don't add to the parent else we get scaled up to the view scale on window resize...
     //parent.getComponent<cro::Transform>().addChild(rootNode.getComponent<cro::Transform>());
 
@@ -566,7 +590,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(largeFont).setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    entity.getComponent<cro::Text>().setString("Settings");
+    entity.getComponent<cro::Text>().setString("Lobby");
     entity.addComponent<cro::UIElement>(cro::UIElement::Text, true);
     entity.getComponent<cro::UIElement>().characterSize = UITextSize;
     entity.getComponent<cro::UIElement>().depth = 0.1f;
@@ -831,6 +855,99 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     createRulesTab();
     createScoresTab();
 
+
+    //detail entities contain the images
+    //on the right hand pane. TODO we could
+    //probably use a single texture and
+    //update it based on its current page
+    //rather than duplicating these...
+    m_uiLayout.tabBar.items[TabID::Players].selected =
+        [this]()
+        {
+            for (auto e : m_detailEntities)
+            {
+                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            }
+            applyDetails(TabID::Players);
+        };
+
+    entity = m_menuState.m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    entity.addComponent<cro::Sprite>();
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, false);
+    entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().absolutePosition.y + 8.f };
+    entity.getComponent<cro::UIElement>().depth = 0.1f;
+    m_detailEntities[TabID::Players] = entity;
+    m_uiLayout.detailsPane.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    updatePlayersTab();
+
+
+    m_uiLayout.tabBar.items[TabID::Course].selected =
+        [this]()
+        {
+            for (auto e : m_detailEntities)
+            {
+                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            }
+            applyDetails(TabID::Course);
+        };
+
+    entity = m_menuState.m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    entity.addComponent<cro::Sprite>();
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, false);
+    entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().absolutePosition.y + 8.f };
+    entity.getComponent<cro::UIElement>().depth = 0.1f;
+    m_detailEntities[TabID::Course] = entity;
+    m_uiLayout.detailsPane.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    updateCourseTab();
+
+    m_uiLayout.tabBar.items[TabID::Rules].selected =
+        [this]()
+        {
+            for (auto e : m_detailEntities)
+            {
+                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            }
+            applyDetails(TabID::Rules);
+        };
+
+    entity = m_menuState.m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    entity.addComponent<cro::Sprite>();
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, false);
+    entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().absolutePosition.y + 8.f };
+    entity.getComponent<cro::UIElement>().depth = 0.1f;
+    m_detailEntities[TabID::Rules] = entity;
+    m_uiLayout.detailsPane.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    updateRulesTab();
+
+    m_uiLayout.tabBar.items[TabID::Scores].selected =
+        [this]()
+        {
+            for (auto e : m_detailEntities)
+            {
+                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            }
+            applyDetails(TabID::Scores);
+        };
+
+    entity = m_menuState.m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    entity.addComponent<cro::Sprite>();
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, false);
+    entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().absolutePosition.y + 8.f };
+    entity.getComponent<cro::UIElement>().depth = 0.1f;
+    m_detailEntities[TabID::Scores] = entity;
+    m_uiLayout.detailsPane.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    updateScoresTab();
+
+
+
     m_uiLayout.updateTabBar(); //this also updates the menu items
 
     //info string at the bottom
@@ -924,6 +1041,8 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
 
 void MenuState::LobbyMenu::createPlayerTab()
 {
+    m_uiLayout.menuLayout.items[TabID::Players].clear();
+
     auto* item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
     item->title = "Player Menu";
     item->displayType = Menu::Item::Heading;
@@ -945,30 +1064,19 @@ void MenuState::LobbyMenu::createPlayerTab()
             m_buttonFlags |= ButtonFlags::Action;
             setProgressColour(CD32::Colours[CD32::GreenLight]);
 
-            //set a callback to be activaed when timer expires
+            //set a callback to be activated when timer expires
+            //(when we get the update from the server the detail
+            //pane is redrawn for us)
             m_timeoutCallback = std::bind(&LobbyMenu::readyStart, this);
         };
     item->labels = { "Let\'s Go!" };
     item->selectedIndex = 0;
 
-
-
-    //select player
-    item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
-    item->title = "Select Player";
-    item->description = "Add me";
-    item->activated = [this](Menu::Item& i)
-        {
-
-        };
-    item->labels = { "1", "2" };
-    item->selectedIndex = 0;
-
-
     //teams mode
     item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
     item->title = "Teams";
-    item->description = "Add me";
+    item->description = "Players are paired up for the round.";
+    cro::Util::String::wordWrap(item->description, WordWrapSmall);
     item->activated = [this](Menu::Item& i)
         {
 
@@ -977,15 +1085,46 @@ void MenuState::LobbyMenu::createPlayerTab()
     item->selectedIndex = 0;
 
 
+    //select player
+    item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
+    item->title = "Select Player";
+    item->description = "Select the active player.";
+    item->activated = [this](Menu::Item& i)
+        {
+            //TODO update index
+            if (i.activationDirection == Menu::Item::Left)
+            {
+
+            }
+            else if (i.activationDirection == Menu::Item::Right)
+            {
+
+            }
+            updatePlayersTab();
+        };
+    item->labels = { "Select", "Select" }; //we don't want the label to change, but to offer left/right buttons
+    item->selectedIndex = 0;
+
+
     //move selected
     item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
     item->title = "Move Selected Player";
-    item->description = "Add me";
+    item->description = "Moving the selected player decides which team they appear in.";
+    cro::Util::String::wordWrap(item->description, WordWrapSmall);
     item->activated = [this](Menu::Item& i)
         {
+            //TODO swap corresponding indices
+            if (i.activationDirection == Menu::Item::Left)
+            {
 
+            }
+            else if (i.activationDirection == Menu::Item::Right)
+            {
+
+            }
+            updatePlayersTab();
         };
-    item->labels = { "1", "2" };
+    item->labels = { "Move", "Move" };
     item->selectedIndex = 0;
 
     //we need to do this in a refresh after creating the lobby
@@ -995,56 +1134,37 @@ void MenuState::LobbyMenu::createPlayerTab()
         //poke selected
         item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
         item->title = "Poke Player";
-        item->description = "Add me";
+        item->description = "Give the selected player a little poke.";
+        cro::Util::String::wordWrap(item->description, WordWrapSmall);
         item->activated = [this](Menu::Item& i)
             {
 
             };
-        item->labels = { "1" };
+        item->labels = { "Poke" };
         item->selectedIndex = 0;
 
 
         //kick selected - TODO press/hold
         item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
-        item->title = "Kick Player";
-        item->description = "Add me";
+        item->title = "Kick Player (Hold)";
+        item->description = "Kick the selected player. This will also remove all players on the same client!";
+        cro::Util::String::wordWrap(item->description, WordWrapSmall);
         item->activated = [this](Menu::Item& i)
             {
+                m_buttonFlags |= ButtonFlags::Action;
+                setProgressColour(CD32::Colours[CD32::Red]);
 
+                m_timeoutCallback = std::bind(&LobbyMenu::kickPlayer, this);
             };
-        item->labels = { "1" };
+        item->labels = { "Kick" };
         item->selectedIndex = 0;
     }
-
-
-    m_uiLayout.tabBar.items[TabID::Players].selected =
-        [this]()
-        {
-            for (auto e : m_detailEntities)
-            {
-                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-            }
-            applyDetails(TabID::Players);
-        };
-
-
-    auto entity = m_menuState.m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-    entity.addComponent<cro::Sprite>();
-    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, false);
-    entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().absolutePosition.y + 8.f };
-    entity.getComponent<cro::UIElement>().depth = 0.1f;
-    m_detailEntities[TabID::Players] = entity;
-    m_uiLayout.detailsPane.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
-
-    updatePlayersTab();
 }
 
 void MenuState::LobbyMenu::createCourseTab()
 {
+    m_uiLayout.menuLayout.items[TabID::Course].clear();
+
     auto* item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
     item->title = "Course Selection";
     item->displayType = Menu::Item::Heading;
@@ -1149,32 +1269,12 @@ void MenuState::LobbyMenu::createCourseTab()
         };
     item->labels = { "Normal", "Medium", "High"};
     item->selectedIndex = 0;
-
-    m_uiLayout.tabBar.items[TabID::Course].selected =
-        [this]()
-        {
-            for (auto e : m_detailEntities)
-            {
-                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-            }
-            applyDetails(TabID::Course);
-        };
-
-    auto entity = m_menuState.m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-    entity.addComponent<cro::Sprite>();
-    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, false);
-    entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().absolutePosition.y + 8.f };
-    entity.getComponent<cro::UIElement>().depth = 0.1f;
-    m_detailEntities[TabID::Course] = entity;
-    m_uiLayout.detailsPane.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    updateCourseTab();
 }
 
 void MenuState::LobbyMenu::createRulesTab()
 {
+    m_uiLayout.menuLayout.items[TabID::Rules].clear();
+
     auto* item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
     item->title = "Game Rules";
     item->displayType = Menu::Item::Heading;
@@ -1265,32 +1365,12 @@ void MenuState::LobbyMenu::createRulesTab()
         item->labels = { "No", "Yes" };
         item->selectedIndex = 0;
     }
-
-    m_uiLayout.tabBar.items[TabID::Rules].selected =
-        [this]()
-        {
-            for (auto e : m_detailEntities)
-            {
-                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-            }
-            applyDetails(TabID::Rules);
-        };
-
-    auto entity = m_menuState.m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-    entity.addComponent<cro::Sprite>();
-    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, false);
-    entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().absolutePosition.y + 8.f };
-    entity.getComponent<cro::UIElement>().depth = 0.1f;
-    m_detailEntities[TabID::Rules] = entity;
-    m_uiLayout.detailsPane.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    updateRulesTab();
 }
 
 void MenuState::LobbyMenu::createScoresTab()
 {
+    m_uiLayout.menuLayout.items[TabID::Scores].clear();
+
     //leaderboards
     auto* item = &m_uiLayout.menuLayout.items[TabID::Scores].emplace_back();
     item->title = "View Scores";
@@ -1352,31 +1432,6 @@ void MenuState::LobbyMenu::createScoresTab()
         item->labels = { "OK" };
         item->selectedIndex = 0;
     }
-
-    //tab selection callback
-    m_uiLayout.tabBar.items[TabID::Scores].selected = 
-        [this]()
-        {
-            for (auto e : m_detailEntities)
-            {
-                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-            }
-            applyDetails(TabID::Scores);
-        };
-
-
-    //create a specific entity to display the scores tab background
-    auto entity = m_menuState.m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-    entity.addComponent<cro::Sprite>();
-    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, false);
-    entity.getComponent<cro::UIElement>().absolutePosition = { 0.f, m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().absolutePosition.y + 8.f };
-    entity.getComponent<cro::UIElement>().depth = 0.1f;
-    m_detailEntities[TabID::Scores] = entity;
-    m_uiLayout.detailsPane.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    updateScoresTab();
 }
 
 void MenuState::LobbyMenu::updatePlayersTab(bool resized)
@@ -1395,7 +1450,60 @@ void MenuState::LobbyMenu::updatePlayersTab(bool resized)
         }
     }
 
-    m_detailTextures[TabID::Players].clear(cro::Colour::Yellow);
+    const float Width = static_cast<float>(m_detailTextures[TabID::Players].getSize().x);
+    const float Top = static_cast<float>(m_detailTextures[TabID::Players].getSize().y);
+    constexpr float Height = 14.f;
+
+    m_detailArray.setPosition({ 0.f, Top - (Height * 2.f) });
+    m_detailArray.setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, Height), CD32::Colours[CD32::BeigeMid]),
+            cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::BeigeMid]),
+            cro::Vertex2D(glm::vec2(Width, Height), CD32::Colours[CD32::BeigeMid]),
+            
+            cro::Vertex2D(glm::vec2(Width, Height), CD32::Colours[CD32::BeigeMid]),
+            cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::BeigeMid]),
+            cro::Vertex2D(glm::vec2(Width, 0.f), CD32::Colours[CD32::BeigeMid])
+        });
+
+    m_detailTextures[TabID::Players].clear(CD32::Colours[CD32::BeigeLight]);
+    for (auto i = 0; i < 8; ++i)
+    {
+        m_detailArray.draw();
+        m_detailArray.move({ 0.f, -(Height * 2.f) });
+    }
+
+    //TODO set verts to yellow and render over selected player position
+
+    m_detailArray.setVertexData({
+        cro::Vertex2D(glm::vec2(0.f, Top), CD32::Colours[CD32::BeigeLight]),
+        cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::BeigeLight]),
+        cro::Vertex2D(glm::vec2(13.f, Top), CD32::Colours[CD32::BeigeLight]),
+        cro::Vertex2D(glm::vec2(13.f, Top), CD32::Colours[CD32::BeigeLight]),
+        cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::BeigeLight]),
+        cro::Vertex2D(glm::vec2(13.f, 0.f), CD32::Colours[CD32::BeigeLight]),
+
+        cro::Vertex2D(glm::vec2(0.f, Top), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(12.f, Top), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(12.f, Top), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(12.f, 0.f), CD32::Colours[CD32::Brown]),
+
+        cro::Vertex2D(glm::vec2(0.f, Top), CD32::Colours[CD32::BeigeDark]),
+        cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::BeigeDark]),
+        cro::Vertex2D(glm::vec2(11.f, Top), CD32::Colours[CD32::BeigeDark]),
+        cro::Vertex2D(glm::vec2(11.f, Top), CD32::Colours[CD32::BeigeDark]),
+        cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::BeigeDark]),
+        cro::Vertex2D(glm::vec2(11.f, 0.f), CD32::Colours[CD32::BeigeDark])
+        });
+    m_detailArray.setPosition({ 0.f, 0.f });
+    m_detailArray.draw();
+
+
+    //TODO render player names, ready status etc
+
+
     m_detailTextures[TabID::Players].display();
 
 
