@@ -3770,7 +3770,7 @@ void GolfState::createScoreboard()
             entity.getComponent<cro::Sprite>().setTextureRect(getAvatarBounds(pl));
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
-                [&, barEnt](cro::Entity e, float)
+                [this, barEnt](cro::Entity e, float)
                 {
                     if (barEnt.destroyed())
                     {
@@ -3791,6 +3791,10 @@ void GolfState::createScoreboard()
                         e.getComponent<cro::Sprite>().setTextureRect(getAvatarBounds(player));
                         e.getComponent<cro::Transform>().setPosition({ -(367.f + (scoreboardExpansion * 2.f)), 2.f });
                         e.getComponent<cro::Transform>().setScale(AVScale);
+
+                        const auto& info = m_sharedData.connectionData[client].playerData[player];
+                        const auto c = (info.retired) ? cro::Colour(0.6f, 0.6f, 0.6f, 1.f) : cro::Colour::White;
+                        e.getComponent<cro::Sprite>().setColour(c);
                     }
                 };
             barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
