@@ -96,6 +96,28 @@ String::String(const std::string& ansiString, const std::locale& locale)
 }
 
 
+String::String(const char8_t* u8String)
+{
+    if (u8String)
+    {
+        std::size_t length = strlen(reinterpret_cast<const char*>(u8String));
+        if (length > 0)
+        {
+            m_string.reserve(length + 1);
+            Utf8::toUtf32(u8String, u8String + length, std::back_inserter(m_string));
+        }
+    }
+}
+
+
+////////////////////////////////////////////////////////////
+String::String(const std::u8string& u8String)
+{
+    m_string.reserve(u8String.length() + 1);
+    Utf8::toUtf32(u8String.begin(), u8String.end(), std::back_inserter(m_string));
+}
+
+
 ////////////////////////////////////////////////////////////
 String::String(const wchar_t* wideString)
 {

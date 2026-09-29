@@ -1,4 +1,4 @@
-/*-----------------------------------------------------------------------
+﻿/*-----------------------------------------------------------------------
 
 Matt Marchant 2026
 http://trederia.blogspot.com
@@ -359,8 +359,10 @@ void MenuState::LobbyMenu::handleEvent(const cro::Event& evt)
 
 void MenuState::LobbyMenu::simulate(float dt)
 {
+    m_uiLayout.scrollToTarget(dt);
+
     //press/hold to exit or show options
-    static constexpr float MaxHoldTime = 0.35f;
+    static constexpr float MaxHoldTime = 0.5f;
     if (m_buttonFlags)
     {
         m_buttonHoldTimer = std::min(m_buttonHoldTimer + dt, MaxHoldTime);
@@ -479,6 +481,11 @@ void MenuState::LobbyMenu::readyStart()
             //m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().play();
         }
     }
+}
+
+void MenuState::LobbyMenu::pokePlayer()
+{
+    LogI << "Poke Player " << std::endl;
 }
 
 void MenuState::LobbyMenu::kickPlayer()
@@ -1051,7 +1058,7 @@ void MenuState::LobbyMenu::createPlayerTab()
 
     //ready-up / start game
     item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
-    item->title = m_sharedData.hosting ?  "Start Game" : "Ready Up";
+    item->title = m_sharedData.hosting ?  u8"Start Game ↓" : u8"Ready Up ↓";
     item->description = m_sharedData.hosting ? "Press and Hold to Start" : "Press and Hold to Ready Up";
     item->selected =
         [this](const Menu::Item&)
@@ -1094,11 +1101,12 @@ void MenuState::LobbyMenu::createPlayerTab()
             //TODO update index
             if (i.activationDirection == Menu::Item::Left)
             {
-
+                m_selectedPlayerIndex = std::max(0, m_selectedPlayerIndex - 1);
             }
             else if (i.activationDirection == Menu::Item::Right)
             {
-
+                LogI << "Count the connected players!!" << std::endl;
+                m_selectedPlayerIndex = std::min(15, m_selectedPlayerIndex + 1);
             }
             updatePlayersTab();
         };
@@ -1116,11 +1124,23 @@ void MenuState::LobbyMenu::createPlayerTab()
             //TODO swap corresponding indices
             if (i.activationDirection == Menu::Item::Left)
             {
+                if (m_selectedPlayerIndex > 1)
+                {
+                    //TODO swap down
 
+                    m_selectedPlayerIndex--;
+                }
             }
             else if (i.activationDirection == Menu::Item::Right)
             {
+                if (m_selectedPlayerIndex < 14)
+                {
+                    LogI << FILE_LINE << " count the connected players!" << std::endl;
 
+                    //TODO swap up
+
+                    m_selectedPlayerIndex++;
+                }
             }
             updatePlayersTab();
         };
@@ -1138,15 +1158,18 @@ void MenuState::LobbyMenu::createPlayerTab()
         cro::Util::String::wordWrap(item->description, WordWrapSmall);
         item->activated = [this](Menu::Item& i)
             {
+                m_buttonFlags |= ButtonFlags::Action;
+                setProgressColour(CD32::Colours[CD32::Yellow]);
 
+                m_timeoutCallback = std::bind(&LobbyMenu::pokePlayer, this);
             };
-        item->labels = { "Poke" };
+        item->labels = { u8"Poke ↓" };
         item->selectedIndex = 0;
 
 
-        //kick selected - TODO press/hold
+        //kick selected
         item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
-        item->title = "Kick Player (Hold)";
+        item->title = "Kick Player";
         item->description = "Kick the selected player. This will also remove all players on the same client!";
         cro::Util::String::wordWrap(item->description, WordWrapSmall);
         item->activated = [this](Menu::Item& i)
@@ -1156,7 +1179,7 @@ void MenuState::LobbyMenu::createPlayerTab()
 
                 m_timeoutCallback = std::bind(&LobbyMenu::kickPlayer, this);
             };
-        item->labels = { "Kick" };
+        item->labels = { u8"Kick ↓" };
         item->selectedIndex = 0;
     }
 }
@@ -1454,17 +1477,19 @@ void MenuState::LobbyMenu::updatePlayersTab(bool resized)
     const float Top = static_cast<float>(m_detailTextures[TabID::Players].getSize().y);
     constexpr float Height = 14.f;
 
+    std::vector<cro::Vertex2D> verts =
+    {
+        cro::Vertex2D(glm::vec2(0.f, Height), CD32::Colours[CD32::BeigeMid]),
+        cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::BeigeMid]),
+        cro::Vertex2D(glm::vec2(Width, Height), CD32::Colours[CD32::BeigeMid]),
+
+        cro::Vertex2D(glm::vec2(Width, Height), CD32::Colours[CD32::BeigeMid]),
+        cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::BeigeMid]),
+        cro::Vertex2D(glm::vec2(Width, 0.f), CD32::Colours[CD32::BeigeMid])
+    };
+
     m_detailArray.setPosition({ 0.f, Top - (Height * 2.f) });
-    m_detailArray.setVertexData(
-        {
-            cro::Vertex2D(glm::vec2(0.f, Height), CD32::Colours[CD32::BeigeMid]),
-            cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::BeigeMid]),
-            cro::Vertex2D(glm::vec2(Width, Height), CD32::Colours[CD32::BeigeMid]),
-            
-            cro::Vertex2D(glm::vec2(Width, Height), CD32::Colours[CD32::BeigeMid]),
-            cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::BeigeMid]),
-            cro::Vertex2D(glm::vec2(Width, 0.f), CD32::Colours[CD32::BeigeMid])
-        });
+    m_detailArray.setVertexData(verts);
 
     m_detailTextures[TabID::Players].clear(CD32::Colours[CD32::BeigeLight]);
     for (auto i = 0; i < 8; ++i)
@@ -1473,7 +1498,14 @@ void MenuState::LobbyMenu::updatePlayersTab(bool resized)
         m_detailArray.move({ 0.f, -(Height * 2.f) });
     }
 
-    //TODO set verts to yellow and render over selected player position
+    //set verts to yellow and render over selected player position
+    m_detailArray.setPosition({ 0.f, Top - ((m_selectedPlayerIndex + 1) * Height) });
+    for (auto& v : verts)
+    {
+        v.colour = CD32::Colours[CD32::Yellow];
+    }
+    m_detailArray.setVertexData(verts);
+    m_detailArray.draw();
 
     m_detailArray.setVertexData({
         cro::Vertex2D(glm::vec2(0.f, Top), CD32::Colours[CD32::BeigeLight]),

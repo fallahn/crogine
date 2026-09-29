@@ -122,6 +122,24 @@ public:
     String(const std::string& ansiString, const std::locale& locale = std::locale());
 
     ////////////////////////////////////////////////////////////
+    /// \brief Construct from null-terminated C-style char8_t string
+    /// Assumes that this string is encoded in utf8
+    /// 
+    /// \param u8String char8_t string to convert
+    ///
+    ////////////////////////////////////////////////////////////
+    String(const char8_t* u8String);
+
+    ////////////////////////////////////////////////////////////
+    /// \brief Construct from a char8_t string
+    /// Assumes that this string is encoded in utf8
+    /// 
+    /// \param u8String char8_t string to convert
+    ///
+    ////////////////////////////////////////////////////////////
+    String(const std::u8string& u8String);
+
+    ////////////////////////////////////////////////////////////
     /// \brief Construct from null-terminated C-style wide string
     ///
     /// \param wideString Wide string to convert
