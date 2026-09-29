@@ -893,6 +893,11 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
             {
                 e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             }
+
+            for (auto e : m_playerDetailIcons)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            }
             applyDetails(TabID::Players);
         };
 
@@ -915,6 +920,11 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
             {
                 e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             }
+            
+            for (auto e : m_playerDetailIcons)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
             applyDetails(TabID::Course);
         };
 
@@ -936,6 +946,11 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
             {
                 e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             }
+            
+            for (auto e : m_playerDetailIcons)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
             applyDetails(TabID::Rules);
         };
 
@@ -956,6 +971,11 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
             for (auto e : m_detailEntities)
             {
                 e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            }
+
+            for (auto e : m_playerDetailIcons)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
             applyDetails(TabID::Scores);
         };
@@ -1206,149 +1226,156 @@ void MenuState::LobbyMenu::createCourseTab()
     item->title = "Course Selection";
     item->displayType = Menu::Item::Heading;
 
-    
-    //course selection
-    item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
-    item->title = "Select Course";
-    //item->description = "Draws a beacon at the pin position, visible from a distance";
-    item->selected =
-        [this](const Menu::Item&)
+    if (m_sharedData.hosting)
+    {
+        //course selection
+        item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
+        item->title = "Select Course";
+        item->activated = [this](Menu::Item& i)
+            {
+                if (i.activationDirection == Menu::Item::Left)
+                {
+                    m_menuState.prevCourse();
+                }
+                else
+                {
+                    m_menuState.nextCourse();
+                }
+            };
+
+        //TODO label course 0 - N based on available courses
+        item->labels = { "Select", "Select" };
+        item->selectedIndex = 0;
+
+
+        //hole count
+        item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
+        item->title = "Hole Count";
+        item->activated = [this](Menu::Item& i)
+            {
+                if (i.activationDirection == Menu::Item::Left)
+                {
+                    m_menuState.prevHoleCount();
+                }
+                else
+                {
+                    m_menuState.nextHoleCount();
+                }
+            };
+        item->labels = { "All 18", "Front 9", " Back 9" };
+        item->selectedIndex = m_sharedData.holeCount;
+
+
+        //reverse course
+        item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
+        item->title = "Play Course In Reverse";
+        item->activated = [this](Menu::Item&)
+            {
+                m_sharedData.reverseCourse = m_sharedData.reverseCourse == 0 ? 1 : 0;
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse,
+                                                                    net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            };
+        item->labels = { "No", "Yes" };
+        item->selectedIndex = m_sharedData.reverseCourse;
+
+
+        const bool hasUserCourses = m_menuState.m_sharedCourseData.courseData.size() > m_menuState.m_courseIndices[Range::Official].count;
+        if (hasUserCourses)
         {
+            //user courses
+            item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
+            item->title = "User Courses";
+            item->description = "Select from courses created in the Course Remixer.";
+            cro::Util::String::wordWrap(item->description, WordWrapSmall);
+            item->activated = [this](Menu::Item& i)
+                {
+                    //hmm the game still has a space for workshop
+                    //courses, but the count (for now) will always
+                    //be zero
+                    do
+                    {
+                        m_menuState.m_currentRange = (m_menuState.m_currentRange + (Range::Count - 1)) % Range::Count;
+                        m_sharedData.courseIndex = m_menuState.m_courseIndices[m_menuState.m_currentRange].start;
+                    } while (m_menuState.m_courseIndices[m_menuState.m_currentRange].count == 0);
 
-        };
-    item->activated = [this](Menu::Item& i)
-        {
+                    i.selectedIndex = m_menuState.m_currentRange;
 
-        };
-    item->labels = { "No", "Yes" };
-    item->selectedIndex = 0;
+                    updateCourseTab();
+                };
+            item->labels = { "No", "Yes", /*"Workshop"*/};
+            item->selectedIndex = m_menuState.m_currentRange;
+        }
 
-
-    //hole count
-    item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
-    item->title = "Hole Count";
-    item->description = "Add me";
-    item->activated = [this](Menu::Item& i)
-        {
-
-        };
-    item->labels = { "All 18", "Front 9", " Back 9" };
-    item->selectedIndex = 0;
-
-
-    //reverse course
-    item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
-    item->title = "Play in Reverse";
-    item->description = "Add me";
-    item->activated = [this](Menu::Item& i)
-        {
-
-        };
-    item->labels = { "No", "Yes" };
-    item->selectedIndex = 0;
-
-
-    //user courses
-    item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
-    item->title = "User Courses";
-    item->description = "Add me";
-    item->activated = [this](Menu::Item& i)
-        {
-
-        };
-    item->labels = { "No", "Yes" };
-    item->selectedIndex = 0;
+        //night mode
+        item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
+        item->title = "Night Time";
+        item->description = "Play the course at night.";
+        item->activated = [this](Menu::Item& i)
+            {
+                m_sharedData.nightTime = static_cast<std::uint8_t>(i.selectedIndex);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::NightTime, m_sharedData.nightTime, 
+                                                                    net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            };
+        item->labels = { "No", "Yes" };
+        item->selectedIndex = m_sharedData.nightTime;
 
 
-    //night mode
-    item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
-    item->title = "Night";
-    item->description = "Add me";
-    item->activated = [this](Menu::Item& i)
-        {
-
-        };
-    item->labels = { "No", "Yes" };
-    item->selectedIndex = 0;
-
-
-    //weather
-    item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
-    item->title = "Weather";
-    item->description = "Add me";
-    item->activated = [this](Menu::Item& i)
-        {
-
-        };
-    item->labels = { "Clear", "Rain", "Showers", "Mist", "Random"};
-    item->selectedIndex = 0;
+        //weather
+        item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
+        item->title = "Weather";
+        item->description = "Choose the weathe conditions.";
+        item->activated = [this](Menu::Item& i)
+            {
+                std::uint8_t weatherType = static_cast<std::uint8_t>(i.selectedIndex);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::WeatherType, weatherType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            };
+        item->labels = { "Clear", "Rain", "Showers", "Mist", "Random" };
+        item->selectedIndex = m_sharedData.weatherType;
 
 
-    //random wind
-    item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
-    item->title = "Randomise Wind";
-    item->description = "Add me";
-    item->activated = [this](Menu::Item& i)
-        {
+        //random wind
+        item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
+        item->title = "Randomise Wind";
+        item->description = "When enabled wind speed and direction can change at any time.";
+        cro::Util::String::wordWrap(item->description, WordWrapSmall);
+        item->activated = [this](Menu::Item& i)
+            {
+                m_sharedData.randomWind = static_cast<std::uint8_t>(i.selectedIndex);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::RandomWind, m_sharedData.randomWind, 
+                                                                    net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            };
+        item->labels = { "No", "Yes" };
+        item->selectedIndex = m_sharedData.randomWind;
 
-        };
-    item->labels = { "No", "Yes" };
-    item->selectedIndex = 0;
 
-
-    //wind strength
-    item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
-    item->title = "Enable Snek";
-    item->description = "Add me";
-    item->activated = [this](Menu::Item& i)
-        {
-
-        };
-    item->labels = { "Normal", "Medium", "High"};
-    item->selectedIndex = 0;
+        //wind strength
+        item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
+        item->title = "Wind Strength";
+        item->description = "Select the maxmimum strength of the wind.";
+        cro::Util::String::wordWrap(item->description, WordWrapSmall);
+        item->activated = [this](Menu::Item& i)
+            {
+                m_sharedData.windStrength = static_cast<std::uint8_t>(i.selectedIndex);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::MaxWind, std::uint8_t(m_sharedData.windStrength + 1), 
+                                                                    net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            };
+        item->labels = { "Normal", "Medium", "High" };
+        item->selectedIndex = m_sharedData.windStrength;
+    }
 }
 
 void MenuState::LobbyMenu::createRulesTab()
 {
     m_uiLayout.menuLayout.items[TabID::Rules].clear();
 
+    //MenuCreation::addCourseSelectButtons()
+
     auto* item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
     item->title = "Game Rules";
     item->displayType = Menu::Item::Heading;
     //item->description = "Customise in-game display settings";
 
-    //choose rules / game mode
-    item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
-    item->title = "Scoring";
-    //item->description = "Draws a beacon at the pin position, visible from a distance";
-    item->selected =
-        [this](const Menu::Item&)
-        {
-
-        };
-    item->activated = [this](Menu::Item& i)
-        {
-
-        };
-    item->labels = { "No", "Yes" };
-    item->selectedIndex = 0;
-
-
-
-    //set gimme radius
-    item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
-    item->title = "Gimme Radius";
-    item->description = "For brevity of play the ball is automatically holed when it is less than this distance from the pin.";
-    cro::Util::String::wordWrap(item->description, WordWrapSmall);
-    item->activated = [this](Menu::Item& i)
-        {
-            m_sharedData.gimmeRadius = i.selectedIndex;
-        };
-    item->labels = { "None", "Under the Leather", "Under the Putter" };
-    item->selectedIndex = m_sharedData.gimmeRadius;
-
-
-    //choose club set
+        //choose club set
     item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
     item->title = "Clubs";
     item->description = "Choose a clubset with which to play";
@@ -1360,9 +1387,75 @@ void MenuState::LobbyMenu::createRulesTab()
     item->labels = { "Casual", "Regular", "Pro" };
     item->selectedIndex = m_sharedData.clubSet;
 
-    //TODO this needs to be refreshed after the menu is launched
-    if (/*m_sharedData.hosting*/true)
+
+    if (m_sharedData.hosting)
     {
+#ifdef USE_GNS
+        //friends only
+        item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
+        item->title = "Friends Only";
+        item->activated = [this](Menu::Item& i)
+            {
+
+            };
+        item->labels = { "No", "Yes" };
+        item->selectedIndex = 1;
+
+
+        //invite friends
+        item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
+        item->title = "Invite Friends";
+        item->description = "Opens the Steam overlay to invite friends to this lobby.";
+        cro::Util::String::wordWrap(item->description, WordWrapSmall);
+        item->activated = [this](Menu::Item& i)
+            {
+
+            };
+        item->labels = { "Invite" };
+        item->selectedIndex = 0;
+#endif
+
+        //choose rules / game mode
+        item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
+        item->title = "Scoring";
+        //item->description = "";
+        item->activated = [this](Menu::Item& i)
+            {
+                /*m_menuState.prevRules();
+                m_menuState.nextRules();*/
+            };
+        item->labels = { "No", "Yes" };
+        item->selectedIndex = 0;
+
+
+
+        //set gimme radius
+        item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
+        item->title = "Gimme Radius";
+        item->description = "For brevity of play the ball is automatically holed when it is less than this distance from the pin.";
+        cro::Util::String::wordWrap(item->description, WordWrapSmall);
+        item->activated = [this](Menu::Item& i)
+            {
+                m_sharedData.gimmeRadius = i.selectedIndex;
+            };
+        item->labels = { "None", "Under the Leather", "Under the Putter" };
+        item->selectedIndex = m_sharedData.gimmeRadius;
+
+
+        //fast CPU
+        item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
+        item->title = "Skip CPU";
+        item->description = "Automatically skip CPU player shots ahead.";
+        cro::Util::String::wordWrap(item->description, WordWrapSmall);
+        item->activated = [this](Menu::Item& i)
+            {
+                
+            };
+        item->labels = { "No", "Yes" };
+        item->selectedIndex = 0;
+
+
+
         //enable snek
         item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
         item->title = "Enable Snek";
@@ -1485,6 +1578,13 @@ void MenuState::LobbyMenu::updatePlayersTab(bool resized)
             m_detailTextures[TabID::Players].create(size.x - (BorderSize * 2), ((size.y / 2) - BorderSize) + Offset, false);
             m_detailEntities[TabID::Players].getComponent<cro::Sprite>().setTexture(m_detailTextures[TabID::Players].getTexture());
         }
+
+        //this might actually get called before we have background size
+        //so quit here and try again next time
+        else
+        {
+            return;
+        }
     }
 
 
@@ -1561,6 +1661,7 @@ void MenuState::LobbyMenu::updatePlayersTab(bool resized)
     {
         m_menuState.m_uiScene.destroyEntity(e);
     }
+    m_playerDetailIcons.clear();
 
     const auto& displayMembers = m_menuState.m_displayOrder;
     static constexpr float RowSpacing = 14.f;
@@ -1632,9 +1733,16 @@ void MenuState::LobbyMenu::updateCourseTab(bool resized)
             m_detailTextures[TabID::Course].create(size.x - (BorderSize * 2), ((size.y / 2) - BorderSize) + Offset, false);
             m_detailEntities[TabID::Course].getComponent<cro::Sprite>().setTexture(m_detailTextures[TabID::Course].getTexture());
         }
+        else
+        {
+            return;
+        }
     }
 
-    m_detailTextures[TabID::Course].clear(cro::Colour::Magenta);
+    //TODO make sure to show details here such as weather as
+    //the buttons won't be available to see unless we're hosting.
+
+    m_detailTextures[TabID::Course].clear(CD32::Colours[CD32::GreyDark]);
     m_detailTextures[TabID::Course].display();
 
 
@@ -1658,6 +1766,10 @@ void MenuState::LobbyMenu::updateRulesTab(bool resized)
 
             m_detailTextures[TabID::Rules].create(size.x - (BorderSize * 2), ((size.y / 2) - BorderSize) + Offset, false);
             m_detailEntities[TabID::Rules].getComponent<cro::Sprite>().setTexture(m_detailTextures[TabID::Rules].getTexture());
+        }
+        else
+        {
+            return;
         }
     }
 
@@ -1685,6 +1797,10 @@ void MenuState::LobbyMenu::updateScoresTab(bool resized)
 
             m_detailTextures[TabID::Scores].create(size.x - (BorderSize * 2), ((size.y / 2) - BorderSize) + Offset, false);
             m_detailEntities[TabID::Scores].getComponent<cro::Sprite>().setTexture(m_detailTextures[TabID::Scores].getTexture());
+        }
+        else
+        {
+            return;
         }
     }
 

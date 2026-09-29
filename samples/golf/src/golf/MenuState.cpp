@@ -450,7 +450,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
 #ifdef NEW_LOBBY
                     m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::LobbyV2;
-                    m_lobbyMenu.refreshTabs();
 #else
                     m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Lobby;
 #endif
@@ -1783,12 +1782,15 @@ void MenuState::handleMessage(const cro::Message& msg)
         if (data.type == SystemEvent::MenuChanged)
         {
             refreshUI();
-
+#ifndef NEW_LOBBY
             if (data.data == MenuID::Lobby)
             {
                 m_uiScene.getActiveCamera().getComponent<cro::Camera>().isStatic = true;
-
-
+#else
+            if (data.data == MenuID::LobbyV2)
+            {
+                m_lobbyMenu.refreshTabs();
+#endif
                 //item list is populated when this state is
                 //loaded so we can cache the unlock state
                 //and then cleared by the state when it quits
@@ -4162,7 +4164,6 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                         m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
 #ifdef NEW_LOBBY
                         m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::LobbyV2;
-                        m_lobbyMenu.refreshTabs();
 #else
                         m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Lobby;
 #endif

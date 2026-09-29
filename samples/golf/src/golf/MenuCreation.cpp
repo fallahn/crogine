@@ -3504,7 +3504,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             {
                 if (activated(evt))
                 {
-                    std::uint8_t weatherType = (m_sharedData.weatherType + 1) % WeatherType::Count;
+                    const std::uint8_t weatherType = (m_sharedData.weatherType + 1) % WeatherType::Count;
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::WeatherType, weatherType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
                     e.getComponent<cro::Text>().setString("Weather: " + WeatherStrings[weatherType]);
@@ -5138,16 +5138,18 @@ void MenuState::prevRules()
 {
     m_sharedData.scoreType = (m_sharedData.scoreType + (ScoreType::Count - 1)) % ScoreType::Count;
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
+#ifndef NEW_LOBBY
     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+#endif
 }
 
 void MenuState::nextRules()
 {
     m_sharedData.scoreType = (m_sharedData.scoreType + 1) % ScoreType::Count;
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
+#ifndef NEW_LOBBY
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+#endif
 }
 
 void MenuState::prevHoleCount()
@@ -5155,8 +5157,9 @@ void MenuState::prevHoleCount()
     m_sharedData.holeCount = (m_sharedData.holeCount + 2) % 3;
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
-
+#ifndef NEW_LOBBY
     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+#endif
 }
 
 void MenuState::nextHoleCount()
@@ -5164,8 +5167,9 @@ void MenuState::nextHoleCount()
     m_sharedData.holeCount = (m_sharedData.holeCount + 1) % 3;
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
-
+#ifndef NEW_LOBBY
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+#endif
 }
 
 void MenuState::prevCourse()
@@ -5178,8 +5182,9 @@ void MenuState::prevCourse()
     m_sharedData.mapDirectory = m_sharedCourseData.courseData[m_sharedData.courseIndex].directory;
     auto data = serialiseString(m_sharedData.mapDirectory);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
-
+#ifndef NEW_LOBBY
     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+#endif
 }
 
 void MenuState::nextCourse()
@@ -5192,8 +5197,9 @@ void MenuState::nextCourse()
     m_sharedData.mapDirectory = m_sharedCourseData.courseData[m_sharedData.courseIndex].directory;
     auto data = serialiseString(m_sharedData.mapDirectory);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
-
+#ifndef NEW_LOBBY
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+#endif
 }
 
 void MenuState::refreshUI()

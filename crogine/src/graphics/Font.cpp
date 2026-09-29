@@ -280,7 +280,7 @@ Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold,
         //middle of rebuilding text, and we need to add *another*, deferred update....
         const auto oldTex = m_pages[charSize].texture.getGLHandle();
 
-        const auto scaledCharSize = static_cast<std::uint32_t>(static_cast<float>(charSize) * fontData.context.scale * fontData.context.density);
+        const auto scaledCharSize = static_cast<std::uint32_t>(std::round(static_cast<float>(charSize) * fontData.context.scale * fontData.context.density));
 
         auto glyph = loadGlyph(codepoint, scaledCharSize, charSize, bold && fontData.context.allowBold, fontData.context.allowOutline ? outlineThickness : 0.f);
         glyph.bounds /= fontData.context.density;
