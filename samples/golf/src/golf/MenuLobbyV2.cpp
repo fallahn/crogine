@@ -1368,14 +1368,12 @@ void MenuState::LobbyMenu::createRulesTab()
 {
     m_uiLayout.menuLayout.items[TabID::Rules].clear();
 
-    //MenuCreation::addCourseSelectButtons()
-
     auto* item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
     item->title = "Game Rules";
     item->displayType = Menu::Item::Heading;
-    //item->description = "Customise in-game display settings";
+    item->description = "Configure the rules of play";
 
-        //choose club set
+    //choose club set
     item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
     item->title = "Clubs";
     item->description = "Choose a clubset with which to play";
@@ -1394,12 +1392,14 @@ void MenuState::LobbyMenu::createRulesTab()
         //friends only
         item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
         item->title = "Friends Only";
+        item->description = "Only allow members of your Steam friends to join this lobby.";
+        cro::Util::String::wordWrap(item->description, WordWrapSmall);
         item->activated = [this](Menu::Item& i)
             {
-
+                m_menuState.m_matchMaking.setFriendsOnly(i.selectedIndex == 1);
             };
         item->labels = { "No", "Yes" };
-        item->selectedIndex = 1;
+        item->selectedIndex = m_menuState.m_matchMaking.getFriendsOnly() ? 1 : 0;
 
 
         //invite friends
@@ -1409,7 +1409,7 @@ void MenuState::LobbyMenu::createRulesTab()
         cro::Util::String::wordWrap(item->description, WordWrapSmall);
         item->activated = [this](Menu::Item& i)
             {
-
+                Social::inviteFriends(m_sharedData.lobbyID);
             };
         item->labels = { "Invite" };
         item->selectedIndex = 0;
@@ -1421,13 +1421,17 @@ void MenuState::LobbyMenu::createRulesTab()
         //item->description = "";
         item->activated = [this](Menu::Item& i)
             {
-                /*m_menuState.prevRules();
-                m_menuState.nextRules();*/
+                if (i.activationDirection == Menu::Item::Left)
+                {
+                    m_menuState.prevRules();
+                }
+                else
+                {
+                    m_menuState.nextRules();
+                }
             };
-        item->labels = { "No", "Yes" };
+        item->labels = { "Select", "Select" };
         item->selectedIndex = 0;
-
-
 
         //set gimme radius
         item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
@@ -1436,24 +1440,28 @@ void MenuState::LobbyMenu::createRulesTab()
         cro::Util::String::wordWrap(item->description, WordWrapSmall);
         item->activated = [this](Menu::Item& i)
             {
-                m_sharedData.gimmeRadius = i.selectedIndex;
+                m_sharedData.gimmeRadius = static_cast<std::uint8_t>(i.selectedIndex);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, 
+                                                                    net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             };
-        item->labels = { "None", "Under the Leather", "Under the Putter" };
+        //item->labels = { "None", "Under the Leather", "Under the Putter" };
+        item->labels = { "Select", "Select", "Select" }; //rely on the details pain to explain this
         item->selectedIndex = m_sharedData.gimmeRadius;
 
 
         //fast CPU
         item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
-        item->title = "Skip CPU";
-        item->description = "Automatically skip CPU player shots ahead.";
+        item->title = "Fast CPU";
+        item->description = "Automatically skip CPU player shots forward.";
         cro::Util::String::wordWrap(item->description, WordWrapSmall);
         item->activated = [this](Menu::Item& i)
             {
-                
+                m_sharedData.fastCPU = i.selectedIndex == 1;
+                m_sharedData.clientConnection.netClient.sendPacket<std::uint8_t>(PacketID::FastCPU, m_sharedData.fastCPU ? 0 : 1,
+                                                                                    net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             };
         item->labels = { "No", "Yes" };
-        item->selectedIndex = 0;
-
+        item->selectedIndex = m_sharedData.fastCPU ? 1 : 0;
 
 
         //enable snek
@@ -1772,6 +1780,11 @@ void MenuState::LobbyMenu::updateRulesTab(bool resized)
             return;
         }
     }
+
+    //TODO list the different rule types / description
+    //TODO list the current gimme selection
+
+    //TODO list other items players won't see when not hosting
 
     m_detailTextures[TabID::Rules].clear(cro::Colour::Cyan);
     m_detailTextures[TabID::Rules].display();
