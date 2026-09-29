@@ -450,6 +450,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
 #ifdef NEW_LOBBY
                     m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::LobbyV2;
+                    m_lobbyMenu.refreshTabs();
 #else
                     m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Lobby;
 #endif
@@ -4161,6 +4162,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                         m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
 #ifdef NEW_LOBBY
                         m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::LobbyV2;
+                        m_lobbyMenu.refreshTabs();
 #else
                         m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Lobby;
 #endif

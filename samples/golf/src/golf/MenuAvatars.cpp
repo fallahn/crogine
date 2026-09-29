@@ -2385,7 +2385,7 @@ void MenuState::updateLobbyAvatars()
         std::int32_t row = 0;
         for (const auto [cID, pID] : m_displayOrder)
         {
-            auto& c = m_sharedData.connectionData[cID];
+            const auto& c = m_sharedData.connectionData[cID];
 
             glm::vec2 iconPos(-11.f, (row * RowSpacing) - 7.f);
             row++;
@@ -2411,14 +2411,13 @@ void MenuState::updateLobbyAvatars()
             entity.addComponent<cro::SpriteAnimation>();
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
-                [&, cID](cro::Entity e2, float) //apparently captured structed binding actually need c++ 20
+                [&, cID](cro::Entity e2, float) //apparently captured structured bindings actually needs c++ 20
                 {
                     auto index = m_readyState[cID] ? 1 : 0;
                     e2.getComponent<cro::SpriteAnimation>().play(index);
                 };
             e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-            children.push_back(entity);
-            
+            children.push_back(entity);            
         }
 
 

@@ -197,7 +197,7 @@ private:
 
     std::array<bool, ConstVal::MaxClients> m_readyState = {};
     std::vector<Team::Player> m_displayOrder; //allows changing the display order of players, which in turn assigns teams
-    std::size_t m_selectedDisplayMember;
+    std::int32_t m_selectedDisplayMember;
     void moveDisplayMemberUp();
     void moveDisplayMemberDown();
     void refreshDisplayMembers();
@@ -499,7 +499,6 @@ private:
             : m_menuState           (ms),
             m_sharedData            (sd),
             m_uiLayout              (TabID::Count, sd),
-            m_selectedPlayerIndex   (0),
             m_progressUniform       (-1),
             m_progressColourUniform (-1),
             m_buttonHoldTimer       (0.f),
@@ -507,6 +506,7 @@ private:
 
         void handleEvent(const cro::Event&);
         void simulate(float);
+        void refreshTabs();
         void clientStatusChanged(); //client added or removed
         void readyStart();
         void pokePlayer();
@@ -535,8 +535,6 @@ private:
             };
         };
 
-        std::int32_t m_selectedPlayerIndex;
-
         void create(cro::Entity rootNode);
         void createPlayerTab();
         void createCourseTab();
@@ -556,6 +554,7 @@ private:
         std::array<cro::RenderTexture, TabID::Count> m_detailTextures = {};
 
         //redraws the detail pane for corresponding tab
+        std::vector<cro::Entity> m_playerDetailIcons; //children of player detail entity
         void updatePlayersTab(bool resized = false);
         void updateCourseTab(bool resized = false);
         void updateRulesTab(bool resized = false);

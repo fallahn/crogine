@@ -400,8 +400,22 @@ void MenuState::LobbyMenu::simulate(float dt)
     glUniform1f(m_progressUniform, m_buttonHoldTimer / MaxHoldTime);
 }
 
+void MenuState::LobbyMenu::refreshTabs()
+{
+    //this completely rebuilds tab
+    //items based on hosting status
+    createPlayerTab();
+    createCourseTab();
+    createRulesTab();
+    createScoresTab();
+
+    m_uiLayout.activateTab(m_uiLayout.tabBar.activeIndex);
+}
+
 void MenuState::LobbyMenu::clientStatusChanged()
 {
+    //whereas this just refreshes
+    //the detail textures
     updatePlayersTab();
     updateCourseTab();
     updateRulesTab();
@@ -485,12 +499,16 @@ void MenuState::LobbyMenu::readyStart()
 
 void MenuState::LobbyMenu::pokePlayer()
 {
-    LogI << "Poke Player " << std::endl;
+    const auto client = m_menuState.m_displayOrder[m_menuState.m_selectedDisplayMember].client;
+    const std::uint16_t data = std::uint16_t(ServerCommand::PokeClient) | ((client) << 8);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 }
 
 void MenuState::LobbyMenu::kickPlayer()
 {
-    LogI << "Player is kicked!" << std::endl;
+    const auto client = m_menuState.m_displayOrder[m_menuState.m_selectedDisplayMember].client;
+    const std::uint16_t data = std::uint16_t(ServerCommand::KickClient) | ((client) << 8);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 }
 
 void MenuState::LobbyMenu::resetRepeatTimer(std::int32_t i, cro::Time resetTime)
@@ -1053,7 +1071,6 @@ void MenuState::LobbyMenu::createPlayerTab()
     auto* item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
     item->title = "Player Menu";
     item->displayType = Menu::Item::Heading;
-    //item->description = "Customise in-game display settings";
 
 
     //ready-up / start game
@@ -1079,78 +1096,75 @@ void MenuState::LobbyMenu::createPlayerTab()
     item->labels = { "Let\'s Go!" };
     item->selectedIndex = 0;
 
-    //teams mode
-    item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
-    item->title = "Teams";
-    item->description = "Players are paired up for the round.";
-    cro::Util::String::wordWrap(item->description, WordWrapSmall);
-    item->activated = [this](Menu::Item& i)
-        {
-
-        };
-    item->labels = { "No", "Yes" };
-    item->selectedIndex = 0;
-
-
-    //select player
-    item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
-    item->title = "Select Player";
-    item->description = "Select the active player.";
-    item->activated = [this](Menu::Item& i)
-        {
-            //TODO update index
-            if (i.activationDirection == Menu::Item::Left)
-            {
-                m_selectedPlayerIndex = std::max(0, m_selectedPlayerIndex - 1);
-            }
-            else if (i.activationDirection == Menu::Item::Right)
-            {
-                LogI << "Count the connected players!!" << std::endl;
-                m_selectedPlayerIndex = std::min(15, m_selectedPlayerIndex + 1);
-            }
-            updatePlayersTab();
-        };
-    item->labels = { "Select", "Select" }; //we don't want the label to change, but to offer left/right buttons
-    item->selectedIndex = 0;
-
-
-    //move selected
-    item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
-    item->title = "Move Selected Player";
-    item->description = "Moving the selected player decides which team they appear in.";
-    cro::Util::String::wordWrap(item->description, WordWrapSmall);
-    item->activated = [this](Menu::Item& i)
-        {
-            //TODO swap corresponding indices
-            if (i.activationDirection == Menu::Item::Left)
-            {
-                if (m_selectedPlayerIndex > 1)
-                {
-                    //TODO swap down
-
-                    m_selectedPlayerIndex--;
-                }
-            }
-            else if (i.activationDirection == Menu::Item::Right)
-            {
-                if (m_selectedPlayerIndex < 14)
-                {
-                    LogI << FILE_LINE << " count the connected players!" << std::endl;
-
-                    //TODO swap up
-
-                    m_selectedPlayerIndex++;
-                }
-            }
-            updatePlayersTab();
-        };
-    item->labels = { "Move", "Move" };
-    item->selectedIndex = 0;
-
     //we need to do this in a refresh after creating the lobby
     //as when the menu is first built the game is only just launched
-    if (/*m_sharedData.hosting*/true)
+    if (m_sharedData.hosting)
     {
+        //teams mode
+        item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
+        item->title = "Teams";
+        item->description = "Players are paired up for the round.";
+        cro::Util::String::wordWrap(item->description, WordWrapSmall);
+        item->activated = [this](Menu::Item& i)
+            {
+                m_sharedData.teamMode ? cro::Console::doCommand("sv_team_mode 0")
+                    : cro::Console::doCommand("sv_team_mode 1");
+            };
+        item->labels = { "No", "Yes" };
+        item->selectedIndex = m_sharedData.teamMode ? 1 : 0;
+
+
+        //select player
+        item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
+        item->title = "Select Player";
+        item->description = "Select the active player.";
+        item->activated = [this](Menu::Item& i)
+            {
+                //TODO update index
+                if (i.activationDirection == Menu::Item::Left)
+                {
+                    m_menuState.m_selectedDisplayMember = std::max(0, m_menuState.m_selectedDisplayMember - 1);
+                }
+                else if (i.activationDirection == Menu::Item::Right)
+                {
+                    m_menuState.m_selectedDisplayMember = std::min(static_cast<std::int32_t>(m_menuState.m_displayOrder.size() - 1),
+                                                                    m_menuState.m_selectedDisplayMember + 1);
+                }
+                updatePlayersTab();
+            };
+        item->labels = { "Select", "Select" }; //we don't want the label to change, but to offer left/right buttons
+        item->selectedIndex = 0;
+
+
+        //move selected
+        item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
+        item->title = "Move Selected Player";
+        item->description = "Moving the selected player decides which team they appear in.";
+        cro::Util::String::wordWrap(item->description, WordWrapSmall);
+        item->activated = [this](Menu::Item& i)
+            {
+                //tbh this probably doesn't matter if teams aren't active
+                //if (m_sharedData.teamMode)
+                {
+                    if (i.activationDirection == Menu::Item::Left)
+                    {
+                        if (m_menuState.m_selectedDisplayMember > 0)
+                        {
+                            m_menuState.moveDisplayMemberUp();
+                        }
+                    }
+                    else if (i.activationDirection == Menu::Item::Right)
+                    {
+                        if (m_menuState.m_selectedDisplayMember < static_cast<std::int32_t>(m_menuState.m_displayOrder.size()) - 1)
+                        {
+                            m_menuState.moveDisplayMemberDown();
+                        }
+                    }
+                }
+            };
+        item->labels = { "Move", "Move" };
+        item->selectedIndex = 0;
+
         //poke selected
         item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
         item->title = "Poke Player";
@@ -1473,6 +1487,7 @@ void MenuState::LobbyMenu::updatePlayersTab(bool resized)
         }
     }
 
+
     const float Width = static_cast<float>(m_detailTextures[TabID::Players].getSize().x);
     const float Top = static_cast<float>(m_detailTextures[TabID::Players].getSize().y);
     constexpr float Height = 14.f;
@@ -1491,6 +1506,8 @@ void MenuState::LobbyMenu::updatePlayersTab(bool resized)
     m_detailArray.setPosition({ 0.f, Top - (Height * 2.f) });
     m_detailArray.setVertexData(verts);
 
+
+    //render everything to texture
     m_detailTextures[TabID::Players].clear(CD32::Colours[CD32::BeigeLight]);
     for (auto i = 0; i < 8; ++i)
     {
@@ -1499,7 +1516,7 @@ void MenuState::LobbyMenu::updatePlayersTab(bool resized)
     }
 
     //set verts to yellow and render over selected player position
-    m_detailArray.setPosition({ 0.f, Top - ((m_selectedPlayerIndex + 1) * Height) });
+    m_detailArray.setPosition({ 0.f, Top - ((m_menuState.m_selectedDisplayMember + 1) * Height) });
     for (auto& v : verts)
     {
         v.colour = CD32::Colours[CD32::Yellow];
@@ -1507,6 +1524,7 @@ void MenuState::LobbyMenu::updatePlayersTab(bool resized)
     m_detailArray.setVertexData(verts);
     m_detailArray.draw();
 
+    //draws the edge border
     m_detailArray.setVertexData({
         cro::Vertex2D(glm::vec2(0.f, Top), CD32::Colours[CD32::BeigeLight]),
         cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::BeigeLight]),
@@ -1533,10 +1551,64 @@ void MenuState::LobbyMenu::updatePlayersTab(bool resized)
     m_detailArray.draw();
 
 
-    //TODO render player names, ready status etc
-
-
     m_detailTextures[TabID::Players].display();
+
+
+
+    //create child ents to display all the info (eg so text scales
+    //properly, rather than pre-rendering on the texture...)
+    for (auto e : m_playerDetailIcons)
+    {
+        m_menuState.m_uiScene.destroyEntity(e);
+    }
+
+    const auto& displayMembers = m_menuState.m_displayOrder;
+    static constexpr float RowSpacing = 14.f;
+    cro::String nameString;
+    std::int32_t row = 0;
+    for (const auto [cID, pID] : displayMembers)
+    {
+        const auto& c = m_sharedData.connectionData[cID];
+
+        std::size_t charOffset = 0;
+        if (m_sharedData.teamMode)
+        {
+            nameString += cro::String(std::uint32_t(pc::TeamEmoji[c.playerData[pID].teamIndex]));
+            charOffset = 1;
+        }
+
+        nameString += c.playerData[pID].name.substr(0, ConstVal::MaxStringChars - charOffset) + "\n";
+
+
+        const glm::vec3 iconPos(2.f, (Top - (row * RowSpacing)) - 10.f, 0.1f);
+        row++;
+
+        //add a ready status for that client
+        auto entity = m_menuState.m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(iconPos);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = m_menuState.m_sprites[SpriteID::ReadyStatus];
+        entity.addComponent<cro::SpriteAnimation>();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&, cID](cro::Entity e2, float) //apparently captured structured bindings actually needs c++ 20
+            {
+                auto index = m_menuState.m_readyState[cID] ? 1 : 0;
+                e2.getComponent<cro::SpriteAnimation>().play(index);
+            };
+        m_playerDetailIcons.push_back(entity);
+        m_detailEntities[TabID::Players].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+
+    auto entity = m_menuState.m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 16.f, Top - 3.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::UI)).setString(nameString);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setVerticalSpacing(6.f);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    m_playerDetailIcons.push_back(entity);
+    m_detailEntities[TabID::Players].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     if (m_uiLayout.tabBar.activeIndex == TabID::Players)
