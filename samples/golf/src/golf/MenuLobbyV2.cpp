@@ -49,7 +49,7 @@ namespace
         "Players", "Course", "Rules", "Scores"
     };
 
-    static const cro::String KeyInfo = u8"LAlt↓ - Options   F4 - Open Chat   ESC↓ - Close";
+    static const cro::String KeyInfo = u8"↓ LAlt- Options   F4 - Open Chat   ↓ ESC- Close";
 
     static constexpr cro::Time RepeatTimeLong = cro::seconds(0.5f);
     static constexpr cro::Time RepeatTimeShort = cro::seconds(0.05f);
@@ -423,6 +423,12 @@ void MenuState::LobbyMenu::clientStatusChanged()
     updateCourseTab();
     updateRulesTab();
     updateScoresTab();
+
+    if (m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].selected)
+    {
+        //updates the visibility of items
+        m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].selected();
+    }
 }
 
 void MenuState::LobbyMenu::readyStart()
@@ -913,6 +919,13 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
                 e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             }
 
+            for (auto e : m_courseDetailIcons)
+            {
+                //we can't modify the scale because they are customised
+                //to the window size (ie not 1:1)
+                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            }
+
             for (auto e : m_playerDetailIcons)
             {
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
@@ -940,6 +953,11 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
                 e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             }
             
+            for (auto e : m_courseDetailIcons)
+            {
+                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            }
+
             for (auto e : m_playerDetailIcons)
             {
                 e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
@@ -966,6 +984,11 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
                 e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             }
             
+            for (auto e : m_courseDetailIcons)
+            {
+                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            }
+
             for (auto e : m_playerDetailIcons)
             {
                 e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
@@ -988,6 +1011,11 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
         [this]()
         {
             for (auto e : m_detailEntities)
+            {
+                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            }
+
+            for (auto e : m_courseDetailIcons)
             {
                 e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             }
@@ -1261,8 +1289,6 @@ void MenuState::LobbyMenu::createCourseTab()
                     m_menuState.nextCourse();
                 }
             };
-
-        //TODO label course 0 - N based on available courses
         item->labels = { "Select", "Select" };
         item->selectedIndex = 0;
 
@@ -1769,6 +1795,13 @@ void MenuState::LobbyMenu::updateCourseTab(bool resized)
         }
     }
 
+    for (auto e : m_courseDetailIcons)
+    {
+        m_menuState.m_uiScene.destroyEntity(e);
+    }
+    m_courseDetailIcons.clear();
+
+
     m_uiText.setAlignment(cro::SimpleText::Alignment::Centre);
     m_infoText.setAlignment(cro::SimpleText::Alignment::Centre);
     const auto texSize = glm::vec2(m_detailTextures[TabID::Course].getSize());
@@ -1787,25 +1820,21 @@ void MenuState::LobbyMenu::updateCourseTab(bool resized)
     {
         m_infoText.setFillColour(TextGoldColour, p);
     }
-    m_infoText.setPosition({ texSize.x / 2.f, texSize.y - 22.f });
+    m_infoText.setPosition({ texSize.x / 2.f, texSize.y - 24.f });
     m_infoText.draw();
 
 
     //render thumbnail background
     m_detailQuad = m_detailSprites[DetailSprite::CourseThumb];
     m_detailQuad.setOrigin(m_detailQuad.getSize() / 2.f);
-    m_detailQuad.setPosition({ texSize.x / 2.f, texSize.y - 96.f });
+    m_detailQuad.setPosition({ std::round(texSize.x / 4.f) + 12.f, texSize.y - 96.f });
     m_detailQuad.setScale({ 1.f, 1.f });
     m_detailQuad.draw();
 
-    //render thumbnail if available
+    //display thumbnail if available
     const cro::Texture* t = nullptr;
-    //TODO shall we just not bother with this? Although thumbs don't
-    //scale up even when static, so might as well create a specific entity
-    //would also solve the quad overlap problem *and* the hole text position
-    //when thumbs are missing...
 
-    /*if (m_menuState.m_sharedCourseData.videoPaths.count(m_sharedData.mapDirectory) != 0
+    if (m_menuState.m_sharedCourseData.videoPaths.count(m_sharedData.mapDirectory) != 0
         && m_menuState.m_sharedCourseData.videoPlayer.loadFromFile(m_menuState.m_sharedCourseData.videoPaths.at(m_sharedData.mapDirectory)))
     {
         m_menuState.m_sharedCourseData.videoPlayer.setLooped(true);
@@ -1815,44 +1844,56 @@ void MenuState::LobbyMenu::updateCourseTab(bool resized)
         t = &m_menuState.m_sharedCourseData.videoPlayer.getTexture();
     }
 
-    else*/ if (m_menuState.m_sharedCourseData.courseThumbs.count(m_sharedData.mapDirectory) != 0)
+    else if (m_menuState.m_sharedCourseData.courseThumbs.count(m_sharedData.mapDirectory) != 0)
     {
         t = m_menuState.m_sharedCourseData.courseThumbs.at(m_sharedData.mapDirectory).get();
     }
 
     if (t)
     {
-        m_detailQuad.setTexture(*t);
+        auto entity = m_menuState.m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(glm::vec3(m_detailQuad.getPosition(), 0.1f));
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>().setTexture(*t);
+        
         const auto thumbSize = glm::vec2(t->getSize());
         const auto scale = CourseThumbnailSize / thumbSize;
-        m_detailQuad.setScale(scale);
-        m_detailQuad.setOrigin(thumbSize / 2.f);
-        m_detailQuad.move({ 0.f, 9.f });
-        m_detailQuad.draw();
+        entity.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        entity.getComponent<cro::Transform>().setOrigin(thumbSize / 2.f);
+        entity.getComponent<cro::Transform>().move({ 0.f, 9.f });
+        m_detailEntities[TabID::Course].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_courseDetailIcons.push_back(entity); //hmmm we could just recycle this with different textures...
+                                               //especially as it causes a flicker when it's recreated
+
+        if (m_uiLayout.tabBar.activeIndex != TabID::Course)
+        {
+            entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+        }
     }
+
     //render hole count
     m_infoText.setString(m_courseDetails.holeCount);
     m_infoText.setFillColour(TextNormalColour);
-    m_infoText.setPosition(m_detailQuad.getPosition() - glm::vec2(0.f, 67.f));
+    m_infoText.setPosition(m_detailQuad.getPosition() - glm::vec2(0.f, 58.f));
     m_infoText.draw();
 
-    //TODO render hole stats / completion count
+    //TODO render course stats / completion count - can't be over thumbnail anymore.
+    //TODO render ticker for leaderboards / personal best
 
-    //TODO we could probably render these side by side rather than vertically
 
     //render reverse state, night time, weather, wind speed, wind random
-    cro::String str = "Reverse Order: ";
+    cro::String str = "Reverse Order:   ";
     str += m_sharedData.reverseCourse ? "Yes" : "No";
-    str += "\nNight Time: ";
+    str += "\nNight Time:          ";
     str += m_sharedData.nightTime ? "Yes" : "No";
-    str += "\nWeather: " + WeatherStrings[m_sharedData.weatherType];
-    str += "\nWind Strength: " + std::to_string(m_sharedData.windStrength + 1);
-    str += "\nRandom Wind: ";
+    str += "\nWeather:            " + WeatherStrings[m_sharedData.weatherType];
+    str += "\nRandom Wind:       ";
     str += m_sharedData.randomWind ? "Yes" : "No";
+    str += "\nWind Strength:     " + std::to_string(m_sharedData.windStrength + 1);
 
     m_infoText.setAlignment(cro::SimpleText::Alignment::Left);
     m_infoText.setString(str);
-    m_infoText.setPosition({ std::floor((texSize.x - m_infoText.getLocalBounds().width) / 2.f), texSize.y - 172.f });
+    m_infoText.setPosition({ (texSize.x / 2.f) + 24.f, texSize.y - 72.f });
     m_infoText.draw();
 
     m_detailTextures[TabID::Course].display();

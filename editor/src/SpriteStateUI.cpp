@@ -262,7 +262,7 @@ void SpriteState::drawInspector()
     {
         texSize = { texture->getSize() };
 
-        ImGui::Text("Texture Path: %s", m_spriteSheet.getTexturePath().c_str());
+        ImGui::Text("Texture Path: %s", U8PATH_CAST(m_spriteSheet.getTexturePath()));
         ImGui::SameLine();
         if (ImGui::Button("Browse##texPath"))
         {

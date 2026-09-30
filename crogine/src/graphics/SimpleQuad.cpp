@@ -70,6 +70,8 @@ void SimpleQuad::setTexture(const cro::Texture& texture)
         m_size = glm::vec2(texture.getSize());
         m_uvRect = { 0.f, 0.f, 1.f, 1.f };
         updateVertexData();
+
+        //setCroppingArea({ 0,0,m_size.x, m_size.y });
     }
     else
     {

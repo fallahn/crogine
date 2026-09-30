@@ -212,6 +212,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_scrollSpeed           (1.f),
     m_serverMapAvailable    (true),
     m_avUpdateCount         (0),
+    m_lobbyDirty            (false),
     m_lobbyMenu             (*this, sd)
 {
     m_uiScene.setTitle("Menu UI");
@@ -1993,6 +1994,14 @@ void MenuState::handleMessage(const cro::Message& msg)
 
 bool MenuState::simulate(float dt)
 {
+#ifdef NEW_LOBBY
+    if (m_lobbyDirty)
+    {
+        m_lobbyMenu.clientStatusChanged();
+        m_lobbyDirty = false;
+    }
+#endif
+
     m_avUpdateCount = 0;
 
     if (!m_lobbyUpdateBuffer.empty())
@@ -4111,6 +4120,8 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::ConnectionAccepted:
             {
+                m_lobbyDirty = true;
+
                 //update local player data
                 const auto connID = evt.packet.as<std::uint8_t>();
                 m_sharedData.clientConnection.connectionID = connID;
@@ -4222,6 +4233,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         }
             break;
         case PacketID::LobbyUpdate:
+            m_lobbyDirty = true;
             updateLobbyData(evt);
             postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage)->type = Social::SocialEvent::LobbyUpdated;
             break;
@@ -4293,7 +4305,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     }
                     m_lobbyMenu.m_courseDetails.desc = "Course Data Not Installed";
                     m_lobbyMenu.m_courseDetails.holeCount = " ";
-                    m_lobbyMenu.updateCourseTab();
+                    m_lobbyDirty = true;
 
                     //TODO these are for the old lobby and can eventually be removed
                     cro::Command cmd;
@@ -4372,9 +4384,10 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                         m_lobbyMenu.m_courseDetails.title = data->title;
                         m_lobbyMenu.m_courseDetails.desc = data->description;
                         m_lobbyMenu.m_courseDetails.holeCount = data->holeCount[m_sharedData.holeCount];
-                        m_lobbyMenu.updateCourseTab();
+                        m_lobbyDirty = true;
 
                         //TODO these are for the old lobby and can be disabled in the future
+#ifndef NEW_LOBBY
                         cro::Command cmd;
                         cmd.targetFlags = CommandID::Menu::CourseTitle;
                         cmd.action = [data](cro::Entity e, float)
@@ -4404,7 +4417,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                             centreText(e);
                         };
                         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
+#endif
                         if (m_sharedData.hosting)
                         {
                             m_matchMaking.setGameTitle(data->title);
@@ -4482,6 +4495,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         }
             break;
         case PacketID::ScoreType:
+            m_lobbyDirty = true;
             m_sharedData.scoreType = evt.packet.as<std::uint8_t>() % ScoreType::Count;
             {
                 cro::Command cmd;
@@ -4549,18 +4563,31 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             }
             break;
         case PacketID::NightTime:
+            m_lobbyDirty = true;
             m_sharedData.nightTime = evt.packet.as<std::uint8_t>();
             break;
         case PacketID::WeatherType:
+            m_lobbyDirty = true;
             m_sharedData.weatherType = std::clamp(evt.packet.as<std::uint8_t>(), std::uint8_t(0), std::uint8_t(WeatherType::Count - 1));
             break;
+        case PacketID::RandomWind:
+            m_lobbyDirty = true;
+            m_sharedData.randomWind = evt.packet.as<std::uint8_t>() % 2;
+            break;
+        case PacketID::MaxWind:
+            m_lobbyDirty = true;
+            m_sharedData.windStrength = (evt.packet.as<std::uint8_t>() - 1) % 3;
+            break;
         case PacketID::FastCPU:
+            m_lobbyDirty = true;
             m_sharedData.fastCPU = evt.packet.as<std::uint8_t>() != 0;
             break;
         case PacketID::GimmeRadius:
         {
+            m_lobbyDirty = true;
             m_sharedData.gimmeRadius = evt.packet.as<std::uint8_t>();
 
+#ifndef NEW_LOBBY
             cro::Command cmd;
             cmd.targetFlags = CommandID::Menu::GimmeDesc;
             cmd.action = [&](cro::Entity e, float)
@@ -4569,15 +4596,16 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 centreText(e);
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
+#endif
             updateCourseRuleString(false);
         }
             break;
         case PacketID::HoleCount:
         {
+            m_lobbyDirty = true;
             m_sharedData.holeCount = evt.packet.as<std::uint8_t>();
             updateCompletionString();
-
+#ifndef NEW_LOBBY
             cro::Command cmd;
             cmd.targetFlags = CommandID::Menu::CourseHoles;
             if (auto data = std::find_if(m_sharedCourseData.courseData.cbegin(), m_sharedCourseData.courseData.cend(),
@@ -4601,13 +4629,25 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 };
             }
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+#else
+            if (auto data = std::find_if(m_sharedCourseData.courseData.cbegin(), m_sharedCourseData.courseData.cend(),
+                [this](const SharedCourseData::CourseData& cd)
+                {
+                    return cd.directory == m_sharedData.mapDirectory;
+                }); data != m_sharedCourseData.courseData.cend())
+            {
+                m_lobbyMenu.m_courseDetails.holeCount = data->holeCount[m_sharedData.holeCount];
+            }
+#endif
             updateCourseRuleString(true);
         }
             break;
         case PacketID::ReverseCourse:
+            m_lobbyDirty = true;
             m_sharedData.reverseCourse = evt.packet.as<std::uint8_t>();
             break;
         case PacketID::ClubLimit:
+            m_lobbyDirty = true;
             m_sharedData.clubLimit = evt.packet.as<std::uint8_t>();
 
             //reply with our level so server knows which limit to set
@@ -4623,6 +4663,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::MaxClubs:
         {
+            m_lobbyDirty = true;
             std::uint8_t clubSet = evt.packet.as<std::uint8_t>();
             if (clubSet < m_sharedData.preferredClubSet)
             {
