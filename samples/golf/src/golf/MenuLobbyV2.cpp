@@ -49,8 +49,7 @@ namespace
         "Players", "Course", "Rules", "Scores"
     };
 
-    //TODO this needs the down arrow icon for press/hold
-    static const cro::String KeyInfo = "F4 - Open Chat   LAlt - Options   ESC - Close";
+    static const cro::String KeyInfo = u8"LAlt↓ - Options   F4 - Open Chat   ESC↓ - Close";
 
     static constexpr cro::Time RepeatTimeLong = cro::seconds(0.5f);
     static constexpr cro::Time RepeatTimeShort = cro::seconds(0.05f);
@@ -114,7 +113,7 @@ void MenuState::LobbyMenu::handleEvent(const cro::Event& evt)
                     m_uiLayout.tabBar.navRightSprite.getComponent<cro::Sprite>().setTextureRect(m_uiLayout.tabBar.navRightRects[1]);
                 }
             }
-            cro::App::getWindow().setCursorVisible(!!mouse);
+            cro::App::getWindow().setCursorVisible(mouse);
         };
 
     if (evt.type == SDL_EVENT_KEY_UP)
@@ -1030,16 +1029,16 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_infoString = entity;
 
-    m_infoRects[0] = spriteSheet.getSprite("info_ps").getTextureRect();
-    m_infoRects[1] = spriteSheet.getSprite("info_xbox").getTextureRect();
+    m_infoRects[0] = spriteSheet.getSprite("lobby_ps").getTextureRect();
+    m_infoRects[1] = spriteSheet.getSprite("lobby_xbox").getTextureRect();
 
     entity = m_menuState.m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("info_xbox");
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("lobby_xbox");
     entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
     entity.getComponent<cro::UIElement>().depth = 0.1f;
-    entity.getComponent<cro::UIElement>().absolutePosition = InfoPos;
+    entity.getComponent<cro::UIElement>().absolutePosition = InfoPos - glm::vec2(0.f, 12.f);
     entity.getComponent<cro::UIElement>().resizeCallback =
         [this](cro::Entity e)
         {
@@ -1112,7 +1111,7 @@ void MenuState::LobbyMenu::createPlayerTab()
 
     //ready-up / start game
     item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
-    item->title = m_sharedData.hosting ?  u8"Start Game ↓" : u8"Ready Up ↓";
+    item->title = m_sharedData.hosting ?  u8"↓ Start Game" : u8"↓ Ready Up";
     item->description = m_sharedData.hosting ? "Press and Hold to Start" : "Press and Hold to Ready Up";
     item->selected =
         [this](const Menu::Item&)
@@ -1214,7 +1213,7 @@ void MenuState::LobbyMenu::createPlayerTab()
 
                 m_timeoutCallback = std::bind(&LobbyMenu::pokePlayer, this);
             };
-        item->labels = { u8"Poke ↓" };
+        item->labels = { u8"↓ Poke" };
         item->selectedIndex = 0;
 
 
@@ -1230,7 +1229,7 @@ void MenuState::LobbyMenu::createPlayerTab()
 
                 m_timeoutCallback = std::bind(&LobbyMenu::kickPlayer, this);
             };
-        item->labels = { u8"Kick ↓" };
+        item->labels = { u8"↓ Kick" };
         item->selectedIndex = 0;
     }
 }
