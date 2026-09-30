@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -95,12 +95,19 @@ namespace cro
         \brief Set the Text fill colour
         \param colour The colour with which the inner part of the
         text will be rendered. Defaults to cro::Colour::White
+        \param index The character index at which to start using
+        this colour. eg setFillColour(white, 0); setFillColour(blue, 3);
+        will render the first 3 characters in white, and the
+        remaining characters in blue.
+        Setting a lower index than was previously set will override
+        any subsequent indices. eg setFillColour(green, 2) will
+        override all blue characters.
         */
-        void setFillColour(Colour colour);
+        void setFillColour(Colour colour, std::uint32_t index = 0);
 
         /*!
         \brief Set the colour used for the text outline
-        If the outline id not visible make sure that this
+        If the outline is not visible make sure that this
         colour is not transparent, and that the outline
         thickness is greater than 0. Defaults to cro::Colour::Black
         \param colour Colour with which to render the outline

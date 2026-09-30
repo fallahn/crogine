@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -100,16 +100,34 @@ void SimpleText::setString(const String& str)
     }
 }
 
-void SimpleText::setFillColour(Colour colour)
+void SimpleText::setFillColour(Colour colour, std::uint32_t index)
 {
     CRO_ASSERT(!m_context.fillColour.colours.empty(), "");
-    if (m_context.fillColour.colours[0] != colour)
+    
+    //TODO this needs to be refactored so whichever
+    //index is set it replaces all subsequent indices
+
+    if (index == 0)
     {
-        //hmm if we cached vertex data we
-        //could just update the colour property rather
-        //than rebuild the entire thing if only
-        //the colour flag is set
-        m_context.fillColour.colours[0] = colour;
+        //if (m_context.fillColour.colours[0] != colour)
+        {
+            //hmm if we cached vertex data we
+            //could just update the colour property rather
+            //than rebuild the entire thing if only
+            //the colour flag is set
+
+            m_context.fillColour.colours.clear();
+            m_context.fillColour.charIndices.clear();
+            
+            m_context.fillColour.colours.push_back(colour);
+            m_context.fillColour.charIndices.push_back(index);
+            m_dirtyFlags |= DirtyFlags::ColourInner;
+        }
+    }
+    else if (index > m_context.fillColour.charIndices.back())
+    {
+        m_context.fillColour.colours.push_back(colour);
+        m_context.fillColour.charIndices.push_back(index);
         m_dirtyFlags |= DirtyFlags::ColourInner;
     }
 }

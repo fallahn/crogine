@@ -1783,10 +1783,10 @@ void MenuState::LobbyMenu::updateCourseTab(bool resized)
     //render description
     m_infoText.setString(m_courseDetails.desc);
     m_infoText.setFillColour(TextNormalColour);
-    /*if (const auto p = m_courseDetails.desc.find("(DLC)"); p != cro::String::InvalidPos)
+    if (const auto p = m_courseDetails.desc.find("(DLC)"); p != cro::String::InvalidPos)
     {
         m_infoText.setFillColour(TextGoldColour, p);
-    }*/
+    }
     m_infoText.setPosition({ texSize.x / 2.f, texSize.y - 22.f });
     m_infoText.draw();
 

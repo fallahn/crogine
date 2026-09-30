@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -182,17 +182,14 @@ void Text::setString(const String& str)
 
 void Text::setFillColour(Colour colour, std::uint32_t idx)
 {
-    /*if (m_context.fillColour != colour)
-    {
-        m_context.fillColour = colour;
-        m_dirtyFlags |= DirtyFlags::Colour;
-    }*/
-
     CRO_ASSERT(!m_context.fillColour.colours.empty(), "");
     if (idx == 0)
     {
-        m_context.fillColour.colours[0] = colour;
-        m_dirtyFlags |= DirtyFlags::Colour;
+        if (m_context.fillColour.colours[0] != colour)
+        {
+            m_context.fillColour.colours[0] = colour;
+            m_dirtyFlags |= DirtyFlags::Colour;
+        }
     }
     else if (idx > m_context.fillColour.charIndices.back())
     {
