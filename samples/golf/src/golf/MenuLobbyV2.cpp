@@ -379,6 +379,10 @@ void MenuState::LobbyMenu::simulate(float dt)
                 m_menuState.quitLobby();
                 break;
             case ButtonFlags::Options:
+                //unready this client so the host can't
+                //launch the game while we're still looking
+                //at the options window
+                unready();
                 m_menuState.requestStackPush(StateID::Options);
                 break;
             case ButtonFlags::Action:
@@ -509,6 +513,19 @@ void MenuState::LobbyMenu::kickPlayer()
     const auto client = m_menuState.m_displayOrder[m_menuState.m_selectedDisplayMember].client;
     const std::uint16_t data = std::uint16_t(ServerCommand::KickClient) | ((client) << 8);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+}
+
+void MenuState::LobbyMenu::unready()
+{
+    //shortcut for unreadying if we're
+    //opening the options or steam overlay
+    if (!m_sharedData.hosting)
+    {
+        m_menuState.m_readyState[m_sharedData.clientConnection.connectionID] = 0;
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::LobbyReady,
+            std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | 0),
+            net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    }
 }
 
 void MenuState::LobbyMenu::resetRepeatTimer(std::int32_t i, cro::Time resetTime)
@@ -1385,6 +1402,22 @@ void MenuState::LobbyMenu::createRulesTab()
     item->labels = { "Casual", "Regular", "Pro" };
     item->selectedIndex = m_sharedData.clubSet;
 
+#ifdef USE_GNS
+    //invite friends
+    item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
+    item->title = "Invite Friends";
+    item->description = "Opens the Steam overlay to invite friends to this lobby.";
+    cro::Util::String::wordWrap(item->description, WordWrapSmall);
+    item->activated = [this](Menu::Item& i)
+        {
+            //unready ourself if not hosting so game can't be started
+            //while the invite overlay is open
+            unready();
+            Social::inviteFriends(m_sharedData.lobbyID);
+        };
+    item->labels = { "Invite" };
+    item->selectedIndex = 0;
+#endif
 
     if (m_sharedData.hosting)
     {
@@ -1400,19 +1433,6 @@ void MenuState::LobbyMenu::createRulesTab()
             };
         item->labels = { "No", "Yes" };
         item->selectedIndex = m_menuState.m_matchMaking.getFriendsOnly() ? 1 : 0;
-
-
-        //invite friends
-        item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
-        item->title = "Invite Friends";
-        item->description = "Opens the Steam overlay to invite friends to this lobby.";
-        cro::Util::String::wordWrap(item->description, WordWrapSmall);
-        item->activated = [this](Menu::Item& i)
-            {
-                Social::inviteFriends(m_sharedData.lobbyID);
-            };
-        item->labels = { "Invite" };
-        item->selectedIndex = 0;
 #endif
 
         //choose rules / game mode
@@ -2022,6 +2042,10 @@ void MenuState::LobbyMenu::resized(std::uint32_t x, std::uint32_t y)
                 updateCourseTab(true);
                 updateRulesTab(true);
                 updateScoresTab(true);
+
+                //we have to call this a second time to make sure the
+                //callbacks are run and approriate tab details are hidden
+                m_uiLayout.activateTab(m_uiLayout.tabBar.activeIndex);
 
                 e.getComponent<cro::Callback>().active = false;
                 m_menuState.m_uiScene.destroyEntity(e);

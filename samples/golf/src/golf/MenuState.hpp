@@ -511,6 +511,7 @@ private:
         void readyStart();
         void pokePlayer();
         void kickPlayer();
+        void unready();
 
         MenuState& m_menuState;
         SharedStateData& m_sharedData;
