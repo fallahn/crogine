@@ -687,6 +687,9 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
 
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/options_buttons.spt", m_menuState.m_sharedData.sharedResources->textures);
+    m_detailSprites[DetailSprite::CourseThumb] = spriteSheet.getSprite("course_thumb");
+    m_detailSprites[DetailSprite::WeatherIcon] = spriteSheet.getSprite("weather_icon");
+
     m_uiLayout.tabBar.navLeftRects[0] = spriteSheet.getSprite("l1").getTextureRect();
     m_uiLayout.tabBar.navLeftRects[1] = spriteSheet.getSprite("lb").getTextureRect();
 
@@ -1339,13 +1342,13 @@ void MenuState::LobbyMenu::createCourseTab()
         //weather
         item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
         item->title = "Weather";
-        item->description = "Choose the weathe conditions.";
+        item->description = "Choose the weather conditions.";
         item->activated = [this](Menu::Item& i)
             {
                 std::uint8_t weatherType = static_cast<std::uint8_t>(i.selectedIndex);
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::WeatherType, weatherType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             };
-        item->labels = { "Clear", "Rain", "Showers", "Mist", "Random" };
+        item->labels = { WeatherStrings.begin(), WeatherStrings.end() };
         item->selectedIndex = m_sharedData.weatherType;
 
 
@@ -1766,11 +1769,95 @@ void MenuState::LobbyMenu::updateCourseTab(bool resized)
         }
     }
 
-    //TODO make sure to show details here such as weather as
-    //the buttons won't be available to see unless we're hosting.
+    m_uiText.setAlignment(cro::SimpleText::Alignment::Centre);
+    m_infoText.setAlignment(cro::SimpleText::Alignment::Centre);
+    const auto texSize = glm::vec2(m_detailTextures[TabID::Course].getSize());
 
     m_detailTextures[TabID::Course].clear(CD32::Colours[CD32::GreyDark]);
+    
+    //render course title
+    m_uiText.setString(m_courseDetails.title);
+    m_uiText.setPosition({ texSize.x / 2.f, texSize.y - 12.f });
+    m_uiText.draw();
+
+    //render description
+    m_infoText.setString(m_courseDetails.desc);
+    m_infoText.setFillColour(TextNormalColour);
+    /*if (const auto p = m_courseDetails.desc.find("(DLC)"); p != cro::String::InvalidPos)
+    {
+        m_infoText.setFillColour(TextGoldColour, p);
+    }*/
+    m_infoText.setPosition({ texSize.x / 2.f, texSize.y - 22.f });
+    m_infoText.draw();
+
+
+    //render thumbnail background
+    m_detailQuad = m_detailSprites[DetailSprite::CourseThumb];
+    m_detailQuad.setOrigin(m_detailQuad.getSize() / 2.f);
+    m_detailQuad.setPosition({ texSize.x / 2.f, texSize.y - 96.f });
+    m_detailQuad.setScale({ 1.f, 1.f });
+    m_detailQuad.draw();
+
+    //render thumbnail if available
+    const cro::Texture* t = nullptr;
+    //TODO shall we just not bother with this? Although thumbs don't
+    //scale up even when static, so might as well create a specific entity
+    //would also solve the quad overlap problem *and* the hole text position
+    //when thumbs are missing...
+
+    /*if (m_menuState.m_sharedCourseData.videoPaths.count(m_sharedData.mapDirectory) != 0
+        && m_menuState.m_sharedCourseData.videoPlayer.loadFromFile(m_menuState.m_sharedCourseData.videoPaths.at(m_sharedData.mapDirectory)))
+    {
+        m_menuState.m_sharedCourseData.videoPlayer.setLooped(true);
+        m_menuState.m_sharedCourseData.videoPlayer.play();
+        m_menuState.m_sharedCourseData.videoPlayer.update(1.f / 30.f);
+
+        t = &m_menuState.m_sharedCourseData.videoPlayer.getTexture();
+    }
+
+    else*/ if (m_menuState.m_sharedCourseData.courseThumbs.count(m_sharedData.mapDirectory) != 0)
+    {
+        t = m_menuState.m_sharedCourseData.courseThumbs.at(m_sharedData.mapDirectory).get();
+    }
+
+    if (t)
+    {
+        m_detailQuad.setTexture(*t);
+        const auto thumbSize = glm::vec2(t->getSize());
+        const auto scale = CourseThumbnailSize / thumbSize;
+        m_detailQuad.setScale(scale);
+        m_detailQuad.setOrigin(thumbSize / 2.f);
+        m_detailQuad.move({ 0.f, 9.f });
+        m_detailQuad.draw();
+    }
+    //render hole count
+    m_infoText.setString(m_courseDetails.holeCount);
+    m_infoText.setFillColour(TextNormalColour);
+    m_infoText.setPosition(m_detailQuad.getPosition() - glm::vec2(0.f, 67.f));
+    m_infoText.draw();
+
+    //TODO render hole stats / completion count
+
+    //TODO we could probably render these side by side rather than vertically
+
+    //render reverse state, night time, weather, wind speed, wind random
+    cro::String str = "Reverse Order: ";
+    str += m_sharedData.reverseCourse ? "Yes" : "No";
+    str += "\nNight Time: ";
+    str += m_sharedData.nightTime ? "Yes" : "No";
+    str += "\nWeather: " + WeatherStrings[m_sharedData.weatherType];
+    str += "\nWind Strength: " + std::to_string(m_sharedData.windStrength + 1);
+    str += "\nRandom Wind: ";
+    str += m_sharedData.randomWind ? "Yes" : "No";
+
+    m_infoText.setAlignment(cro::SimpleText::Alignment::Left);
+    m_infoText.setString(str);
+    m_infoText.setPosition({ std::floor((texSize.x - m_infoText.getLocalBounds().width) / 2.f), texSize.y - 172.f });
+    m_infoText.draw();
+
     m_detailTextures[TabID::Course].display();
+
+    m_detailQuad.setOrigin({ 0.f, 0.f });
 
 
     if (m_uiLayout.tabBar.activeIndex == TabID::Course)
@@ -1873,19 +1960,19 @@ void MenuState::LobbyMenu::updateScoresTab(bool resized)
             //rank badge
             //this uses animation 0-5 based on level / 10
             const auto index = std::min(5, m_sharedData.connectionData[h].level / 10);
-            m_infoQuad = m_menuState.m_sprites[SpriteID::LevelBadge];
-            m_infoQuad.setTextureRect(m_menuState.m_sprites[SpriteID::LevelBadge].getAnimations()[index].frames[0].frame);
-            m_infoQuad.setScale(glm::vec2(1.f));
-            m_infoQuad.setPosition(m_infoText.getPosition() + glm::vec2(-18.f, -5.f));
-            m_infoQuad.draw();
+            m_detailQuad = m_menuState.m_sprites[SpriteID::LevelBadge];
+            m_detailQuad.setTextureRect(m_menuState.m_sprites[SpriteID::LevelBadge].getAnimations()[index].frames[0].frame);
+            m_detailQuad.setScale(glm::vec2(1.f));
+            m_detailQuad.setPosition(m_infoText.getPosition() + glm::vec2(-18.f, -5.f));
+            m_detailQuad.draw();
 
             //avatar icon
             const cro::FloatRect bounds = { 0.f, LabelTextureSize.y - (LabelIconSize.y * 4.f), LabelIconSize.x, LabelIconSize.y };
-            m_infoQuad.setTexture(m_sharedData.nameTextures[h].getTexture());
-            m_infoQuad.setTextureRect(bounds);
-            m_infoQuad.setPosition(m_infoText.getPosition() + glm::vec2(-62.f, -4.f));
-            m_infoQuad.setScale(glm::vec2(0.2f)); //hmm this mangles things even more when scaled up - but then 0.2 isn't a multiple of view scales anyway...
-            m_infoQuad.draw();
+            m_detailQuad.setTexture(m_sharedData.nameTextures[h].getTexture());
+            m_detailQuad.setTextureRect(bounds);
+            m_detailQuad.setPosition(m_infoText.getPosition() + glm::vec2(-62.f, -4.f));
+            m_detailQuad.setScale(glm::vec2(0.2f)); //hmm this mangles things even more when scaled up - but then 0.2 isn't a multiple of view scales anyway...
+            m_detailQuad.draw();
 
             //network icon - actually an ent as it's dynamic
             auto entity = m_menuState.m_uiScene.createEntity();

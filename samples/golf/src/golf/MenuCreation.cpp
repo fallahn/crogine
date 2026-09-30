@@ -4302,6 +4302,10 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
     {
         refreshDisplayMembers();
     }
+
+#ifdef NEW_LOBBY
+    m_lobbyMenu.clientStatusChanged();
+#endif
 }
 
 void MenuState::updateRemoteContent(const ConnectionData& cd)

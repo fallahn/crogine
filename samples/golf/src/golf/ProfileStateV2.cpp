@@ -257,7 +257,7 @@ bool ProfileStateV2::handleEvent(const cro::Event& evt)
                 m_uiLayout.tabBar.navRight.getComponent<cro::Text>().setCharacterSize(charSize);
                 m_uiLayout.tabBar.navRight.getComponent<cro::UIElement>().characterSize = LabelTextSize * 2;*/
             }
-            cro::App::getWindow().setCursorVisible(!!mouse);
+            cro::App::getWindow().setCursorVisible(mouse);
         };
 
     const auto setProgressColour = 

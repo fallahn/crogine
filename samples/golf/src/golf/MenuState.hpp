@@ -513,6 +513,14 @@ private:
         void kickPlayer();
         void unready();
 
+        struct CourseDetails final
+        {
+            cro::String title;
+            cro::String desc;
+            cro::String holeCount;
+        }m_courseDetails;
+        //hmm do we want a func to set this or rely on the menu state to do it properly?
+
         MenuState& m_menuState;
         SharedStateData& m_sharedData;
         UILayout m_uiLayout;
@@ -546,13 +554,25 @@ private:
         cro::SimpleText m_infoText; //uses Info Font
 
         cro::SimpleVertexArray m_detailArray; //used when updating a detail panel - verts are set at draw time
+        cro::SimpleQuad m_detailQuad; //used to update detail panels, image is set at draw time
 
-        cro::SimpleQuad m_infoQuad; //used on scores tab
         cro::SimpleVertexArray m_infoArray; //used on scores tab
 
 
         std::array<cro::Entity, TabID::Count> m_detailEntities = {};
         std::array<cro::RenderTexture, TabID::Count> m_detailTextures = {};
+
+        struct DetailSprite final
+        {
+            enum
+            {
+                CourseThumb,
+                WeatherIcon,
+
+                Count
+            };
+        };
+        std::array<cro::Sprite, DetailSprite::Count> m_detailSprites = {};
 
         //redraws the detail pane for corresponding tab
         std::vector<cro::Entity> m_playerDetailIcons; //children of player detail entity

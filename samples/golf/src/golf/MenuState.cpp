@@ -4283,6 +4283,19 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     m_sharedData.mapDirectory = "";
 
                     //print to UI course is missing
+                    if (MissingCourses.count(course) != 0)
+                    {
+                        m_lobbyMenu.m_courseDetails.title = MissingCourses.at(course);
+                    }
+                    else
+                    {
+                        m_lobbyMenu.m_courseDetails.title = course;
+                    }
+                    m_lobbyMenu.m_courseDetails.desc = "Course Data Not Installed";
+                    m_lobbyMenu.m_courseDetails.holeCount = " ";
+                    m_lobbyMenu.updateCourseTab();
+
+                    //TODO these are for the old lobby and can eventually be removed
                     cro::Command cmd;
                     cmd.targetFlags = CommandID::Menu::CourseTitle;
                     cmd.action = [course](cro::Entity e, float)
@@ -4356,6 +4369,12 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                         updateCompletionString();
 
                         //update UI
+                        m_lobbyMenu.m_courseDetails.title = data->title;
+                        m_lobbyMenu.m_courseDetails.desc = data->description;
+                        m_lobbyMenu.m_courseDetails.holeCount = data->holeCount[m_sharedData.holeCount];
+                        m_lobbyMenu.updateCourseTab();
+
+                        //TODO these are for the old lobby and can be disabled in the future
                         cro::Command cmd;
                         cmd.targetFlags = CommandID::Menu::CourseTitle;
                         cmd.action = [data](cro::Entity e, float)
@@ -4430,6 +4449,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     };
                 };
 
+#ifndef NEW_LOBBY
                 if (m_sharedCourseData.videoPaths.count(course) != 0
                     && m_sharedCourseData.videoPlayer.loadFromFile(m_sharedCourseData.videoPaths.at(course)))
                 {
@@ -4457,6 +4477,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 {
                     m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Transform>().setScale({0.f, 0.f});
                 }
+#endif
             }
         }
             break;
