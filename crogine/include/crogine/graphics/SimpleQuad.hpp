@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -48,15 +48,30 @@ namespace cro
     public:
         /*!
         \brief Default constructor
+        Constructs a SimpleQuad with the default overlap value of 1
         */
         SimpleQuad();
         
         /*!
         \brief Constructor
+        \param overlap This expands the individual triangles of this quad so that they
+        overlap. The value is a scale, where 1 is the default (no overlap) so usually
+        only a small value is needed eg 1.02. Overlap is useful in cases such as
+        rendering a full screen post-process with a SimpleQuad, where it may prevent
+        visible seams, however the overlap is very visible on the corners when the
+        quad is rendered at a smaller size than the target. In these cases the default
+        value may be more desirable.
+        */
+        explicit SimpleQuad(float overlap);
+        
+        /*!
+        \brief Constructor
         \param texture A valid texture with which to draw the quad.
+        \param overlap The overlap scale
+        \see SimpleQuad
         The quad is automatically set to the size of the given texture, in pixels.
         */
-        explicit SimpleQuad(const Texture& texture);
+        SimpleQuad(const Texture& texture, float overlap = 1.f);
 
         /*!
         \brief Assignment operator
@@ -120,6 +135,7 @@ namespace cro
         const cro::FloatRect& getUVRect() const { return m_uvRect; }
 
     private:
+        const float m_overlap;
         cro::Colour m_colour;
         glm::vec2 m_size;
         cro::FloatRect m_uvRect;

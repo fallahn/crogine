@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -174,6 +174,14 @@ namespace cro
         \brief Draws the geometry with the given transform
         */
         void drawGeometry(const glm::mat4& worldTransform) const;
+
+
+        /*!
+        \brief Returns whether or not this drawable has cropping active.
+        Used by SimpleQuad to determine if it needs to apply the
+        default croppign to hide the overlapping corners of the geometry
+        */
+        bool isCropped() const { return m_cropped; }
 
     private:
         std::uint32_t m_primitiveType;

@@ -38,15 +38,22 @@ source distribution.
 
 using namespace cro;
 
-SimpleQuad::SimpleQuad()
-    : m_colour      (cro::Colour::White),
-    m_size          (0.f)
+SimpleQuad::SimpleQuad(float overlap)
+    : m_overlap (overlap),
+    m_colour    (cro::Colour::White),
+    m_size      (0.f)
 {
+    assert(overlap >= 1);
     setPrimitiveType(GL_TRIANGLES);
 }
 
-SimpleQuad::SimpleQuad(const cro::Texture& texture)
-    : SimpleQuad()
+SimpleQuad::SimpleQuad()
+    : SimpleQuad(1.f)
+{
+}
+
+SimpleQuad::SimpleQuad(const cro::Texture& texture, float overlap)
+    : SimpleQuad(overlap)
 {
     setTexture(texture);
 }
@@ -70,8 +77,6 @@ void SimpleQuad::setTexture(const cro::Texture& texture)
         m_size = glm::vec2(texture.getSize());
         m_uvRect = { 0.f, 0.f, 1.f, 1.f };
         updateVertexData();
-
-        //setCroppingArea({ 0,0,m_size.x, m_size.y });
     }
     else
     {
@@ -131,11 +136,11 @@ void SimpleQuad::updateVertexData()
     //TODO we could cache the verts locally
     //to make updating only what's changed faster
     //but probably not worth it.
-    static constexpr float Overlap = 1.02f;
-    const auto size = m_size * Overlap;
+    //static constexpr float Overlap = 1.02f;
+    const auto size = m_size * m_overlap;
     const auto corner = (size - m_size);
 
-    const auto UVSize = glm::vec2(m_uvRect.width, m_uvRect.height) * Overlap;
+    const auto UVSize = glm::vec2(m_uvRect.width, m_uvRect.height) * m_overlap;
     const auto UVCorner = UVSize - glm::vec2(m_uvRect.width, m_uvRect.height);
 
     std::vector<Vertex2D> vertexData =

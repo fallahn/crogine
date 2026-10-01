@@ -268,7 +268,7 @@ bool SimpleDrawable::setShader(const Shader& shader)
 void SimpleDrawable::setCroppingArea(FloatRect area)
 {
     m_croppingArea = area;
-    m_cropped = true;
+    m_cropped = area.width != 0 || area.height != 0;
 }
 
 //protected
