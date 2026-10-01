@@ -991,6 +991,51 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     }
     m_courseDetailEntities[CourseDetail::Thumbnail].addComponent<cro::Sprite>();
 
+
+    //top five scores scroller (or personal best in non-Steam build)
+    auto e = m_courseDetailEntities[CourseDetail::Ticker];
+    e.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Label)).setCharacterSize(LabelTextSize);
+    e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    //e.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    e.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    e.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    e.addComponent<cro::Callback>().active = true;
+    e.getComponent<cro::Callback>().setUserData<float>(120.f);
+    e.getComponent<cro::Callback>().function =
+        [this](cro::Entity e, float dt)
+        {
+            if (e.getComponent<cro::Drawable2D>().getFacing() == cro::Drawable2D::Facing::Front)
+            {
+#ifdef USE_GNS
+                static constexpr float BasePosY = 23.f;
+#else
+                static constexpr float BasePosY = 26.f;
+#endif
+                static constexpr float LineHeight = 13.f;
+
+                const auto scrollBounds = cro::Text::getLocalBounds(e);
+
+                auto pos = e.getComponent<cro::Transform>().getPosition();
+
+                pos.x -= 20.f * m_menuState.m_scrollSpeed * dt;
+                pos.y = BasePosY + std::floor(scrollBounds.height - LineHeight);
+                pos.z = 0.3f;
+
+                //TODO this should be a variable along with bgWidth
+                static constexpr float Offset = 0.f;// 232.f;
+                const auto bgWidth = e.getComponent<cro::Callback>().getUserData<float>();
+                if (pos.x < -scrollBounds.width + Offset)
+                {
+                    pos.x = bgWidth;
+                }
+
+                e.getComponent<cro::Transform>().setPosition(pos);
+
+                const cro::FloatRect cropping = { -pos.x + Offset, -16.f + (BasePosY - pos.y), (bgWidth-(Offset * 2.f)), 18.f };
+                e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
+            }
+        };
+
     updateCourseTab();
 
 
@@ -1796,6 +1841,40 @@ void MenuState::LobbyMenu::updatePlayersTab(bool resized)
     }
 }
 
+#ifdef USE_GNS
+void MenuState::LobbyMenu::getMonthlyProgress(cro::String& dst)
+{
+
+    const auto count = Social::getMonthlyCompletionCount(m_sharedData.mapDirectory, m_sharedData.holeCount);
+    if (count != 0)
+    {
+        const cro::String completed = "\n\n\nCompleted " + std::to_string(count) + "x this month!";
+        cro::String monthlyBest;
+
+        auto best = Social::getMonthlyBest(m_sharedData.mapDirectory, m_sharedData.holeCount);
+        if (best)
+        {
+            monthlyBest = "\nMonthly Best: " + std::to_string(best);
+        }
+        else
+        {
+            best = Social::getPersonalBest(m_sharedData.mapDirectory, m_sharedData.holeCount);
+            if (best)
+            {
+                monthlyBest = "\nPersonal Best: " + std::to_string(best);
+            }
+            else
+            {
+                monthlyBest = "\nFetching Score...";
+            }
+        }
+
+        dst += completed;
+        dst + monthlyBest;
+    }
+}
+#endif
+
 void MenuState::LobbyMenu::updateCourseTab(bool resized)
 {
     if (!m_detailTextures[TabID::Course].available()
@@ -1883,9 +1962,21 @@ void MenuState::LobbyMenu::updateCourseTab(bool resized)
     m_infoText.setPosition(m_detailQuad.getPosition() - glm::vec2(0.f, 58.f));
     m_infoText.draw();
 
-    //TODO render course stats / completion count
-    //TODO render ticker for leaderboards / personal best
+    //render ticker for leaderboards / personal best
+    m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().setPosition({ texSize.x, 12.f, 0.2f });
+    //this is the cropping width
+    m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Callback>().setUserData<float>(texSize.x);
 
+    if (m_sharedData.scoreType == ScoreType::Stroke)
+    {
+        const auto scoreStr = Social::getTopFive(m_sharedData.mapDirectory, m_sharedData.holeCount);
+        m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Text>().setString(scoreStr);
+        m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+    }
+    else
+    {
+        m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    }
 
     //render reverse state, night time, weather, wind speed, wind random
     cro::String str = "Reverse Order:   ";
@@ -1897,9 +1988,13 @@ void MenuState::LobbyMenu::updateCourseTab(bool resized)
     str += m_sharedData.randomWind ? "Yes" : "No";
     str += "\nWind Strength:     " + WindStrings[m_sharedData.windStrength];
 
+#ifdef USE_GNS
+    getMonthlyProgress(str);
+#endif
+
     m_infoText.setAlignment(cro::SimpleText::Alignment::Left);
     m_infoText.setString(str);
-    m_infoText.setPosition({ (texSize.x / 2.f) + 24.f, texSize.y - 72.f });
+    m_infoText.setPosition({ (texSize.x / 2.f) + 24.f, texSize.y - 42.f });
     m_infoText.draw();
 
     m_detailTextures[TabID::Course].display();

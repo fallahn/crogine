@@ -384,6 +384,7 @@ void MenuState::hideToolTip()
 void MenuState::updateCompletionString()
 {
 #ifdef USE_GNS
+#ifndef NEW_LOBBY
     const auto count = Social::getMonthlyCompletionCount(m_sharedData.mapDirectory, m_sharedData.holeCount);
     if (count == 0)
     {
@@ -396,6 +397,7 @@ void MenuState::updateCompletionString()
         m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Text>().setString("Completed " + std::to_string(count) + "x this month!");
        
         m_lobbyWindowEntities[LobbyEntityID::MonthlyBest].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        
         auto best = Social::getMonthlyBest(m_sharedData.mapDirectory, m_sharedData.holeCount);
         if (best)
         {
@@ -415,6 +417,7 @@ void MenuState::updateCompletionString()
         }
     }
     m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+#endif
 #endif
 }
 
@@ -2243,7 +2246,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
 //#ifdef USE_GNS
     //scrolls info about the selected course (or personal best if no leaderboards available)
-    auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
+    const auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 100.f, 0.f, 0.2f });
     if (m_sharedData.scoreType != ScoreType::Stroke)
@@ -2269,7 +2272,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 #endif
             static constexpr float LineHeight = 13.f;
 
-            auto scrollBounds = cro::Text::getLocalBounds(e);
+            const auto scrollBounds = cro::Text::getLocalBounds(e);
 
             auto pos = e.getComponent<cro::Transform>().getPosition();
 
@@ -2286,7 +2289,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
             e.getComponent<cro::Transform>().setPosition(pos);
 
-            cro::FloatRect cropping = { -pos.x + Offset, -16.f + (BasePosY - pos.y), (bgWidth)-(Offset + 10.f), 18.f};
+            const cro::FloatRect cropping = { -pos.x + Offset, -16.f + (BasePosY - pos.y), (bgWidth)-(Offset + 10.f), 18.f};
             e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
         }
     };

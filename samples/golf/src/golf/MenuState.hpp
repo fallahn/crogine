@@ -584,14 +584,15 @@ private:
             enum
             {
                 Thumbnail,
-                PersonalBest,
-                CompletionCount,
                 Ticker,
 
                 Count
             };
         };
         std::array<cro::Entity, CourseDetail::Count> m_courseDetailEntities; //children of course detail entity
+#ifdef USE_GNS
+        void getMonthlyProgress(cro::String& dst);
+#endif
         void updateCourseTab(bool resized = false);
         void updateRulesTab(bool resized = false);
 
