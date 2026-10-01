@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -53,10 +53,10 @@ void main()
     float inner = smoothstep(0.6, 0.61, d);
 
     float angle = atan(coord.y, coord.x) + PI;
-    angle = 1.0 - step(u_progress * TAU, angle);
+    angle = step(u_progress * TAU, angle);
 
-    vec4 colour = u_colour;
-    colour.a *= outer * inner * angle;
+    vec4 colour = mix(u_colour, vec4(0.0, 0.0, 0.0, 0.5), angle);
+    colour.a *= outer * inner;
 
     FRAG_OUT = colour;
 })";

@@ -55,6 +55,11 @@ namespace
     static constexpr cro::Time RepeatTimeShort = cro::seconds(0.05f);
 
     glm::uvec2 lastWindowSize = { 0u,0u };
+
+    static const std::array WindStrings =
+    {
+        cro::String("Normal"), cro::String("Medium"), cro::String("High")
+    };
 }
 
 void MenuState::LobbyMenu::handleEvent(const cro::Event& evt)
@@ -919,7 +924,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
                 e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             }
 
-            for (auto e : m_courseDetailIcons)
+            for (auto e : m_courseDetailEntities)
             {
                 //we can't modify the scale because they are customised
                 //to the window size (ie not 1:1)
@@ -953,7 +958,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
                 e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             }
             
-            for (auto e : m_courseDetailIcons)
+            for (auto e : m_courseDetailEntities)
             {
                 e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
             }
@@ -965,6 +970,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
             applyDetails(TabID::Course);
         };
 
+
     entity = m_menuState.m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
@@ -974,7 +980,21 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     entity.getComponent<cro::UIElement>().depth = 0.1f;
     m_detailEntities[TabID::Course] = entity;
     m_uiLayout.detailsPane.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //course thumbnails etc. Updated by updateCourseTab()
+    for (auto& e : m_courseDetailEntities)
+    {
+        e = m_menuState.m_uiScene.createEntity();
+        e.addComponent<cro::Transform>();
+        e.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+        m_detailEntities[TabID::Course].getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
+    }
+    m_courseDetailEntities[CourseDetail::Thumbnail].addComponent<cro::Sprite>();
+
     updateCourseTab();
+
+
+
 
     m_uiLayout.tabBar.items[TabID::Rules].selected =
         [this]()
@@ -984,7 +1004,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
                 e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             }
             
-            for (auto e : m_courseDetailIcons)
+            for (auto e : m_courseDetailEntities)
             {
                 e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             }
@@ -1015,7 +1035,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
                 e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             }
 
-            for (auto e : m_courseDetailIcons)
+            for (auto e : m_courseDetailEntities)
             {
                 e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             }
@@ -1043,7 +1063,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     m_uiLayout.updateTabBar(); //this also updates the menu items
 
     //info string at the bottom
-    static constexpr glm::vec2 InfoPos = glm::vec2(26.f, 21.f);
+    static constexpr glm::vec2 InfoPos = glm::vec2(20.f, 21.f);
     entity = m_menuState.m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
@@ -1101,12 +1121,13 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     //entity.getComponent<cro::Drawable2D>().setTexture(m_uiLayout.uiTexture);
     //hmm theres a bug here preventing the coords being forwarded to the
     //shader so we'll fudge coords in the colour channel
+    static constexpr float IconSize = 12.f;
     entity.getComponent<cro::Drawable2D>().setVertexData(
         {
-            cro::Vertex2D(glm::vec2(0.f, 16.f), cro::Colour(0.f, 1.f, 1.f, 1.f)),
+            cro::Vertex2D(glm::vec2(0.f, IconSize), cro::Colour(0.f, 1.f, 1.f, 1.f)),
             cro::Vertex2D(glm::vec2(0.f), cro::Colour(0.f, 0.f, 1.f, 1.f)),
-            cro::Vertex2D(glm::vec2(16.f), cro::Colour(1.f, 1.f, 1.f, 1.f)),
-            cro::Vertex2D(glm::vec2(16.f, 0.f), cro::Colour(1.f, 0.f, 1.f, 1.f)),
+            cro::Vertex2D(glm::vec2(IconSize), cro::Colour(1.f, 1.f, 1.f, 1.f)),
+            cro::Vertex2D(glm::vec2(IconSize, 0.f), cro::Colour(1.f, 0.f, 1.f, 1.f)),
         });
     entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
     entity.getComponent<cro::UIElement>().depth = 0.1f;
@@ -1795,12 +1816,6 @@ void MenuState::LobbyMenu::updateCourseTab(bool resized)
         }
     }
 
-    for (auto e : m_courseDetailIcons)
-    {
-        m_menuState.m_uiScene.destroyEntity(e);
-    }
-    m_courseDetailIcons.clear();
-
 
     m_uiText.setAlignment(cro::SimpleText::Alignment::Centre);
     m_infoText.setAlignment(cro::SimpleText::Alignment::Centre);
@@ -1851,24 +1866,15 @@ void MenuState::LobbyMenu::updateCourseTab(bool resized)
 
     if (t)
     {
-        auto entity = m_menuState.m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(glm::vec3(m_detailQuad.getPosition(), 0.1f));
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Sprite>().setTexture(*t);
+        auto entity = m_courseDetailEntities[CourseDetail::Thumbnail];
+        entity.getComponent<cro::Transform>().setPosition(glm::vec3(m_detailQuad.getPosition(), 0.1f));
+        entity.getComponent<cro::Sprite>().setTexture(*t);
         
         const auto thumbSize = glm::vec2(t->getSize());
         const auto scale = CourseThumbnailSize / thumbSize;
         entity.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         entity.getComponent<cro::Transform>().setOrigin(thumbSize / 2.f);
         entity.getComponent<cro::Transform>().move({ 0.f, 9.f });
-        m_detailEntities[TabID::Course].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-        m_courseDetailIcons.push_back(entity); //hmmm we could just recycle this with different textures...
-                                               //especially as it causes a flicker when it's recreated
-
-        if (m_uiLayout.tabBar.activeIndex != TabID::Course)
-        {
-            entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-        }
     }
 
     //render hole count
@@ -1877,7 +1883,7 @@ void MenuState::LobbyMenu::updateCourseTab(bool resized)
     m_infoText.setPosition(m_detailQuad.getPosition() - glm::vec2(0.f, 58.f));
     m_infoText.draw();
 
-    //TODO render course stats / completion count - can't be over thumbnail anymore.
+    //TODO render course stats / completion count
     //TODO render ticker for leaderboards / personal best
 
 
@@ -1889,7 +1895,7 @@ void MenuState::LobbyMenu::updateCourseTab(bool resized)
     str += "\nWeather:            " + WeatherStrings[m_sharedData.weatherType];
     str += "\nRandom Wind:       ";
     str += m_sharedData.randomWind ? "Yes" : "No";
-    str += "\nWind Strength:     " + std::to_string(m_sharedData.windStrength + 1);
+    str += "\nWind Strength:     " + WindStrings[m_sharedData.windStrength];
 
     m_infoText.setAlignment(cro::SimpleText::Alignment::Left);
     m_infoText.setString(str);

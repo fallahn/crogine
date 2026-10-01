@@ -578,7 +578,20 @@ private:
         //redraws the detail pane for corresponding tab
         std::vector<cro::Entity> m_playerDetailIcons; //children of player detail entity
         void updatePlayersTab(bool resized = false);
-        std::vector<cro::Entity> m_courseDetailIcons; //children of course detail entity
+
+        struct CourseDetail final
+        {
+            enum
+            {
+                Thumbnail,
+                PersonalBest,
+                CompletionCount,
+                Ticker,
+
+                Count
+            };
+        };
+        std::array<cro::Entity, CourseDetail::Count> m_courseDetailEntities; //children of course detail entity
         void updateCourseTab(bool resized = false);
         void updateRulesTab(bool resized = false);
 
