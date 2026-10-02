@@ -1176,7 +1176,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
         });
     entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true);
     entity.getComponent<cro::UIElement>().depth = 0.1f;
-    entity.getComponent<cro::UIElement>().absolutePosition = { 2.f, 12.f };
+    entity.getComponent<cro::UIElement>().absolutePosition = { 6.f, 12.f };
     entity.getComponent<cro::UIElement>().resizeCallback =
         [this](cro::Entity e)
         {
@@ -1373,7 +1373,7 @@ void MenuState::LobbyMenu::createCourseTab()
                     m_menuState.nextHoleCount();
                 }
             };
-        item->labels = { "All 18", "Front 9", " Back 9" };
+        item->labels = { "All", "Front", " Back" };
         item->selectedIndex = m_sharedData.holeCount;
 
 
@@ -1411,7 +1411,9 @@ void MenuState::LobbyMenu::createCourseTab()
 
                     i.selectedIndex = m_menuState.m_currentRange;
 
-                    updateCourseTab();
+                    //silly hack which sends the server updaetd course info to refresh clients
+                    m_menuState.prevCourse();
+                    m_menuState.nextCourse();
                 };
             item->labels = { "No", "Yes", /*"Workshop"*/};
             item->selectedIndex = m_menuState.m_currentRange;
@@ -1870,7 +1872,7 @@ void MenuState::LobbyMenu::getMonthlyProgress(cro::String& dst)
         }
 
         dst += completed;
-        dst + monthlyBest;
+        dst += monthlyBest;
     }
 }
 #endif
@@ -1928,19 +1930,22 @@ void MenuState::LobbyMenu::updateCourseTab(bool resized)
     //display thumbnail if available
     const cro::Texture* t = nullptr;
 
-    if (m_menuState.m_sharedCourseData.videoPaths.count(m_sharedData.mapDirectory) != 0
-        && m_menuState.m_sharedCourseData.videoPlayer.loadFromFile(m_menuState.m_sharedCourseData.videoPaths.at(m_sharedData.mapDirectory)))
+    if (m_menuState.m_currentRange == Range::Official)
     {
-        m_menuState.m_sharedCourseData.videoPlayer.setLooped(true);
-        m_menuState.m_sharedCourseData.videoPlayer.play();
-        m_menuState.m_sharedCourseData.videoPlayer.update(1.f / 30.f);
+        if (m_menuState.m_sharedCourseData.videoPaths.count(m_sharedData.mapDirectory) != 0
+            && m_menuState.m_sharedCourseData.videoPlayer.loadFromFile(m_menuState.m_sharedCourseData.videoPaths.at(m_sharedData.mapDirectory)))
+        {
+            m_menuState.m_sharedCourseData.videoPlayer.setLooped(true);
+            m_menuState.m_sharedCourseData.videoPlayer.play();
+            m_menuState.m_sharedCourseData.videoPlayer.update(1.f / 30.f);
 
-        t = &m_menuState.m_sharedCourseData.videoPlayer.getTexture();
-    }
+            t = &m_menuState.m_sharedCourseData.videoPlayer.getTexture();
+        }
 
-    else if (m_menuState.m_sharedCourseData.courseThumbs.count(m_sharedData.mapDirectory) != 0)
-    {
-        t = m_menuState.m_sharedCourseData.courseThumbs.at(m_sharedData.mapDirectory).get();
+        else if (m_menuState.m_sharedCourseData.courseThumbs.count(m_sharedData.mapDirectory) != 0)
+        {
+            t = m_menuState.m_sharedCourseData.courseThumbs.at(m_sharedData.mapDirectory).get();
+        }
     }
 
     if (t)
@@ -1954,6 +1959,10 @@ void MenuState::LobbyMenu::updateCourseTab(bool resized)
         entity.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         entity.getComponent<cro::Transform>().setOrigin(thumbSize / 2.f);
         entity.getComponent<cro::Transform>().move({ 0.f, 9.f });
+    }
+    else
+    {
+        m_courseDetailEntities[CourseDetail::Thumbnail].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     }
 
     //render hole count
