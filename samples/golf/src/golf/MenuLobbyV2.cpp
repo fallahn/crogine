@@ -60,6 +60,14 @@ namespace
     {
         cro::String("Normal"), cro::String("Medium"), cro::String("High")
     };
+
+    struct TickerData final
+    {
+        float width = 0.f;
+        float offset = 8.f;
+        float basePos = 0.f;
+        float currentPos = 0.f; //this is actual position so we can round it to the nearest pixel
+    };
 }
 
 void MenuState::LobbyMenu::handleEvent(const cro::Event& evt)
@@ -546,11 +554,22 @@ void MenuState::LobbyMenu::resetRepeatTimer(std::int32_t i, cro::Time resetTime)
 
 void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
 {
+    //load assets first - should be own func?
     if (m_progressShader.loadFromString(cro::RenderSystem2D::getDefaultVertexShader(), ProgressFrag))
     {
         m_progressUniform = m_progressShader.getUniformID("u_progress");
         m_progressColourUniform = m_progressShader.getUniformID("u_colour");
     }
+
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/options_buttons.spt", m_menuState.m_sharedData.sharedResources->textures);
+    m_detailSprites[DetailSprite::CourseThumb] = spriteSheet.getSprite("course_thumb");
+    m_detailSprites[DetailSprite::WeatherIcon] = spriteSheet.getSprite("weather_icon");
+    m_detailSprites[DetailSprite::TickerLeft] = spriteSheet.getSprite("ticker_left");
+    m_detailSprites[DetailSprite::TickerCentre] = spriteSheet.getSprite("ticker_middle");
+    m_detailSprites[DetailSprite::TickerRight] = spriteSheet.getSprite("ticker_right");
+
+
 
     m_uiLayout.loadAssets(*m_sharedData.sharedResources);
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
@@ -695,11 +714,6 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     m_uiLayout.tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_uiLayout.tabBar.navRight = entity;
 
-
-    cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/options_buttons.spt", m_menuState.m_sharedData.sharedResources->textures);
-    m_detailSprites[DetailSprite::CourseThumb] = spriteSheet.getSprite("course_thumb");
-    m_detailSprites[DetailSprite::WeatherIcon] = spriteSheet.getSprite("weather_icon");
 
     m_uiLayout.tabBar.navLeftRects[0] = spriteSheet.getSprite("l1").getTextureRect();
     m_uiLayout.tabBar.navLeftRects[1] = spriteSheet.getSprite("lb").getTextureRect();
@@ -996,34 +1010,27 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     auto e = m_courseDetailEntities[CourseDetail::Ticker];
     e.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Label)).setCharacterSize(LabelTextSize);
     e.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    //e.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     e.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     e.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     e.addComponent<cro::Callback>().active = true;
-    e.getComponent<cro::Callback>().setUserData<float>(120.f);
+    e.getComponent<cro::Callback>().setUserData<TickerData>();
     e.getComponent<cro::Callback>().function =
         [this](cro::Entity e, float dt)
         {
             if (e.getComponent<cro::Drawable2D>().getFacing() == cro::Drawable2D::Facing::Front)
             {
-#ifdef USE_GNS
-                static constexpr float BasePosY = 23.f;
-#else
-                static constexpr float BasePosY = 26.f;
-#endif
                 static constexpr float LineHeight = 13.f;
 
                 const auto scrollBounds = cro::Text::getLocalBounds(e);
+                auto& [bgWidth, Offset, BasePosY, xPos] = e.getComponent<cro::Callback>().getUserData<TickerData>();
+                xPos -= 20.f * m_menuState.m_scrollSpeed * dt;
 
-                auto pos = e.getComponent<cro::Transform>().getPosition();
-
-                pos.x -= 20.f * m_menuState.m_scrollSpeed * dt;
+                auto pos = e.getComponent<cro::Transform>().getPosition();                
+                pos.x = std::round(xPos);
                 pos.y = BasePosY + std::floor(scrollBounds.height - LineHeight);
                 pos.z = 0.3f;
 
-                //TODO this should be a variable along with bgWidth
-                static constexpr float Offset = 0.f;// 232.f;
-                const auto bgWidth = e.getComponent<cro::Callback>().getUserData<float>();
+
                 if (pos.x < -scrollBounds.width + Offset)
                 {
                     pos.x = bgWidth;
@@ -1031,7 +1038,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
 
                 e.getComponent<cro::Transform>().setPosition(pos);
 
-                const cro::FloatRect cropping = { -pos.x + Offset, -16.f + (BasePosY - pos.y), (bgWidth-(Offset * 2.f)), 18.f };
+                const cro::FloatRect cropping = { -pos.x + Offset, -16.f + (BasePosY - pos.y), (bgWidth - (Offset * 2.f)), 18.f };
                 e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
             }
         };
@@ -1923,7 +1930,7 @@ void MenuState::LobbyMenu::updateCourseTab(bool resized)
     //render thumbnail background
     m_detailQuad = m_detailSprites[DetailSprite::CourseThumb];
     m_detailQuad.setOrigin(m_detailQuad.getSize() / 2.f);
-    m_detailQuad.setPosition({ std::round(texSize.x / 4.f) + 12.f, texSize.y - 96.f });
+    m_detailQuad.setPosition({ std::round(texSize.x / 4.f) + 12.f, texSize.y - 102.f });
     m_detailQuad.setScale({ 1.f, 1.f });
     m_detailQuad.draw();
 
@@ -1971,13 +1978,56 @@ void MenuState::LobbyMenu::updateCourseTab(bool resized)
     m_infoText.setPosition(m_detailQuad.getPosition() - glm::vec2(0.f, 58.f));
     m_infoText.draw();
 
-    //render ticker for leaderboards / personal best
-    m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().setPosition({ texSize.x, 12.f, 0.2f });
-    //this is the cropping width
-    m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Callback>().setUserData<float>(texSize.x);
+
+    //background for ticker text
+    const auto tickerBounds = m_detailSprites[DetailSprite::TickerLeft].getTextureBounds();
+    const auto oldPos = m_detailQuad.getPosition() - m_detailQuad.getOrigin();
+    m_detailQuad.setOrigin({ 0.f, 0.f });
+    m_detailQuad = m_detailSprites[DetailSprite::TickerLeft];
+    m_detailQuad.setPosition({ 0.f, oldPos.y - tickerBounds.height - 16.f });
+    m_detailQuad.draw();
+
+    const float centreWidth = texSize.x - (tickerBounds.width * 2.f);
+    m_detailQuad = m_detailSprites[DetailSprite::TickerCentre];
+    m_detailQuad.move({ tickerBounds.width, 0.f });
+    m_detailQuad.setScale({ centreWidth, 1.f });
+    m_detailQuad.draw();
+
+    m_detailQuad = m_detailSprites[DetailSprite::TickerRight];
+    m_detailQuad.move({ centreWidth, 0.f });
+    m_detailQuad.setScale(glm::vec2(1.f));
+    m_detailQuad.draw();
+
+    const float vertsHeight = m_detailQuad.getPosition().y;
+
+    m_detailArray.setVertexData({
+        cro::Vertex2D(glm::vec2(0.f, vertsHeight), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(texSize.x, vertsHeight), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(texSize.x, vertsHeight), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(texSize.x, 0.f), CD32::Colours[CD32::Brown]),
+
+        });
+    m_detailArray.setPosition(glm::vec2(0.f));
+    m_detailArray.draw();
 
     if (m_sharedData.scoreType == ScoreType::Stroke)
     {
+        //render ticker for leaderboards / personal best
+        const auto posX = m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().getPosition().x;
+        m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().setPosition({ posX, vertsHeight + 22.f, 0.2f });
+        TickerData td =
+        {
+            //this is the cropping width
+            .width = texSize.x,
+            //offset from the edge
+            .offset = 8.f,
+            .basePos = vertsHeight + 22.f,
+            .currentPos = posX
+        };
+        m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Callback>().setUserData<TickerData>(td);
+
         const auto scoreStr = Social::getTopFive(m_sharedData.mapDirectory, m_sharedData.holeCount);
         m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Text>().setString(scoreStr);
         m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
@@ -2003,12 +2053,10 @@ void MenuState::LobbyMenu::updateCourseTab(bool resized)
 
     m_infoText.setAlignment(cro::SimpleText::Alignment::Left);
     m_infoText.setString(str);
-    m_infoText.setPosition({ (texSize.x / 2.f) + 24.f, texSize.y - 42.f });
+    m_infoText.setPosition({ (texSize.x / 2.f) + 24.f, texSize.y - 48.f });
     m_infoText.draw();
 
     m_detailTextures[TabID::Course].display();
-
-    m_detailQuad.setOrigin({ 0.f, 0.f });
 
 
     if (m_uiLayout.tabBar.activeIndex == TabID::Course)

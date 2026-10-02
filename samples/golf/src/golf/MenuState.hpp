@@ -569,6 +569,9 @@ private:
             {
                 CourseThumb,
                 WeatherIcon,
+                TickerLeft,
+                TickerCentre,
+                TickerRight,
 
                 Count
             };
