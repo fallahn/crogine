@@ -1027,18 +1027,18 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
 
                 auto pos = e.getComponent<cro::Transform>().getPosition();                
                 pos.x = std::round(xPos);
-                pos.y = BasePosY + std::floor(scrollBounds.height - LineHeight);
+                pos.y = BasePosY + std::floor(scrollBounds.height - LineHeight + scrollBounds.bottom);
                 pos.z = 0.3f;
 
 
-                if (pos.x < -scrollBounds.width + Offset)
+                if (xPos < -scrollBounds.width + Offset)
                 {
-                    pos.x = bgWidth;
+                    xPos = bgWidth;
                 }
 
                 e.getComponent<cro::Transform>().setPosition(pos);
 
-                const cro::FloatRect cropping = { -pos.x + Offset, -16.f + (BasePosY - pos.y), (bgWidth - (Offset * 2.f)), 18.f };
+                const cro::FloatRect cropping = { -pos.x + Offset, -26.f + (BasePosY - pos.y), (bgWidth - (Offset * 2.f)), 18.f };
                 e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
             }
         };
@@ -1781,6 +1781,24 @@ void MenuState::LobbyMenu::updatePlayersTab(bool resized)
     m_detailArray.setPosition({ 0.f, 0.f });
     m_detailArray.draw();
 
+    const float Bottom = Top - (Height * 16.f);
+    m_detailArray.setVertexData({
+        cro::Vertex2D(glm::vec2(0.f, Bottom), CD32::Colours[CD32::Olive]),
+        cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::Olive]),
+        cro::Vertex2D(glm::vec2(Width, Bottom), CD32::Colours[CD32::Olive]),
+        cro::Vertex2D(glm::vec2(Width, Bottom), CD32::Colours[CD32::Olive]),
+        cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::Olive]),
+        cro::Vertex2D(glm::vec2(Width, 0.f), CD32::Colours[CD32::Olive]),
+
+        cro::Vertex2D(glm::vec2(0.f, Bottom - 1.f), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(Width, Bottom - 1.f), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(Width, Bottom - 1.f), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(Width, 0.f), CD32::Colours[CD32::Brown]),
+
+        });
+    m_detailArray.draw();
 
     m_detailTextures[TabID::Players].display();
 
@@ -2016,14 +2034,14 @@ void MenuState::LobbyMenu::updateCourseTab(bool resized)
     {
         //render ticker for leaderboards / personal best
         const auto posX = m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().getPosition().x;
-        m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().setPosition({ posX, vertsHeight + 22.f, 0.2f });
+        m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().setPosition({ posX, vertsHeight + 34.f, 0.2f });
         TickerData td =
         {
             //this is the cropping width
             .width = texSize.x,
             //offset from the edge
             .offset = 8.f,
-            .basePos = vertsHeight + 22.f,
+            .basePos = vertsHeight + 34.f,
             .currentPos = posX
         };
         m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Callback>().setUserData<TickerData>(td);
