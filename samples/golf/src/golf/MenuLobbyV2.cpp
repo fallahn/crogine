@@ -374,6 +374,84 @@ void MenuState::LobbyMenu::simulate(float dt)
 {
     m_uiLayout.scrollToTarget(dt);
 
+    //fast scroll when press / hold up or down
+    const auto maskTest =
+        [&](std::int32_t index, std::int32_t flag)
+        {
+            return ((m_controllerMasks[index] & flag) != 0) && ((m_controllerPrevMasks[index] & flag) == 0);
+        };
+
+    for (auto i = 0; i < cro::GameController::getControllerCount(); ++i)
+    {
+        //check stick input
+        if (maskTest(i, InputFlag::Left))
+        {
+            m_uiLayout.activateLeft();
+        }
+
+        if (maskTest(i, InputFlag::Right))
+        {
+            m_uiLayout.activateRight();
+        }
+
+        if (maskTest(i, InputFlag::Up))
+        {
+            m_uiLayout.prevItem();
+            resetRepeatTimer(i, RepeatTimeLong);
+        }
+
+        if (maskTest(i, InputFlag::Down))
+        {
+            m_uiLayout.nextItem();
+            resetRepeatTimer(i, RepeatTimeLong);
+        }
+
+        m_controllerPrevMasks[i] = m_controllerMasks[i];
+
+        //check for repeat inputs
+        if (cro::GameController::isButtonPressed(i, cro::GameController::DPadDown)
+            || (m_controllerMasks[i] & InputFlag::Down))
+        {
+            if (m_inputRepeatClocks[i].elapsed() > m_repeatTimes[i])
+            {
+                m_uiLayout.nextItem();
+                resetRepeatTimer(i, RepeatTimeShort);
+            }
+        }
+
+        if (cro::GameController::isButtonPressed(i, cro::GameController::DPadUp)
+            || (m_controllerMasks[i] & InputFlag::Up))
+        {
+            if (m_inputRepeatClocks[i].elapsed() > m_repeatTimes[i])
+            {
+                m_uiLayout.prevItem();
+                resetRepeatTimer(i, RepeatTimeShort);
+            }
+        }
+
+        if (cro::GameController::isButtonPressed(i, cro::GameController::DPadLeft)
+            /*|| (m_controllerMasks[i] & InputFlag::Left)*/)
+        {
+            if (m_inputRepeatClocks[i].elapsed() > m_repeatTimes[i])
+            {
+                m_uiLayout.activateLeft();
+                resetRepeatTimer(i, RepeatTimeShort);
+            }
+        }
+
+        if (cro::GameController::isButtonPressed(i, cro::GameController::DPadRight)
+            /*|| (m_controllerMasks[i] & InputFlag::Right)*/)
+        {
+            if (m_inputRepeatClocks[i].elapsed() > m_repeatTimes[i])
+            {
+                m_uiLayout.activateRight();
+                resetRepeatTimer(i, RepeatTimeShort);
+            }
+        }
+    }
+
+
+
     //press/hold to exit or show options
     static constexpr float MaxHoldTime = 0.5f;
     if (m_buttonFlags)
@@ -1239,10 +1317,41 @@ void MenuState::LobbyMenu::createPlayerTab()
     item->labels = { "Let\'s Go!" };
     item->selectedIndex = 0;
 
+#ifdef USE_GNS
+    //invite friends
+    item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
+    item->title = "Invite Friends";
+    item->description = "Opens the Steam overlay to invite friends to this lobby.";
+    cro::Util::String::wordWrap(item->description, WordWrapSmall);
+    item->activated = [this](Menu::Item& i)
+        {
+            //unready ourself if not hosting so game can't be started
+            //while the invite overlay is open
+            unready();
+            Social::inviteFriends(m_sharedData.lobbyID);
+        };
+    item->labels = { "Invite" };
+    item->selectedIndex = 0;
+#endif
+
     //we need to do this in a refresh after creating the lobby
     //as when the menu is first built the game is only just launched
     if (m_sharedData.hosting)
     {
+#ifdef USE_GNS
+        //friends only
+        item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
+        item->title = "Friends Only";
+        item->description = "Only allow members of your Steam friends to join this lobby.";
+        cro::Util::String::wordWrap(item->description, WordWrapSmall);
+        item->activated = [this](Menu::Item& i)
+            {
+                m_menuState.m_matchMaking.setFriendsOnly(i.selectedIndex == 1);
+            };
+        item->labels = { "No", "Yes" };
+        item->selectedIndex = m_menuState.m_matchMaking.getFriendsOnly() ? 1 : 0;
+#endif
+
         //teams mode
         item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
         item->title = "Teams";
@@ -1338,6 +1447,7 @@ void MenuState::LobbyMenu::createPlayerTab()
             };
         item->labels = { u8"↓ Kick" };
         item->selectedIndex = 0;
+
     }
 }
 
@@ -1610,38 +1720,7 @@ void MenuState::LobbyMenu::createRulesTab()
             };
         item->labels = { "No", "Yes" };
         item->selectedIndex = 1;
-
-#ifdef USE_GNS
-        //friends only
-        item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
-        item->title = "Friends Only";
-        item->description = "Only allow members of your Steam friends to join this lobby.";
-        cro::Util::String::wordWrap(item->description, WordWrapSmall);
-        item->activated = [this](Menu::Item& i)
-            {
-                m_menuState.m_matchMaking.setFriendsOnly(i.selectedIndex == 1);
-            };
-        item->labels = { "No", "Yes" };
-        item->selectedIndex = m_menuState.m_matchMaking.getFriendsOnly() ? 1 : 0;
-#endif
     }
-
-#ifdef USE_GNS
-    //invite friends
-    item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
-    item->title = "Invite Friends";
-    item->description = "Opens the Steam overlay to invite friends to this lobby.";
-    cro::Util::String::wordWrap(item->description, WordWrapSmall);
-    item->activated = [this](Menu::Item& i)
-        {
-            //unready ourself if not hosting so game can't be started
-            //while the invite overlay is open
-            unready();
-            Social::inviteFriends(m_sharedData.lobbyID);
-        };
-    item->labels = { "Invite" };
-    item->selectedIndex = 0;
-#endif
 }
 
 void MenuState::LobbyMenu::createScoresTab()

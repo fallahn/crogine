@@ -364,9 +364,10 @@ void GolfState::createCameras()
         [&, camEnt](cro::Camera& cam)
         {
             //this cam has a slightly narrower FOV
-            auto zoomFOV = camEnt.getComponent<cro::Callback>().getUserData<CameraFollower::ZoomData>().fov;
+            //const auto zoomFOV = camEnt.getComponent<cro::Callback>().getUserData<CameraFollower::ZoomData>().fov;
+            const auto zoomFOV = camEnt.getComponent<CameraFollower::ZoomData>().fov;
 
-            auto vpSize = glm::vec2(cro::App::getWindow().getSize());
+            const auto vpSize = glm::vec2(cro::App::getWindow().getSize());
             cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * zoomFOV * 0.7f,
                 vpSize.x / vpSize.y, 0.1f, CameraFarPlane * 0.7f,
                 m_shadowQuality.cascadeCount);
@@ -385,14 +386,18 @@ void GolfState::createCameras()
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
 
+
     CameraFollower::ZoomData zoomData;
     zoomData.speed = 3.f;
     zoomData.target = 0.45f;
-    camEnt.addComponent<cro::Callback>().setUserData<CameraFollower::ZoomData>(zoomData);
+    camEnt.addComponent<CameraFollower::ZoomData>() = zoomData;
+
+    camEnt.addComponent<cro::Callback>(); //.setUserData<CameraFollower::ZoomData>(zoomData);
     camEnt.getComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)
         {
-            auto& zoom = e.getComponent<cro::Callback>().getUserData<CameraFollower::ZoomData>();
+            //auto& zoom = e.getComponent<cro::Callback>().getUserData<CameraFollower::ZoomData>();
+            auto& zoom = e.getComponent<CameraFollower::ZoomData>();
 
             zoom.progress = std::min(1.f, zoom.progress + (dt * zoom.speed));
             zoom.fov = glm::mix(1.f, zoom.target, cro::Util::Easing::easeInOutQuad(zoom.progress));
@@ -803,20 +808,30 @@ void GolfState::updateCameraHeight(float movement)
     }
 }
 
-void GolfState::toggleFreeCam()
+void GolfState::toggleFreeCam(bool skipAnim)
 {
     if (!m_photoMode)
     {
+#ifdef NO_MP_FREECAM
         //only switch if we're the active player and the input is active
         if (/*!m_groupIdle &&*/
             (!m_inputParser.getActive() || m_currentCamera != CameraID::Player
-            || m_emoteWheel.currentScale != 0)
+                || m_emoteWheel.currentScale != 0)
             || m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].isCPU)
         {
             return;
         }
+#else
+        //only switch if we're the active player and the input is active
+        if (((!m_inputParser.getActive() && m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
+                || (m_currentCamera != CameraID::Player && m_currentCamera != CameraID::Bystander)
+                || m_emoteWheel.currentScale != 0)
+            || m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].isCPU)
+        {
+            return;
+        }
+#endif
     }
-
 
     m_photoMode = !m_photoMode;
     if (m_photoMode)
@@ -826,9 +841,9 @@ void GolfState::toggleFreeCam()
         m_defaultCam = m_gameScene.setActiveCamera(m_freeCam);
         m_defaultCam.getComponent<cro::Camera>().active = false;
         m_defaultCam.getComponent<TargetInfo>().waterPlane = {};
-
+        assert(m_defaultCam != m_freecam); //we've tried toggling twice while in the same transition!
         m_gameScene.setActiveListener(m_freeCam);
-
+        auto label = m_defaultCam.getLabel();
 
         const auto pos = m_defaultCam.getComponent<cro::Transform>().getWorldPosition();
         const auto rot = m_defaultCam.getComponent<cro::Transform>().getWorldRotation();
@@ -879,10 +894,6 @@ void GolfState::toggleFreeCam()
     else
     {
         m_ballTrails[m_serverGroup]->showPrevious(false);
-
-        const auto pos = m_freeCam.getComponent<cro::Transform>().getWorldPosition();
-        const auto rot = m_freeCam.getComponent<cro::Transform>().getWorldRotation();
-        m_freeCam.getComponent<FpsCamera>().endTransition(pos, rot);
 
         m_freeCam.getComponent<FpsCamera>().transition.completionCallback =
             [&]()
@@ -943,6 +954,20 @@ void GolfState::toggleFreeCam()
                 m_gameScene.getSystem<cro::CameraSystem>()->process(0.f);
                 m_gameScene.getSystem<cro::ShadowMapRenderer>()->process(0.f);
             };
+
+        const auto pos = m_freeCam.getComponent<cro::Transform>().getWorldPosition();
+        const auto rot = m_freeCam.getComponent<cro::Transform>().getWorldRotation();
+        if (!skipAnim)
+        {
+            m_freeCam.getComponent<FpsCamera>().endTransition(pos, rot);
+        }
+        else
+        {
+            //m_freeCam.getComponent<FpsCamera>().transition.completionCallback();
+            m_freeCam.getComponent<FpsCamera>().endTransition(pos, rot, 0.f); //zero progress actually skips to end of transition
+            m_gameScene.getSystem<FpsCameraSystem>()->process(0.f); //causes above callback to be executed immediately
+        }
+
         enableDOF(false);
 
         for (auto i = 0; i < 4; ++i)

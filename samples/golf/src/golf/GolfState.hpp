@@ -619,7 +619,7 @@ private:
     bool m_showTrailHistory;
     bool m_useDOF;
     bool m_restoreInput;
-    void toggleFreeCam();
+    void toggleFreeCam(bool = false); //if true skips the animation
     void enableDOF(bool);
     void applyShadowQuality();
 

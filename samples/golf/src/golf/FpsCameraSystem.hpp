@@ -122,12 +122,12 @@ struct FpsCamera final
         state = State::Enter;
     }
 
-    void endTransition(glm::vec3 pos, glm::quat rot)
+    void endTransition(glm::vec3 pos, glm::quat rot, float progress = 1.f)
     {
         transition.endPosition = pos;
         transition.endRotation = rot;
         transition.endFov = fov;
-        transition.progress = 1.f;
+        transition.progress = progress;
         state = State::Exit;
     }
 };

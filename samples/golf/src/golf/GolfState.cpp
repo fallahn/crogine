@@ -1197,7 +1197,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case cro::GameController::DPadLeft:
             scrollScores(-19);
             break;
-        case cro::GameController::DPadDown:
+        //case cro::GameController::DPadDown:
         case cro::GameController::DPadRight:
             scrollScores(19);
             break;
@@ -1205,6 +1205,22 @@ bool GolfState::handleEvent(const cro::Event& evt)
             m_buttonStates.buttonA = true;
             toggleQuitReady();
             break;
+#ifndef NO_MP_FREECAM
+        case cro::GameController::DPadDown:
+            //usually handled by input parser, but we may be spectating
+            if (evt.gbutton.which == cro::GameController::deviceID(activeID)
+                && m_currentPlayer.client != m_sharedData.clientConnection.connectionID
+                && !m_photoMode)
+            {
+                toggleFreeCam();
+            }
+            else
+            {
+                scrollScores(19);
+            }
+            break;
+#endif
+
         }
     }
     else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
@@ -6392,7 +6408,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::SetPlayer:
             if (m_photoMode)
             {
-                toggleFreeCam();
+                toggleFreeCam(true);
             }
             else
             {
@@ -6461,7 +6477,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::SetHole:
             if (m_photoMode)
             {
-                toggleFreeCam();
+                toggleFreeCam(true);
             }
             else
             {
@@ -8204,7 +8220,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
         //update the position of the bystander camera
         //make sure to reset any zoom
-        auto& zoomData = m_cameras[CameraID::Bystander].getComponent<cro::Callback>().getUserData<CameraFollower::ZoomData>();
+        //auto& zoomData = m_cameras[CameraID::Bystander].getComponent<cro::Callback>().getUserData<CameraFollower::ZoomData>();
+        auto& zoomData = m_cameras[CameraID::Bystander].getComponent<CameraFollower::ZoomData>();
         zoomData.progress = 0.f;
         zoomData.fov = 1.f;
         m_cameras[CameraID::Bystander].getComponent<cro::Camera>().resizeCallback(m_cameras[CameraID::Bystander].getComponent<cro::Camera>());

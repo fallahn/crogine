@@ -1229,17 +1229,21 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
                             return m_teams[a.teamIndex].players[m_teams[a.teamIndex].currentPlayer] == a;
                         }
 
+
+                        //for some reason debug builds throw invalid comparator - but refuses to explain why
+                        //this actually works as intended.
+#ifndef CRO_DEBUG_
                         //return true if still at the tee (we might be closer to the hole on u-bends)
-                        if (glm::length2(a.position - m_holeData[m_currentHole].tee) < 1)
+                        if (glm::length2(a.position - m_holeData[m_currentHole].tee) < 1.f)
                         {
                             return true;
                         }
                         //and conversely
-                        if (glm::length2(b.position - m_holeData[m_currentHole].tee) < 1)
+                        if (glm::length2(b.position - m_holeData[m_currentHole].tee) < 1.f)
                         {
                             return false;
                         }
-
+#endif
                         return a.distanceToHole > b.distanceToHole;
                     };
 
