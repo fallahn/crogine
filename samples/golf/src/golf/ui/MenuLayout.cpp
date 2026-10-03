@@ -1022,12 +1022,20 @@ void UILayout::checkMouseOver(glm::vec2 screenPos)
     if (selectedTab != tabBar.hoveredIndex)
     {
         tabBar.hoveredIndex = selectedTab;
+        if (selectedTab != -1)
+        {
+            playSound(MenuSoundEvent::Switch);
+        }
         updateTabBar();
     }
 
     if (selectedItem != menuLayout.hoveredIndex)
     {
         menuLayout.hoveredIndex = selectedItem;
+        if (selectedItem != -1)
+        {
+            playSound(MenuSoundEvent::Switch);
+        }
         updateMenuItems();
     }
 }

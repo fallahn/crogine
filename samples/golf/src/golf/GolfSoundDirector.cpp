@@ -59,12 +59,13 @@ namespace
 {
     constexpr float VoiceDelay = 0.5f;
 
-    const cro::Time MinCrowdTime = cro::seconds(43.f);
-    const cro::Time FlagSoundTime = cro::seconds(3.f);
-    const cro::Time ChatSoundTime = cro::seconds(0.05f);
-    const cro::Time PowerSoundTime = cro::seconds(0.5f);
-    const cro::Time ApplauseSoundTime = cro::seconds(11.5f);
-    const cro::Time ForeSoundTime = cro::seconds(13.5f);
+    constexpr cro::Time MinCrowdTime = cro::seconds(43.f);
+    constexpr cro::Time FlagSoundTime = cro::seconds(3.f);
+    constexpr cro::Time ChatSoundTime = cro::seconds(0.05f);
+    constexpr cro::Time MenuSoundTime = cro::seconds(0.1f);
+    constexpr cro::Time PowerSoundTime = cro::seconds(0.5f);
+    constexpr cro::Time ApplauseSoundTime = cro::seconds(11.5f);
+    constexpr cro::Time ForeSoundTime = cro::seconds(13.5f);
 
     bool hadBeefstick = false;
 }
@@ -289,21 +290,29 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         case cl::MessageID::MenuSoundMessage:
         {
             const auto& data = msg.getData<MenuSoundEvent>();
+            std::int32_t audioID = 0;
+
             switch (data.type)
             {
             default: break;
             case MenuSoundEvent::Activate:
-                playSound(AudioID::Accept, glm::vec3(0.f), 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                audioID = AudioID::Accept;
                 break;
             case MenuSoundEvent::Cancel:
-                playSound(AudioID::Back, glm::vec3(0.f), 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                audioID = AudioID::Back;
                 break;
             case MenuSoundEvent::Switch:
-                playSound(AudioID::Switch, glm::vec3(0.f), 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                audioID = AudioID::Switch;
                 break;
             case MenuSoundEvent::Denied:
-                playSound(AudioID::Denied, glm::vec3(0.f), 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                audioID = AudioID::Denied;
                 break;
+            }
+
+            if (m_soundTimers[audioID].elapsed() > MenuSoundTime)
+            {
+                playSound(audioID, glm::vec3(0.f), 0.25f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                m_soundTimers[audioID].restart();
             }
         }
         break;

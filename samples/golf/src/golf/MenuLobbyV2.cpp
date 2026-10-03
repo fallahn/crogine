@@ -43,6 +43,7 @@ using namespace UI;
 namespace
 {
 #include "shaders/ProgressShader.inl"
+#include <crogine/gui/Codepoints.inl>
 
     const std::array ItemLabels =
     {
@@ -389,6 +390,7 @@ void MenuState::LobbyMenu::simulate(float dt)
                 break;
             case ButtonFlags::Quit:
                 m_menuState.quitLobby();
+                playSound(MenuSoundEvent::Cancel);
                 break;
             case ButtonFlags::Options:
                 //unready this client so the host can't
@@ -401,6 +403,7 @@ void MenuState::LobbyMenu::simulate(float dt)
                 if (m_timeoutCallback)
                 {
                     m_timeoutCallback();
+                    playSound(MenuSoundEvent::Activate);
                 }
                 break;
             }
@@ -1026,7 +1029,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
                 xPos -= 20.f * m_menuState.m_scrollSpeed * dt;
 
                 auto pos = e.getComponent<cro::Transform>().getPosition();                
-                pos.x = std::round(xPos);
+                pos.x = /*std::round*/(xPos);
                 pos.y = BasePosY + std::floor(scrollBounds.height - LineHeight + scrollBounds.bottom);
                 pos.z = 0.3f;
 
@@ -1505,39 +1508,9 @@ void MenuState::LobbyMenu::createRulesTab()
     item->labels = { "Casual", "Regular", "Pro" };
     item->selectedIndex = m_sharedData.clubSet;
 
-#ifdef USE_GNS
-    //invite friends
-    item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
-    item->title = "Invite Friends";
-    item->description = "Opens the Steam overlay to invite friends to this lobby.";
-    cro::Util::String::wordWrap(item->description, WordWrapSmall);
-    item->activated = [this](Menu::Item& i)
-        {
-            //unready ourself if not hosting so game can't be started
-            //while the invite overlay is open
-            unready();
-            Social::inviteFriends(m_sharedData.lobbyID);
-        };
-    item->labels = { "Invite" };
-    item->selectedIndex = 0;
-#endif
 
     if (m_sharedData.hosting)
     {
-#ifdef USE_GNS
-        //friends only
-        item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
-        item->title = "Friends Only";
-        item->description = "Only allow members of your Steam friends to join this lobby.";
-        cro::Util::String::wordWrap(item->description, WordWrapSmall);
-        item->activated = [this](Menu::Item& i)
-            {
-                m_menuState.m_matchMaking.setFriendsOnly(i.selectedIndex == 1);
-            };
-        item->labels = { "No", "Yes" };
-        item->selectedIndex = m_menuState.m_matchMaking.getFriendsOnly() ? 1 : 0;
-#endif
-
         //choose rules / game mode
         item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
         item->title = "Scoring";
@@ -1591,16 +1564,15 @@ void MenuState::LobbyMenu::createRulesTab()
         item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
         item->title = "Enable Snek";
         item->description = "The player who last misses a putt is left holding the snek";
+        item->description += EmSnake;
         cro::Util::String::wordWrap(item->description, WordWrapSmall);
         item->activated = [this](Menu::Item& i)
             {
-                if (m_sharedData.hosting
-                    && m_sharedData.clientConnection.connected)
+                if (m_sharedData.clientConnection.connected)
                 {
                     const std::uint16_t d = (std::uint8_t(RuleMod::Snek) << 8) | std::uint8_t(i.selectedIndex);
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::RuleMod, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-                    cro::Console::print("snek enabled");
                 }
             };
         item->labels = { "No", "Yes" };
@@ -1614,18 +1586,62 @@ void MenuState::LobbyMenu::createRulesTab()
         cro::Util::String::wordWrap(item->description, WordWrapSmall);
         item->activated = [this](Menu::Item& i)
             {
-                if (m_sharedData.hosting
-                    && m_sharedData.clientConnection.connected)
+                if (m_sharedData.clientConnection.connected)
                 {
                     const std::uint16_t d = (std::uint8_t(RuleMod::BigBalls) << 8) | std::uint8_t(i.selectedIndex);
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::RuleMod, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
-                    cro::Console::print("Big Balls enabled");
                 }
             };
         item->labels = { "No", "Yes" };
         item->selectedIndex = 0;
+
+        //allow assists
+        item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
+        item->title = "Allow Assists";
+        item->description = "Players are allowed to use Range Assist and Putt Assist";
+        cro::Util::String::wordWrap(item->description, WordWrapSmall);
+        item->activated = [this](Menu::Item& i)
+            {
+                if (m_sharedData.clientConnection.connected)
+                {
+                    //const std::uint16_t d = (std::uint8_t(RuleMod::BigBalls) << 8) | std::uint8_t(i.selectedIndex);
+                    //m_sharedData.clientConnection.netClient.sendPacket(PacketID::RuleMod, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
+            };
+        item->labels = { "No", "Yes" };
+        item->selectedIndex = 1;
+
+#ifdef USE_GNS
+        //friends only
+        item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
+        item->title = "Friends Only";
+        item->description = "Only allow members of your Steam friends to join this lobby.";
+        cro::Util::String::wordWrap(item->description, WordWrapSmall);
+        item->activated = [this](Menu::Item& i)
+            {
+                m_menuState.m_matchMaking.setFriendsOnly(i.selectedIndex == 1);
+            };
+        item->labels = { "No", "Yes" };
+        item->selectedIndex = m_menuState.m_matchMaking.getFriendsOnly() ? 1 : 0;
+#endif
     }
+
+#ifdef USE_GNS
+    //invite friends
+    item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
+    item->title = "Invite Friends";
+    item->description = "Opens the Steam overlay to invite friends to this lobby.";
+    cro::Util::String::wordWrap(item->description, WordWrapSmall);
+    item->activated = [this](Menu::Item& i)
+        {
+            //unready ourself if not hosting so game can't be started
+            //while the invite overlay is open
+            unready();
+            Social::inviteFriends(m_sharedData.lobbyID);
+        };
+    item->labels = { "Invite" };
+    item->selectedIndex = 0;
+#endif
 }
 
 void MenuState::LobbyMenu::createScoresTab()
@@ -2034,14 +2050,14 @@ void MenuState::LobbyMenu::updateCourseTab(bool resized)
     {
         //render ticker for leaderboards / personal best
         const auto posX = m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().getPosition().x;
-        m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().setPosition({ posX, vertsHeight + 34.f, 0.2f });
+        m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().setPosition({ posX, vertsHeight + 33.f, 0.2f });
         TickerData td =
         {
             //this is the cropping width
             .width = texSize.x,
             //offset from the edge
             .offset = 8.f,
-            .basePos = vertsHeight + 34.f,
+            .basePos = vertsHeight + 33.f,
             .currentPos = posX
         };
         m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Callback>().setUserData<TickerData>(td);
@@ -2154,12 +2170,12 @@ void MenuState::LobbyMenu::updateScoresTab(bool resized)
     std::int32_t h = 0;
     std::int32_t clientCount = 0;
     const float TextureWidth = static_cast<float>(m_detailTextures[TabID::Scores].getSize().x);
-    const float TextureHeight = static_cast<float>(m_detailTextures[TabID::Scores].getSize().y) - 22.f;
+    const float TextureHeight = static_cast<float>(m_detailTextures[TabID::Scores].getSize().y) - 24.f;
     static constexpr float RankSpacing = -14.f;
 
     m_uiText.setString("Connected Clients");
     m_uiText.setAlignment(cro::SimpleText::Alignment::Centre);
-    m_uiText.setPosition({TextureWidth / 2.f, TextureHeight + 12.f});
+    m_uiText.setPosition({TextureWidth / 2.f, TextureHeight + 14.f});
     m_uiText.draw();
 
     for (const auto& c : m_sharedData.connectionData)
