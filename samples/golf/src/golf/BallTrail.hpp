@@ -53,12 +53,13 @@ class BallTrail final //: public cro::GuiClient
 public:
     BallTrail();
 
-    void create(cro::Scene&, cro::ResourceCollection&, std::int32_t, bool courseSize = true);
+    void create(cro::Scene&, cro::ResourceCollection&, std::int32_t matID, std::uint8_t playerCount, bool courseSize = true);
 
     void setNext();
     void resetPrevious();
     void addPoint(glm::vec3, std::uint32_t = 0);
-    void showPrevious(bool);
+    void showPrevious(bool, std::uint8_t playerID);
+    void updatePrevious(std::uint8_t playerID); //hides the previous trail then updates it from the buffer
 
     void update();
     void reset();
@@ -82,7 +83,7 @@ private:
 
     //used to display the previous trail in free look mode
     Trail m_previousTrail;
-    cro::Entity m_previousEnt;
+    std::vector<cro::Entity> m_previousTrails;
 
     glm::vec4 m_baseColour;
 

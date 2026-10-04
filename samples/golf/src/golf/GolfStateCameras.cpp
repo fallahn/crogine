@@ -836,7 +836,14 @@ void GolfState::toggleFreeCam(bool skipAnim)
     m_photoMode = !m_photoMode;
     if (m_photoMode)
     {
-        m_ballTrails[m_serverGroup]->showPrevious(m_showTrailHistory);
+        if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID)
+        {
+            m_ballTrails[m_serverGroup]->showPrevious(m_showTrailHistory, m_currentPlayer.player);
+        }
+        else
+        {
+            m_ballTrails[m_serverGroup]->showPrevious(m_showTrailHistory, ConstVal::NullValue);
+        }
 
         m_defaultCam = m_gameScene.setActiveCamera(m_freeCam);
         m_defaultCam.getComponent<cro::Camera>().active = false;
@@ -893,7 +900,7 @@ void GolfState::toggleFreeCam(bool skipAnim)
     }
     else
     {
-        m_ballTrails[m_serverGroup]->showPrevious(false);
+        m_ballTrails[m_serverGroup]->showPrevious(false, ConstVal::NullValue);
 
         m_freeCam.getComponent<FpsCamera>().transition.completionCallback =
             [&]()

@@ -792,7 +792,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
             if (m_photoMode)
             {
                 m_showTrailHistory = !m_showTrailHistory;
-                m_ballTrails[m_serverGroup]->showPrevious(m_showTrailHistory);
+                m_ballTrails[m_serverGroup]->showPrevious(m_showTrailHistory, 
+                    m_currentPlayer.client == m_sharedData.localConnectionData.connectionID ? m_currentPlayer.player : ConstVal::NullValue);
             }
         };
 
@@ -1829,8 +1830,6 @@ void GolfState::handleMessage(const cro::Message& msg)
             //reset the stroke timer for timeline - set this to a couple of seconds to allow for wind-up
             m_strokeTimer = 3.f;
 
-            //TODO this needs to reset the trail of
-            //the group to which this event belongs...
             m_ballTrails[m_serverGroup]->resetPrevious();
         }
         else if (data.userType == SpriteAnimID::Swoosh)
@@ -4970,7 +4969,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     while (m_ballTrails.size() <= info.groupID)
     {
         auto& trail = m_ballTrails.emplace_back(std::make_unique<BallTrail>());
-        trail->create(m_gameScene, m_resources, m_materialIDs[MaterialID::BallTrail]);
+        trail->create(m_gameScene, m_resources, m_materialIDs[MaterialID::BallTrail], m_sharedData.localConnectionData.playerCount); //TODO this can be zero for groups which aren't ours
         trail->setUseBeaconColour(m_sharedData.trailBeaconColour);
     }
 
@@ -7698,6 +7697,12 @@ std::uint32_t GolfState::holeNumberFromIndex() const
 
 void GolfState::requestNextPlayer(const ActivePlayer& player)
 {
+    //updates the trail with whoever just took a turn
+    if (m_sharedData.localConnectionData.connectionID == m_currentPlayer.client)
+    {
+        m_ballTrails[m_serverGroup]->updatePrevious(m_currentPlayer.player);
+    }
+
     if (m_sharedData.gameMode != GameMode::Tutorial)
     {
         m_currentPlayer = player;
@@ -7848,6 +7853,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     {
         trail->setNext();
     }
+
 
     //close any remaining icons
     cro::Command cmd;

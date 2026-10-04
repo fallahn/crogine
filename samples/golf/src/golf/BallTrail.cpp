@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2025
+Matt Marchant 2023 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -86,7 +86,7 @@ BallTrail::BallTrail()
 }
 
 //public
-void BallTrail::create(cro::Scene& scene, cro::ResourceCollection& resources, std::int32_t materialID, bool courseSize)
+void BallTrail::create(cro::Scene& scene, cro::ResourceCollection& resources, std::int32_t materialID, std::uint8_t playerCount, bool courseSize)
 {
     auto material = resources.materials.get(materialID);
     material.enableDepthTest = false;
@@ -142,9 +142,11 @@ void BallTrail::create(cro::Scene& scene, cro::ResourceCollection& resources, st
         m_trails[i].meshData = &createEntity().getComponent<cro::Model>().getMeshData();
     }
 
-    m_previousEnt = createEntity();
-    m_previousTrail.meshData = &m_previousEnt.getComponent<cro::Model>().getMeshData();
-    m_previousEnt.getComponent<cro::Model>().setHidden(true);
+
+    for (auto i = 0u; i < playerCount; ++i)
+    {
+        m_previousTrails.emplace_back(createEntity()).getComponent<cro::Model>().setHidden(true);
+    }
 }
 
 void BallTrail::setNext()
@@ -160,7 +162,9 @@ void BallTrail::resetPrevious()
 {
     m_previousTrail.vertexData.clear();
     m_previousTrail.indices.clear();
-    m_previousEnt.getComponent<cro::Model>().setHidden(true);
+
+    //don't hide the old one yet, we might be viewing it during someone else's turn
+    //m_previousEnt.getComponent<cro::Model>().setHidden(true);
 }
 
 void BallTrail::addPoint(glm::vec3 position, std::uint32_t /*callerIndex*/)
@@ -184,20 +188,43 @@ void BallTrail::addPoint(glm::vec3 position, std::uint32_t /*callerIndex*/)
     //m_insertTime = m_insertTimer.restart();
 }
 
-void BallTrail::showPrevious(bool show)
+void BallTrail::showPrevious(bool show, std::uint8_t playerID)
 {
-    m_previousEnt.getComponent<cro::Model>().setHidden(!show);
-
-    if (show)
+    if (playerID == ConstVal::NullValue)
     {
-        //update the buffers
-        m_previousTrail.meshData->vertexCount = m_previousTrail.indices.size();
-        cro::DynamicMeshBuilder::setVertexData(*m_previousTrail.meshData, cro::DataArray(m_previousTrail.vertexData.data(), m_previousTrail.vertexData.size()));
-
-        auto* submesh = &m_previousTrail.meshData->indexData[0];
-        submesh->indexCount = static_cast<std::uint32_t>(m_previousTrail.indices.size());
-        cro::DynamicMeshBuilder::setIndexData(*m_previousTrail.meshData, { cro::DataArray(m_previousTrail.indices.data(), submesh->indexCount) });
+        //we're spectating a network client so show/hide everyone local
+        for (auto e : m_previousTrails)
+        {
+            e.getComponent<cro::Model>().setHidden(!show);
+        }
     }
+
+    else
+    {
+        for (auto e : m_previousTrails)
+        {
+            e.getComponent<cro::Model>().setHidden(true);
+        }
+        m_previousTrails[playerID].getComponent<cro::Model>().setHidden(!show);
+    }
+}
+
+void BallTrail::updatePrevious(std::uint8_t playerID)
+{
+    for (auto e : m_previousTrails)
+    {
+        e.getComponent<cro::Model>().setHidden(true);
+    }
+
+    auto* meshData = &m_previousTrails[playerID].getComponent<cro::Model>().getMeshData();
+
+    //update the buffers
+    meshData->vertexCount = m_previousTrail.indices.size();
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(m_previousTrail.vertexData.data(), m_previousTrail.vertexData.size()));
+
+    auto* submesh = &meshData->indexData[0];
+    submesh->indexCount = static_cast<std::uint32_t>(m_previousTrail.indices.size());
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { cro::DataArray(m_previousTrail.indices.data(), submesh->indexCount) });
 }
 
 void BallTrail::update()
