@@ -144,4 +144,7 @@ static constexpr inline std::uint32_t EmParty          = 0x1F389;
 static constexpr inline std::uint32_t EmConfetti       = 0x1F38A;
 static constexpr inline std::uint32_t EmBullsEye       = 0x1F3AF;
 
+static constexpr inline std::uint32_t EmCheck          = 0x2714; //requires term
+static constexpr inline std::uint32_t EmCross          = 0x274C;
+
 static constexpr inline std::uint32_t EmojiTerminate   = 0xFE0F;

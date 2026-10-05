@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -142,6 +142,11 @@ void LobbyState::netEvent(const net::NetEvent& evt)
                 {
                     m_sharedData.bigBalls = value;
                 }
+                //this is up to the client...
+                /*else if (rule == RuleMod::NoAssist)
+                {
+                    m_sharedData.noAssist = value;
+                }*/
 
                 m_sharedData.host.broadcastPacket(PacketID::RuleMod, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }

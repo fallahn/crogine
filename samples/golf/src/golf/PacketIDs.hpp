@@ -152,7 +152,11 @@ struct RuleMod final
     enum
     {
         Snek,
-        BigBalls
+        BigBalls,
+        NoAssist,
+
+
+        Count
     };
 };
 

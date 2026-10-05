@@ -29,7 +29,6 @@ source distribution.
 
 #include "MenuState.hpp"
 #include "MenuSoundDirector.hpp"
-#include "PacketIDs.hpp"
 #include "Utility.hpp"
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
@@ -3935,32 +3934,44 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             const auto ruleType = (data & 0xff00) >> 8;
             const auto value = (data & 0x00ff);
 
-            if (ruleType == RuleMod::Snek)
+            m_lobbyMenu.m_ruleMods[ruleType] = value;
+            m_lobbyDirty = true;
+
+            switch (ruleType)
             {
+            default: break;
+            case RuleMod::Snek:
                 if (value)
                 {
                     m_textChat.printToScreen("Host has enabled Snek", CD32::Colours[CD32::BlueLight]);
-                    playMessageSound();
                 }
                 else
                 {
                     m_textChat.printToScreen("Host has disabled Snek", CD32::Colours[CD32::BlueLight]);
-                    playMessageSound();
                 }
-            }
-            else if (ruleType == RuleMod::BigBalls)
-            {
+                break;
+            case RuleMod::BigBalls:
                 if (value)
                 {
                     m_textChat.printToScreen("Host has enabled Big Balls", CD32::Colours[CD32::BlueLight]);
-                    playMessageSound();
                 }
                 else
                 {
                     m_textChat.printToScreen("Host has disabled Big Balls", CD32::Colours[CD32::BlueLight]);
-                    playMessageSound();
                 }
+                break;
+            case RuleMod::NoAssist:
+                if (value)
+                {
+                    m_textChat.printToScreen("Host has disabled Assists", CD32::Colours[CD32::BlueLight]);
+                }
+                else
+                {
+                    m_textChat.printToScreen("Host has allowed Assists", CD32::Colours[CD32::BlueLight]);
+                }
+                break;
             }
+            playMessageSound();
 
             WebSock::broadcastPacket(evt.packet.getDataRaw());
         }

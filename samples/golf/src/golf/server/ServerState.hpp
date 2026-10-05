@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -110,10 +110,11 @@ namespace sv
         std::int32_t groupMode = 0;
         std::array<std::uint8_t, ConstVal::MaxClients> clubLevels = {};
 
-        std::atomic_int32_t leagueID = 0;
         std::atomic_uint64_t hostID = 0;
+        std::atomic_int32_t leagueID = 0;
 
         std::int32_t bigBalls = 0;
+        //std::int32_t noAssist = 0;
 
         std::mutex mutex;
         std::string customTournament;

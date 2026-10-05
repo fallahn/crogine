@@ -1036,6 +1036,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
             {
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             }
+            
             m_introTicker.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
             applyDetails(TabID::Players);
         };
@@ -1110,6 +1111,11 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
             for (auto e : m_courseDetailEntities)
             {
                 e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            }
+
+            if (m_sharedData.scoreType != ScoreType::Stroke)
+            {
+                m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             }
 
             for (auto e : m_playerDetailIcons)
@@ -1687,7 +1693,7 @@ void MenuState::LobbyMenu::createRulesTab()
         item->activated = [this](Menu::Item& i)
             {
                 m_sharedData.fastCPU = i.selectedIndex == 1;
-                m_sharedData.clientConnection.netClient.sendPacket<std::uint8_t>(PacketID::FastCPU, m_sharedData.fastCPU ? 0 : 1,
+                m_sharedData.clientConnection.netClient.sendPacket<std::uint8_t>(PacketID::FastCPU, std::uint8_t(i.selectedIndex),
                                                                                     net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             };
         item->labels = { "No", "Yes" };
@@ -1738,12 +1744,12 @@ void MenuState::LobbyMenu::createRulesTab()
             {
                 if (m_sharedData.clientConnection.connected)
                 {
-                    //const std::uint16_t d = (std::uint8_t(RuleMod::BigBalls) << 8) | std::uint8_t(i.selectedIndex);
-                    //m_sharedData.clientConnection.netClient.sendPacket(PacketID::RuleMod, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    const std::uint16_t d = (std::uint8_t(RuleMod::NoAssist) << 8) | std::uint8_t(i.selectedIndex);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RuleMod, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
             };
-        item->labels = { "No", "Yes" };
-        item->selectedIndex = 1;
+        item->labels = { "Yes", "No" };
+        item->selectedIndex = 0;
     }
 }
 
@@ -2410,12 +2416,94 @@ void MenuState::LobbyMenu::updateRulesTab(bool resized)
         }
     }
 
-    //TODO list the different rule types / description
-    //TODO list the current gimme selection
+    const auto texSize = glm::vec2(m_detailTextures[TabID::Rules].getSize());
 
-    //TODO list other items players won't see when not hosting
+    m_detailTextures[TabID::Rules].clear(CD32::Colours[CD32::GreyDark]);
+    //list the different rule types / description
+    m_uiText.setPosition({ texSize.x / 2.f, texSize.y - 12.f });
+    m_uiText.setString(ScoreTypes[m_sharedData.scoreType]);
+    m_uiText.draw();
 
-    m_detailTextures[TabID::Rules].clear(cro::Colour::Cyan);
+    m_infoText.setString(RuleDescriptions[m_sharedData.scoreType]);
+    auto tWidth = m_infoText.getLocalBounds().width;
+    m_infoText.setPosition({ std::round((texSize.x - tWidth) / 2.f), texSize.y - 24.f});
+    m_infoText.draw();
+
+    //list the current gimme selection
+    m_uiText.setPosition({ texSize.x / 2.f, texSize.y - 112.f });
+    m_uiText.setString("Gimme Type");
+    m_uiText.draw();
+
+    m_infoText.setPosition({ texSize.x / 2.f, texSize.y - 124.f });
+    m_infoText.setString(GimmeString[m_sharedData.gimmeRadius]);
+    m_infoText.setAlignment(cro::SimpleText::Alignment::Centre);
+    m_infoText.draw();
+
+
+    //list other items players won't see when not hosting
+    cro::String str = m_sharedData.fastCPU ? EmCheck : EmCross;
+    str += " Skip CPU\n";
+    str += m_ruleMods[RuleMod::Snek] ? EmCheck : EmCross;
+    str += " Snek\n";
+    str += m_ruleMods[RuleMod::BigBalls] ? EmCheck : EmCross;
+    str += " Big Balls\n";
+    str += m_ruleMods[RuleMod::NoAssist] ? EmCross : EmCheck;
+    str += " Allow Assists";
+
+    m_infoText.setString(str);
+    tWidth = m_infoText.getLocalBounds().width;
+    m_infoText.setPosition({ std::round((texSize.x - tWidth) / 2.f), texSize.y - 164.f });
+    m_infoText.setAlignment(cro::SimpleText::Alignment::Left);
+    m_infoText.draw();
+
+    //show a message if the player count doesn't match
+    //the selected game mode
+    m_uiText.setPosition({ texSize.x / 2.f, 16.f });
+    m_uiText.setFillColour(CD32::Colours[CD32::Red]);
+    if (m_menuState.m_connectedPlayerCount < ScoreType::MinPlayerCount[m_sharedData.scoreType]
+        || m_menuState.m_connectedPlayerCount > ScoreType::MaxPlayerCount[m_sharedData.scoreType])
+    {
+        if (m_menuState.m_connectedPlayerCount < ScoreType::MinPlayerCount[m_sharedData.scoreType])
+        {
+            m_uiText.setString(MinPlayerWarning);
+        }
+        else
+        {
+            m_uiText.setString(MaxPlayerWarning);
+        }
+        m_uiText.draw();
+    }
+    else if (m_sharedData.teamMode && !ScoreType::CanTeamPlay[m_sharedData.scoreType])
+    {
+        m_uiText.setString(NoTeamplayWarning);
+        m_uiText.draw();
+    }
+    m_uiText.setFillColour(TextNormalColour);
+
+
+    //bottom border
+    const float Width = texSize.x;
+    const float Bottom = 12.f;
+    m_detailArray.setVertexData({
+        cro::Vertex2D(glm::vec2(0.f, Bottom), CD32::Colours[CD32::Olive]),
+        cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::Olive]),
+        cro::Vertex2D(glm::vec2(Width, Bottom), CD32::Colours[CD32::Olive]),
+        cro::Vertex2D(glm::vec2(Width, Bottom), CD32::Colours[CD32::Olive]),
+        cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::Olive]),
+        cro::Vertex2D(glm::vec2(Width, 0.f), CD32::Colours[CD32::Olive]),
+
+        cro::Vertex2D(glm::vec2(0.f, Bottom - 1.f), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(Width, Bottom - 1.f), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(Width, Bottom - 1.f), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(Width, 0.f), CD32::Colours[CD32::Brown]),
+
+        });
+    m_detailArray.setPosition({ 0.f, 0.f });
+    m_detailArray.draw();
+
+
     m_detailTextures[TabID::Rules].display();
 
 
@@ -2604,6 +2692,31 @@ void MenuState::LobbyMenu::updateScoresTab(bool resized)
         }*/
         h++;
     }
+
+
+
+    //bottom border - TODO this needs to make sure a full server doesn't get clipped by this
+    const float Width = TextureWidth;
+    const float Bottom = 10.f;
+    m_detailArray.setVertexData({
+        cro::Vertex2D(glm::vec2(0.f, Bottom), CD32::Colours[CD32::Olive]),
+        cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::Olive]),
+        cro::Vertex2D(glm::vec2(Width, Bottom), CD32::Colours[CD32::Olive]),
+        cro::Vertex2D(glm::vec2(Width, Bottom), CD32::Colours[CD32::Olive]),
+        cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::Olive]),
+        cro::Vertex2D(glm::vec2(Width, 0.f), CD32::Colours[CD32::Olive]),
+
+        cro::Vertex2D(glm::vec2(0.f, Bottom - 1.f), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(Width, Bottom - 1.f), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(Width, Bottom - 1.f), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::Brown]),
+        cro::Vertex2D(glm::vec2(Width, 0.f), CD32::Colours[CD32::Brown]),
+
+        });
+    m_detailArray.setPosition({ 0.f, 0.f });
+    m_detailArray.draw();
+
     m_detailTextures[TabID::Scores].display();
 
 

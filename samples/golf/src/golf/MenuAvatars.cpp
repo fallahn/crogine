@@ -29,7 +29,6 @@ source distribution.
 
 #include "MenuState.hpp"
 #include "CommandIDs.hpp"
-#include "PacketIDs.hpp"
 #include "MenuConsts.hpp"
 #include "CallbackData.hpp"
 #include "Clubs.hpp"

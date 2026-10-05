@@ -43,6 +43,7 @@ source distribution.
 #include "VoiceChat.hpp"
 #include "HoleData.hpp"
 #include "GroupID.hpp"
+#include "PacketIDs.hpp"
 #include "ui/MenuLayout.hpp"
 
 #include <MatchMaking.hpp>
@@ -503,7 +504,10 @@ private:
             m_progressUniform       (-1),
             m_progressColourUniform (-1),
             m_buttonHoldTimer       (0.f),
-            m_buttonFlags           (0) { }
+            m_buttonFlags           (0)
+        {
+            std::fill(m_ruleMods.begin(), m_ruleMods.end(), 0);
+        }
 
         void handleEvent(const cro::Event&);
         void simulate(float);
@@ -601,6 +605,8 @@ private:
         void getMonthlyProgress(cro::String& dst);
 #endif
         void updateCourseTab(bool resized = false);
+
+        std::array<std::int32_t, RuleMod::Count> m_ruleMods = {};
         void updateRulesTab(bool resized = false);
 
         std::vector<cro::Entity> m_networkIcons; //contains the connection info icons

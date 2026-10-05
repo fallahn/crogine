@@ -30,7 +30,6 @@ source distribution.
 #include "MenuState.hpp"
 #include "MenuCallbacks.hpp"
 #include "SharedStateData.hpp"
-#include "PacketIDs.hpp"
 #include "MessageIDs.hpp"
 #include "MenuConsts.hpp"
 #include "GameConsts.hpp"
