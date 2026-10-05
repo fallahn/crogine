@@ -514,6 +514,8 @@ private:
         void kickPlayer();
         void unready();
 
+        void onShown();
+
         struct CourseDetails final
         {
             cro::String title;
@@ -580,6 +582,8 @@ private:
 
         //redraws the detail pane for corresponding tab
         std::vector<cro::Entity> m_playerDetailIcons; //children of player detail entity
+        cro::Entity m_introTicker;
+        void updateIntroTicker();
         void updatePlayersTab(bool resized = false);
 
         struct CourseDetail final

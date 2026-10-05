@@ -1790,8 +1790,7 @@ void MenuState::handleMessage(const cro::Message& msg)
 #else
             if (data.data == MenuID::LobbyV2)
             {
-                m_lobbyMenu.refreshTabs(); //rebuilds the menu based on hosting state etc
-                m_lobbyMenu.clientStatusChanged(); //refreshes the detail panes
+                m_lobbyMenu.onShown();
 #endif
                 //item list is populated when this state is
                 //loaded so we can cache the unlock state

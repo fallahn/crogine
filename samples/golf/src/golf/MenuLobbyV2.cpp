@@ -627,6 +627,12 @@ void MenuState::LobbyMenu::unready()
     }
 }
 
+void MenuState::LobbyMenu::onShown()
+{
+    refreshTabs(); //rebuilds the menu based on hosting state etc
+    clientStatusChanged(); //refreshes the detail panes
+}
+
 void MenuState::LobbyMenu::resetRepeatTimer(std::int32_t i, cro::Time resetTime)
 {
     m_inputRepeatClocks[i].restart();
@@ -1030,6 +1036,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
             {
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             }
+            m_introTicker.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
             applyDetails(TabID::Players);
         };
 
@@ -1042,6 +1049,53 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     entity.getComponent<cro::UIElement>().depth = 0.1f;
     m_detailEntities[TabID::Players] = entity;
     m_uiLayout.detailsPane.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    
+    
+    const auto createTicker = [this](cro::Entity e)
+        {
+            e.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Label)).setCharacterSize(LabelTextSize);
+            e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            e.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+            e.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+            e.addComponent<cro::Callback>().active = true;
+            e.getComponent<cro::Callback>().setUserData<TickerData>();
+            e.getComponent<cro::Callback>().function =
+                [this](cro::Entity e, float dt)
+                {
+                    if (e.getComponent<cro::Drawable2D>().getFacing() == cro::Drawable2D::Facing::Front)
+                    {
+                        static constexpr float LineHeight = 13.f;
+
+                        const auto scrollBounds = cro::Text::getLocalBounds(e);
+                        auto& [bgWidth, Offset, BasePosY, xPos] = e.getComponent<cro::Callback>().getUserData<TickerData>();
+                        xPos -= 20.f * m_menuState.m_scrollSpeed * dt;
+
+                        auto pos = e.getComponent<cro::Transform>().getPosition();
+                        pos.x = /*std::round*/(xPos);
+                        pos.y = BasePosY + std::floor(scrollBounds.height - LineHeight + scrollBounds.bottom);
+                        pos.z = 0.3f;
+
+
+                        if (xPos < -scrollBounds.width + Offset)
+                        {
+                            xPos = bgWidth;
+                        }
+
+                        e.getComponent<cro::Transform>().setPosition(pos);
+
+                        const cro::FloatRect cropping = { -pos.x + Offset, -26.f + (BasePosY - pos.y), (bgWidth - (Offset * 2.f)), 18.f };
+                        e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
+                    }
+                };
+
+        };
+
+    m_introTicker = m_menuState.m_uiScene.createEntity();
+    m_introTicker.addComponent<cro::Transform>();
+    m_introTicker.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    m_detailEntities[TabID::Players].getComponent<cro::Transform>().addChild(m_introTicker.getComponent<cro::Transform>());
+    createTicker(m_introTicker);
+    updateIntroTicker();
     updatePlayersTab();
 
 
@@ -1062,6 +1116,8 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
             {
                 e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
+            
+            m_introTicker.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             applyDetails(TabID::Course);
         };
 
@@ -1088,42 +1144,8 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
 
 
     //top five scores scroller (or personal best in non-Steam build)
-    auto e = m_courseDetailEntities[CourseDetail::Ticker];
-    e.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Label)).setCharacterSize(LabelTextSize);
-    e.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    e.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-    e.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-    e.addComponent<cro::Callback>().active = true;
-    e.getComponent<cro::Callback>().setUserData<TickerData>();
-    e.getComponent<cro::Callback>().function =
-        [this](cro::Entity e, float dt)
-        {
-            if (e.getComponent<cro::Drawable2D>().getFacing() == cro::Drawable2D::Facing::Front)
-            {
-                static constexpr float LineHeight = 13.f;
-
-                const auto scrollBounds = cro::Text::getLocalBounds(e);
-                auto& [bgWidth, Offset, BasePosY, xPos] = e.getComponent<cro::Callback>().getUserData<TickerData>();
-                xPos -= 20.f * m_menuState.m_scrollSpeed * dt;
-
-                auto pos = e.getComponent<cro::Transform>().getPosition();                
-                pos.x = /*std::round*/(xPos);
-                pos.y = BasePosY + std::floor(scrollBounds.height - LineHeight + scrollBounds.bottom);
-                pos.z = 0.3f;
-
-
-                if (xPos < -scrollBounds.width + Offset)
-                {
-                    xPos = bgWidth;
-                }
-
-                e.getComponent<cro::Transform>().setPosition(pos);
-
-                const cro::FloatRect cropping = { -pos.x + Offset, -26.f + (BasePosY - pos.y), (bgWidth - (Offset * 2.f)), 18.f };
-                e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
-            }
-        };
-
+    createTicker(m_courseDetailEntities[CourseDetail::Ticker]);
+    
     updateCourseTab();
 
 
@@ -1146,6 +1168,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
             {
                 e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
+            m_introTicker.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             applyDetails(TabID::Rules);
         };
 
@@ -1177,6 +1200,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
             {
                 e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
+            m_introTicker.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             applyDetails(TabID::Scores);
         };
 
@@ -1790,6 +1814,159 @@ void MenuState::LobbyMenu::createScoresTab()
     }
 }
 
+void MenuState::LobbyMenu::updateIntroTicker()
+{
+    struct ScoreInfo final
+    {
+        std::uint8_t clientID = 0;
+        std::uint8_t playerID = 0;
+        std::uint8_t lives = 0;
+        std::int8_t score = 0;
+    };
+
+    std::vector<ScoreInfo> scoreInfo;
+    const auto& courseData = m_menuState.m_sharedCourseData.courseData[m_sharedData.courseIndex];
+    cro::String str = "Welcome to Super Video Golf!";
+
+    //calculate the string for the intro ticker
+    if (m_sharedData.gameMode == GameMode::FreePlay //at this point (when the menu is built) this will be set if we're returning from a tutorial or quit menu
+        && m_sharedData.scoreType != ScoreType::NearestThePin) //don't bother scrolling these - we can still read them from the score card if we want to
+    {
+        for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
+        {
+            for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
+            {
+                if (!m_sharedData.connectionData[i].playerData[j].name.empty())
+                {
+                    auto& info = scoreInfo.emplace_back();
+                    info.clientID = i;
+                    info.playerID = j;
+                    switch (m_sharedData.scoreType)
+                    {
+                    default:
+                    case ScoreType::Elimination:
+                        info.lives = m_sharedData.connectionData[i].playerData[j].skinScore;
+                        [[fallthrough]];
+                    case ScoreType::Stroke:
+                    case ScoreType::ShortRound:
+                    case ScoreType::MultiTarget:
+                        info.score = m_sharedData.connectionData[i].playerData[j].parScore;
+                        break;
+                    case ScoreType::Match:
+                    case ScoreType::NearestThePinPro:
+                        info.score = m_sharedData.connectionData[i].playerData[j].matchScore;
+                        break;
+                    case ScoreType::Skins:
+                        info.score = m_sharedData.connectionData[i].playerData[j].skinScore;
+                        break;
+                    case ScoreType::Stableford:
+                    case ScoreType::StablefordPro:
+                        for (auto k = 0u; k < m_sharedData.connectionData[i].playerData[j].holeScores.size(); ++k)
+                        {
+                            auto diff = static_cast<std::int32_t>(m_sharedData.connectionData[i].playerData[j].holeScores[k]) - courseData.parVals[k];
+                            auto stableScore = 2 - diff;
+
+                            if (m_sharedData.scoreType == ScoreType::Stableford)
+                            {
+                                stableScore = std::max(0, stableScore);
+                            }
+                            else if (stableScore < 2)
+                            {
+                                stableScore -= 2;
+                            }
+                            info.score += stableScore;
+                        }
+                        break;
+                    case ScoreType::NearestThePin:
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        std::sort(scoreInfo.begin(), scoreInfo.end(),
+            [&](const ScoreInfo& a, const ScoreInfo& b)
+            {
+                switch (m_sharedData.scoreType)
+                {
+                default:
+                case ScoreType::Elimination:
+                    if (a.lives == b.lives)
+                    {
+                        return a.score < b.score;
+                    }
+                    return a.lives > b.lives;
+                    //[[fallthrough]];
+                case ScoreType::Stroke:
+                case ScoreType::ShortRound:
+                case ScoreType::MultiTarget:
+                    return a.score < b.score;
+                case ScoreType::Stableford:
+                case ScoreType::StablefordPro:
+                case ScoreType::NearestThePinPro:
+                case ScoreType::Skins:
+                case ScoreType::Match:
+                    return a.score > b.score;
+                }
+            });
+
+
+        std::vector<cro::String> names;
+        for (const auto& score : scoreInfo)
+        {
+            names.push_back(m_sharedData.connectionData[score.clientID].playerData[score.playerID].name);
+            names.back() += ": (" + std::to_string(score.score) + ")";
+            switch (m_sharedData.scoreType)
+            {
+            default:
+            case ScoreType::Elimination:
+            case ScoreType::MultiTarget:
+            case ScoreType::ShortRound:
+            case ScoreType::Stroke:
+                if (score.score < 0)
+                {
+                    names.back() += " Under Par";
+                }
+                else if (score.score > 0)
+                {
+                    names.back() += " Over Par";
+                }
+                break;
+            case ScoreType::Stableford:
+            case ScoreType::StablefordPro:
+            case ScoreType::NearestThePinPro:
+                names.back() += " Points";
+                break;
+            case ScoreType::Skins:
+                names.back() += " Skins";
+                break;
+            case ScoreType::Match:
+                names.back() += " Match Points";
+                break;
+            }
+        }
+
+        if (!names.empty())
+        {
+            str = "Last Round's Top Scorers: < " + names[0];
+            for (auto i = 1u; i < names.size() && i < 4u; ++i)
+            {
+                str += " >< " + names[i];
+            }
+            str += " >";
+        }
+//#ifdef USE_GNS
+//        else if (!m_sharedData.hosting)
+//        {
+//            str = "Can't ready up? Try opening then closing the Steam Overlay.";
+//        }
+//#endif
+    }
+
+    m_introTicker.getComponent<cro::Text>().setString(str);
+}
+
 void MenuState::LobbyMenu::updatePlayersTab(bool resized)
 {
     if (!m_detailTextures[TabID::Players].available()
@@ -1895,6 +2072,27 @@ void MenuState::LobbyMenu::updatePlayersTab(bool resized)
         });
     m_detailArray.draw();
 
+
+    //background for ticker text - nice idea, but it doesn't fit :(
+    /*const auto tickerBounds = m_detailSprites[DetailSprite::TickerLeft].getTextureBounds();
+    m_detailQuad.setOrigin({ 0.f, 0.f });
+    m_detailQuad.setScale(glm::vec2(1.f));
+    m_detailQuad = m_detailSprites[DetailSprite::TickerLeft];
+    m_detailQuad.setPosition({ 0.f, Bottom - tickerBounds.height });
+    m_detailQuad.draw();
+
+    const float centreWidth = Width - (tickerBounds.width * 2.f);
+    m_detailQuad = m_detailSprites[DetailSprite::TickerCentre];
+    m_detailQuad.move({ tickerBounds.width, 0.f });
+    m_detailQuad.setScale({ centreWidth, 1.f });
+    m_detailQuad.draw();
+
+    m_detailQuad = m_detailSprites[DetailSprite::TickerRight];
+    m_detailQuad.move({ centreWidth, 0.f });
+    m_detailQuad.setScale(glm::vec2(1.f));
+    m_detailQuad.draw();*/
+
+
     m_detailTextures[TabID::Players].display();
 
 
@@ -1955,6 +2153,18 @@ void MenuState::LobbyMenu::updatePlayersTab(bool resized)
     m_playerDetailIcons.push_back(entity);
     m_detailEntities[TabID::Players].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
+    //update the ticker output
+    TickerData td =
+    {
+        //this is the cropping width
+        .width = Width,
+        //offset from the edge
+        .offset = 8.f,
+        .basePos = Bottom + 10.f,
+        .currentPos = Width
+    };
+    m_introTicker.getComponent<cro::Callback>().setUserData<TickerData>(td);
 
     if (m_uiLayout.tabBar.activeIndex == TabID::Players)
     {
@@ -2129,6 +2339,7 @@ void MenuState::LobbyMenu::updateCourseTab(bool resized)
     {
         //render ticker for leaderboards / personal best
         const auto posX = m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().getPosition().x;
+        //TODO we need to set posX to texture width if we changed the selected course or hole count...
         m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().setPosition({ posX, vertsHeight + 33.f, 0.2f });
         TickerData td =
         {
