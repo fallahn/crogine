@@ -316,7 +316,7 @@ private:
 
     void addSystems();
     void loadAssets();
-    void createScene();
+    cro::Entity createScene(); //returns the root node for the UI scene
     struct PropFileData final
     {
         std::string propFilePath;
@@ -417,7 +417,7 @@ private:
         cro::Entity lobby;
     }m_clubsetButtons;
 
-    void createUI();
+    cro::Entity createUI(); //return the root node to which the UI is attached
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createAvatarMenu(cro::Entity);
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
@@ -474,7 +474,7 @@ private:
     void updateCourseRuleString(bool updateScoreboard);
     void updateUnlockedItems();
 
-    void createPreviousScoreCard();
+    void createPreviousScoreCard(cro::Entity parent);
     void togglePreviousScoreCard();
 
     void launchQuickPlay();

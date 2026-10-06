@@ -1851,11 +1851,6 @@ void MenuState::LobbyMenu::createScoresTab()
     {
         item = &m_uiLayout.menuLayout.items[TabID::Scores].emplace_back();
         item->title = "View Last Round's Scores";
-        item->selected =
-        [this](const Menu::Item&)
-        {
-
-        };
         item->activated = [this](Menu::Item& i)
             {
                 m_menuState.togglePreviousScoreCard();

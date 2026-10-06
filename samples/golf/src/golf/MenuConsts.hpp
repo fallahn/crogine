@@ -192,6 +192,15 @@ struct UIElement final
 };
 static constexpr glm::vec2 UIHiddenPosition(-10000.f, -10000.f);
 
+//end of round scorecard in lobby
+struct ScorecardCallbackData final
+{
+    std::int32_t direction = 0;
+    float targetPos = 0.f;
+    std::size_t targetMenuID = 0;
+};
+static constexpr float ScoresOffscreenPos = -360.f;
+
 //spacing of each menu relative to root node
 //see GolfMenuState::m_menuPositions/MenuCreation.cpp
 static constexpr glm::vec2 MenuSpacing(1920.f, 1080.f);

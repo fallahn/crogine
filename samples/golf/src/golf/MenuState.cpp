@@ -251,7 +251,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //launches a loading screen (registered in MyApp.cpp)
     CRO_ASSERT(!isCached(), "Don't use loading screen on cached states!");
     sd.clientConnection.launchThread(); //pumps any message queue while we wait for loading to complete
-    context.mainWindow.loadResources([&]() {
+    context.mainWindow.loadResources([this, &context, &sd]() {
 #ifdef USE_GNS
         sd.clientConnection.netClient.warningCallback = [&](const std::string& msg) {m_textChat.printToScreen(msg, CD32::Colours[CD32::Red]); };
         Social::findLeaderboards(Social::BoardType::Courses);
@@ -274,7 +274,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         updateUnlockedItems(); //do this before attempting to load the assets...
         addSystems();
         loadAssets();
-        createScene();
+        auto rootNode = createScene();
         setVoiceCallbacks();
 
         cacheState(StateID::Unlock);
@@ -439,7 +439,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             }
 
             updateLobbyAvatars();
-            createPreviousScoreCard();
+            createPreviousScoreCard(rootNode);
 
             //switch to lobby view - send as a command
             //to ensure it's delayed by a frame
@@ -1181,7 +1181,11 @@ bool MenuState::handleEvent(const cro::Event& evt)
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
             break;
+#ifdef NEW_LOBBY
+        case MenuID::LobbyV2:
+#else
         case MenuID::Lobby:
+#endif
             if (m_textChat.isVisible())
             {
                 break;
@@ -1190,6 +1194,11 @@ bool MenuState::handleEvent(const cro::Event& evt)
             //however m_currentMenu is still set to Lobby as this is
             //used by the window resize callback (which I can't find
             //any more...) so we have to test for the actual active menu
+
+
+            //LATER NOTE - since the new lobby menu none of the above comment
+            //is true any more and the only case handled below is that of
+            //the scorecard when viewing post-game scores.
             switch (m_uiScene.getSystem<cro::UISystem>()->getActiveGroup())
             {
             default:
@@ -1974,6 +1983,23 @@ void MenuState::handleMessage(const cro::Message& msg)
         if (data.event == SDL_EVENT_WINDOW_RESIZED)
         {
             m_lobbyMenu.resized(data.data0, data.data1);
+
+            const glm::vec2 windowSize = glm::vec2(data.data0, data.data1) / cro::UIElementSystem::getViewScale(); 
+            
+            auto e = m_lobbyWindowEntities[LobbyEntityID::Scorecard];
+            auto& [dir, targetPos, _2] = e.getComponent<cro::Callback>().getUserData<ScorecardCallbackData>();
+            targetPos = windowSize.y / 2.f;
+
+            if (dir == 0)
+            {
+                //currently hidden
+                e.getComponent<cro::Transform>().setPosition({ windowSize.x / 2.f, ScoresOffscreenPos });
+            }
+            else
+            {
+                //on screen
+                e.getComponent<cro::Transform>().setPosition(windowSize / 2.f);
+            }
         }
     }
 
@@ -2447,7 +2473,7 @@ void MenuState::loadAssets()
     m_audioEnts[AudioID::Title].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("title");
 }
 
-void MenuState::createScene()
+cro::Entity MenuState::createScene()
 {
     //registerWindow([&]()
     //    {
@@ -3182,7 +3208,7 @@ void MenuState::createScene()
     //set up cam / models for ball preview
     createBallScene();    
 
-    createUI();
+    return createUI();
 
 #ifndef USE_GNS
     //creates an ent which triggers pre-loading of score values
