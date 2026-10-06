@@ -111,6 +111,8 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
         "assets/golf/sound/ball/pole.wav",
         "assets/golf/sound/ball/power.wav",
         "assets/golf/sound/party.wav",
+        "assets/golf/sound/ball/inflate.wav",
+        "assets/golf/sound/ball/deflate.wav",
 
         "assets/golf/sound/holes/albatross.wav",
         "assets/golf/sound/holes/birdie.wav",

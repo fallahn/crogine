@@ -920,24 +920,28 @@ bool GolfState::handleEvent(const cro::Event& evt)
         {
             toggleTrailHistory();
 
-            /*cro::Entity entity = m_gameScene.createEntity();
+            /*auto ballEnt = m_avatars[m_currentPlayer.client][m_currentPlayer.player].ballModel;
+            m_gameScene.getDirector<GolfSoundDirector>()->playSound(GolfSoundDirector::AudioID::Inflate, ballEnt.getComponent<cro::Transform>().getWorldPosition(), 1.2f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+
+            cro::Entity entity = m_gameScene.createEntity();
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().setUserData<float>(0.f);
             entity.getComponent<cro::Callback>().function =
-                [this](cro::Entity e, float dt)
+                [this, ballEnt](cro::Entity e, float dt) mutable
                 {
                     auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
-                    progress = std::min(1.f, progress + (dt * 2.f));
-                    const float scale = cro::Util::Easing::easeOutCirc(progress) * 15.f;
+                    progress = std::min(1.f, progress + (dt / 1.5f));
 
-                    auto ballEnt = m_avatars[m_currentPlayer.client][m_currentPlayer.player].ballModel;
-                    ballEnt.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+                    const float scale = cro::Util::Easing::easeOutQuint(std::min(1.f, progress));
 
-                    if (progress == 1)
+                    ballEnt.getComponent<cro::Transform>().setScale(glm::vec3(scale, std::min(scale, 0.95f), scale) * 15.f);
+
+                    if (progress == 1.f)
                     {
                         m_gameScene.getDirector<GolfParticleDirector>()->fireParticles(GolfParticleDirector::ParticleID::Confetti, 
                                                                                     ballEnt.getComponent<cro::Transform>().getWorldPosition() - glm::vec3(0.f, 0.4f, 0.f));
                         ballEnt.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+                        m_gameScene.getDirector<GolfSoundDirector>()->playSound(GolfSoundDirector::AudioID::Deflate, ballEnt.getComponent<cro::Transform>().getWorldPosition(), 1.2f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);;
 
                         e.getComponent<cro::Callback>().active = false;
                         m_gameScene.destroyEntity(e);

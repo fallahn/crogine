@@ -92,6 +92,8 @@ public:
             Pole,
             PowerBall,
             Party,
+            Inflate,
+            Deflate,
 
             ScoreAlbatross,
             ScoreBirdie,
