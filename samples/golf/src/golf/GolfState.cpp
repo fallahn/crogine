@@ -920,26 +920,29 @@ bool GolfState::handleEvent(const cro::Event& evt)
         {
             toggleTrailHistory();
 
-            /*if (evt.key.mod & SDL_KMOD_SHIFT)
-            {
-                cro::Command cmd;
-                cmd.targetFlags = CommandID::Seagull;
-                cmd.action = [](cro::Entity e, float)
+            /*cro::Entity entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+            entity.getComponent<cro::Callback>().function =
+                [this](cro::Entity e, float dt)
+                {
+                    auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
+                    progress = std::min(1.f, progress + (dt * 2.f));
+                    const float scale = cro::Util::Easing::easeOutCirc(progress) * 15.f;
+
+                    auto ballEnt = m_avatars[m_currentPlayer.client][m_currentPlayer.player].ballModel;
+                    ballEnt.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+
+                    if (progress == 1)
                     {
-                        e.getComponent<cro::Callback>().setUserData<std::int32_t>(1);
-                    };
-                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-            }
-            else
-            {
-            }*/
-            //spawnSeagulls(m_holeData[m_currentHole].pin);
-            //spawnGardener(m_holeData[m_currentHole].target);
-            /*auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
-            msg->type = CollisionEvent::Trigger;
-            msg->position = {236.f,1.5f,-102.f};
-            msg->terrain = TriggerID::Greenhouse;*/
-            //m_debugCurve.clear();
+                        m_gameScene.getDirector<GolfParticleDirector>()->fireParticles(GolfParticleDirector::ParticleID::Confetti, 
+                                                                                    ballEnt.getComponent<cro::Transform>().getWorldPosition() - glm::vec3(0.f, 0.4f, 0.f));
+                        ballEnt.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+
+                        e.getComponent<cro::Callback>().active = false;
+                        m_gameScene.destroyEntity(e);
+                    }
+                };*/
         }
             break;
 #ifdef CRO_DEBUG_

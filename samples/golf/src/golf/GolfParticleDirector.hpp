@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -45,17 +45,6 @@ struct SharedStateData;
 class GolfParticleDirector final : public ParticleDirector
 {
 public:
-    GolfParticleDirector(cro::TextureResource&, const SharedStateData&, bool partyMode = false);
-
-    void handleMessage(const cro::Message&) override;
-
-    //hack to prevent stall the first time particles are spawned
-    void init() { resizeEmitters(); }
-private:
-
-    const SharedStateData& m_sharedData;
-    const bool m_partyMode;
-
     struct ParticleID final
     {
         enum
@@ -68,6 +57,20 @@ private:
             Count
         };
     };
+    
+    GolfParticleDirector(cro::TextureResource&, const SharedStateData&, bool partyMode = false);
+
+    void handleMessage(const cro::Message&) override;
+
+    //hack to prevent stall the first time particles are spawned
+    void init() { resizeEmitters(); }
+
+    cro::Entity fireParticles(std::int32_t id, glm::vec3 pos);
+
+private:
+
+    const SharedStateData& m_sharedData;
+    const bool m_partyMode;
 
     std::array<cro::EmitterSettings, ParticleID::Count> m_emitterSettings = {};
 

@@ -72,9 +72,9 @@ GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr, const Share
     m_emitterSettings[ParticleID::Firework].loadFromFile("assets/golf/particles/firework.cps", tr);
     m_emitterSettings[ParticleID::Firework].blendmode = cro::EmitterSettings::BlendMode::Add;
 
+    m_emitterSettings[ParticleID::Confetti].loadFromFile("assets/golf/particles/confetti.cps", tr);
     if (pm)
     {
-        m_emitterSettings[ParticleID::Confetti].loadFromFile("assets/golf/particles/confetti.cps", tr);
         m_emitterSettings[ParticleID::Balloons].loadFromFile("assets/golf/particles/balloons.cps", tr);
     }
 
@@ -99,16 +99,6 @@ GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr, const Share
 //public
 void GolfParticleDirector::handleMessage(const cro::Message& msg)
 {
-    const auto getEnt = [&](std::int32_t id, glm::vec3 position)
-    {
-        auto entity = getNextEntity();
-        entity.getComponent<cro::Transform>().setPosition(position);
-        entity.getComponent<cro::ParticleEmitter>().settings = m_emitterSettings[id];
-        entity.getComponent<cro::ParticleEmitter>().parentVelocity = glm::vec3(0.f);
-        entity.getComponent<cro::ParticleEmitter>().start();
-        return entity;
-    };
-
     switch (msg.id)
     {
     default: break;
@@ -120,12 +110,12 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
             //bubbles
             auto pos = data.position;
             pos.y += 0.45f;
-            getEnt(ParticleID::Water, pos);
+            fireParticles(ParticleID::Water, pos);
         }
         /*else if (data.userType == SpriteAnimID::Swing)
         {
-            getEnt(ParticleID::Confetti, data.position);
-            getEnt(ParticleID::Balloons, data.position);
+            fireParticles(ParticleID::Confetti, data.position);
+            fireParticles(ParticleID::Balloons, data.position);
         }*/
     }
         break;
@@ -138,23 +128,23 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
             {
             default: break;
             case TerrainID::Rough:
-                getEnt(ParticleID::GrassDark, data.position);
+                fireParticles(ParticleID::GrassDark, data.position);
                 break;
             case TerrainID::Fairway:
-                getEnt(ParticleID::Grass, data.position);
+                fireParticles(ParticleID::Grass, data.position);
                 break;
             case TerrainID::Bunker:
-                getEnt(ParticleID::Sand, data.position);
+                fireParticles(ParticleID::Sand, data.position);
                 break;
             case TerrainID::Water:
-                getEnt(ParticleID::Water, data.position);
+                fireParticles(ParticleID::Water, data.position);
                 break;
             }
             if (m_partyMode
                 && data.club != ClubID::Putter)
             {
-                getEnt(ParticleID::Confetti, data.position);
-                getEnt(ParticleID::Balloons, data.position);
+                fireParticles(ParticleID::Confetti, data.position);
+                fireParticles(ParticleID::Balloons, data.position);
             }
         }
         else if (data.type == GolfEvent::SetNewPlayer)
@@ -163,34 +153,34 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
             {
                 auto pos = data.position;
                 pos.y += (Ball::Radius * 2.f);
-                getEnt(ParticleID::Puff, pos);
+                fireParticles(ParticleID::Puff, pos);
             }
         }
         else if (data.type == GolfEvent::HoleInOne)
         {
-            getEnt(ParticleID::HIO, data.position);
+            fireParticles(ParticleID::HIO, data.position);
 
             launchFireworks();
         }
         else if (data.type == GolfEvent::DroneHit)
         {
-            getEnt(ParticleID::Drone, data.position);
-            getEnt(ParticleID::Explode, data.position);
-            getEnt(ParticleID::Blades, data.position);
+            fireParticles(ParticleID::Drone, data.position);
+            fireParticles(ParticleID::Explode, data.position);
+            fireParticles(ParticleID::Blades, data.position);
         }
         else if (data.type == GolfEvent::BirdHit)
         {
             const auto id = data.terrain == TerrainID::Scrub ? ParticleID::Bird : ParticleID::Puff;
-            getEnt(id, data.position).getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, data.travelDistance + (cro::Util::Const::PI / 2.f));
+            fireParticles(id, data.position).getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, data.travelDistance + (cro::Util::Const::PI / 2.f));
         }
         else if (data.type == GolfEvent::TargetHit)
         {
-            getEnt(ParticleID::Star, data.position);
+            fireParticles(ParticleID::Star, data.position);
         }
         else if (data.type == GolfEvent::PowerShot
             || data.type == GolfEvent::PlayerRemoved)
         {
-            getEnt(ParticleID::PowerShot, data.position);
+            fireParticles(ParticleID::PowerShot, data.position);
         }
     }
         break;
@@ -206,21 +196,21 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
                 if (m_sharedData.showBallTrail
                     && cro::Util::Random::value(0,3) == 0)
                 {
-                    getEnt(ParticleID::Trail, data.position);
+                    fireParticles(ParticleID::Trail, data.position);
                 }
                 break;
             case TerrainID::Rough:
-                getEnt(ParticleID::GrassDark, data.position);
+                fireParticles(ParticleID::GrassDark, data.position);
                 break;
             case TerrainID::Bunker:
-                getEnt(ParticleID::Sand, data.position);
+                fireParticles(ParticleID::Sand, data.position);
                 break;
             case TerrainID::Water:
-                getEnt(ParticleID::Water, data.position);
+                fireParticles(ParticleID::Water, data.position);
                 spawnRings(data.position);
                 break;
             case CollisionEvent::Billboard:
-                getEnt(ParticleID::Explode, data.position);
+                fireParticles(ParticleID::Explode, data.position);
                 break;
             case CollisionEvent::Timeout:
             case CollisionEvent::Firework:
@@ -234,6 +224,17 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
 
     //    break;
     }
+}
+
+cro::Entity GolfParticleDirector::fireParticles(std::int32_t id, glm::vec3 position)
+{
+    assert(id < ParticleID::Count);
+    auto entity = getNextEntity();
+    entity.getComponent<cro::Transform>().setPosition(position);
+    entity.getComponent<cro::ParticleEmitter>().settings = m_emitterSettings[id];
+    entity.getComponent<cro::ParticleEmitter>().parentVelocity = glm::vec3(0.f);
+    entity.getComponent<cro::ParticleEmitter>().start();
+    return entity;
 }
 
 //private

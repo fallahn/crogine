@@ -1147,6 +1147,13 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
             
             m_introTicker.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             applyDetails(TabID::Course);
+
+            //resets the scroll position to the beginning
+            const float newPos = static_cast<float>(m_detailTextures[TabID::Course].getSize().x);
+            auto pos = m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().getPosition();
+            pos.x = newPos;
+            m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().setPosition(pos);
+            m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Callback>().getUserData<TickerData>().currentPos = newPos;
         };
 
 
@@ -1536,11 +1543,23 @@ void MenuState::LobbyMenu::createCourseTab()
 
     if (m_sharedData.hosting)
     {
+        const auto resetScroll =
+            [this]() 
+            {
+                const float newPos = static_cast<float>(m_detailTextures[TabID::Course].getSize().x);
+                auto pos = m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().getPosition();
+                pos.x = newPos;
+                m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().setPosition(pos);
+                m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Callback>().getUserData<TickerData>().currentPos = newPos;
+            };
+
         //course selection
         item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
         item->title = "Select Course";
-        item->activated = [this](Menu::Item& i)
+        item->activated = 
+            [this, resetScroll](Menu::Item& i)
             {
+                resetScroll();
                 if (i.activationDirection == Menu::Item::Left)
                 {
                     m_menuState.prevCourse();
@@ -1557,8 +1576,10 @@ void MenuState::LobbyMenu::createCourseTab()
         //hole count
         item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
         item->title = "Hole Count";
-        item->activated = [this](Menu::Item& i)
+        item->activated = 
+            [this, resetScroll](Menu::Item& i)
             {
+                resetScroll();
                 if (i.activationDirection == Menu::Item::Left)
                 {
                     m_menuState.prevHoleCount();
@@ -1567,6 +1588,7 @@ void MenuState::LobbyMenu::createCourseTab()
                 {
                     m_menuState.nextHoleCount();
                 }
+
             };
         item->labels = { "All", "Front", " Back" };
         item->selectedIndex = m_sharedData.holeCount;
@@ -2384,7 +2406,6 @@ void MenuState::LobbyMenu::updateCourseTab(bool resized)
     {
         //render ticker for leaderboards / personal best
         const auto posX = m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().getPosition().x;
-        //TODO we need to set posX to texture width if we changed the selected course or hole count...
         m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().setPosition({ posX, vertsHeight + 33.f, 0.2f });
         TickerData td =
         {
