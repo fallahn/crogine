@@ -655,6 +655,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     m_detailSprites[DetailSprite::TickerLeft] = spriteSheet.getSprite("ticker_left");
     m_detailSprites[DetailSprite::TickerCentre] = spriteSheet.getSprite("ticker_middle");
     m_detailSprites[DetailSprite::TickerRight] = spriteSheet.getSprite("ticker_right");
+    m_detailSprites[DetailSprite::GameRules] = spriteSheet.getSprite("game_rules");
 
 
 
@@ -2419,22 +2420,29 @@ void MenuState::LobbyMenu::updateRulesTab(bool resized)
     const auto texSize = glm::vec2(m_detailTextures[TabID::Rules].getSize());
 
     m_detailTextures[TabID::Rules].clear(CD32::Colours[CD32::GreyDark]);
+    
+    m_detailQuad = m_detailSprites[DetailSprite::GameRules];
+    const auto bounds = m_detailSprites[DetailSprite::GameRules].getTextureBounds();
+    m_detailQuad.setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
+    m_detailQuad.setPosition({ texSize.x / 2.f, texSize.y - (bounds.height - 101.f) });;
+    m_detailQuad.draw();
+    
     //list the different rule types / description
-    m_uiText.setPosition({ texSize.x / 2.f, texSize.y - 12.f });
+    m_uiText.setPosition({ texSize.x / 2.f, texSize.y - 16.f });
     m_uiText.setString(ScoreTypes[m_sharedData.scoreType]);
     m_uiText.draw();
 
     m_infoText.setString(RuleDescriptions[m_sharedData.scoreType]);
     auto tWidth = m_infoText.getLocalBounds().width;
-    m_infoText.setPosition({ std::round((texSize.x - tWidth) / 2.f), texSize.y - 24.f});
+    m_infoText.setPosition({ std::round((texSize.x - tWidth) / 2.f), texSize.y - 39.f});
     m_infoText.draw();
 
     //list the current gimme selection
-    m_uiText.setPosition({ texSize.x / 2.f, texSize.y - 112.f });
+    m_uiText.setPosition({ texSize.x / 2.f, texSize.y - 120.f });
     m_uiText.setString("Gimme Type");
     m_uiText.draw();
 
-    m_infoText.setPosition({ texSize.x / 2.f, texSize.y - 124.f });
+    m_infoText.setPosition({ texSize.x / 2.f, texSize.y - 138.f });
     m_infoText.setString(GimmeString[m_sharedData.gimmeRadius]);
     m_infoText.setAlignment(cro::SimpleText::Alignment::Centre);
     m_infoText.draw();
@@ -2452,13 +2460,13 @@ void MenuState::LobbyMenu::updateRulesTab(bool resized)
 
     m_infoText.setString(str);
     tWidth = m_infoText.getLocalBounds().width;
-    m_infoText.setPosition({ std::round((texSize.x - tWidth) / 2.f), texSize.y - 164.f });
+    m_infoText.setPosition({ std::round((texSize.x - tWidth) / 2.f), texSize.y - 165.f });
     m_infoText.setAlignment(cro::SimpleText::Alignment::Left);
     m_infoText.draw();
 
     //show a message if the player count doesn't match
     //the selected game mode
-    m_uiText.setPosition({ texSize.x / 2.f, 16.f });
+    m_uiText.setPosition({ texSize.x / 2.f, 15.f });
     m_uiText.setFillColour(CD32::Colours[CD32::Red]);
     if (m_menuState.m_connectedPlayerCount < ScoreType::MinPlayerCount[m_sharedData.scoreType]
         || m_menuState.m_connectedPlayerCount > ScoreType::MaxPlayerCount[m_sharedData.scoreType])

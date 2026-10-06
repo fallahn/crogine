@@ -657,7 +657,7 @@ void TextChat::printToScreen(cro::String outStr, cro::Colour chatColour, std::ui
     
     auto bounds = cro::Text::getLocalBounds(entity);
     bounds.width = std::round(bounds.width + (5.f * viewScale));
-    bounds.height = std::round(bounds.height + (4.f * viewScale));
+    bounds.height = std::floor(bounds.height + (4.f * viewScale));
 
     static constexpr float BgAlpha = 0.45f;
     const cro::Colour c(0.f, 0.f, 0.f, BgAlpha);
