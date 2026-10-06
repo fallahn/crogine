@@ -4483,6 +4483,12 @@ void MenuState::refreshTeams()
 
 void MenuState::quitLobby()
 {
+#ifdef NEW_LOBBY
+#ifndef USE_GNS
+    m_lobbyMenu.m_ipText.getComponent<cro::Text>().setString(" ");
+#endif
+#endif
+
     m_sharedData.clientConnection.connected = false;
     m_sharedData.clientConnection.connectionID = ConstVal::NullValue;
     m_sharedData.clientConnection.ready = false;

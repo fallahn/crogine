@@ -629,6 +629,27 @@ void MenuState::LobbyMenu::unready()
 
 void MenuState::LobbyMenu::onShown()
 {
+#ifdef USE_GNS
+    if (!m_sharedData.hosting)
+    {
+        auto str = m_introTicker.getComponent<cro::Text>().getString();
+        str += " - Can't ready up? Try opening then closing the Steam Overlay.";
+        m_introTicker.getComponent<cro::Text>().setString(str);
+    }
+#else
+    cro::String str;
+    if (m_sharedData.hosting)
+    {
+        str = "Hosting on: " + m_sharedData.clientConnection.netClient.getPeer().getAddress() + ":"
+        + std::to_string(ConstVal::GamePort);
+    }
+    else
+    {
+        str = "Connected to: " + m_sharedData.targetIP + ":" + std::to_string(ConstVal::GamePort);
+    }
+    m_ipText.getComponent<cro::Text>().setString(str);
+#endif
+
     refreshTabs(); //rebuilds the menu based on hosting state etc
     clientStatusChanged(); //refreshes the detail panes
 }
@@ -1306,6 +1327,29 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
         };
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
+#ifndef USE_GNS
+    //hosting IP
+    entity = m_menuState.m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    entity.addComponent<UIElement>().relativePosition = { 1.f, 0.f };
+    entity.getComponent<UIElement>().absolutePosition = { -2.f, 10.f };
+    entity.getComponent<UIElement>().depth = 0.05f;
+    entity.getComponent<UIElement>().resizeCallback =
+        [&](cro::Entity e)
+        {
+            const auto viewScale = cro::UIElementSystem::getViewScale();
+            glm::vec2 p(e.getComponent<cro::Transform>().getPosition());
+            e.getComponent<cro::Transform>().setPosition(p * viewScale);
+            e.getComponent<cro::Transform>().setScale(glm::vec2(viewScale));
+        };
+    m_ipText = entity;
+#endif
 
 
     //m_menuState.registerWindow([this]()
@@ -2183,7 +2227,6 @@ void MenuState::LobbyMenu::updatePlayersTab(bool resized)
 #ifdef USE_GNS
 void MenuState::LobbyMenu::getMonthlyProgress(cro::String& dst)
 {
-
     const auto count = Social::getMonthlyCompletionCount(m_sharedData.mapDirectory, m_sharedData.holeCount);
     if (count != 0)
     {
@@ -2563,6 +2606,8 @@ void MenuState::LobbyMenu::updateScoresTab(bool resized)
     m_uiText.setAlignment(cro::SimpleText::Alignment::Centre);
     m_uiText.setPosition({TextureWidth / 2.f, TextureHeight + 14.f});
     m_uiText.draw();
+
+    m_detailQuad.setOrigin({ 0.f, 0.f });
 
     for (const auto& c : m_sharedData.connectionData)
     {

@@ -531,6 +531,7 @@ private:
         MenuState& m_menuState;
         SharedStateData& m_sharedData;
         UILayout m_uiLayout;
+        cro::Entity m_ipText;
 
         std::array<cro::Clock, 4u> m_inputRepeatClocks = {};
         std::array<cro::Time, 4u> m_repeatTimes = {};
