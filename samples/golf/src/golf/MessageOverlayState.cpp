@@ -38,6 +38,7 @@ source distribution.
 #include "TextAnimCallback.hpp"
 #include "Career.hpp"
 #include "Tournament.hpp"
+#include "MessageIDs.hpp"
 #include "../GolfGame.hpp"
 
 #include <Achievements.hpp>
@@ -639,7 +640,6 @@ void MessageOverlayState::buildScene()
 
         m_sharedData.errorMessage.clear();
     }
-
     else if (m_sharedData.errorMessage == "reset_profile")
     {
         entity.getComponent<cro::Text>().setString("Are You REALLY Sure?");
@@ -833,6 +833,58 @@ void MessageOverlayState::buildScene()
                 m_sharedData.errorMessage = "delete_profile"; //used when returning to menu to decide on appropriate action
                 quitState();
             };
+    }
+    else if (m_sharedData.errorMessage == "start_game")
+    {
+        entity.getComponent<cro::Text>().setString("Start Game");
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        entity.getComponent<cro::Transform>().move({ 0.f, -8.f });
+        centreText(entity);
+
+        auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString("Are you ready to tee off?");
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        //this always needs clearing, regardless of outcome
+        m_sharedData.errorMessage = "";
+
+        entity = createItem(glm::vec2(28.f, -24.f), "Yes", menuEntity);
+        entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+                {
+                    if (activated(evt))
+                    {
+                        auto msg = postMessage<DialogueResultEvent>(cl::MessageID::DialogueResult);
+                        msg->id = DialogueResultEvent::StartGame;
+                        msg->result = DialogueResultEvent::Yes;
+
+                        quitState();
+                    }
+                });
+
+        entity = createItem(glm::vec2(-28.f, -24.f), "No", menuEntity);
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+                {
+                    if (activated(evt))
+                    {
+                        quitState();
+                    }
+                });
     }
     else //a generic message
     {

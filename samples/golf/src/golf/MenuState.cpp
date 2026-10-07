@@ -2004,6 +2004,17 @@ void MenuState::handleMessage(const cro::Message& msg)
     }
 
 #ifdef NEW_LOBBY
+    else if (msg.id == MessageID::DialogueResult)
+    {
+        const auto& data = msg.getData<DialogueResultEvent>();
+        if (data.id == DialogueResultEvent::StartGame
+            && data.result == DialogueResultEvent::Yes)
+        {
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf),
+                                                                net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
+    }
+
     if (m_currentMenu == MenuID::LobbyV2)
 #else
     if (m_currentMenu == MenuID::Lobby)

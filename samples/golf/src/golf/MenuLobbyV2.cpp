@@ -539,10 +539,9 @@ void MenuState::LobbyMenu::readyStart()
             || m_menuState.m_connectedPlayerCount > ScoreType::MaxPlayerCount[m_sharedData.scoreType]
             || (m_menuState.m_sharedData.teamMode && !ScoreType::CanTeamPlay[m_sharedData.scoreType]))
         {
-            LogI << FILE_LINE << " Implement correct drawing!" << std::endl;
-            m_menuState.m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Callback>().active = true;
-            //m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().play();
-            //m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(0.f));
+            //m_menuState.m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Callback>().active = true;
+            m_menuState.m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().play();
+            m_menuState.m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(0.f));
         }
         else
         {
@@ -565,8 +564,10 @@ void MenuState::LobbyMenu::readyStart()
             if (ready && m_sharedData.clientConnection.connected
                 && m_sharedData.serverInstance.running()) //not running if we're not hosting :)
             {
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                //m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                m_sharedData.errorMessage = "start_game";
+                m_menuState.requestStackPush(StateID::MessageOverlay);
+                //moved to message handler for DialogueResultEvent
+                //m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
         }
     }
@@ -581,21 +582,10 @@ void MenuState::LobbyMenu::readyStart()
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::LobbyReady,
                 std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | ready),
                 net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
-            /*if (ready)
-            {
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-            }
-            else
-            {
-                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
-            }*/
         }
         else
         {
             LogI << "Shared Data Map Directory Is Empty" << std::endl;
-
-            //m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().play();
         }
     }
 }
@@ -1380,11 +1370,6 @@ void MenuState::LobbyMenu::createPlayerTab()
     item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
     item->title = m_sharedData.hosting ?  u8"↓ Start Game" : u8"↓ Ready Up";
     item->description = m_sharedData.hosting ? "Press and Hold to Start" : "Press and Hold to Ready Up";
-    item->selected =
-        [this](const Menu::Item&)
-        {
-
-        };
     item->activated = [this](Menu::Item& i)
         {
             //press / hold to start or ready up

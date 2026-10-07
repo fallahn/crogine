@@ -52,6 +52,7 @@ namespace cl::MessageID
         EnviroMessage,
         WebSocketMessage,
         MenuSoundMessage,
+        DialogueResult,
 
         Count
     };
@@ -252,4 +253,17 @@ struct MenuSoundEvent final
         Snapshot, Crumple,
     };
     std::uint8_t type = 0;
+};
+
+struct DialogueResultEvent final
+{
+    enum
+    {
+        StartGame
+    }id = StartGame;
+
+    enum
+    {
+        Yes, No
+    }result = No;
 };
