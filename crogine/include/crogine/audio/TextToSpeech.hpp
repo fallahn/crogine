@@ -56,7 +56,24 @@ namespace cro
         const TTSSpeaker& operator = (const TTSSpeaker&) = delete;
         TTSSpeaker& operator = (TTSSpeaker&&) = delete;
 
-        //setVoice(std::int32_t idx);
+        /*!
+        \brief Set the index of the voice to use
+        \param idx Voice index which must be less than getMaxVoices()
+        */
+        void setVoice(std::size_t idx);
+
+        /*!
+        \brief Returns the currently selected voice index
+        */
+        std::size_t getVoiceIndex() const { return m_voiceIndex; }
+
+        /*!
+        \brief Returns the max number of voices supported by the current platform.
+        On linux this is always 3 which is the default number of
+        voices supported by flite. On windows this depends on the installed
+        SAPI voice number.
+        */
+        std::size_t getMaxVoices() const { return m_maxVoices; }
 
         /*!
         \brief Speak the given string
@@ -67,12 +84,14 @@ namespace cro
         bool speak(const cro::String& str, float vol = 1.f) const;
 
     private:
-        std::int32_t m_voiceIndex;
+        std::size_t m_voiceIndex;
+        std::size_t m_maxVoices;
 
 #ifdef _WIN32
         ISpVoice* m_voice = nullptr;
         bool m_initOK = false;
 
+        void enumerateVoices();
 
 #elif defined(__linux__)
         std::atomic_bool m_threadRunning;

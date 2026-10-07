@@ -32,10 +32,35 @@ source distribution.
 
 using namespace cro;
 
-//speaker class for linux
 #ifdef _WIN32
+//#include <atlbase.h>
+//#include <sphelper.h>
+//inline HRESULT SpGetCategoryFromId(
+//    const WCHAR* pszCategoryId,
+//    ISpObjectTokenCategory** ppCategory,
+//    BOOL fCreateIfNotExist = FALSE)
+//{
+//    HRESULT hr;
+//
+//    CComPtr<ISpObjectTokenCategory> cpTokenCategory;
+//    hr = cpTokenCategory.CoCreateInstance(CLSID_SpObjectTokenCategory);
+//
+//    if (SUCCEEDED(hr))
+//    {
+//        hr = cpTokenCategory->SetId(pszCategoryId, fCreateIfNotExist);
+//    }
+//
+//    if (SUCCEEDED(hr))
+//    {
+//        *ppCategory = cpTokenCategory.Detach();
+//    }
+//
+//    return hr;
+//}
+
 TTSSpeaker::TTSSpeaker()
     : m_voiceIndex  (0),
+    m_maxVoices     (1),
     m_initOK        (false),
     m_voice         (nullptr)
 {
@@ -47,6 +72,10 @@ TTSSpeaker::TTSSpeaker()
         if (FAILED(CoCreateInstance(CLSID_SpVoice, NULL, CLSCTX_ALL, IID_ISpVoice, (void**)&m_voice)))
         {
             m_voice = nullptr;
+        }
+        else
+        {
+            enumerateVoices();
         }
     }
 }
@@ -67,6 +96,14 @@ TTSSpeaker::~TTSSpeaker()
 }
 
 //public
+void TTSSpeaker::setVoice(std::size_t)
+{
+    if (m_voice)
+    {
+        //m_voice->SetVoice();
+    }
+}
+
 bool TTSSpeaker::speak(const cro::String& str, float vol) const
 {
     if (m_voice != nullptr)
@@ -79,9 +116,32 @@ bool TTSSpeaker::speak(const cro::String& str, float vol) const
     return false;
 }
 
+//private
+void TTSSpeaker::enumerateVoices()
+{
+    //HRESULT hr = S_OK;
+    //CComPtr<ISpObjectTokenCategory> cpSpCategory = NULL;
+    //if (SUCCEEDED(hr = SpGetCategoryFromId(SPCAT_VOICES, &cpSpCategory)))
+    //{
+    //    CComPtr<IEnumSpObjectTokens> cpSpEnumTokens;
+    //    if (SUCCEEDED(hr = cpSpCategory->EnumTokens(NULL, NULL, &cpSpEnumTokens)))
+    //    {
+    //        CComPtr<ISpObjectToken> pSpTok;
+    //        while (SUCCEEDED(hr = cpSpEnumTokens->Next(1, &pSpTok, NULL)))
+    //        {
+    //            // do something with the token here; for example, set the voice
+    //            //m_voice->SetVoice(pSpTok.GetInterfacePtr());
+    //            // NOTE:  IEnumSpObjectTokens::Next will *overwrite* the pointer; must manually release
+    //            pSpTok.Release();
+    //        }
+    //    }
+    //}
+}
+
 #elif defined __linux__
 TTSSpeaker::TTSSpeaker()
     : m_voiceIndex  (0),
+    m_maxVoices     (3),
     m_threadRunning (true),
     m_busy          (false),
     m_thread        (&TTSSpeaker::threadFunc, this)
@@ -108,6 +168,11 @@ TTSSpeaker::~TTSSpeaker()
 }
 
 //public
+void TTSSpeak::setVoice(std::size_t idx) 
+{
+    m_voiceIndex = idx % m_maxVoices;
+}
+
 bool TTSSpeaker::speak(const cro::String& line, float vol) const
 {
     //flite doesn't have a vol control :/
@@ -115,7 +180,7 @@ bool TTSSpeaker::speak(const cro::String& line, float vol) const
         && vol > 0.2f)
     {
         std::scoped_lock l(m_mutex);
-        m_queue.push(std::make_pair(line, m_voiceIndex));
+        m_queue.push(std::make_pair(line, static_cast<std::int32_t>(m_voiceIndex)));
         return true;
     }
     return false;
@@ -194,4 +259,9 @@ void TTSSpeaker::threadFunc()
         }
     }
 }
+
+#else
+//stubs for macOS
+bool TTSSpeaker::speak(const cro::String&, float) const { return false; }
+void TTSSpeak::setVoice(std::int32_t) {}
 #endif
