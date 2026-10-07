@@ -869,6 +869,7 @@ void UILayout::activateTab(std::int32_t idx)
         detailsPane.tabDetails[tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     }
 
+    const auto lastIndex = tabBar.activeIndex;
     tabBar.activeIndex = idx;
     menuLayout.itemIndex = 0;
 
@@ -882,14 +883,18 @@ void UILayout::activateTab(std::int32_t idx)
         }
     }
 
-    if (detailsPane.tabDetails[tabBar.activeIndex].isValid())
+    //only do this if the index changed.
+    if (lastIndex != idx)
     {
-        detailsPane.tabDetails[tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-    }
+        if (detailsPane.tabDetails[tabBar.activeIndex].isValid())
+        {
+            detailsPane.tabDetails[tabBar.activeIndex].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        }
 
-    if (tabBar.items[tabBar.activeIndex].selected)
-    {
-        tabBar.items[tabBar.activeIndex].selected();
+        if (tabBar.items[tabBar.activeIndex].selected)
+        {
+            tabBar.items[tabBar.activeIndex].selected();
+        }
     }
 
     updateTabBar();

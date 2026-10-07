@@ -560,7 +560,7 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
         //MaxClients means this is a Server message
         const auto outStr = "Server: " + msgText;
 
-        playSound = !speak(msgText);
+        playSound = !m_speaker.speak(msgText, cro::AudioMixer::getVolume(MixerChannel::TextToSpeech));
         m_displayBuffer.emplace_back(outStr, ImVec4(TextHighlightColour));
 
         if (m_displayBuffer.size() > MaxLines)
@@ -608,7 +608,7 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     else
     {
         outStr += ": " + msgText;
-        playSound = !speak(msgText);
+        playSound = !m_speaker.speak(msgText, cro::AudioMixer::getVolume(MixerChannel::TextToSpeech));
 
         static std::int32_t idx = 0;
         idx = (idx + 1) % 2;
@@ -967,140 +967,3 @@ void TextChat::sendTextChat()
         endChat();
     }
 }
-
-bool TextChat::speak(const cro::String& str) const
-{
-#ifdef _WIN32
-    if (!Social::isSteamdeck(false) && //not sure why the check for steam deck is here if it's conditionally compiled out
-        m_sharedData.useTTS)
-    {
-        if (m_speaker.voice != nullptr)
-        {
-            m_speaker.voice->SetVolume(static_cast<std::uint16_t>(cro::AudioMixer::getVolume(MixerChannel::TextToSpeech) * 100.f));
-            m_speaker.voice->Speak((LPCWSTR)(str.toUtf16().c_str()), SPF_ASYNC, nullptr);
-            return true;
-        }
-    }
-#elif defined(__linux__)
-    if (m_sharedData.useTTS //hm there's currently no way to set flite volume
-        && cro::AudioMixer::getVolume(MixerChannel::TextToSpeech) > 0.2f)
-    {
-        m_speaker.say(str, TTSSpeaker::Voice::Three);
-        return true;
-    }
-#endif
-    return false;
-}
-
-//speaker class for linux
-#ifdef __linux__
-TextChat::TTSSpeaker::TTSSpeaker()
-    : m_threadRunning   (true),
-    m_busy              (false),
-    m_thread            (&TTSSpeaker::threadFunc, this)
-{
-    m_threadRunning = cro::FileSystem::fileExists("flite");
-    if (!m_threadRunning)
-    {
-        LogW << "flite not found, TTS is unavailable" << std::endl;
-        m_thread.detach();
-    }
-    //else
-    //{
-    //    LogI << "Created TTS" << std::endl;
-    //}
-}
-
-TextChat::TTSSpeaker::~TTSSpeaker()
-{
-    if (m_threadRunning)
-    {
-        m_threadRunning = false;
-        m_thread.join();
-    }
-}
-
-//public
-void TextChat::TTSSpeaker::say(const cro::String& line, Voice voice) const
-{
-    if (/*cro::FileSystem::fileExists("flite")*/m_threadRunning)
-    {
-        std::scoped_lock l(m_mutex);
-        m_queue.push(std::make_pair(line, voice));
-    }
-}
-
-//private
-void TextChat::TTSSpeaker::threadFunc()
-{
-    while (m_threadRunning)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(16));
-
-        if (!m_queue.empty())
-        {
-            if (!m_busy)
-            {
-                cro::String msg;
-                Voice type;
-                {
-                    std::scoped_lock l(m_mutex);
-                    msg = m_queue.front().first;
-                    type = m_queue.front().second;
-                    m_queue.pop();
-                }
-
-                //remove mid-line quotes as they break the string
-                msg.replace("\"", " ");
-
-                //then propertly terminate
-                msg += "\"";
-
-                {
-                    std::string say = "./flite -voice ";
-                    switch (type)
-                    {
-                    default:
-                    case Voice::One:
-                        say += "awb -t \"";
-                        break;
-                    case Voice::Two:
-                        say += "rms -t \"";
-                        break;
-                    case Voice::Three:
-                        say += "slt -t \"";
-                        break;
-                    }
-
-                    //attempt to preserve any utf encoding
-                    auto utf = msg.toUtf8();
-                    //these aren't null terminated by default
-                    utf.push_back(0);
-
-                    std::vector<char> finalMessage(say.length() + utf.size());
-                    
-                    std::copy(say.begin(), say.end(), finalMessage.data());
-                    std::copy(utf.begin(), utf.end(), finalMessage.data() + say.length());
-
-                    //TODO is there a way to set the volume?
-                    FILE* pipe = popen(finalMessage.data(), "r");
-                    if (pipe)
-                    {
-                        //LogI << "Said: " << finalMessage.data() << std::endl;
-                        while (pclose(pipe) == -1)
-                        {
-                            std::this_thread::sleep_for(std::chrono::milliseconds(30));
-                        }
-                    }
-                    else
-                    {
-                        LogE << "Could not pipe to flite" << std::endl;
-                    }
-
-                    m_busy = false;
-                }
-            }
-        }
-    }
-}
-#endif

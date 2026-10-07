@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2025
+Matt Marchant 2023 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,18 +29,9 @@ source distribution.
 
 #pragma once
 
-#ifdef _WIN32
-#define NOMINMAX
-#include <sapi.h>
-#elif defined __linux__
-#include <thread>
-#include <atomic>
-#include <mutex>
-#include <queue>
-#endif
-
 #include "SharedStateData.hpp"
 
+#include <crogine/audio/TextToSpeech.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/ConsoleClient.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -133,65 +124,5 @@ private:
 
     void sendTextChat();
 
-#ifdef _WIN32
-    struct TTSSpeaker final
-    {
-        ISpVoice* voice = nullptr;
-        bool initOK = false;
-
-        TTSSpeaker()
-        {
-            //init com interface - must only do this once!!
-            if (SUCCEEDED(CoInitialize(NULL)))
-            {
-                initOK = true;
-
-                if (FAILED(CoCreateInstance(CLSID_SpVoice, NULL, CLSCTX_ALL, IID_ISpVoice, (void**)&voice)))
-                {
-                    voice = nullptr;
-                }
-            }
-        }
-
-        ~TTSSpeaker()
-        {
-            if (voice)
-            {
-                voice->Release();
-            }
-
-            //we may still have the com interface init even
-            //if the voice fails.
-            if (initOK)
-            {
-                CoUninitialize();
-            }
-        }
-    }m_speaker;
-
-#elif defined(__linux__)
-    class TTSSpeaker final
-    {
-    public:
-        enum class Voice
-        {
-            One, Two, Three
-        };
-
-        TTSSpeaker();
-        ~TTSSpeaker();
-
-        void say(const cro::String& line, Voice voice) const;
-
-    private:
-        std::atomic_bool m_threadRunning;
-        std::atomic_bool m_busy;
-        mutable std::mutex m_mutex;
-        mutable std::queue<std::pair<cro::String, Voice>> m_queue;
-
-        std::thread m_thread;
-        void threadFunc();        
-    }m_speaker;
-#endif
-    bool speak(const cro::String&) const; //returns true if speech was initiated
+    cro::TTSSpeaker m_speaker;
 };
