@@ -156,7 +156,7 @@ struct Menu final
         cro::String subTitle; //shown below title in TextOnly items
         cro::String description; //shown when hovered
 
-        std::function<void(const Item&)> selected; //called when selected
+        std::function<void(Item&)> selected; //called when selected
         std::function<void(Item&)> activated; //called when activated
         bool activateLeft()
         {

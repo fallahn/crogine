@@ -1987,18 +1987,21 @@ void MenuState::handleMessage(const cro::Message& msg)
             const glm::vec2 windowSize = glm::vec2(data.data0, data.data1) / cro::UIElementSystem::getViewScale(); 
             
             auto e = m_lobbyWindowEntities[LobbyEntityID::Scorecard];
-            auto& [dir, targetPos, _2] = e.getComponent<cro::Callback>().getUserData<ScorecardCallbackData>();
-            targetPos = windowSize.y / 2.f;
+            if (e.isValid()) //we won't have created this unless we returned from a previous game
+            {
+                auto& [dir, targetPos, _2] = e.getComponent<cro::Callback>().getUserData<ScorecardCallbackData>();
+                targetPos = windowSize.y / 2.f;
 
-            if (dir == 0)
-            {
-                //currently hidden
-                e.getComponent<cro::Transform>().setPosition({ windowSize.x / 2.f, ScoresOffscreenPos });
-            }
-            else
-            {
-                //on screen
-                e.getComponent<cro::Transform>().setPosition(windowSize / 2.f);
+                if (dir == 0)
+                {
+                    //currently hidden
+                    e.getComponent<cro::Transform>().setPosition({ windowSize.x / 2.f, ScoresOffscreenPos });
+                }
+                else
+                {
+                    //on screen
+                    e.getComponent<cro::Transform>().setPosition(windowSize / 2.f);
+                }
             }
         }
     }

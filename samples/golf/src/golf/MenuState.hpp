@@ -609,6 +609,7 @@ private:
         void updateCourseTab(bool resized = false);
 
         std::array<std::int32_t, RuleMod::Count> m_ruleMods = {};
+        cro::String m_ruleViolation; //invalid number of players for current rule set - used to display message on Players tab
         void updateRulesTab(bool resized = false);
 
         std::vector<cro::Entity> m_networkIcons; //contains the connection info icons

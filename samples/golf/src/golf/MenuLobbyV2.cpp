@@ -567,7 +567,8 @@ void MenuState::LobbyMenu::readyStart()
                 m_sharedData.errorMessage = "start_game";
                 m_menuState.requestStackPush(StateID::MessageOverlay);
                 //moved to message handler for DialogueResultEvent
-                //m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                //m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf),
+                //                                                    net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
         }
     }
@@ -1370,6 +1371,12 @@ void MenuState::LobbyMenu::createPlayerTab()
     item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
     item->title = m_sharedData.hosting ?  u8"↓ Start Game" : u8"↓ Ready Up";
     item->description = m_sharedData.hosting ? "Press and Hold to Start" : "Press and Hold to Ready Up";
+    item->selected = [this](Menu::Item& i)
+        {
+            i.description = m_sharedData.hosting ? 
+                m_ruleViolation.empty() ? "Press and Hold to Start" : m_ruleViolation
+                : "Press and Hold to Ready Up";
+        };
     item->activated = [this](Menu::Item& i)
         {
             //press / hold to start or ready up
@@ -1423,7 +1430,7 @@ void MenuState::LobbyMenu::createPlayerTab()
         item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
         item->title = "Teams";
         item->description = "Players are paired up for the round.";
-        cro::Util::String::wordWrap(item->description, WordWrapSmall);
+        cro::Util::String::wordWrap(item->description, WordWrapSmall); //TODO pretty sure word wrapping is done when text is rendered *anyway*
         item->activated = [this](Menu::Item& i)
             {
                 m_sharedData.teamMode ? cro::Console::doCommand("sv_team_mode 0")
@@ -2510,6 +2517,7 @@ void MenuState::LobbyMenu::updateRulesTab(bool resized)
 
     //show a message if the player count doesn't match
     //the selected game mode
+    m_ruleViolation.clear();
     m_uiText.setPosition({ texSize.x / 2.f, 15.f });
     m_uiText.setFillColour(CD32::Colours[CD32::Red]);
     if (m_menuState.m_connectedPlayerCount < ScoreType::MinPlayerCount[m_sharedData.scoreType]
@@ -2518,15 +2526,18 @@ void MenuState::LobbyMenu::updateRulesTab(bool resized)
         if (m_menuState.m_connectedPlayerCount < ScoreType::MinPlayerCount[m_sharedData.scoreType])
         {
             m_uiText.setString(MinPlayerWarning);
+            m_ruleViolation = MinPlayerWarning;
         }
         else
         {
             m_uiText.setString(MaxPlayerWarning);
+            m_ruleViolation = MaxPlayerWarning;
         }
         m_uiText.draw();
     }
     else if (m_sharedData.teamMode && !ScoreType::CanTeamPlay[m_sharedData.scoreType])
     {
+        m_ruleViolation = NoTeamplayWarning;
         m_uiText.setString(NoTeamplayWarning);
         m_uiText.draw();
     }
