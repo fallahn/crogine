@@ -38,6 +38,7 @@ source distribution.
 #include <mutex>
 #include <queue>
 #endif
+#include <vector>
 
 #include <crogine/Config.hpp>
 #include <crogine/core/String.hpp>

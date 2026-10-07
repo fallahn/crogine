@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/audio/TextToSpeech.hpp>
+#include <crogine/core/Log.hpp>
 #include <crogine/core/FileSystem.hpp>
 
 using namespace cro;
@@ -168,7 +169,7 @@ TTSSpeaker::~TTSSpeaker()
 }
 
 //public
-void TTSSpeak::setVoice(std::size_t idx) 
+void TTSSpeaker::setVoice(std::size_t idx) 
 {
     m_voiceIndex = idx % m_maxVoices;
 }
@@ -263,5 +264,5 @@ void TTSSpeaker::threadFunc()
 #else
 //stubs for macOS
 bool TTSSpeaker::speak(const cro::String&, float) const { return false; }
-void TTSSpeak::setVoice(std::int32_t) {}
+void TTSSpeaker::setVoice(std::int32_t) {}
 #endif
