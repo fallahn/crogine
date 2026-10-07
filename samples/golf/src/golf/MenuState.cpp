@@ -4096,7 +4096,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::ActorSpawn:
         {
-            spawnActor(evt.packet.as<ActorInfo>());
+            //spawnActor(evt.packet.as<ActorInfo>());
         }
             break;
         case PacketID::CanUpdate:

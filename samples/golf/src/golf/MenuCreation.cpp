@@ -2055,8 +2055,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     m_sprites[SpriteID::WeatherHighlight] = spriteSheetV2.getSprite("weather_highlight");
     m_sprites[SpriteID::PlayerManage] = spriteSheetV2.getSprite("manage_highlight");
 
+
     //title
     auto entity = m_uiScene.createEntity();
+#ifndef NEW_LOBBY
     entity.addComponent<cro::Transform>();
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.9f };
     entity.getComponent<UIElement>().depth = 1.4f;
@@ -2094,7 +2096,9 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::SpriteAnimation>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::ChatHint;
     hintEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+#else
+    cro::FloatRect bounds;
+#endif // NEW_LOBBY
     //background
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -2112,7 +2116,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     auto bgEnt = entity;
     auto bgBounds = bounds;
 
-
+#ifndef NEW_LOBBY
     //shows a button hint for switching courses if hosting
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ (bgBounds.width / 2.f) - 180.f, bgBounds.height - 15.f, -0.2f });
@@ -2238,6 +2242,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::Callback>().function = TextCallback(InputBinding::NextClub, m_sharedData);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseHint;
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
 
 //#ifdef USE_GNS
@@ -2454,9 +2459,9 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         entity.getComponent<cro::Callback>().function = ruleButtonEnable;
         bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
-
+#endif //NEW_LOBBY
     navigationUpdate = nullptr; //we're using nasty static hack so make sure to reset this
-
+#ifndef NEW_LOBBY
     const auto selectNext = [&](std::int32_t idx)
     {
         auto e = m_uiScene.createEntity();
@@ -2547,9 +2552,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::Callback>().function = ruleButtonEnable;
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_lobbyButtonContext.lobbyInfoA = entity;
-
+#endif //NEW_LOBBY
 
     //display lobby members - updateLobbyAvatars() adds the text ents to this.
+    //TODO this is required by the new lobby too as it relies on the result of the update
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
@@ -2558,7 +2564,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::LobbyList;
     entity.addComponent<cro::Callback>().setUserData<std::vector<cro::Entity>>(); //abuse this component to store handles to the text children.
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+#ifndef NEW_LOBBY
     //highlight ent for shuffling teams
     auto memberEnt = entity;
     constexpr glm::vec2 Offset(-1.f, -9.f);
@@ -2768,7 +2774,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         }
     );
     teamEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+#endif //NEW_LOBBY
 
 
     //displays a message if current rule type requires more players
@@ -2784,6 +2790,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Callback>().function = HighlightAnimationCallback();
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount] = entity;
+
 
     //displays the thumbnails for the selected course
     entity = m_uiScene.createEntity();
@@ -2858,6 +2865,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 #endif
 
+#ifndef NEW_LOBBY
     //hole count
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 86.f, 45.f, 0.1f });
@@ -3097,7 +3105,6 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     thumbBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_lobbyButtonContext.lobbyInfoB = entity;
 
-
     //course title
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 134.f, 190.f, 0.1f });
@@ -3126,7 +3133,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::Text>().setString("Please Wait...");
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     thumbBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+#endif //NEW_LOBBY
 
 
     //displays the player info
@@ -3139,8 +3146,9 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto infoBgEnt = entity;
-    m_lobbyWindowEntities[LobbyEntityID::Info] = infoBgEnt;
+    m_lobbyWindowEntities[LobbyEntityID::Info] = infoBgEnt; //TODO disable references to this in new lobby
 
+#ifndef NEW_LOBBY
     const auto infoButtonEnable =
         [&](cro::Entity e, float)
     {
@@ -3263,7 +3271,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     infoBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     
     
-    
+   
     
     //button to show league
     entity = m_uiScene.createEntity();
@@ -3323,6 +3331,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     auto bannerEnt = entity;
     menuTransform.addChild(entity.getComponent<cro::Transform>());
     m_bannerEnt = entity; //stash this to attach minigame
+
 
 
     //cursor
@@ -4021,6 +4030,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         }
     };
 
+
+
     //server info message
 #ifndef USE_GNS
     entity = m_uiScene.createEntity();
@@ -4233,6 +4244,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     refreshLobbyButtons();
+#endif //NEW_LOBBY
 }
 
 void MenuState::updateLobbyData(const net::NetEvent& evt)
@@ -4514,12 +4526,13 @@ void MenuState::quitLobby()
     m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Main;
     m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
 
-
+#ifndef NEW_LOBBY
     //reset the lobby tabs
     m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().setScale({ 1.f, 1.f });
     m_lobbyWindowEntities[LobbyEntityID::Info].getComponent<cro::Transform>().setScale({ 0.f, 0.f });
     navigationUpdate(LobbyCourseA);
     m_uiScene.getSystem<cro::UISystem>()->selectByIndex(LobbyCourseA);
+#endif
 
     //clear the update buffer so no more updates are attempted
     std::queue<cro::Command> temp;
@@ -6993,6 +7006,7 @@ void MenuState::togglePreviousScoreCard()
 
 void MenuState::refreshLobbyButtons()
 {
+#ifndef NEW_LOBBY
     if (m_sharedData.hosting)
     {
         m_lobbyButtonContext.lobbyCourseB.getComponent<cro::UIInput>().setPrevIndex(LobbyTeamsDown, InfoLeaderboards);
@@ -7054,6 +7068,7 @@ void MenuState::refreshLobbyButtons()
         m_lobbyButtonContext.infoLeague.getComponent<cro::UIInput>().setNextIndex(LobbyRulesB, LobbyRulesB);
         m_lobbyButtonContext.infoLeague.getComponent<cro::UIInput>().setPrevIndex(InfoLeaderboards, LobbyQuit);
     }
+#endif
 }
 
 void MenuState::moveDisplayMemberUp()

@@ -1139,12 +1139,12 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
             m_introTicker.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             applyDetails(TabID::Course);
 
-            //resets the scroll position to the beginning
-            const float newPos = static_cast<float>(m_detailTextures[TabID::Course].getSize().x);
+            //resets the scroll position to the beginning - TODO why is this callback activated when changing Item values?
+            /*const float newPos = static_cast<float>(m_detailTextures[TabID::Course].getSize().x);
             auto pos = m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().getPosition();
             pos.x = newPos;
             m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Transform>().setPosition(pos);
-            m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Callback>().getUserData<TickerData>().currentPos = newPos;
+            m_courseDetailEntities[CourseDetail::Ticker].getComponent<cro::Callback>().getUserData<TickerData>().currentPos = newPos;*/
         };
 
 
@@ -1535,6 +1535,36 @@ void MenuState::LobbyMenu::createCourseTab()
 
     if (m_sharedData.hosting)
     {
+        const bool hasUserCourses = m_menuState.m_sharedCourseData.courseData.size() > m_menuState.m_courseIndices[Range::Official].count;
+        if (hasUserCourses)
+        {
+            //user courses
+            item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
+            item->title = "User Courses";
+            item->description = "Select from courses created in the Course Remixer.";
+            cro::Util::String::wordWrap(item->description, WordWrapSmall);
+            item->activated = [this](Menu::Item& i)
+                {
+                    //hmm the game still has a space for workshop
+                    //courses, but the count (for now) will always
+                    //be zero
+                    do
+                    {
+                        m_menuState.m_currentRange = (m_menuState.m_currentRange + (Range::Count - 1)) % Range::Count;
+                        m_sharedData.courseIndex = m_menuState.m_courseIndices[m_menuState.m_currentRange].start;
+                    } while (m_menuState.m_courseIndices[m_menuState.m_currentRange].count == 0);
+
+                    i.selectedIndex = m_menuState.m_currentRange;
+
+                    //silly hack which sends the server updaetd course info to refresh clients
+                    m_menuState.prevCourse();
+                    m_menuState.nextCourse();
+                };
+            item->labels = { "No", "Yes", /*"Workshop"*/ };
+            item->selectedIndex = m_menuState.m_currentRange;
+        }
+
+
         const auto resetScroll =
             [this]() 
             {
@@ -1598,35 +1628,6 @@ void MenuState::LobbyMenu::createCourseTab()
         item->labels = { "No", "Yes" };
         item->selectedIndex = m_sharedData.reverseCourse;
 
-
-        const bool hasUserCourses = m_menuState.m_sharedCourseData.courseData.size() > m_menuState.m_courseIndices[Range::Official].count;
-        if (hasUserCourses)
-        {
-            //user courses
-            item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
-            item->title = "User Courses";
-            item->description = "Select from courses created in the Course Remixer.";
-            cro::Util::String::wordWrap(item->description, WordWrapSmall);
-            item->activated = [this](Menu::Item& i)
-                {
-                    //hmm the game still has a space for workshop
-                    //courses, but the count (for now) will always
-                    //be zero
-                    do
-                    {
-                        m_menuState.m_currentRange = (m_menuState.m_currentRange + (Range::Count - 1)) % Range::Count;
-                        m_sharedData.courseIndex = m_menuState.m_courseIndices[m_menuState.m_currentRange].start;
-                    } while (m_menuState.m_courseIndices[m_menuState.m_currentRange].count == 0);
-
-                    i.selectedIndex = m_menuState.m_currentRange;
-
-                    //silly hack which sends the server updaetd course info to refresh clients
-                    m_menuState.prevCourse();
-                    m_menuState.nextCourse();
-                };
-            item->labels = { "No", "Yes", /*"Workshop"*/};
-            item->selectedIndex = m_menuState.m_currentRange;
-        }
 
         //night mode
         item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
