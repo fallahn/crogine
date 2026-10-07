@@ -279,6 +279,7 @@ namespace PacketID
         SnekUpdate, //< uint16 client|player has been given the snek
         BigBallUpdate, //< uint16(client|player) | uint16 scale 0-11 (rescaled on client to +/-5)
         PlayerRetired, //< uint16(client|player)
+        DOG,
 
         //special cases for websocket
         RichPresence = 127

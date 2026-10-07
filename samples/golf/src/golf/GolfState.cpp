@@ -901,52 +901,24 @@ bool GolfState::handleEvent(const cro::Event& evt)
             }
             break;
         case SDLK_F9:
-            //if (evt.key.mod & SDL_KMOD_SHIFT)
-            {
-                //cro::Console::doCommand("build_cubemaps");
+            ////if (evt.key.mod & SDL_KMOD_SHIFT)
+            //{
+            //    //cro::Console::doCommand("build_cubemaps");
 
-                std::ofstream file("minimap.log", std::ios::app);
-                file << cro::SysTime::dateString() << " " << cro::SysTime::timeString() 
-                    << "- hole: " << m_currentHole + 1 << ", course: " << m_courseTitle.toAnsiString() << std::endl;
-                LogI << "Updated minimap.log" << std::endl;
-            }
-            //else
-            {
-                retargetMinimap(false);
-            }
+            //    std::ofstream file("minimap.log", std::ios::app);
+            //    file << cro::SysTime::dateString() << " " << cro::SysTime::timeString() 
+            //        << "- hole: " << m_currentHole + 1 << ", course: " << m_courseTitle.toAnsiString() << std::endl;
+            //    LogI << "Updated minimap.log" << std::endl;
+            //}
+            ////else
+            //{
+            //    retargetMinimap(false);
+            //}
             break;
 
         case SDLK_F10:
         {
             toggleTrailHistory();
-
-            /*auto ballEnt = m_avatars[m_currentPlayer.client][m_currentPlayer.player].ballModel;
-            m_gameScene.getDirector<GolfSoundDirector>()->playSound(GolfSoundDirector::AudioID::Inflate, ballEnt.getComponent<cro::Transform>().getWorldPosition(), 1.2f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
-
-            cro::Entity entity = m_gameScene.createEntity();
-            entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().setUserData<float>(0.f);
-            entity.getComponent<cro::Callback>().function =
-                [this, ballEnt](cro::Entity e, float dt) mutable
-                {
-                    auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
-                    progress = std::min(1.f, progress + (dt / 1.5f));
-
-                    const float scale = cro::Util::Easing::easeOutQuint(std::min(1.f, progress));
-
-                    ballEnt.getComponent<cro::Transform>().setScale(glm::vec3(scale, std::min(scale, 0.95f), scale) * 15.f);
-
-                    if (progress == 1.f)
-                    {
-                        m_gameScene.getDirector<GolfParticleDirector>()->fireParticles(GolfParticleDirector::ParticleID::Confetti, 
-                                                                                    ballEnt.getComponent<cro::Transform>().getWorldPosition() - glm::vec3(0.f, 0.4f, 0.f));
-                        ballEnt.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
-                        m_gameScene.getDirector<GolfSoundDirector>()->playSound(GolfSoundDirector::AudioID::Deflate, ballEnt.getComponent<cro::Transform>().getWorldPosition(), 1.2f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);;
-
-                        e.getComponent<cro::Callback>().active = false;
-                        m_gameScene.destroyEntity(e);
-                    }
-                };*/
         }
             break;
 #ifdef CRO_DEBUG_
@@ -1136,6 +1108,14 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 if (Social::isAuth())
                 {
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::CAT, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
+                break;
+            }
+            else if (evt.key.mod & SDL_KMOD_CTRL)
+            {
+                if (Social::isAuth())
+                {
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::DOG, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
                 break;
             }
@@ -5788,6 +5768,9 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::CAT:
             catAuth();
+            break;
+        case PacketID::DOG:
+            inflate();
             break;
         case PacketID::DronePosition:
         if (!m_sharedData.hosting)

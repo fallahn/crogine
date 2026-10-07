@@ -353,6 +353,9 @@ void Server::run()
                 case PacketID::CAT:
                     m_sharedData.host.broadcastPacket(PacketID::CAT, std::uint8_t(0), net::NetFlag::Reliable);
                     break;
+                case PacketID::DOG:
+                    m_sharedData.host.broadcastPacket(PacketID::DOG, std::uint8_t(0), net::NetFlag::Reliable);
+                    break;
                 case PacketID::ChatMessage:
                 {
                     //TODO there ought to be an overload for perfect forwarding a packet...
