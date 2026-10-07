@@ -42,6 +42,7 @@ source distribution.
 
 #include "scrub/ScrubSharedData.hpp"
 
+#include <crogine/audio/TextToSpeech.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/ConsoleClient.hpp>
 #include <crogine/core/Cursor.hpp>
@@ -124,6 +125,8 @@ private:
     std::vector<pg::Chapter> m_guideChapters;
     std::unique_ptr<cro::TextureResource> m_guideTextures;
     void createHowTo();
+
+    cro::TTSSpeaker m_t2sReader;
 
 #ifdef _WIN32
     void assertFileSystem();

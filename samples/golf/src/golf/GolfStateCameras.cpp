@@ -848,7 +848,7 @@ void GolfState::toggleFreeCam(bool skipAnim)
         m_defaultCam = m_gameScene.setActiveCamera(m_freeCam);
         m_defaultCam.getComponent<cro::Camera>().active = false;
         m_defaultCam.getComponent<TargetInfo>().waterPlane = {};
-        assert(m_defaultCam != m_freecam); //we've tried toggling twice while in the same transition!
+        assert(m_defaultCam != m_freeCam); //we've tried toggling twice while in the same transition!
         m_gameScene.setActiveListener(m_freeCam);
         auto label = m_defaultCam.getLabel();
 
@@ -985,10 +985,14 @@ void GolfState::toggleFreeCam(bool skipAnim)
 
     cro::App::getWindow().setMouseCaptured(m_photoMode);
 
-    Activity a;
-    a.client = m_sharedData.clientConnection.connectionID;
-    a.type = m_photoMode ? Activity::FreecamStart : Activity::FreecamEnd;
-    m_sharedData.clientConnection.netClient.sendPacket(PacketID::Activity, a, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    //only send this if we're the current player else it's confusing
+    if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
+    {
+        Activity a;
+        a.client = m_sharedData.clientConnection.connectionID;
+        a.type = m_photoMode ? Activity::FreecamStart : Activity::FreecamEnd;
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::Activity, a, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    }
 }
 
 void GolfState::enableDOF(bool enable)

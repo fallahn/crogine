@@ -264,5 +264,5 @@ void TTSSpeaker::threadFunc()
 #else
 //stubs for macOS
 bool TTSSpeaker::speak(const cro::String&, float) const { return false; }
-void TTSSpeaker::setVoice(std::int32_t) {}
+void TTSSpeaker::setVoice(std::size_t) {}
 #endif

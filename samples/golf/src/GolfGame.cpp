@@ -2633,7 +2633,7 @@ void GolfGame::createHowTo()
                     || std::strcmp(c.name(), "title") == 0
                     || std::strcmp(c.name(), "h") == 0)
                 {
-                    std::basic_string<std::uint8_t> s(reinterpret_cast<const std::uint8_t*>(c.text().as_string()));
+                    std::u8string s(reinterpret_cast<const char8_t*>(c.text().as_string()));
 
                     if (!s.empty())
                     {
@@ -2693,7 +2693,7 @@ void GolfGame::createHowTo()
     }
 
 
-    registerWindow([&]() 
+    registerWindow([this, &controlTex]() 
         {
             if (m_sharedData.showHelp)
             {
@@ -2777,10 +2777,12 @@ void GolfGame::createHowTo()
                 }
 
                 helpNav.scrollIndex = 0;
+                std::int32_t i = 0;
                 for (auto& chapter : m_guideChapters)
                 {
                     for (auto& item : chapter.items)
                     {
+                        std::string uid = std::to_string(i++);
                         switch (item.type)
                         {
                         default: break;
@@ -2819,7 +2821,19 @@ void GolfGame::createHowTo()
                             ImGui::PopStyleColor();
                             break;
                         case pg::Item::Text:
+                        {
+#ifndef USE_GNS
+                            if (!Social::isSteamdeck(true))
+                            {
+                                const auto label = "Click to read out loud##" + uid;
+                                if (ImGui::Button(label.c_str()))
+                                {
+                                    m_t2sReader.speak(item.string, cro::AudioMixer::getVolume(MixerChannel::TextToSpeech));
+                                }
+                            }
+#endif
                             ImGui::TextWrapped(reinterpret_cast<const char*>(item.string.data()));
+                        }
                             break;
                         case pg::Item::Image:
                         {

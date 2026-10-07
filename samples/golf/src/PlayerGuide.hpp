@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025
+Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -46,7 +46,7 @@ namespace pg
             Image, Separator,
             Header
         }type = Text;
-        std::basic_string<std::uint8_t> string;
+        std::u8string string;
         const cro::Texture* image = nullptr;
         glm::vec2 frameSize = glm::vec2(0.f);
 
@@ -85,7 +85,7 @@ namespace pg
     {
         //I know this duplicates, but the item list
         //resizing invalidates a pointer to the string
-        std::basic_string<std::uint8_t> title;
+        std::u8string title;
         std::vector<Item> items;
         bool isVisible = false;
     };
