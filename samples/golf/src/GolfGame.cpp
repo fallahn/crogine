@@ -272,7 +272,7 @@ GolfGame::GolfGame(const std::vector<std::string>& args)
     m_stateStack.registerState<StatsState>(StateID::Stats, m_sharedData);
     m_stateStack.registerState<LeagueState>(StateID::League, m_sharedData, m_profileData);
     m_stateStack.registerState<MapOverviewState>(StateID::MapOverview, m_sharedData);
-    m_stateStack.registerState<BushState>(StateID::Bush, m_sharedData);
+    //m_stateStack.registerState<BushState>(StateID::Bush, m_sharedData);
     m_stateStack.registerState<EndlessAttractState>(StateID::EndlessAttract, m_sharedData, elsShared);
     m_stateStack.registerState<EndlessDrivingState>(StateID::EndlessRunner, m_sharedData, elsShared);
     m_stateStack.registerState<EndlessPauseState>(StateID::EndlessPause, m_sharedData, elsShared);
@@ -956,15 +956,15 @@ bool GolfGame::initialise()
             }*/
         });
 
-    registerCommand("chip_in",
-        [&](const std::string&)
-        {
-            if (m_stateStack.getTopmostState() == StateID::Menu)
-            {
-                m_stateStack.clearStates();
-                m_stateStack.pushState(StateID::ChipIn);
-            }
-        });
+    //registerCommand("chip_in",
+    //    [&](const std::string&)
+    //    {
+    //        if (m_stateStack.getTopmostState() == StateID::Menu)
+    //        {
+    //            m_stateStack.clearStates();
+    //            m_stateStack.pushState(StateID::ChipIn);
+    //        }
+    //    });
 
     registerCommand("log_benchmark", 
         [&](const std::string& state)
@@ -996,7 +996,7 @@ bool GolfGame::initialise()
     registerCommand("show_userdir",
         [](const std::string&)
         {
-            //this assumes that the directory was successfully creates already...
+            //this assumes that the directory was successfully created already...
             cro::Util::String::parseURL(U8PATH_CAST(Content::getBaseContentPath()));
         });
 
@@ -1121,12 +1121,12 @@ bool GolfGame::initialise()
             cro::Console::print(WebSock::getStatus());
         });
 
-    registerCommand("scrub", 
-        [&](const std::string&)
-        {
-            m_stateStack.clearStates();
-            m_stateStack.pushState(StateID::ScrubBackground);
-        });
+    //registerCommand("scrub", 
+    //    [&](const std::string&)
+    //    {
+    //        m_stateStack.clearStates();
+    //        m_stateStack.pushState(StateID::ScrubBackground);
+    //    });
 
 #ifdef USE_GNS
     //registerCommand("discord_connect",

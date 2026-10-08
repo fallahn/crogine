@@ -393,7 +393,7 @@ void Window::setFullScreen(bool fullscreen)
             const auto mode = SDL_GetWindowFullscreenMode(m_window);
             if (mode)
             {
-                SDL_SetWindowSize(m_window, mode->w, mode->h);
+                SDL_SetWindowSize(m_window, std::max(mode->w, 640), std::max(mode->h, 480));
             }
             else
             {

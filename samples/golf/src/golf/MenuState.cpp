@@ -572,13 +572,13 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
 #ifndef __APPLE__
 #ifndef DEMO
-    registerCommand("tree_ed", [&](const std::string&)
-        {
-            if (getStateCount() == 1)
-            {
-                requestStackPush(StateID::Bush);
-            }
-        });
+    //registerCommand("tree_ed", [&](const std::string&)
+    //    {
+    //        if (getStateCount() == 1)
+    //        {
+    //            requestStackPush(StateID::Bush);
+    //        }
+    //    });
 
     registerCommand("clubhouse", [&](const std::string&)
         {

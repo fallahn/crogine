@@ -130,6 +130,12 @@
     <Filter Include="Source Files\golf\client\states\old">
       <UniqueIdentifier>{29256788-2816-4c81-9ffb-b8a7a32ba99c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\editor">
+      <UniqueIdentifier>{cf42b4c8-daee-4109-a8ea-7a5f246ae41e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\editor">
+      <UniqueIdentifier>{08585b5f-1ce2-4558-bcfd-454af276378c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -337,9 +343,6 @@
       <Filter>Source Files\rss</Filter>
     </ClCompile>
     <ClCompile Include="src\golf\NewsState.cpp">
-      <Filter>Source Files\golf\client\states</Filter>
-    </ClCompile>
-    <ClCompile Include="src\editor\BushState.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
     <ClCompile Include="src\golf\PlaylistState.cpp">
@@ -747,6 +750,12 @@
     <ClCompile Include="src\golf\MenuLobbyV2.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
+    <ClCompile Include="src\editor\BushState.cpp">
+      <Filter>Source Files\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\editor\EditorApp.cpp">
+      <Filter>Source Files\editor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -1027,9 +1036,6 @@
     </ClInclude>
     <ClInclude Include="src\golf\Treeset.hpp">
       <Filter>Header Files\golf\client</Filter>
-    </ClInclude>
-    <ClInclude Include="src\editor\BushState.hpp">
-      <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\SpectatorAnimCallback.hpp">
       <Filter>Header Files\golf\client</Filter>
@@ -1549,6 +1555,12 @@
     </ClInclude>
     <ClInclude Include="src\golf\GroupID.hpp">
       <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\editor\BushState.hpp">
+      <Filter>Header Files\editor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\editor\EditorApp.hpp">
+      <Filter>Header Files\editor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
