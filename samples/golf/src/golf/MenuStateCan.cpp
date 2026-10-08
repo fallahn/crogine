@@ -50,7 +50,7 @@ source distribution.
 
 namespace
 {
-    static constexpr float ActorY = 22.f; //banner height
+    static constexpr float ActorY = 24.f; //banner height
     static constexpr float ActorZ = 3.f;
 }
 
@@ -160,7 +160,7 @@ void MenuState::spawnActor(const ActorInfo& info)
         sound.getComponent<cro::AudioEmitter>().setPitch(1.f + pitchOffset);
     }
 
-    m_bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_canEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     
     //beh we need to delay this a frame or 2
     entity = m_uiScene.createEntity();
@@ -249,5 +249,5 @@ void MenuState::createCanControl(cro::Entity can)
                 m_uiScene.destroyEntity(e);
             }
         };
-    m_bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_canEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }

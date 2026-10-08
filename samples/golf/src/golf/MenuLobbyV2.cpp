@@ -539,7 +539,7 @@ void MenuState::LobbyMenu::readyStart()
             || m_menuState.m_connectedPlayerCount > ScoreType::MaxPlayerCount[m_sharedData.scoreType]
             || (m_menuState.m_sharedData.teamMode && !ScoreType::CanTeamPlay[m_sharedData.scoreType]))
         {
-            //m_menuState.m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Callback>().active = true;
+            m_uiLayout.detailsPane.text.getComponent<cro::Callback>().active = true; //flashes the text red
             m_menuState.m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().play();
             m_menuState.m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(0.f));
         }
@@ -697,6 +697,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     rootNode.addComponent<cro::UIElement>(cro::UIElement::Position, true).relativePosition = { 0.5f, 0.5f };
     m_menuState.m_menuEntities[MenuID::LobbyV2] = rootNode;
     
+
     constexpr auto c = cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha);
     auto bgNode = m_menuState.m_uiScene.createEntity();
     bgNode.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.5f });
@@ -880,11 +881,43 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     m_uiLayout.detailsPane.text.addComponent<cro::Text>(largeFont);
     m_uiLayout.detailsPane.text.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     m_uiLayout.detailsPane.text.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    m_uiLayout.detailsPane.text.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    m_uiLayout.detailsPane.text.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     m_uiLayout.detailsPane.text.addComponent<cro::UIElement>(cro::UIElement::Text, true);
     m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundOffset, -104.f }; //90
     m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().characterSize = UITextSize;
     m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().verticalSpacing = 3.f;
     m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().depth = 0.2f;
+    m_uiLayout.detailsPane.text.addComponent<cro::Callback>().setUserData<std::pair<std::int32_t, float>>(0, 0.f);
+    m_uiLayout.detailsPane.text.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+
+            static constexpr float FlashTime = 0.5f;
+            auto& [count, ct] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
+
+            ct += dt;
+            if (ct > FlashTime)
+            {
+                ct -= FlashTime;
+                count++;
+
+                const auto facing = e.getComponent<cro::Drawable2D>().getFacing() == cro::Drawable2D::Facing::Front ? 
+                                                            cro::Drawable2D::Facing::Back : cro::Drawable2D::Facing::Front;
+                e.getComponent<cro::Drawable2D>().setFacing(facing);
+            }
+
+            if (count == 4)
+            {
+                count = 0;
+                ct = 0.f;
+                e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                e.getComponent<cro::Callback>().active = false;
+            }
+        };
+
     m_uiLayout.detailsPane.root.getComponent<cro::Transform>().addChild(m_uiLayout.detailsPane.text.getComponent<cro::Transform>());
 
     //image

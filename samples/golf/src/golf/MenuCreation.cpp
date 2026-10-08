@@ -510,6 +510,8 @@ cro::Entity MenuState::createUI()
 
     //also the new menu expects the root to be centre of the screen...
     m_lobbyMenu.create(rootNode);
+
+    m_canEnt = rootNode;
 #else
     createLobbyMenu(rootNode, mouseEnterCallback, mouseExitCallback);
 #endif
@@ -3330,7 +3332,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     };
     auto bannerEnt = entity;
     menuTransform.addChild(entity.getComponent<cro::Transform>());
-    m_bannerEnt = entity; //stash this to attach minigame
+    m_canEnt = entity; //stash this to attach minigame
 
 
 

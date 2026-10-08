@@ -1302,7 +1302,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_PAUSE:
             if (evt.key.mod & SDL_KMOD_SHIFT)
             {
+#ifdef USE_GNS
                 if (Social::isAuth())
+#endif
                 {
                     m_sharedData.clientConnection.netClient.sendPacket(
                         PacketID::ServerCommand, std::uint16_t(ServerCommand::SpawnCan), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -4096,7 +4098,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::ActorSpawn:
         {
-            //spawnActor(evt.packet.as<ActorInfo>());
+            spawnActor(evt.packet.as<ActorInfo>());
         }
             break;
         case PacketID::CanUpdate:

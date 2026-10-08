@@ -267,7 +267,7 @@ private:
     };
     std::array<cro::Entity, LobbyEntityID::Count> m_lobbyWindowEntities = {};
 
-    cro::Entity m_bannerEnt;
+    cro::Entity m_canEnt;
     void spawnActor(const ActorInfo&);
     void updateActor(const CanInfo&);
 
