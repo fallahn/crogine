@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include <crogine/audio/TextToSpeech.hpp>
 #include <crogine/core/String.hpp>
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
@@ -251,6 +252,8 @@ class UILayout final
 {
 public:
     explicit UILayout(std::int32_t tabCount, const SharedStateData&);
+
+    //cro::TTSSpeaker m_textToSpeech;
 
     TabBar tabBar;
     Menu menuLayout;

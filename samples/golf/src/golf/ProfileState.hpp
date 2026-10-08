@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#ifdef OLD_MENU
+
 #include "../StateIDs.hpp"
 #include "SharedProfileData.hpp"
 #include "CommonConsts.hpp"
@@ -344,3 +346,4 @@ private:
 
     void renderBallFrames();
 };
+#endif //OLD_MENU

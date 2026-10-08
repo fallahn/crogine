@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -26,6 +26,8 @@ and must not be misrepresented as being the original software.
 source distribution.
 
 -----------------------------------------------------------------------*/
+
+#ifdef OLD_MENU
 
 #include "ProfileState.hpp"
 #include "SharedStateData.hpp"
@@ -6553,3 +6555,5 @@ void ProfileState::renderBallFrames()
     m_modelScene.setActiveCamera(oldCam);
     m_cameras[CameraID::Ball].getComponent<cro::Transform>().setPosition(oldPos);
 }
+
+#endif //OLD_MENU

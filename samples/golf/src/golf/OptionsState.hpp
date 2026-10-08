@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -28,6 +28,8 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #pragma once
+
+#ifdef OLD_MENU
 
 #include "../StateIDs.hpp"
 #include "InputBinding.hpp"
@@ -209,3 +211,5 @@ private:
     void quitState();
     void applyWebsock();
 };
+
+#endif //OLD_MENU

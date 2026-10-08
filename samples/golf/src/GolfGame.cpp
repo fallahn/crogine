@@ -79,7 +79,7 @@ source distribution.
 #include "golf/XPAwardStrings.hpp"
 #include "golf/UserInterface.hpp"
 
-#ifdef _WIN32
+#if defined _WIN32 && defined OLD_MENU
 #include "golf/OptionsState.hpp"
 #include "golf/ProfileState.hpp"
 #endif
@@ -232,7 +232,7 @@ GolfGame::GolfGame(const std::vector<std::string>& args)
     //m_stateStack.registerState<KeyboardState>(StateID::Keyboard, m_sharedData);
     m_stateStack.registerState<NewsState>(StateID::News, m_sharedData);
     m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData, m_profileData);
-#ifdef _WIN32
+#if defined _WIN32 && defined OLD_MENU
     if(std::find(args.begin(), args.end(), "no-prof") != args.end())
     {
         m_stateStack.registerState<ProfileState>(StateID::Profile, m_sharedData, m_profileData);
@@ -240,7 +240,7 @@ GolfGame::GolfGame(const std::vector<std::string>& args)
     else
 #endif
     m_stateStack.registerState<ProfileStateV2>(StateID::Profile, m_sharedData, m_profileData);
-#ifdef _WIN32
+#if defined _WIN32 && defined OLD_MENU
     if (std::find(args.begin(), args.end(), "no-opt") != args.end())
     {
         m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);
