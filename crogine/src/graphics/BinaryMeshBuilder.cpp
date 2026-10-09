@@ -110,6 +110,12 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
             return {};
         }
 
+        //for backards compat we need to default the primitive type to triangles
+        if (header.primitiveType == 0)
+        {
+            header.primitiveType = GL_TRIANGLES;
+        }
+
         if (header.meshOffset)
         {
             Detail::ModelBinary::MeshHeader meshHeader;
@@ -364,7 +370,7 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
 
             //set the vertex data
             meshData.attributeFlags = meshHeader.flags;
-            meshData.primitiveType = GL_TRIANGLES;
+            meshData.primitiveType = header.primitiveType;
             meshData.vertexSize = getVertexSize(meshData.attributes);
             meshData.vertexCount = interleavedData.size() / meshData.vertexSize;
             
@@ -380,7 +386,7 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
             for (auto i = 0u; i < meshData.submeshCount; ++i)
             {
                 meshData.indexData[i].format = GL_UNSIGNED_INT;
-                meshData.indexData[i].primitiveType = meshData.primitiveType;
+                meshData.indexData[i].primitiveType = meshData.primitiveType; //SIGH this should have been part of the mesh header so that we could mix types...
                 meshData.indexData[i].indexCount = static_cast<std::uint32_t>(indexData[i].size());
 
                 if (meshData.vertexCount < std::numeric_limits<std::uint8_t>::max())
@@ -469,6 +475,11 @@ Mesh::Data BinaryMeshBuilder::buildDefault() const
         {
             LogE << "Invalid header found" << std::endl;
             return {};
+        }
+
+        if (header.primitiveType == 0)
+        {
+            header.primitiveType = GL_TRIANGLES;
         }
 
         if (header.meshOffset)
@@ -636,7 +647,7 @@ Mesh::Data BinaryMeshBuilder::buildDefault() const
             }
 
             meshData.attributeFlags = meshHeader.flags;
-            meshData.primitiveType = GL_TRIANGLES;
+            meshData.primitiveType = header.primitiveType;
             meshData.vertexSize = getVertexSize(meshData.attributes);
             meshData.vertexCount = vertData.size() / (meshData.vertexSize / sizeof(float));
 

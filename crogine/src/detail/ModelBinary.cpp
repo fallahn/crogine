@@ -56,6 +56,7 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
         header.meshOffset = sizeof(header);
 
         const auto& meshData = entity.getComponent<Model>().getMeshData();
+        header.primitiveType = meshData.primitiveType;
 
         //download the mesh data from vbo/ibo
         std::vector<float> vertexData;
@@ -386,6 +387,11 @@ cro::Mesh::Data cro::Detail::ModelBinary::read(const std::filesystem::path& binP
             return {};
         }
 
+        if (header.primitiveType == 0)
+        {
+            header.primitiveType = GL_TRIANGLES;
+        }
+
         if (header.meshOffset)
         {
             cro::Detail::ModelBinary::MeshHeader meshHeader;
@@ -453,7 +459,7 @@ cro::Mesh::Data cro::Detail::ModelBinary::read(const std::filesystem::path& binP
 
             dstVert.swap(tempVerts);
             meshData.attributeFlags = meshHeader.flags;
-            meshData.primitiveType = GL_TRIANGLES;
+            meshData.primitiveType = header.primitiveType;
 
             for (const auto& a : meshData.attributes)
             {

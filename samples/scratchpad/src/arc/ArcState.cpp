@@ -4,6 +4,7 @@
 #include "ExportHeader.hpp"
 
 #include <crogine/gui/Gui.hpp>
+#include <crogine/detail/IOStream.hpp>
 
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>

@@ -36,6 +36,7 @@ source distribution.
 
 #include <crogine/graphics/MeshData.hpp>
 
+#include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 
@@ -61,8 +62,11 @@ namespace cro::Detail::ModelBinary
         //of the SkeletonHeader in bytes. If 0 no skeleton is defined
         std::uint32_t skeletonOffset = 0;
 
+        //GL Primitive type used when rendering.
+        //TODO this should have been per-index array. Sad.
+        std::uint32_t primitiveType = GL_TRIANGLES;
+
         //reserved for future expansion
-        std::uint32_t reserved0 = 0;
         std::uint32_t reserved1 = 0;
         std::uint32_t reserved2 = 0;
         std::uint32_t reserved3 = 0;

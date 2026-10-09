@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,9 +29,9 @@ source distribution.
 
 #include "League.hpp"
 
-#include <crogine/detail/Types.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/FileSystem.hpp>
+#include <crogine/detail/IOstream.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Easings.hpp>
