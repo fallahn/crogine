@@ -3489,6 +3489,18 @@ void GolfState::createScoreboard()
     //course leader if available
     if (!m_courseTitle.empty())
     {
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::ScoreTitle;
+        entity.addComponent<UIElement>().absolutePosition = { 200.f, 11.f };
+        entity.getComponent<UIElement>().depth = 0.5f;
+        entity.getComponent<UIElement>().resizeCallback = resizeCentre;
+        entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+        entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+
+
         auto str = m_courseTitle;
 
         if (m_sharedData.scoreType == ScoreType::Stroke)
@@ -3517,18 +3529,36 @@ void GolfState::createScoreboard()
         {
             str += " - Pot: 1";
         }
-
-        entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>();
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::ScoreTitle;
-        entity.addComponent<UIElement>().absolutePosition = { 200.f, 11.f };
-        entity.getComponent<UIElement>().depth = 0.5f;
-        entity.getComponent<UIElement>().resizeCallback = resizeCentre;
-        entity.addComponent<cro::Text>(font).setString(str);
-        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-        entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
-        centreText(entity);
+        else
+        {
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 0);
+            entity.getComponent<cro::Callback>().function =
+                [str](cro::Entity e, float dt)
+                {
+                    auto& [ct, state] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+                    ct += dt;
+                    if (state == 0)
+                    {
+                        if (ct > 8.f)
+                        {
+                            ct -= 8.f;
+                            state = 1;
+                            e.getComponent<cro::Text>().setString("You're Playing on...");
+                        }
+                    }
+                    else
+                    {
+                        if (ct > 4.f)
+                        {
+                            ct -= 4.f;
+                            state = 0;
+                            e.getComponent<cro::Text>().setString(str);
+                        }
+                    }
+                };
+        }
+        entity.getComponent<cro::Text>().setString(str);
         bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 

@@ -648,8 +648,13 @@ void MenuState::LobbyMenu::onShown()
     m_ipText.getComponent<cro::Text>().setString(str);
 #endif
 
+    m_menuState.m_uiScene.getSystem<cro::UIElementSystem>()->forceRefresh();
     refreshTabs(); //rebuilds the menu based on hosting state etc
-    clientStatusChanged(); //refreshes the detail panes
+    //refreshes the detail panes
+    updatePlayersTab(true);
+    updateCourseTab(true);
+    updateRulesTab(true);
+    updateScoresTab(true);
 }
 
 void MenuState::LobbyMenu::resetRepeatTimer(std::int32_t i, cro::Time resetTime)
@@ -882,6 +887,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     rootNode.getComponent<cro::Transform>().addChild(m_uiLayout.detailsPane.root.getComponent<cro::Transform>());
 
     //text
+    const auto viewScale = cro::UIElementSystem::getViewScale();
     m_uiLayout.detailsPane.text = m_menuState.m_uiScene.createEntity();
     m_uiLayout.detailsPane.text.addComponent<cro::Transform>();
     m_uiLayout.detailsPane.text.addComponent<cro::Drawable2D>();
@@ -889,12 +895,18 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     m_uiLayout.detailsPane.text.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     m_uiLayout.detailsPane.text.getComponent<cro::Text>().setFillColour(TextNormalColour);
     m_uiLayout.detailsPane.text.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-    m_uiLayout.detailsPane.text.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    m_uiLayout.detailsPane.text.getComponent<cro::Text>().setShadowOffset({ viewScale, -viewScale });
     m_uiLayout.detailsPane.text.addComponent<cro::UIElement>(cro::UIElement::Text, true);
     m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().absolutePosition = { DetailBackgroundOffset, -104.f }; //90
     m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().characterSize = UITextSize;
     m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().verticalSpacing = 3.f;
     m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().depth = 0.2f;
+    m_uiLayout.detailsPane.text.getComponent<cro::UIElement>().resizeCallback = 
+        [](cro::Entity e)
+        {
+            const auto scale = cro::UIElementSystem::getViewScale();
+            e.getComponent<cro::Text>().setShadowOffset({ scale, -scale });
+        };
     m_uiLayout.detailsPane.text.addComponent<cro::Callback>().setUserData<std::pair<std::int32_t, float>>(0, 0.f);
     m_uiLayout.detailsPane.text.getComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)
@@ -2897,8 +2909,8 @@ void MenuState::LobbyMenu::resized(std::uint32_t x, std::uint32_t y)
 
                 //we have to call this a second time to make sure the
                 //callbacks are run and approriate tab details are hidden
-                m_uiLayout.activateTab(m_uiLayout.tabBar.activeIndex);
-
+                m_uiLayout.tabBar.items[m_uiLayout.tabBar.activeIndex].selected();
+                
                 e.getComponent<cro::Callback>().active = false;
                 m_menuState.m_uiScene.destroyEntity(e);
             };

@@ -87,7 +87,7 @@ void GolfState::updateHoleScore(std::uint16_t data)
                     {
                         auto str = m_courseTitle + " - Skins - Pot: " + std::to_string(player);
                         e.getComponent<cro::Text>().setString(str);
-                        centreText(e);
+                        //centreText(e);
                     };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
@@ -119,7 +119,7 @@ void GolfState::updateHoleScore(std::uint16_t data)
                     {
                         auto str = m_courseTitle + " - Skins - Pot: 1";
                         e.getComponent<cro::Text>().setString(str);
-                        centreText(e);
+                        //centreText(e);
                     };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 

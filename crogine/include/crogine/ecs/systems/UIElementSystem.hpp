@@ -45,6 +45,8 @@ namespace cro
 
         void handleMessage(const Message&) override;
 
+        void forceRefresh();
+
         /*!
         \brief returns a rounded scale value based on the given view size
         */

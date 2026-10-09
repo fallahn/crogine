@@ -6550,7 +6550,11 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     {
                         auto str = m_courseTitle + " - " + ScoreTypes[m_sharedData.scoreType];
                         e.getComponent<cro::Text>().setString(str);
-                        centreText(e);
+                        if (e.hasComponent<cro::Callback>())
+                        {
+                            e.getComponent<cro::Callback>().active = false;
+                        }
+                        //centreText(e);
                     };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
