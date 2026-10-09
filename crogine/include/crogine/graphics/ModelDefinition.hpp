@@ -127,6 +127,14 @@ namespace cro
         */
         void optimiseOnLoad(bool optimise) { m_optimiseOnLoad = optimise; }
 
+        /*!
+        \brief Requests the internal MeshBuilder to create a wireframe sub-mesh
+        in the final sub-mesh slot. Note that this is only implemented on models
+        loaded via the ModelBinary (*.cmb) format.
+        \param create When set to true all subsequent model loads will attempt
+        wireframe creation.
+        */
+        void createWireframe(bool create) { m_createWireframe = create; }
 
         /*!
         \brief Attempts to load a definition from a ConfigFile at a given path.
@@ -220,6 +228,7 @@ namespace cro
         std::string m_workingDir;
         std::string m_fileName;
         bool m_optimiseOnLoad;
+        bool m_createWireframe;
 
         std::size_t m_meshID = 0; //!< ID of the mesh in the mesh resource
         std::array<std::int32_t, Mesh::IndexData::MaxBuffers> m_materialIDs = {}; //!< list of material IDs in the order in which they appear on the model

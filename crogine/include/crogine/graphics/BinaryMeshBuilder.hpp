@@ -49,21 +49,32 @@ namespace cro
         \param optimiseOnLoad Attempts to compress the default vertex format
         and assigns shared VBO/IBO resources if true. If false leaves the
         vertex format in uncompressed float for use with the model editor etc
+        \param createWireframe Attempts to create a wireframe of the model by
+        adding a final submesh rendered as GL_LINES
         */
-        explicit BinaryMeshBuilder(const std::filesystem::path& path, bool optimseOnLoad = true);
+        explicit BinaryMeshBuilder(const std::filesystem::path& path, bool optimseOnLoad = true, bool createWireframe = false);
 
         std::size_t getUID() const override;
         Skeleton getSkeleton() const override;
 
+        /*!
+        \brief Returns true if we requested wireframe creation and succeeded
+        */
+        bool hasWireframe() const override { return m_hasWireframe; }
+
     private:
         std::filesystem::path m_path;
         bool m_optimiseOnLoad;
+        bool m_createWireframe;
+        mutable bool m_hasWireframe;
         std::size_t m_uid;
         mutable Skeleton m_skeleton;
         Mesh::Data build(AllocationResource*) const override;
 
         Mesh::Data buildOptimised(AllocationResource*) const;
         Mesh::Data buildDefault() const;
+
+        void createWireframe(Mesh::Data&, const std::vector<std::vector<std::uint32_t>>&, AllocationResource*) const;
 
         void calcBounds(Mesh::Data& target, const std::vector<float>& vertData) const;
         void parseSkeleton(IOStream& file, const Detail::ModelBinary::Header& header) const;

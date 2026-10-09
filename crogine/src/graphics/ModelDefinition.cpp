@@ -92,15 +92,16 @@ namespace
 }
 
 ModelDefinition::ModelDefinition(ResourceCollection& rc, EnvironmentMap* envMap, const std::string& workingDir)
-    : m_resources   (rc),
-    m_envMap        (envMap),
-    m_workingDir    (workingDir),
-    m_optimiseOnLoad(true),
-    m_materialCount (0),
-    m_castShadows   (false),
-    m_billboard     (false),
-    m_instanced     (false),
-    m_modelLoaded   (false)
+    : m_resources       (rc),
+    m_envMap            (envMap),
+    m_workingDir        (workingDir),
+    m_optimiseOnLoad    (true),
+    m_createWireframe   (false),
+    m_materialCount     (0),
+    m_castShadows       (false),
+    m_billboard         (false),
+    m_instanced         (false),
+    m_modelLoaded       (false)
 {
     if (!workingDir.empty())
     {
@@ -160,6 +161,7 @@ bool ModelDefinition::loadFromFile(const std::filesystem::path& path, bool insta
 
     bool lockRotation = false;
     bool lockScale = false;
+    bool wireframeCreated = false;
 
     //if there's an empty working path this checks to see if we have a model file
     //in the same dir as the definition without a full path
@@ -197,7 +199,7 @@ bool ModelDefinition::loadFromFile(const std::filesystem::path& path, bool insta
     {
         //binary model
         updateLocalPath(meshValue);
-        meshBuilder = std::make_unique<BinaryMeshBuilder>(meshValue, m_optimiseOnLoad);
+        meshBuilder = std::make_unique<BinaryMeshBuilder>(meshValue, m_optimiseOnLoad, m_createWireframe);
     }
     else if (ext == ".iqm")
     {
@@ -327,6 +329,8 @@ bool ModelDefinition::loadFromFile(const std::filesystem::path& path, bool insta
     //do all the resource loading last when we know properties are valid,
     //to prevent partially loading a model and wasting resources.
     m_meshID = m_resources.meshes.loadMesh(*meshBuilder.get(), forceReload);
+    wireframeCreated = meshBuilder->hasWireframe();
+
     if (m_meshID == 0)
     {
         LogE << path << ": preloading mesh failed" << std::endl;
@@ -928,7 +932,7 @@ bool ModelDefinition::loadFromFile(const std::filesystem::path& path, bool insta
                 flags |= ShaderResource::BuiltInFlags::LockScale;
             }
 
-            auto shaderID = m_resources.shaders.loadBuiltIn(m_billboard ? ShaderResource::BillboardShadowMap : ShaderResource::ShadowMap, flags);
+            const auto shaderID = m_resources.shaders.loadBuiltIn(m_billboard ? ShaderResource::BillboardShadowMap : ShaderResource::ShadowMap, flags);
             matID = m_resources.materials.add(m_resources.shaders.get(shaderID));
             m_shadowIDs[m_materialCount] = matID;
             
@@ -940,6 +944,25 @@ bool ModelDefinition::loadFromFile(const std::filesystem::path& path, bool insta
                 m.setProperty("u_alphaClip", alphaClip);
             }
         }
+
+        m_materialCount++;
+    }
+
+    if (wireframeCreated)
+    {
+        //add the default wireframe material
+        const auto shaderID = m_resources.shaders.loadBuiltIn(ShaderResource::BuiltIn::Wireframe, ShaderResource::BuiltInFlags::DiffuseColour);
+        const auto matID = m_resources.materials.add(m_resources.shaders.get(shaderID));
+
+        auto& material = m_resources.materials.get(matID);
+        material.deferred = false; //TODO if we ever dig out deferred rendering again this needs fixing
+        material.enableDepthTest = true;
+        material.doubleSided = false;
+        material.name = "Wireframe";
+        material.customShader = false;
+        material.setProperty("u_colour", glm::vec4(1.f));
+
+        m_materialIDs[m_materialCount] = matID;
 
         m_materialCount++;
     }

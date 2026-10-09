@@ -176,7 +176,7 @@ bool ShaderResource::loadFromString(std::int32_t ID, const std::string& vertex, 
 std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
 {
 #ifdef PLATFORM_DESKTOP
-    CRO_ASSERT(type >= BuiltIn::PBRDeferred && flags > 0, "Invalid type of flags value");
+    CRO_ASSERT(type >= BuiltIn::Wireframe && flags > 0, "Invalid type of flags value");
 #else
     CRO_ASSERT(type >= BuiltIn::Unlit && flags > 0, "Invalid type of flags value");
 #endif
@@ -184,7 +184,7 @@ std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
     std::int32_t id = type | flags;
 
     //check not already loaded
-    if (m_shaders.count(id) > 0)
+    if (m_shaders.count(id) != 0)
     {
         return id;
     }
@@ -286,6 +286,7 @@ std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
     case BuiltIn::BillboardUnlit:
         success = loadFromString(id, Shaders::Billboard::Vertex, Shaders::Billboard::Fragment, defines);
         break;
+    case BuiltIn::Wireframe:
     case BuiltIn::Unlit:
         success = loadFromString(id, Shaders::Unlit::Vertex, Shaders::Unlit::Fragment, defines);
         break;

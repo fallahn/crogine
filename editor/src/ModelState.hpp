@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -174,7 +174,6 @@ private:
     void exportModel(bool = false, bool = true);
     void applyImportTransform(std::vector<float>& vertexData);
     void flipNormals();
-    void readBackVertexData(cro::Mesh::Data, std::vector<float>&, std::vector<std::vector<std::uint32_t>>&);
     //-------------------------------------------//
 
 

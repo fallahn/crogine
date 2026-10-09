@@ -38,9 +38,11 @@ source distribution.
 
 using namespace cro;
 
-BinaryMeshBuilder::BinaryMeshBuilder(const std::filesystem::path& path, bool optimiseOnLoad)
+BinaryMeshBuilder::BinaryMeshBuilder(const std::filesystem::path& path, bool optimiseOnLoad, bool createWireframe)
     : m_path            (path),
     m_optimiseOnLoad    (optimiseOnLoad),
+    m_createWireframe   (createWireframe),
+    m_hasWireframe      (false),
     m_uid               (0)
 {
 #ifdef __APPLE__
@@ -432,6 +434,9 @@ Mesh::Data BinaryMeshBuilder::buildOptimised(AllocationResource* allocationResou
                         indexData[i].size() * sizeof(std::uint32_t), indexData[i].data()));
                 }
             }
+            
+            createWireframe(meshData, indexData, allocationResource);
+            
             glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
             //boundingbox / sphere
@@ -693,6 +698,9 @@ Mesh::Data BinaryMeshBuilder::buildDefault() const
                     createIBO(meshData, indexData[i].data(), i, sizeof(std::uint32_t));
                 }
             }
+
+            createWireframe(meshData, indexData, nullptr);
+
             glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
             //boundingbox / sphere
@@ -708,6 +716,62 @@ Mesh::Data BinaryMeshBuilder::buildDefault() const
     }
 
     return meshData;
+}
+
+void BinaryMeshBuilder::createWireframe(Mesh::Data& meshData, const std::vector<std::vector<std::uint32_t>>& indexData, AllocationResource* allocationResource) const
+{
+    if (m_createWireframe)
+    {
+        if (meshData.primitiveType != GL_TRIANGLES)
+        {
+            LogW << "Requested wireframe creation for model, but primitive type not GL_TRIANGLES" << std::endl;
+            return;
+        }
+
+        if (meshData.submeshCount == meshData.indexData.size())
+        {
+            LogW << "Requested wireframe creation for model, maximum sub-meshes have already been assigned." << std::endl;
+            return;
+        }
+
+        //as this is probably for debugging we don't compress the
+        //size of the index data - though I might revisit this in the future
+        std::vector<std::uint32_t> indices;
+        for (const auto& data : indexData)
+        {
+            assert(data.size() % 3 == 0); //else we have incomplet triangles...
+            for (auto i = 0u; i < data.size(); i += 3u)
+            {
+                indices.push_back(data[i]);
+                indices.push_back(data[i + 1]);
+
+                indices.push_back(data[i + 1]);
+                indices.push_back(data[i + 2]);
+
+                indices.push_back(data[i + 2]);
+                indices.push_back(data[i]);
+            }
+        }
+
+        meshData.indexData[meshData.submeshCount].format = GL_UNSIGNED_INT;
+        meshData.indexData[meshData.submeshCount].primitiveType = GL_LINES;
+        meshData.indexData[meshData.submeshCount].indexCount = static_cast<std::uint32_t>(indices.size());
+
+        if (allocationResource)
+        {
+            meshData.iboAllocator = allocationResource->getIBOAllocator(3, sizeof(std::uint32_t));
+            meshData.indexData[meshData.submeshCount].iboAllocation = meshData.iboAllocator->newAllocation(indices.size());
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[meshData.submeshCount].iboAllocation.bufferID));
+            glCheck(glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[meshData.submeshCount].iboAllocation.offset,
+                indices.size() * sizeof(std::uint32_t), indices.data()));
+        }
+        else
+        {
+            createIBO(meshData, indices.data(), meshData.submeshCount, sizeof(std::uint32_t));
+        }
+        meshData.submeshCount++;
+        m_hasWireframe = true;
+    }
 }
 
 void BinaryMeshBuilder::calcBounds(Mesh::Data& meshData, const std::vector<float>& vertData) const

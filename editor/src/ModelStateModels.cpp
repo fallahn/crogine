@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2025
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -248,7 +248,7 @@ void ModelState::openModelAtPath(const std::string& path)
         updateGridMesh(m_entities[EntityID::GridMesh].getComponent<cro::Model>().getMeshData(), sphere, box);
 
         //read back the buffer data into the imported buffer so we can do things like normal vis and lightmap baking
-        readBackVertexData(meshData, m_modelProperties.vertexData, m_modelProperties.indexData);
+        cro::Detail::ModelBinary::readBackVertexData(meshData, m_modelProperties.vertexData, m_modelProperties.indexData);
         
         if (def.hasSkeleton())
         {
@@ -1245,50 +1245,50 @@ void ModelState::flipNormals()
     }
 }
 
-void ModelState::readBackVertexData(cro::Mesh::Data meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint32_t>>& destIndices)
-{
-    destVerts.clear();
-    destVerts.resize(meshData.vertexCount * (meshData.vertexSize / sizeof(float)));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
-    glCheck(glGetBufferSubData(GL_ARRAY_BUFFER, meshData.vboAllocation.offset, meshData.vertexCount * meshData.vertexSize, destVerts.data()));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
-    destIndices.clear();
-    destIndices.resize(meshData.submeshCount);
-
-    for (auto i = 0u; i < meshData.submeshCount; ++i)
-    {
-        destIndices[i].resize(meshData.indexData[i].indexCount);
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
-
-        //fudgy kludge for different index types
-        switch (meshData.indexData[i].format)
-        {
-        default: break;
-        case GL_UNSIGNED_BYTE:
-        {
-            std::vector<std::uint8_t> temp(meshData.indexData[i].indexCount);
-            glCheck(glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, meshData.indexData[i].indexCount, temp.data()));
-            for (auto j = 0u; j < meshData.indexData[i].indexCount; ++j)
-            {
-                destIndices[i][j] = temp[j];
-            }
-        }
-        break;
-        case GL_UNSIGNED_SHORT:
-        {
-            std::vector<std::uint16_t> temp(meshData.indexData[i].indexCount);
-            glCheck(glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, meshData.indexData[i].indexCount * sizeof(std::uint16_t), temp.data()));
-            for (auto j = 0u; j < meshData.indexData[i].indexCount; ++j)
-            {
-                destIndices[i][j] = temp[j];
-            }
-        }
-        break;
-        case GL_UNSIGNED_INT:
-            glCheck(glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, meshData.indexData[i].indexCount * sizeof(std::uint32_t), destIndices[i].data()));
-            break;
-        }
-    }
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-}
+//void ModelState::readBackVertexData(cro::Mesh::Data meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint32_t>>& destIndices)
+//{
+//    destVerts.clear();
+//    destVerts.resize(meshData.vertexCount * (meshData.vertexSize / sizeof(float)));
+//    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
+//    glCheck(glGetBufferSubData(GL_ARRAY_BUFFER, meshData.vboAllocation.offset, meshData.vertexCount * meshData.vertexSize, destVerts.data()));
+//    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+//
+//    destIndices.clear();
+//    destIndices.resize(meshData.submeshCount);
+//
+//    for (auto i = 0u; i < meshData.submeshCount; ++i)
+//    {
+//        destIndices[i].resize(meshData.indexData[i].indexCount);
+//        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].iboAllocation.bufferID));
+//
+//        //fudgy kludge for different index types
+//        switch (meshData.indexData[i].format)
+//        {
+//        default: break;
+//        case GL_UNSIGNED_BYTE:
+//        {
+//            std::vector<std::uint8_t> temp(meshData.indexData[i].indexCount);
+//            glCheck(glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, meshData.indexData[i].indexCount, temp.data()));
+//            for (auto j = 0u; j < meshData.indexData[i].indexCount; ++j)
+//            {
+//                destIndices[i][j] = temp[j];
+//            }
+//        }
+//        break;
+//        case GL_UNSIGNED_SHORT:
+//        {
+//            std::vector<std::uint16_t> temp(meshData.indexData[i].indexCount);
+//            glCheck(glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, meshData.indexData[i].indexCount * sizeof(std::uint16_t), temp.data()));
+//            for (auto j = 0u; j < meshData.indexData[i].indexCount; ++j)
+//            {
+//                destIndices[i][j] = temp[j];
+//            }
+//        }
+//        break;
+//        case GL_UNSIGNED_INT:
+//            glCheck(glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, meshData.indexData[i].indexCount * sizeof(std::uint32_t), destIndices[i].data()));
+//            break;
+//        }
+//    }
+//    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+//}

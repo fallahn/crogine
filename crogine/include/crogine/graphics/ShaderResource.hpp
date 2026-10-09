@@ -156,6 +156,7 @@ namespace cro
     public:
         enum BuiltIn
         {
+            Wireframe          = 0x75000000,
             PBRDeferred        = 0x76000000,
             VertexLitDeferred  = 0x77000000,
             Unlit              = 0x78000000,

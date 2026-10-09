@@ -288,4 +288,9 @@ namespace cro::Detail::ModelBinary
     for loading collision meshes into the golf game. TODO: fix this.
     */
     CRO_EXPORT_API cro::Mesh::Data read(const std::filesystem::path&, std::vector<float>& dstVert, std::vector<std::vector<std::uint32_t>>& dstIdx);
+
+    /*!
+    \brief Reads back model data from the GPU based on the given MeshData and stores it in the given arrays
+    */
+    CRO_EXPORT_API void readBackVertexData(cro::Mesh::Data meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint32_t>>& destIndices);
 }

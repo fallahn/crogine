@@ -378,12 +378,14 @@ void SurrealState::createScene()
         entity.getComponent<cro::ParticleEmitter>().start();
     }
 
+    md.createWireframe(true);
     if (md.loadFromFile("assets/models/debug_capsule.cmt"))
     {
         entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 0.f, 1.f, -2.f });
         md.createModel(entity);
     }
+    md.createWireframe(false);
 
     if (md.loadFromFile("assets/water/head.cmt"))
     {

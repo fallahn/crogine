@@ -100,6 +100,12 @@ namespace cro
         */
         virtual Skeleton getSkeleton() const { return {}; }
 
+        /*!
+        \brief Used to tell if this mesh builder also created a wireframe mesh.
+        \see BinaryMeshBuilder
+        */
+        virtual bool hasWireframe() const { return false; }
+
         //returns the total number of components in a given set of attributes
         static std::size_t getComponentCount(const std::array<Mesh::Attribute, Mesh::Attribute::Total>& attrib);
         //returns the size of the vertex layout in bytes
