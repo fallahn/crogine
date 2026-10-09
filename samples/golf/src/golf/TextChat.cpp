@@ -561,14 +561,6 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
         const auto outStr = "Server: " + msgText;
 
         playSound = !m_speaker.speak(msgText, cro::AudioMixer::getVolume(MixerChannel::TextToSpeech));
-        m_displayBuffer.emplace_back(outStr, ImVec4(TextHighlightColour));
-
-        if (m_displayBuffer.size() > MaxLines)
-        {
-            m_displayBuffer.pop_front();
-        }
-        m_scrollToEnd = true;
-
         printToScreen(outStr, TextHighlightColour, 7, TextGoldColour);
 
         return playSound;
@@ -615,8 +607,17 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
         listColour = idx == 0 ? TextNormalColour : CD32::Colours[CD32::GreyLight];
     }
 
-    //TODO stick this in a function as it's repeated from Server Message, above
-    m_displayBuffer.emplace_back(outStr, ImVec4(listColour));
+    printToScreen(outStr, chatColour);
+    //hack to alternate regular chat lines fo visibility
+    m_displayBuffer.back().colour = listColour;
+
+    return playSound;
+}
+
+void TextChat::printToScreen(cro::String outStr, cro::Colour chatColour, std::uint32_t colourIndex, cro::Colour c2)
+{
+    //log the message in history
+    m_displayBuffer.emplace_back(outStr, ImVec4(chatColour));
 
     if (m_displayBuffer.size() > MaxLines)
     {
@@ -624,15 +625,8 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     }
     m_scrollToEnd = true;
 
-    printToScreen(outStr, chatColour);
 
-    return playSound;
-}
-
-void TextChat::printToScreen(cro::String outStr, cro::Colour chatColour, std::uint32_t colourIndex, cro::Colour c2)
-{
     //create an entity to temporarily show the message on screen
-
     const auto uiSize = glm::vec2(GolfGame::getActiveTarget()->getSize());
     const auto viewScale = getViewScale(uiSize);
     //uiSize /= getViewScale(uiSize);

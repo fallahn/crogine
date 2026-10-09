@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "ScoreType.hpp"
+#include "PacketIDs.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/graphics/Colour.hpp>
@@ -129,11 +130,45 @@ static inline const std::array<std::string, ScoreType::Count> RuleDescriptions =
     */
 };
 
+//NOTE min player count is part of the ScoreType struct
 static const inline cro::String MinPlayerWarning("NEED MORE PLAYERS");
 static const inline cro::String MaxPlayerWarning("TOO MANY PLAYERS");
 static const inline cro::String NoTeamplayWarning("NOT AVAILABLE FOR TEAMS");
 
-//NOTE min player count is part of the ScoreType struct
+
+#ifdef USE_GNS
+#define GROUP_ENABLED (!Social::isSteamdeck() && SteamBeta::isOnBeta())
+#else
+#define GROUP_ENABLED false
+#endif
+
+static inline const std::array<cro::String, ClientGrouping::Count> GroupStrings =
+{
+    cro::String("None"),
+    "Balanced",
+    "One", "Two", "Three", "Four"
+};
+
+static inline const std::string GroupHelpString =
+R"(
+Simultaneous play allows splitting the round's players into smaller
+groups which play concurrently for a shorter round time. Multiple
+players on the same client or in the same group continue to play
+consecutively. Groups are approximate as players on the same client
+cannot be split between groups.
+
+Skins rounds and Match play ignore group settings.
+
+Group modes are:
+   None     - All players play consecutively as usual.
+   Balanced - Players are split as evenly as possible between two groups.
+   One      - Each player has their own group, unless there are multiple
+              players on the client.
+   Two      - Players are split into approximate groups of two.
+   Three    - Players are split into approximate groups of three.
+   Four     - Players are split into approximate groups of four.
+)";
+
 
 static constexpr std::array<glm::vec3, 8u> EmotePositions =
 {

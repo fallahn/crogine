@@ -30,6 +30,11 @@ source distribution.
 #include "MenuState.hpp"
 #include "PacketIDs.hpp"
 
+#ifdef USE_GNS
+#include <Social.hpp>
+#include <SteamBeta.hpp>
+#endif
+
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/SpriteAnimation.hpp>
@@ -481,7 +486,7 @@ void MenuState::LobbyMenu::simulate(float dt)
                 if (m_timeoutCallback)
                 {
                     m_timeoutCallback();
-                    playSound(MenuSoundEvent::Activate);
+                    //playSound(MenuSoundEvent::Activate);
                 }
                 break;
             }
@@ -583,6 +588,8 @@ void MenuState::LobbyMenu::readyStart()
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::LobbyReady,
                 std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | ready),
                 net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+            playSound(ready? MenuSoundEvent::Switch : MenuSoundEvent::Cancel);
         }
         else
         {
@@ -1843,6 +1850,26 @@ void MenuState::LobbyMenu::createRulesTab()
             };
         item->labels = { "Yes", "No" };
         item->selectedIndex = 0;
+
+        if (GROUP_ENABLED)
+        {
+            item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
+            item->title = "Group Mode";
+            item->description = "Split network players in to multiple groups which play simultaneously. Experimental (beta only).";
+            cro::Util::String::wordWrap(item->description, WordWrapSmall);
+            item->activated = [this](Menu::Item& i)
+                {
+                    if (m_sharedData.clientConnection.connected)
+                    {
+                        //this is set when receive confirmation back from the server
+                        //m_sharedData.groupMode = i.selectedIndex;
+                        m_sharedData.clientConnection.netClient.sendPacket(
+                            PacketID::GroupMode, /*m_sharedData.groupMode*/i.selectedIndex, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    }
+                };
+            item->labels = { GroupStrings.begin(), GroupStrings.end() };
+            item->selectedIndex = m_sharedData.groupMode;
+        }
     }
 }
 
@@ -2542,6 +2569,10 @@ void MenuState::LobbyMenu::updateRulesTab(bool resized)
     str += " Big Balls\n";
     str += m_ruleMods[RuleMod::NoAssist] ? EmCross : EmCheck;
     str += " Allow Assists";
+    //if (GROUP_ENABLED)
+    //{
+    //    str += "\n" + cro::String("Grouping: ") + GroupStrings[m_sharedData.groupMode];
+    //}
 
     m_infoText.setString(str);
     tWidth = m_infoText.getLocalBounds().width;

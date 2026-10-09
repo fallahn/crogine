@@ -37,7 +37,6 @@ source distribution.
 #include "GameConsts.hpp"
 #include "TextAnimCallback.hpp"
 #include "MessageIDs.hpp"
-#include "PacketIDs.hpp"
 #include "../GolfGame.hpp"
 
 #include <Social.hpp>
@@ -78,13 +77,6 @@ source distribution.
 
 using namespace cl;
 
-#ifdef USE_GNS
-#define GROUP_ENABLED (!Social::isSteamdeck() && SteamBeta::isOnBeta())
-#else
-#define GROUP_ENABLED false
-#endif
-//#define GROUP_ENABLED true
-
 namespace
 {
     struct MenuID final
@@ -112,33 +104,6 @@ namespace
     constexpr glm::vec2 MenuHiddenPosition(-10000.f);
 
     const cro::Time CooldownTime = cro::seconds(10.f);
-
-    std::array<std::string, ClientGrouping::Count> GroupStrings =
-    {
-        std::string("None"),
-        "Balanced",
-        "One", "Two", "Three", "Four"
-    };
-
-    const std::string HelpString =
-R"(
-Simultaneous play allows splitting the round's players into smaller
-groups which play concurrently for a shorter round time. Multiple
-players on the same client or in the same group continue to play
-consecutively. Groups are approximate as players on the same client
-cannot be split between groups.
-
-Skins rounds and Match play ignore group settings.
-
-Group modes are:
-   None     - All players play consecutively as usual.
-   Balanced - Players are split as evenly as possible between two groups.
-   One      - Each player has their own group, unless there are multiple
-              players on the client.
-   Two      - Players are split into approximate groups of two.
-   Three    - Players are split into approximate groups of three.
-   Four     - Players are split into approximate groups of four.
-)";
 }
 
 PlayerManagementState::PlayerManagementState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -604,7 +569,7 @@ void PlayerManagementState::buildScene()
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ -258.f, 0.f, 0.2f });
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(smallFont).setString(HelpString);
+        entity.addComponent<cro::Text>(smallFont).setString(GroupHelpString);
         entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.addComponent<cro::UIInput>().setGroup(MenuID::Help);
