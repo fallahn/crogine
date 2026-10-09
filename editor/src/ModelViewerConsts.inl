@@ -63,6 +63,6 @@ struct CameraID final
 
 static constexpr std::uint32_t LightmapSize = 1024;
 
-static constexpr std::uint8_t MaxSubMeshes = 8; //for imported models. Can be made bigger but this is generally a waste of memory
+static constexpr std::uint8_t MaxSubMeshes = 12; //for imported models. Can be made bigger but this is generally a waste of memory
 
 float updateView(cro::Entity entity, float farPlane, float fov);

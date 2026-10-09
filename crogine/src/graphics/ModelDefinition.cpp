@@ -52,8 +52,11 @@ source distribution.
 
 #include <filesystem>
 
+#include "../detail/GLCheck.hpp"
+
 using namespace cro;
 
+//TODO we can make this permanent now.
 #define VSM_TEST
 
 namespace
@@ -961,6 +964,9 @@ bool ModelDefinition::loadFromFile(const std::filesystem::path& path, bool insta
         material.name = "Wireframe";
         material.customShader = false;
         material.setProperty("u_colour", glm::vec4(1.f));
+
+        //material.addCustomSetting(GL_POLYGON_OFFSET_LINE);
+        //glCheck(glPolygonOffset(-1.0f, -1.0f)); //hmmm this is really not the place to be setting this - not to mention it may be reset *anywhere* else
 
         m_materialIDs[m_materialCount] = matID;
 

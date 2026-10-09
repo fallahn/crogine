@@ -169,7 +169,7 @@ private:
 
     void importModel();
     void importIQM(const std::string&);
-    void updateImportNode(CMFHeader, std::vector<float>& verts, std::vector<std::vector<std::uint32_t>>& indices);
+    void updateImportNode(CMFHeader, std::vector<float>& verts, std::vector<std::vector<std::uint32_t>>& indices, std::uint32_t primitiveType);
     void buildSkeleton();
     void exportModel(bool = false, bool = true);
     void applyImportTransform(std::vector<float>& vertexData);

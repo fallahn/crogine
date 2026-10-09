@@ -788,7 +788,7 @@ void ModelState::importModel()
                     }), importedIndexArrays.end());
 
                 //updates header with array sizes
-                updateImportNode(header, importedVBO, importedIndexArrays);
+                updateImportNode(header, importedVBO, importedIndexArrays, GL_TRIANGLES); //TODO this needs to read the import data
             }
 
             m_preferences.lastImportDirectory = U8PATH_CAST(cro::FileSystem::getFilePath(path));
@@ -821,12 +821,12 @@ void ModelState::importIQM(const std::string& path)
     std::vector<float> verts;
     std::vector<std::vector<std::uint32_t>> indices;
 
-    readBackVertexData(meshData, verts, indices);
+    cro::Detail::ModelBinary::readBackVertexData(meshData, verts, indices);
 
     CMFHeader header;
     header.flags = meshData.attributeFlags;
     header.animated = builder.getSkeleton();
-    updateImportNode(header, verts, indices);
+    updateImportNode(header, verts, indices, meshData.primitiveType);
 
     //yoink the anim info if it exists and apply to preview skel
     if (header.animated)
@@ -859,7 +859,8 @@ void ModelState::importIQM(const std::string& path)
     buildSkeleton();
 }
 
-void ModelState::updateImportNode(CMFHeader header, std::vector<float>& importedVBO, std::vector<std::vector<std::uint32_t>>& importedIndexArrays)
+void ModelState::updateImportNode(CMFHeader header, std::vector<float>& importedVBO, 
+                                std::vector<std::vector<std::uint32_t>>& importedIndexArrays, std::uint32_t primitiveType)
 {
     for (const auto& indices : importedIndexArrays)
     {
@@ -882,7 +883,7 @@ void ModelState::updateImportNode(CMFHeader header, std::vector<float>& imported
         //create a new VBO if it doesn't exist, else recycle it
         if (m_importedMeshes.count(header.flags) == 0)
         {
-            m_importedMeshes.insert(std::make_pair(header.flags, m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(header.flags, MaxSubMeshes, GL_TRIANGLES))));
+            m_importedMeshes.insert(std::make_pair(header.flags, m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(header.flags, MaxSubMeshes, /*GL_TRIANGLES*/primitiveType))));
             LOG("Created new import mesh", cro::Logger::Type::Info);
         }
         else
@@ -1245,6 +1246,7 @@ void ModelState::flipNormals()
     }
 }
 
+//moved to cro::Detail::ModelBinary - TODO remove this
 //void ModelState::readBackVertexData(cro::Mesh::Data meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint32_t>>& destIndices)
 //{
 //    destVerts.clear();

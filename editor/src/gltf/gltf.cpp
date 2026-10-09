@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -944,7 +944,7 @@ bool ModelState::importGLTF(std::int32_t idx, bool loadAnims)
     CMFHeader header;
     header.flags = attribFlags;
     header.animated = loadAnims;
-    updateImportNode(header, vertices, indices);
+    updateImportNode(header, vertices, indices, primitiveTypes[0]); //TODO we want to be able to read different types per sub-mesh
 
     return true;
 }
