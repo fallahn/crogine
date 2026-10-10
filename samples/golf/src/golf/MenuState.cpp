@@ -1984,8 +1984,9 @@ void MenuState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<cro::Message::WindowEvent>();
         if (data.event == SDL_EVENT_WINDOW_RESIZED)
         {
+#ifdef NEW_LOBBY
             m_lobbyMenu.resized(data.data0, data.data1);
-
+#endif
             const glm::vec2 windowSize = glm::vec2(data.data0, data.data1) / cro::UIElementSystem::getViewScale(); 
             
             auto e = m_lobbyWindowEntities[LobbyEntityID::Scorecard];
@@ -3977,10 +3978,10 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             const std::uint16_t data = evt.packet.as<std::uint16_t>();
             const auto ruleType = (data & 0xff00) >> 8;
             const auto value = (data & 0x00ff);
-
+#ifdef NEW_LOBBY
             m_lobbyMenu.m_ruleMods[ruleType] = value;
             m_lobbyDirty = true;
-
+#endif
             switch (ruleType)
             {
             default: break;
@@ -4350,6 +4351,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     m_sharedData.mapDirectory = "";
 
                     //print to UI course is missing
+#ifdef NEW_LOBBY
                     if (MissingCourses.count(course) != 0)
                     {
                         m_lobbyMenu.m_courseDetails.title = MissingCourses.at(course);
@@ -4361,7 +4363,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     m_lobbyMenu.m_courseDetails.desc = "Course Data Not Installed";
                     m_lobbyMenu.m_courseDetails.holeCount = " ";
                     m_lobbyDirty = true;
-
+#endif
                     //TODO these are for the old lobby and can eventually be removed
                     cro::Command cmd;
                     cmd.targetFlags = CommandID::Menu::CourseTitle;
@@ -4436,11 +4438,12 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                         updateCompletionString();
 
                         //update UI
+#ifdef NEW_LOBBY
                         m_lobbyMenu.m_courseDetails.title = data->title;
                         m_lobbyMenu.m_courseDetails.desc = data->description;
                         m_lobbyMenu.m_courseDetails.holeCount = data->holeCount[m_sharedData.holeCount];
                         m_lobbyDirty = true;
-
+#endif
                         //TODO these are for the old lobby and can be disabled in the future
 #ifndef NEW_LOBBY
                         cro::Command cmd;
