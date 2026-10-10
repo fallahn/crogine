@@ -71,7 +71,7 @@ static const std::uint32_t BallRenderFlags = (1 << 22);
 
 #define INTERP_TYPE InterpolationType::Hermite
 
-#define NEW_LOBBY
+//#define NEW_LOBBY
 
 namespace cro
 {

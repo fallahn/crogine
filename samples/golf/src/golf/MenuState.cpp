@@ -2110,7 +2110,9 @@ bool MenuState::simulate(float dt)
     wind.elapsedTime = accumTime;
     m_windBuffer.setData(wind);
 
+#ifdef NEW_LOBBY
     m_lobbyMenu.simulate(dt);
+#endif
     m_backgroundScene.simulate(dt);
     //processing these with options open only slows things down.
 #ifdef CRO_DEBUG_
