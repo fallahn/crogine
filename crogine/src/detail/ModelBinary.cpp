@@ -37,7 +37,7 @@ source distribution.
 
 using namespace cro;
 
-bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path, bool includeSkeleton)
+bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::filesystem::path& path, bool includeSkeleton)
 {
     bool retVal = false;
 

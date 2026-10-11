@@ -278,7 +278,7 @@ namespace cro::Detail::ModelBinary
         }
     };
 
-    CRO_EXPORT_API bool write(cro::Entity, const std::string&, bool includeSkeleton = true);
+    CRO_EXPORT_API bool write(cro::Entity, const std::filesystem::path&, bool includeSkeleton = true);
 
     /*!
     \brief Reads vertex positions and index arrays from a binary file at the given path

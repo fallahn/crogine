@@ -79,7 +79,7 @@ namespace ImGui
 
             if(m_fileBrowser.HasSelected())
             {
-                const std::string path = m_fileBrowser.GetSelected().string(); //note actually returns std::filesystem::path - may be more useful
+                const auto path = m_fileBrowser.GetSelected().string(); //note actually returns std::filesystem::path - may be more useful
                 m_fileBrowser.ClearSelected();
 
                 //do stuff with file path
