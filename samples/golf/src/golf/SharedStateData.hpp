@@ -407,6 +407,7 @@ struct SharedStateData final
     
     std::int32_t flagText = 0; //none, black, white
     std::string flagPath;
+    std::int32_t ttsVoice = 0;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources; //globally shared resources, eg fonts

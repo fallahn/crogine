@@ -2211,6 +2211,36 @@ void OptionsStateV2::createAccesibilityItems()
         };
     item->labels = { "No", "Yes" };
     item->selectedIndex = m_sharedData.useTTS ? 1 : 0;
+
+#ifdef __linux__
+    //voice selection
+    item = &m_uiLayout.menuLayout.items[TabID::Accessibility].emplace_back();
+    item->title = "Text to Speech Voice";
+    //item->description = "Enable text to speech playback for in-game chat";
+    //cro::Util::String::wordWrap(item->description, WordWrapSmall);
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.ttsVoice = i.selectedIndex;
+
+            m_tts.setVoice(m_sharedData.ttsVoice);
+            switch (i.selectedIndex)
+            {
+            default:
+            case 0:
+                m_tts.speak("Voice One");
+                break;
+            case 1:
+                m_tts.speak("Voice Two");
+                break;
+            case 2:
+                m_tts.speak("Voice Three");
+                break;
+            }
+        };
+    item->labels = { "1", "2", "3"}; //TODO we should be reading TTS MaxVoices, but this only works on linux anyway
+    item->selectedIndex = m_sharedData.ttsVoice;
+    m_tts.setVoice(m_sharedData.ttsVoice);
+#endif
 }
 
 void OptionsStateV2::createKeyboardItems()
