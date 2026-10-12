@@ -1083,7 +1083,7 @@ void ProfileStateV2::buildScene()
     m_uiLayout.tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_uiLayout.tabBar.navLeft = entity;
 
-    //nave right text
+    //nav right text
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
@@ -1114,7 +1114,7 @@ void ProfileStateV2::buildScene()
 
     const auto bounds = spriteSheet.getSprite("l1").getTextureBounds();
 
-    //nave left icon
+    //nav left icon
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), bounds.height / 2.f });
     entity.addComponent<cro::Drawable2D>();
@@ -1131,7 +1131,7 @@ void ProfileStateV2::buildScene()
     m_uiLayout.tabBar.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_uiLayout.tabBar.navLeftSprite = entity;
 
-    //nave right icon
+    //nav right icon
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), bounds.height / 2.f });
     entity.addComponent<cro::Drawable2D>();
@@ -1275,6 +1275,7 @@ void ProfileStateV2::buildScene()
 
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.05f });
+        entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f)); //hide initially - this is shown on tab selection
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>(m_clubTexture.getTexture());
         m_uiLayout.detailsPane.image.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
