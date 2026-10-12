@@ -560,8 +560,11 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
         //MaxClients means this is a Server message
         const auto outStr = "Server: " + msgText;
 
-        m_speaker.setVoice(m_sharedData.ttsVoice);
-        playSound = !m_speaker.speak(msgText, cro::AudioMixer::getVolume(MixerChannel::TextToSpeech));
+        if (m_sharedData.useTTS)
+        {
+            m_speaker.setVoice(m_sharedData.ttsVoice);
+            playSound = !m_speaker.speak(msgText, cro::AudioMixer::getVolume(MixerChannel::TextToSpeech));
+        }
         printToScreen(outStr, TextHighlightColour, 7, TextGoldColour);
 
         return playSound;
@@ -601,8 +604,12 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     else
     {
         outStr += ": " + msgText;
-        m_speaker.setVoice(m_sharedData.ttsVoice);
-        playSound = !m_speaker.speak(msgText, cro::AudioMixer::getVolume(MixerChannel::TextToSpeech));
+
+        if (m_sharedData.useTTS)
+        {
+            m_speaker.setVoice(m_sharedData.ttsVoice);
+            playSound = !m_speaker.speak(msgText, cro::AudioMixer::getVolume(MixerChannel::TextToSpeech));
+        }
 
         static std::int32_t idx = 0;
         idx = (idx + 1) % 2;
