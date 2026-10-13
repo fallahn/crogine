@@ -33,9 +33,10 @@ source distribution.
 #include "ui/FlagPreview.hpp"
 #include "ui/MenuLayout.hpp"
 
+#include <crogine/audio/AudioScape.hpp>
+#include <crogine/audio/TextToSpeech.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/State.hpp>
-#include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
@@ -88,6 +89,7 @@ private:
     void resetRepeatTimer(std::int32_t, cro::Time);
 
     UILayout m_uiLayout;
+    cro::TTSSpeaker m_tts;
     
     cro::Entity m_infoString;
     cro::Entity m_infoSprite;

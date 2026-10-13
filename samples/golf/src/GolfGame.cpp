@@ -1909,6 +1909,12 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.enableDailyStreak = prop.getValue<bool>();
                     }
+                    else if (name == "tts_voice")
+                    {
+                        //TODO we limit to 3 because that's the linux count
+                        //I gave up trying to read anything from windows TTS
+                        m_sharedData.ttsVoice = prop.getValue<std::int32_t>() % 3;
+                    }
                 }
             }
 
@@ -2131,6 +2137,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("snap_hio").setValue(m_sharedData.snapHIO);
     cfg.addProperty("random_weather").setValue(m_sharedData.randomQuickplayWeather);
     cfg.addProperty("daily_streak").setValue(m_sharedData.enableDailyStreak);
+    cfg.addProperty("tts_voice").setValue(m_sharedData.ttsVoice);
     //cfg.addProperty("filter_assist").setValue(Social::getLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist));
     cfg.save(path);
 
