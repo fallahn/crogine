@@ -208,9 +208,10 @@ namespace
                     swapData.umbrellaEnt.getComponent<cro::Model>().setHidden(true);
                 }
             }
-
+#ifdef GEN_GRASS
             glUseProgram(grassUniform.shader);
             glUniform1f(grassUniform.alpha, grassUniform.current);
+#endif
         }
 
         cro::Entity terrainEntity;
