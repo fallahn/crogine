@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -39,7 +39,9 @@ source distribution.
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/matrix.hpp>
 
-#ifdef CRO_DEBUG_
+//#define DEBUG_UI
+
+#if defined CRO_DEBUG_ || defined DEBUG_UI
 #include <crogine/gui/GuiClient.hpp>
 #endif
 
@@ -79,7 +81,7 @@ namespace cro
     \see Camera
     */
     class CRO_EXPORT_API RenderSystem2D final : public System, public Renderable
-#ifdef CRO_DEBUG_
+#if defined CRO_DEBUG_ || defined DEBUG_UI
         , public GuiClient
 #endif
     {
@@ -148,6 +150,11 @@ namespace cro
         }
 
     private:
+
+#ifdef DEBUG_UI
+        std::int32_t m_shaderSwitches;
+        std::int32_t m_textureSwitches;
+#endif
 
         Shader m_colouredShader;
         Shader m_texturedShader;

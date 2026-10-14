@@ -74,6 +74,10 @@ using namespace cro;
 
 RenderSystem2D::RenderSystem2D(MessageBus& mb)
     : System        (mb, typeid(RenderSystem2D)),
+#ifdef DEBUG_UI
+    m_shaderSwitches(0),
+    m_textureSwitches(0),
+#endif
     m_sortOrder     (DepthAxis::Z),
     m_needsSort     (true),
     m_drawLists     (1),
@@ -87,6 +91,7 @@ RenderSystem2D::RenderSystem2D(MessageBus& mb)
     m_colouredShader.loadFromString(Shaders::Sprite::Vertex, Shaders::Sprite::Fragment);
     m_texturedShader.loadFromString(Shaders::Sprite::Vertex, Shaders::Sprite::Fragment, "#define TEXTURED\n");
 
+
 #ifdef CRO_DEBUG_
     addStats([&]() 
         {
@@ -96,6 +101,15 @@ RenderSystem2D::RenderSystem2D(MessageBus& mb)
             }
         });
 #endif
+
+    //registerWindow([this]()
+    //    {
+    //        const auto t = "Scene: " + getScene()->getTitle();
+    //        ImGui::Begin(t.c_str());
+    //        ImGui::Text("Shader switches %d", m_shaderSwitches);
+    //        ImGui::Text("Texture switches %d", m_textureSwitches);
+    //        ImGui::End();
+    //    });
 }
 
 RenderSystem2D::~RenderSystem2D()
@@ -137,7 +151,8 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
             auto& drawable = entity.getComponent<Drawable2D>();
             drawable.m_wasCulledLastFrame = true;
 
-            if ((renderFlags & drawable.m_renderFlags) == 0)
+            if ((renderFlags & drawable.m_renderFlags) == 0
+                || drawable.m_shader == nullptr)
             {
                 EARLY_OUT;
             }
@@ -183,7 +198,22 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
 #endif
             [](Entity a, Entity b)
             {
-                return a.getComponent<Drawable2D>().m_sortCriteria < b.getComponent<Drawable2D>().m_sortCriteria;
+                //if two drawables have the same depth (which may be the case
+                //for many text items for example) sort by texture ID to reduce
+                //the number of times textures are re-bound.
+                const auto& d1 = a.getComponent<cro::Drawable2D>();
+                const auto& d2 = b.getComponent<cro::Drawable2D>();
+                if (d1.m_sortCriteria == d2.m_sortCriteria)
+                {
+                    /*if (d1.m_textureInfo.textureID.textureID == d2.m_textureInfo.textureID.textureID)
+                    {
+                        return d1.m_shader->getGLHandle() < d2.m_shader->getGLHandle();
+                    }*/
+
+                    return d1.m_textureInfo.textureID.textureID < d2.m_textureInfo.textureID.textureID;
+                }
+                //else sort by depth
+                return d1.m_sortCriteria < d2.m_sortCriteria;
             });
     }
 }
@@ -258,6 +288,9 @@ void RenderSystem2D::process(float)
 
 void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
 {
+    std::int32_t sSwitches = 0;
+    std::int32_t tSwitches = 0;
+
     const auto& camComponent = cameraEntity.getComponent<Camera>();
     if (camComponent.getDrawListIndex() < m_drawLists.size())
     {
@@ -267,9 +300,12 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
         glCheck(glDepthMask(GL_FALSE));
         glCheck(glEnable(GL_CULL_FACE));
         glCheck(glDisable(GL_DEPTH_TEST));
+        //glCheck(glEnable(GL_DEPTH_TEST)); //hmm would be nice to use this rather than manually sort, but epic z-fighting, and we can't draw text shadows etc
         glCheck(glEnable(GL_SCISSOR_TEST));
 
         std::uint32_t lastProgram = 0;
+        std::array<std::uint32_t, 32> activeTextures = {};
+        std::fill(activeTextures.begin(), activeTextures.end(), 0);
 
         const auto& entities = m_drawLists[camComponent.getDrawListIndex()];
         for (auto entity : entities)
@@ -285,14 +321,15 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
             glm::mat4 worldMat = tx.getWorldTransform();
 
             if (//TODO surely these ought to be culling criteria?
-                drawable.m_shader && !drawable.m_updateBufferData)
+                /*drawable.m_shader && */!drawable.m_updateBufferData)
             {
-                //apply shader
+                //apply shader - the drawable should be culled from the list if shader is nullptr...
                 auto program = drawable.m_shader->getGLHandle();
                 if (program != lastProgram)
                 {
                     glCheck(glUseProgram(program));
                     lastProgram = program;
+                    sSwitches++;
                 }
                 //glCheck(glUniformMatrix4fv(drawable.m_worldUniform, 1, GL_FALSE, &(worldMat[0].x)));
                 glCheck(glUniformMatrix4fv(drawable.m_viewProjectionUniform, 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
@@ -300,10 +337,17 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
                 glCheck(glUniformMatrix3fv(drawable.m_normalMatrixUniform, 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldMat)))));
 
                 //apply texture if active
-                if (drawable.m_textureInfo.textureID.textureID)
+                const auto texID = drawable.m_textureInfo.textureID.textureID;
+                if (texID)
                 {
-                    glCheck(glActiveTexture(GL_TEXTURE0));
-                    glCheck(glBindTexture(drawable.m_textureInfo.GLType, drawable.m_textureInfo.textureID.textureID));
+                    if (activeTextures[0] != texID)
+                    {
+                        glCheck(glActiveTexture(GL_TEXTURE0));
+                        glCheck(glBindTexture(drawable.m_textureInfo.GLType, drawable.m_textureInfo.textureID.textureID));
+
+                        tSwitches++;
+                        activeTextures[0] = texID;
+                    }
                     glCheck(glUniform1i(drawable.m_textureUniform, 0));
                 }
 
@@ -311,10 +355,17 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
                 std::int32_t j = 1;
                 for (const auto& [uniform, value] : drawable.m_textureIDBindings)
                 {
-                    glCheck(glActiveTexture(GL_TEXTURE0 + j));
-                    glCheck(glBindTexture(GL_TEXTURE_2D, value));
+                    if (activeTextures[j] != value)
+                    {
+                        glCheck(glActiveTexture(GL_TEXTURE0 + j));
+                        glCheck(glBindTexture(GL_TEXTURE_2D, value));
+                        activeTextures[j] = value;
+                        tSwitches++;
+                    }
+
                     glCheck(glUniform1i(uniform, j));
                     j++;
+
                 }
                 for (auto [uniform, value] : drawable.m_floatBindings)
                 {
@@ -423,8 +474,12 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
         glCheck(glDisable(GL_CULL_FACE));
         glCheck(glFrontFace(GL_CCW));
         glCheck(glDepthMask(GL_TRUE));
-        //glCheck(glCullFace(GL_BACK));
     }
+
+#ifdef DEBUG_UI
+    m_shaderSwitches = sSwitches;
+    m_textureSwitches = tSwitches;
+#endif
 }
 
 void RenderSystem2D::setSortOrder(DepthAxis sortOrder)
