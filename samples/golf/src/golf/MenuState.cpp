@@ -2133,7 +2133,7 @@ bool MenuState::simulate(float dt)
     return true;
 }
 
-void MenuState::render()
+void MenuState::preRender()
 {
     m_scaleBuffer.bind();
     m_resolutionBuffer.bind();
@@ -2160,7 +2160,10 @@ void MenuState::render()
     m_backgroundTexture.clear();
     m_backgroundScene.render();
     m_backgroundTexture.display();
+}
 
+void MenuState::render()
+{
     glLineWidth(m_viewScale.y * 2.f);
     m_uiScene.render();
     glLineWidth(1.f);

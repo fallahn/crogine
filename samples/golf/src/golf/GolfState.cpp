@@ -3526,7 +3526,7 @@ bool GolfState::simulate(float dt)
     return true;
 }
 
-void GolfState::render()
+void GolfState::preRender()
 {
     m_benchmark.update();
 
@@ -3650,7 +3650,7 @@ void GolfState::render()
 
         nightCam = m_flightCam;
     }
- 
+
 
     //TODO remove conditional branch?
     if (m_sharedData.nightTime)
@@ -3701,7 +3701,10 @@ void GolfState::render()
         m_mapScene.render();
         m_minimapZoom.sceneTexture.display();
     }
+}
 
+void GolfState::render()
+{
     //m_uiScene.setActiveCamera(uiCam);
     m_uiScene.render();
 }

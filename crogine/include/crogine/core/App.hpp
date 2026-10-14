@@ -154,7 +154,15 @@ namespace cro
         virtual void simulate(float) = 0;
 
         /*!
-        \brief Renders any drawables
+        \brief Provides an opportunity to pre-render any offscreen targets
+        *after* the update cycle is run, but *before* the main window is cleared.
+        This is highly recommended to prevent multiple unnecessary calls to
+        setting the default target active.
+        */
+        virtual void preRender() {};
+
+        /*!
+        \brief Renders any drawables to the default target (the main window)
         */
         virtual void render() = 0;
 

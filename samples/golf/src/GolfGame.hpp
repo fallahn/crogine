@@ -108,6 +108,7 @@ private:
     void handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
     void simulate(float) override;
+    void preRender() override;
     void render() override;
     bool initialise() override;
     void finalise() override;

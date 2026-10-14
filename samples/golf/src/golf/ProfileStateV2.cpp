@@ -823,7 +823,7 @@ bool ProfileStateV2::simulate(float dt)
     return true;
 }
 
-void ProfileStateV2::render()
+void ProfileStateV2::preRender()
 {
     std::int32_t colourIndex = 0;
     switch (m_uiLayout.tabBar.activeIndex)
@@ -854,7 +854,10 @@ void ProfileStateV2::render()
         m_uiLayout.palettePreview.draw();
     }
     m_previewTexture.display();
+}
 
+void ProfileStateV2::render()
+{
     m_scene.render();
 }
 

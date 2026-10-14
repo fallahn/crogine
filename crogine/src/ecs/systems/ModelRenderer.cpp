@@ -431,8 +431,8 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
                 }
 
                 //apply shader uniforms from material
-                //FUTURE ME: if you end up back here wondering why the matrices aren't calculated correctly
-                //remember CamerSystems need to be added to a Scene BEFORE any render systems...
+                //DEAR FUTURE ME: if you end up back here wondering why the matrices aren't calculated correctly
+                //remember CameraSystems need to be added to a Scene BEFORE any render systems...
                 glCheck(glUniformMatrix4fv(uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(sortData.worldViewMatrix)));
                 tSwitches += applyProperties(material, model, *getScene(), camComponent);
 

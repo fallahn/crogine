@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -111,7 +111,16 @@ namespace cro
         virtual bool simulate(float dt) = 0;
 
         /*!
-        \brief Calls to rendering systems should be performed here.
+        \brief Provides an opportunity to render to offscreen targets
+        after the State has been updated but before the main window has
+        been set active.
+        */
+        virtual void preRender() {}
+
+        /*!
+        \brief Calls to rendering systems should be performed here. This
+        function will always be called while the main window is the active
+        frame buffer.
         */
         virtual void render() = 0;
 

@@ -598,6 +598,8 @@ void App::run(bool resetSettings)
             || framesRendered++ < /*MaxFrames*/Console::getMaxFrames())
         {
             renderClock.restart();
+            preRender();
+
             m_window.clear();
             render();
             if (auto* dd = ImGui::GetDrawData(); dd != nullptr)

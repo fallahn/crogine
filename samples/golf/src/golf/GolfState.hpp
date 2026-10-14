@@ -142,6 +142,7 @@ public:
     void handleMessage(const cro::Message&) override;
     bool simulate(float) override;
 
+    void preRender() override;
     void render() override;
 
     cro::StateID getStateID() const override { return StateID::Golf; }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -118,6 +118,11 @@ namespace cro
         or the end of the stack is reached.
         */
         void simulate(float);
+
+        /*!
+        \brief Calls the preRender() function on each state active in the stack
+        */
+        void preRender();
 
         /*!
         \brief Calls the render function on each state active on the stack

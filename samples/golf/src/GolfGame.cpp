@@ -668,14 +668,27 @@ void GolfGame::simulate(float dt)
     }
 }
 
-void GolfGame::render()
+void GolfGame::preRender()
 {
+    m_stateStack.preRender();
+
     if (m_sharedData.usePostProcess
         && m_postBuffer)
     {
         m_postBuffer->clear();
         m_stateStack.render();
         m_postBuffer->display();
+    }
+}
+
+void GolfGame::render()
+{
+    if (m_sharedData.usePostProcess
+        && m_postBuffer)
+    {
+        /*m_postBuffer->clear();
+        m_stateStack.render();
+        m_postBuffer->display();*/
 
         m_postQuad->draw();
     }
