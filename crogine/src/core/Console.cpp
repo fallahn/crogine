@@ -110,6 +110,7 @@ namespace
 int textEditCallback(ImGuiInputTextCallbackData* data);
 
 float Console::m_avgFrameTime = 0.f;
+std::int32_t Console::m_displayedFrames = 0;
 
 //public
 const std::vector<Console::ResolutionData>& Console::getResolutionData()
@@ -497,8 +498,37 @@ void Console::draw()
                 //stats
                 if (ui::BeginTabItem("Stats"))
                 {
+                    const auto fpsUncapped = 1.f / m_avgFrameTime;
+
+                    static float minUncappedFps = std::numeric_limits<float>::max();
+                    static float maxUncappedFps = 0.f;
+
+                    if (fpsUncapped < minUncappedFps) minUncappedFps = fpsUncapped;
+                    if (fpsUncapped > maxUncappedFps) maxUncappedFps = fpsUncapped;
+
+                    static std::int32_t minCappedFps = std::numeric_limits<std::int32_t>::max();
+                    static std::int32_t maxCappedFps = 0;
+
+                    if (m_displayedFrames < minCappedFps) minCappedFps = m_displayedFrames;
+                    if (m_displayedFrames > maxCappedFps) maxCappedFps = m_displayedFrames;
+
                     //ui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-                    ui::Text("Application average %.3f ms/frame (%.1f FPS)", m_avgFrameTime, 1.f / m_avgFrameTime);
+                    ui::Text("Average frame time: %.5f ms", m_avgFrameTime);
+                    ui::Text("%.3f FPS (Uncapped) Min: %.3f Max: %.3f", fpsUncapped, minUncappedFps, maxUncappedFps);
+                    ImGui::SameLine();
+                    if (ImGui::Button("Reset##1"))
+                    {
+                        minUncappedFps = std::numeric_limits<float>::max();
+                        maxUncappedFps = 0.f;
+                    }
+
+                    ui::Text("%d FPS (Capped) Min: %d Max: %d", m_displayedFrames, minCappedFps, maxCappedFps);
+                    ImGui::SameLine();
+                    if (ImGui::Button("Reset##2"))
+                    {
+                        minCappedFps = std::numeric_limits<std::int32_t>::max();
+                        maxCappedFps = 0;
+                    }
                     ui::NewLine();
 
                     for (const auto& [f, _] : m_statFuncs)

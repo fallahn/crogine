@@ -230,9 +230,11 @@ void Window::clear()
     //need to track the fact that it's in use in case
     //drawing is suspended while another RenderTarget
     //is pushed on the stack
-    m_inUse = true;
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+    if (!m_inUse)
+    {
+        m_inUse = true;
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
     auto vp = getViewport();
     glCheck(glViewport(vp.left, vp.bottom, vp.width, vp.height));
 
@@ -242,8 +244,6 @@ void Window::clear()
 
 void Window::display()
 {
-    m_inUse = false;
-
     SDL_GL_SwapWindow(m_window);
 }
 

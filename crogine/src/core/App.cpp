@@ -560,6 +560,9 @@ void App::run(bool resetSettings)
 
     static constexpr std::int32_t MaxFrames = 4; //for every fixed update render no more than these frames
     std::int32_t framesRendered = 0;
+    std::int32_t framesRenderedPerSecond = 0;
+    float timeSinceLastFrameCount = 0.f;
+    static constexpr float frameCountTime = 1.f;
 
     static constexpr std::int32_t MaxUpdates = 20;
 
@@ -567,8 +570,20 @@ void App::run(bool resetSettings)
 
     while (m_running)
     {
-        timeSinceLastUpdate += frameClock.restart();
+        const auto elapsed = frameClock.restart();
+        timeSinceLastUpdate += elapsed;
+        timeSinceLastFrameCount += elapsed;
 
+        //counts the number of frames actually rendered in a second
+        //ish... doesn't acount for time overflow
+        while (timeSinceLastFrameCount > frameCountTime)
+        {
+            Console::updateFrameCount(framesRenderedPerSecond);
+            framesRenderedPerSecond = 0;
+            timeSinceLastFrameCount -= frameCountTime;
+        }
+
+        //main update loop
         std::int32_t updates = 0;
         while (timeSinceLastUpdate > frameTime)
         {
@@ -594,6 +609,8 @@ void App::run(bool resetSettings)
             }
         }
 
+
+        //rendering
         if (m_window.getVsyncEnabled()
             || framesRendered++ < /*MaxFrames*/Console::getMaxFrames())
         {
@@ -610,6 +627,7 @@ void App::run(bool resetSettings)
             m_window.display();
 
             Console::updateAverageRenderTime(renderClock.restart());
+            framesRenderedPerSecond++;
         }
     }
 

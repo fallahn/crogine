@@ -164,6 +164,7 @@ namespace cro
         //manually so we know if we need to restore the frame
         //buffer when eg render textures are popped from the stack
         bool m_inUse = false;
+        bool m_restorePrevious = false;
 
         FloatRect m_view;
         IntRect m_viewport;
@@ -176,6 +177,6 @@ namespace cro
         //need to refactor this to per-context tracking
         static constexpr std::size_t MaxActiveTargets = 10;
         static std::size_t m_bufferIndex;
-        static std::array<const RenderTarget*, MaxActiveTargets> m_bufferStack;
+        static std::array<RenderTarget*, MaxActiveTargets> m_bufferStack;
     };
 }

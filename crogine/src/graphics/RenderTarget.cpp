@@ -38,7 +38,7 @@ source distribution.
 using namespace cro;
 
 std::size_t RenderTarget::m_bufferIndex = 0;
-std::array<const RenderTarget*, RenderTarget::MaxActiveTargets> RenderTarget::m_bufferStack = { nullptr };
+std::array<RenderTarget*, RenderTarget::MaxActiveTargets> RenderTarget::m_bufferStack = { nullptr };
 
 IntRect RenderTarget::getViewport(FloatRect normalised) const
 {
@@ -96,6 +96,9 @@ void RenderTarget::setActive(bool active)
     {
         CRO_ASSERT(getFrameBufferID() != RenderTarget::m_bufferStack[RenderTarget::m_bufferIndex]->getFrameBufferID(), "Target currently active");
 
+        m_restorePrevious = RenderTarget::m_bufferStack[RenderTarget::m_bufferIndex]->m_inUse;
+        RenderTarget::m_bufferStack[RenderTarget::m_bufferIndex]->m_inUse = false;
+
         RenderTarget::m_bufferStack[++RenderTarget::m_bufferIndex] = this;
         CRO_ASSERT(RenderTarget::m_bufferIndex < RenderTarget::m_bufferStack.size(), "Max active buffers reached");
 
@@ -114,8 +117,9 @@ void RenderTarget::setActive(bool active)
 
         //we need to check if this was actually active before the current target
         //was pushed on to the stack, then only activate it if needed.
-        if (RenderTarget::m_bufferStack[RenderTarget::m_bufferIndex]->m_inUse)
+        if (m_restorePrevious)
         {
+            RenderTarget::m_bufferStack[RenderTarget::m_bufferIndex]->m_inUse = true;
             glCheck(glBindFramebuffer(GL_FRAMEBUFFER, RenderTarget::m_bufferStack[RenderTarget::m_bufferIndex]->getFrameBufferID()));
 
             //restore viewport

@@ -195,6 +195,9 @@ namespace cro
         static float m_avgFrameTime;
         static void updateAverageRenderTime(float);
 
+        static std::int32_t m_displayedFrames;
+        static void updateFrameCount(std::int32_t fc) { m_displayedFrames = fc; }
+
         static cro::ConfigObject& getConvars();
     };
 
