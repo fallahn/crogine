@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -90,6 +90,8 @@ void RenderTarget::setView(FloatRect view)
 
 void RenderTarget::setActive(bool active)
 {
+    m_inUse = active;
+
     if (active)
     {
         CRO_ASSERT(getFrameBufferID() != RenderTarget::m_bufferStack[RenderTarget::m_bufferIndex]->getFrameBufferID(), "Target currently active");
@@ -110,10 +112,15 @@ void RenderTarget::setActive(bool active)
         RenderTarget::m_bufferIndex--;
         CRO_ASSERT(RenderTarget::m_bufferIndex < RenderTarget::m_bufferStack.size(), "Uneven calls to setActive detected");
 
-        glCheck(glBindFramebuffer(GL_FRAMEBUFFER, RenderTarget::m_bufferStack[RenderTarget::m_bufferIndex]->getFrameBufferID()));
+        //we need to check if this was actually active before the current target
+        //was pushed on to the stack, then only activate it if needed.
+        if (RenderTarget::m_bufferStack[RenderTarget::m_bufferIndex]->m_inUse)
+        {
+            glCheck(glBindFramebuffer(GL_FRAMEBUFFER, RenderTarget::m_bufferStack[RenderTarget::m_bufferIndex]->getFrameBufferID()));
 
-        //restore viewport
-        glCheck(glViewport(m_previousViewport[0], m_previousViewport[1], m_previousViewport[2], m_previousViewport[3]));
+            //restore viewport
+            glCheck(glViewport(m_previousViewport[0], m_previousViewport[1], m_previousViewport[2], m_previousViewport[3]));
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -73,6 +73,10 @@ namespace cro
     {
         std::vector<MaterialPair> renderables;
         glm::mat4 viewMatrix = glm::mat4(1.f);
+#ifdef DEBUG_WINDOWS
+        std::int32_t shaderSwitches = 0;
+        std::int32_t textureSwitches = 0;
+#endif
     };
 
     /*!
@@ -205,7 +209,8 @@ namespace cro
 
         friend class DeferredRenderSystem;
         //these funcs are shared with above system - should probably be free funcs somewhere?
-        static void applyProperties(const Material::Data&, const Model&, const Scene&, const Camera&);
+        //returns the number of times a texture was bound for debugging purposes
+        static std::int32_t applyProperties(const Material::Data&, const Model&, const Scene&, const Camera&);
         static void applyBlendMode(const Material::Data&);
     };
 

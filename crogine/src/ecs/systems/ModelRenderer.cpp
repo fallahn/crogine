@@ -85,28 +85,43 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
     requireComponent<Model>();
 
 #ifdef DEBUG_WINDOWS
-    addStats([&]() 
+    //addStats([&]() 
+    //    {
+    //        for (auto i = 0u; i < m_drawLists.size(); ++i)
+    //        {
+    //            const auto sceneID = getScene()->getInstanceID();
+    //            const auto& dList = m_drawLists[i];
+    //            ImGui::Text("Visisble entities in scene %lu, to Camera %lu: %lu", sceneID, i, dList[0].renderables.size());
+
+    //            const auto mat = dList[i].viewMatrix;
+    //            for (auto j = 0; j < 4; ++j)
+    //            {
+    //                ImGui::Text("%3.3f,%3.3f,%3.3f,%3.3f", mat[j][0], mat[j][1], mat[j][2], mat[j][3]);
+    //            }
+    //        }
+    //    });
+
+    //registerWindow([&]() 
+    //    {
+    //        ImGui::Begin("sdfg");
+    //        ImGui::Text("Skybox %d", drawCount);
+    //        ImGui::End();
+    //    });
+
+    registerWindow([this]() 
         {
-            for (auto i = 0u; i < m_drawLists.size(); ++i)
+            const auto sceneID = getScene()->getInstanceID();
+            const std::string str = "Scene " + std::to_string(sceneID);
+            ImGui::Begin(str.c_str());
+            for (const auto& list : m_drawLists)
             {
-                const auto sceneID = getScene()->getInstanceID();
-                const auto& dList = m_drawLists[i];
-                ImGui::Text("Visisble entities in scene %lu, to Camera %lu: %lu", sceneID, i, dList[0].renderables.size());
-
-                const auto mat = dList[i].viewMatrix;
-                for (auto j = 0; j < 4; ++j)
-                {
-                    ImGui::Text("%3.3f,%3.3f,%3.3f,%3.3f", mat[j][0], mat[j][1], mat[j][2], mat[j][3]);
-                }
+                ImGui::Text("Shader Switches: %d", list[0].shaderSwitches);
+                ImGui::Text("Texture Switches: %d", list[0].textureSwitches);
+                ImGui::NewLine();
             }
-        });
-
-    registerWindow([&]() 
-        {
-            ImGui::Begin("sdfg");
-            ImGui::Text("Skybox %d", drawCount);
             ImGui::End();
         });
+
 #endif
 
 #ifdef BENCHMARK
@@ -328,6 +343,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 #ifdef BENCHMARK
     m_timer.restart();
 #endif
+
     m_lightUBO.bind();
     
     bool skyboxDrawn = false;
@@ -357,6 +373,11 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
             drawSkybox(camComponent);
             return;
         }
+
+        std::int32_t sSwitches = 0;
+        std::int32_t tSwitches = 0;
+
+        std::uint32_t activeShader = 0;
 
         for (const auto& [entity, sortData] : visibleEntities)
         {
@@ -402,13 +423,18 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
                 previousMode = material.blendMode;
 
                 //bind shader
-                glCheck(glUseProgram(material.shader));
+                if (activeShader != material.shader)
+                {
+                    glCheck(glUseProgram(material.shader));
+                    sSwitches++;
+                    activeShader = material.shader;
+                }
 
                 //apply shader uniforms from material
                 //FUTURE ME: if you end up back here wondering why the matrices aren't calculated correctly
                 //remember CamerSystems need to be added to a Scene BEFORE any render systems...
                 glCheck(glUniformMatrix4fv(uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(sortData.worldViewMatrix)));
-                applyProperties(material, model, *getScene(), camComponent);
+                tSwitches += applyProperties(material, model, *getScene(), camComponent);
 
                 //apply standard uniforms
                 glCheck(glUniform2f(uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
@@ -466,6 +492,11 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
                 material.disableCustomSettings();
             }
         }
+
+#ifdef DEBUG_WINDOWS
+        m_drawLists[camIndex][camComponent.getActivePassIndex()].shaderSwitches = sSwitches;
+        m_drawLists[camIndex][camComponent.getActivePassIndex()].textureSwitches = tSwitches;
+#endif
 
 #ifdef PLATFORM_DESKTOP
         glCheck(glBindVertexArray(0));
@@ -952,9 +983,10 @@ void ModelRenderer::updateDrawListBalancedTree(Entity cameraEnt)
 //    return retVal;
 //}
 
-void ModelRenderer::applyProperties(const Material::Data& material, const Model& model, const Scene& scene, const Camera& camera)
+std::int32_t ModelRenderer::applyProperties(const Material::Data& material, const Model& model, const Scene& scene, const Camera& camera)
 {
     std::uint32_t currentTextureUnit = 0;
+    std::int32_t textureBindCount = 0;
     for (const auto& prop : material.properties)
     {
         switch (prop.second.second.type)
@@ -964,6 +996,7 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
             glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
             glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, prop.second.second.textureID));
             glCheck(glUniform1i(prop.second.first, currentTextureUnit++));
+            textureBindCount++;
             break;        
         case Material::Property::Texture:
             //TODO textures need to track which unit they're currently bound
@@ -971,16 +1004,19 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
             glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
             glCheck(glBindTexture(GL_TEXTURE_2D, prop.second.second.textureID));
             glCheck(glUniform1i(prop.second.first, currentTextureUnit++));
+            textureBindCount++;
             break;
         case Material::Property::Cubemap:
             glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
             glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, prop.second.second.textureID));
             glCheck(glUniform1i(prop.second.first, currentTextureUnit++));
+            textureBindCount++;
             break;
         case Material::Property::CubemapArray:
             glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
             glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, prop.second.second.textureID));
             glCheck(glUniform1i(prop.second.first, currentTextureUnit++));
+            textureBindCount++;
             break;
         case Material::Property::Number:
             glCheck(glUniform1f(prop.second.first,
@@ -1075,6 +1111,8 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
         break;
         }
     }
+
+    return textureBindCount;
 }
 
 void ModelRenderer::applyBlendMode(const Material::Data& material)

@@ -407,7 +407,7 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
     }
     else
     {
-        auto rtSize = RenderTarget::getActiveTarget()->getSize();
+        const auto rtSize = RenderTarget::getActiveTarget()->getSize();
         glCheck(glScissor(0, 0, rtSize.x, rtSize.y));
         glCheck(glDisable(GL_SCISSOR_TEST));
     }

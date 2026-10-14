@@ -124,6 +124,10 @@ namespace cro
 
         /*!
         \brief Returns a pointer to the currently bound RenderTarget
+        NOTE that this actually returns the target currently on top
+        of the stack - if this is the default buffer it may not
+        *actually* be active, if we're not currently in the default
+        render path.
         */
         static const RenderTarget* getActiveTarget();
 
@@ -155,6 +159,11 @@ namespace cro
 
     private:
         friend class Window;
+        //this is always set to true/false based on setActive()
+        //however the window is a special case which sets this
+        //manually so we know if we need to restore the frame
+        //buffer when eg render textures are popped from the stack
+        bool m_inUse = false;
 
         FloatRect m_view;
         IntRect m_viewport;

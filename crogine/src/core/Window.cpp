@@ -224,16 +224,15 @@ bool Window::getMultisamplingEnabled() const
 
 void Window::clear()
 {
-    //hmm appears that this is a bug i nSDL and seems awfully hacky...
-    //if (m_cursor
-    //    && !getMouseCaptured())
-    //{
-    //    SDL_SetCursor(m_cursor->m_cursor);
-    //}
-
     //we don't need to call RenderTarget::setActive()
     //for the window as it is automatically set to be
-    //the bottom most target in the stack.
+    //the bottom most target in the stack - but we
+    //need to track the fact that it's in use in case
+    //drawing is suspended while another RenderTarget
+    //is pushed on the stack
+    m_inUse = true;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     auto vp = getViewport();
     glCheck(glViewport(vp.left, vp.bottom, vp.width, vp.height));
 
@@ -243,6 +242,8 @@ void Window::clear()
 
 void Window::display()
 {
+    m_inUse = false;
+
     SDL_GL_SwapWindow(m_window);
 }
 

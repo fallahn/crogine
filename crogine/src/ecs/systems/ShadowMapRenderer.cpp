@@ -631,6 +631,7 @@ void ShadowMapRenderer::render()
                 glm::mat4 worldView = camera.m_shadowViewMatrices[d] * worldMat;
 
                 //foreach submesh / material:
+                std::uint32_t activeShader = 0;
 
 #ifndef PLATFORM_DESKTOP
                 glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
@@ -653,8 +654,11 @@ void ShadowMapRenderer::render()
                     }
 
                     //bind shader
-                    glCheck(glUseProgram(mat.shader));
-
+                    if (activeShader != mat.shader)
+                    {
+                        glCheck(glUseProgram(mat.shader));
+                        activeShader = mat.shader;
+                    }
                     //apply shader uniforms from material
                     for (auto j = 0u; j < mat.optionalUniformCount; ++j)
                     {

@@ -56,7 +56,7 @@ namespace cro
     /*!
     \brief Creates a window to which to draw.
     */
-    class CRO_EXPORT_API Window final : public RenderTarget// : public cro::Detail::SDLResource
+    class CRO_EXPORT_API Window final : public RenderTarget
     {
     public:
         enum StyleFlags
