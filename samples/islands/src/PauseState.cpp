@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -58,14 +58,14 @@ namespace
         switch (evt.type)
         {
         default: return false;
-        case SDL_MOUSEBUTTONUP:
+        case SDL_EVENT_MOUSE_BUTTON_UP:
             return evt.button.button == SDL_BUTTON_LEFT;
-        case SDL_CONTROLLERBUTTONUP:
-            return evt.cbutton.button == SDL_CONTROLLER_BUTTON_A;
-        case SDL_FINGERUP:
+        case SDL_EVENT_GAMEPAD_BUTTON_UP:
+            return evt.gbutton.button == SDL_GAMEPAD_BUTTON_SOUTH;
+        case SDL_EVENT_FINGER_UP:
             return true;
-        case SDL_KEYUP:
-            return (evt.key.keysym.sym == SDLK_SPACE || evt.key.keysym.sym == SDLK_RETURN);
+        case SDL_EVENT_KEY_UP:
+            return (evt.key.key == SDLK_SPACE || evt.key.key == SDLK_RETURN);
         }
     }
 }
@@ -88,12 +88,12 @@ bool PauseState::handleEvent(const cro::Event& evt)
         return false;
     }
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
-        case SDLK_p:
+        case SDLK_P:
         case SDLK_ESCAPE:
         case SDLK_PAUSE:
             requestStackPop();

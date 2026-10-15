@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -44,7 +44,7 @@ namespace
     {
         "Edwardo", "Cliff", "Theodora", "Annabelle", "Mr.Wilson", "Sarah"
     };
-    std::string configPath;
+    std::filesystem::path configPath;
 }
 
 MyApp::MyApp()
@@ -61,9 +61,9 @@ MyApp::MyApp()
 //public
 void MyApp::handleEvent(const cro::Event& evt)
 {
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
 #ifdef CRO_DEBUG_
@@ -89,6 +89,11 @@ void MyApp::simulate(float dt)
     m_stateStack.simulate(dt);
 }
 
+void MyApp::preRender()
+{
+    m_stateStack.preRender();
+}
+
 void MyApp::render()
 {
     m_stateStack.render();
@@ -103,7 +108,7 @@ bool MyApp::initialise()
 
     m_sharedData.clientConnection.netClient.create(4);
 
-    configPath = cro::App::getPreferencePath() + "settings.cfg";
+    configPath = cro::App::getPreferencePath() / "settings.cfg";
     loadSettings();
 
     return true;

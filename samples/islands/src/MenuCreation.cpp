@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -54,18 +54,18 @@ namespace
         switch (evt.type)
         {
         default: return false;
-        case SDL_MOUSEBUTTONUP:
-        case SDL_MOUSEBUTTONDOWN:
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
             return evt.button.button == SDL_BUTTON_LEFT;
-        case SDL_CONTROLLERBUTTONUP:
-        case SDL_CONTROLLERBUTTONDOWN:
-            return evt.cbutton.button == SDL_CONTROLLER_BUTTON_A;
-        case SDL_FINGERUP:
-        case SDL_FINGERDOWN:
+        case SDL_EVENT_GAMEPAD_BUTTON_UP:
+        case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+            return evt.gbutton.button == SDL_GAMEPAD_BUTTON_SOUTH;
+        case SDL_EVENT_FINGER_UP:
+        case SDL_EVENT_FINGER_DOWN:
             return true;
-        case SDL_KEYUP:
-        case SDL_KEYDOWN:
-            return (evt.key.keysym.sym == SDLK_SPACE || evt.key.keysym.sym == SDLK_RETURN);
+        case SDL_EVENT_KEY_UP:
+        case SDL_EVENT_KEY_DOWN:
+            return (evt.key.key == SDLK_SPACE || evt.key.key == SDLK_RETURN);
         }
     }
 }
@@ -288,7 +288,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                         textEnt.getComponent<cro::Text>().setFillColour(TextHighlightColour);
                         m_textEdit.string = &m_sharedData.localPlayer.name;
                         m_textEdit.entity = textEnt;
-                        SDL_StartTextInput();
+                        SDL_StartTextInput(cro::App::getWindow());
                     }
                     else
                     {
@@ -443,7 +443,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                         textEnt.getComponent<cro::Text>().setFillColour(TextHighlightColour);
                         m_textEdit.string = &m_sharedData.targetIP;
                         m_textEdit.entity = textEnt;
-                        SDL_StartTextInput();
+                        SDL_StartTextInput(cro::App::getWindow());
                     }
                     else
                     {

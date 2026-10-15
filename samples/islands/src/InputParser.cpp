@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -57,166 +57,166 @@ InputParser::InputParser(cro::NetClient& nc, InputBinding binding)
 void InputParser::handleEvent(const SDL_Event& evt)
 {
     //apply to input mask
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Up])
+        if (evt.key.key == m_inputBinding.keys[InputBinding::Up])
         {
             m_inputFlags |= InputFlag::Up;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Left])
+        else if (evt.key.key == m_inputBinding.keys[InputBinding::Left])
         {
             m_inputFlags |= InputFlag::Left;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Right])
+        else if (evt.key.key == m_inputBinding.keys[InputBinding::Right])
         {
             m_inputFlags |= InputFlag::Right;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Down])
+        else if (evt.key.key == m_inputBinding.keys[InputBinding::Down])
         {
             m_inputFlags |= InputFlag::Down;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::CarryDrop])
+        else if (evt.key.key == m_inputBinding.keys[InputBinding::CarryDrop])
         {
             m_inputFlags |= InputFlag::CarryDrop;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Action])
+        else if (evt.key.key == m_inputBinding.keys[InputBinding::Action])
         {
             m_inputFlags |= InputFlag::Action;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::WeaponPrev])
+        else if (evt.key.key == m_inputBinding.keys[InputBinding::WeaponPrev])
         {
             m_inputFlags |= InputFlag::WeaponPrev;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::WeaponNext])
+        else if (evt.key.key == m_inputBinding.keys[InputBinding::WeaponNext])
         {
             m_inputFlags |= InputFlag::WeaponNext;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Strafe])
+        else if (evt.key.key == m_inputBinding.keys[InputBinding::Strafe])
         {
             m_inputFlags |= InputFlag::Strafe;
         }
     }
-    else if (evt.type == SDL_KEYUP)
+    else if (evt.type == SDL_EVENT_KEY_UP)
     {
-        if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Up])
+        if (evt.key.key == m_inputBinding.keys[InputBinding::Up])
         {
             m_inputFlags &= ~InputFlag::Up;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Left])
+        else if (evt.key.key == m_inputBinding.keys[InputBinding::Left])
         {
             m_inputFlags &= ~InputFlag::Left;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Right])
+        else if (evt.key.key == m_inputBinding.keys[InputBinding::Right])
         {
             m_inputFlags &= ~InputFlag::Right;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Down])
+        else if (evt.key.key == m_inputBinding.keys[InputBinding::Down])
         {
             m_inputFlags &= ~InputFlag::Down;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::CarryDrop])
+        else if (evt.key.key == m_inputBinding.keys[InputBinding::CarryDrop])
         {
             m_inputFlags &= ~InputFlag::CarryDrop;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Action])
+        else if (evt.key.key == m_inputBinding.keys[InputBinding::Action])
         {
             m_inputFlags &= ~InputFlag::Action;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::WeaponNext])
+        else if (evt.key.key == m_inputBinding.keys[InputBinding::WeaponNext])
         {
             m_inputFlags &= ~InputFlag::WeaponNext;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::WeaponPrev])
+        else if (evt.key.key == m_inputBinding.keys[InputBinding::WeaponPrev])
         {
             m_inputFlags &= ~InputFlag::WeaponPrev;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Strafe])
+        else if (evt.key.key == m_inputBinding.keys[InputBinding::Strafe])
         {
             m_inputFlags &= ~InputFlag::Strafe;
         }
 
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
     {
-        if (evt.cbutton.which == m_inputBinding.controllerID)
+        if (evt.gbutton.which == m_inputBinding.controllerID)
         {
-            if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
+            if (evt.gbutton.button == m_inputBinding.buttons[InputBinding::Action])
             {
                 m_inputFlags |= InputFlag::Action;
             }
-            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::CarryDrop])
+            else if (evt.gbutton.button == m_inputBinding.buttons[InputBinding::CarryDrop])
             {
                 m_inputFlags |= InputFlag::CarryDrop;
             }
-            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::WeaponNext])
+            else if (evt.gbutton.button == m_inputBinding.buttons[InputBinding::WeaponNext])
             {
                 m_inputFlags |= InputFlag::WeaponNext;
             }
-            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::WeaponPrev])
+            else if (evt.gbutton.button == m_inputBinding.buttons[InputBinding::WeaponPrev])
             {
                 m_inputFlags |= InputFlag::WeaponPrev;
             }
-            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Strafe])
+            else if (evt.gbutton.button == m_inputBinding.buttons[InputBinding::Strafe])
             {
                 m_inputFlags |= InputFlag::Strafe;
             }
 
-            else if (evt.cbutton.button == cro::GameController::DPadLeft)
+            else if (evt.gbutton.button == cro::GameController::DPadLeft)
             {
                 m_inputFlags |= InputFlag::Left;
             }
-            else if (evt.cbutton.button == cro::GameController::DPadRight)
+            else if (evt.gbutton.button == cro::GameController::DPadRight)
             {
                 m_inputFlags |= InputFlag::Right;
             }
-            else if (evt.cbutton.button == cro::GameController::DPadUp)
+            else if (evt.gbutton.button == cro::GameController::DPadUp)
             {
                 m_inputFlags |= InputFlag::Up;
             }
-            else if (evt.cbutton.button == cro::GameController::DPadDown)
+            else if (evt.gbutton.button == cro::GameController::DPadDown)
             {
                 m_inputFlags |= InputFlag::Down;
             }
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        if (evt.cbutton.which == m_inputBinding.controllerID)
+        if (evt.gbutton.which == m_inputBinding.controllerID)
         {
-            if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
+            if (evt.gbutton.button == m_inputBinding.buttons[InputBinding::Action])
             {
                 m_inputFlags &= ~InputFlag::Action;
             }
-            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::CarryDrop])
+            else if (evt.gbutton.button == m_inputBinding.buttons[InputBinding::CarryDrop])
             {
                 m_inputFlags &= ~InputFlag::CarryDrop;
             }
-            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::WeaponNext])
+            else if (evt.gbutton.button == m_inputBinding.buttons[InputBinding::WeaponNext])
             {
                 m_inputFlags &= ~InputFlag::WeaponNext;
             }
-            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::WeaponPrev])
+            else if (evt.gbutton.button == m_inputBinding.buttons[InputBinding::WeaponPrev])
             {
                 m_inputFlags &= ~InputFlag::WeaponPrev;
             }
-            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Strafe])
+            else if (evt.gbutton.button == m_inputBinding.buttons[InputBinding::Strafe])
             {
                 m_inputFlags &= ~InputFlag::Strafe;
             }
 
-            else if (evt.cbutton.button == cro::GameController::DPadLeft)
+            else if (evt.gbutton.button == cro::GameController::DPadLeft)
             {
                 m_inputFlags &= ~InputFlag::Left;
             }
-            else if (evt.cbutton.button == cro::GameController::DPadRight)
+            else if (evt.gbutton.button == cro::GameController::DPadRight)
             {
                 m_inputFlags &= ~InputFlag::Right;
             }
-            else if (evt.cbutton.button == cro::GameController::DPadUp)
+            else if (evt.gbutton.button == cro::GameController::DPadUp)
             {
                 m_inputFlags &= ~InputFlag::Up;
             }
-            else if (evt.cbutton.button == cro::GameController::DPadDown)
+            else if (evt.gbutton.button == cro::GameController::DPadDown)
             {
                 m_inputFlags &= ~InputFlag::Down;
             }
@@ -266,10 +266,10 @@ void InputParser::checkControllerInput()
 {
     m_analogueAmount = 1.f;
 
-    if (m_inputBinding.controllerID >= SDL_NumJoysticks())
-    {
-        return;
-    }
+    //if (m_inputBinding.controllerID >= SDL_NumJoysticks())
+    //{
+    //    return;
+    //}
     if (!cro::GameController::isConnected(m_inputBinding.controllerID))
     {
         return;
