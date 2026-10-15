@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -76,26 +76,26 @@ PauseState::PauseState(cro::StateStack& stack, cro::State::Context ctx, Resource
 //public
 bool PauseState::handleEvent(const cro::Event& evt)
 {
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
-        case SDLK_p:
+        case SDLK_P:
         case SDLK_PAUSE:
         case SDLK_ESCAPE:
             requestStackPop();
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default:break;
-        case SDL_CONTROLLER_BUTTON_B:
-        case SDL_CONTROLLER_BUTTON_START:
-        case SDL_CONTROLLER_BUTTON_BACK:
+        case SDL_GAMEPAD_BUTTON_EAST:
+        case SDL_GAMEPAD_BUTTON_START:
+        case SDL_GAMEPAD_BUTTON_BACK:
             requestStackPop();
             break;
         }
@@ -112,7 +112,7 @@ void PauseState::handleMessage(const cro::Message& msg)
     if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             updateView();
         }

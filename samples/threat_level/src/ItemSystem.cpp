@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -85,9 +85,9 @@ void ItemSystem::process(float dt)
             }
 
 
-            //if item out of view move back to beginning
-            bool visible = entity.getComponent<cro::Model>().isVisible();
-            if (!visible && status.wantsReset)
+            //if item out of view move back to beginning - hmmm we need a different visibility test now
+            //bool visible = entity.getComponent<cro::Model>().isVisible();
+            if (/*!visible &&*/ status.wantsReset)
             {
                 auto pos = tx.getWorldPosition();
                 glm::vec3 dest(0.f);
@@ -98,7 +98,7 @@ void ItemSystem::process(float dt)
                 status.wantsReset = false;
                 status.active = false;
             }
-            else if(visible)
+            else //if(visible)
             {
                 //we've entered the visible area so will eventually want resetting
                 status.wantsReset = true;

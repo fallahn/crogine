@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -51,7 +51,7 @@ source distribution.
 #include <crogine/util/Random.hpp>
 #include <crogine/core/ConfigFile.hpp>
 
-#include <SDL_keyboard.h>
+#include <SDL3/SDL_keyboard.h>
 
 namespace
 {
@@ -94,15 +94,15 @@ GameOverState::GameOverState(cro::StateStack& stack, cro::State::Context context
 //public
 bool GameOverState::handleEvent(const cro::Event& evt)
 {
-    if (evt.type == SDL_TEXTINPUT)
+    if (evt.type == SDL_EVENT_TEXT_INPUT)
     {
         handleTextEvent(evt);
     }
-    else if (evt.type == SDL_KEYUP)
+    else if (evt.type == SDL_EVENT_KEY_UP)
     {
-        if (evt.key.keysym.sym == SDLK_RETURN)
+        if (evt.key.key == SDLK_RETURN)
         {
-            SDL_StopTextInput();
+            SDL_StopTextInput(cro::App::getWindow());
 
             cro::Command cmd;
             cmd.targetFlags = UICommand::NameText;
@@ -120,10 +120,10 @@ bool GameOverState::handleEvent(const cro::Event& evt)
             commandSystem->sendCommand(cmd);
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
         //android only produces key down for backspace events :S
-        if (evt.key.keysym.sym == SDLK_BACKSPACE && !m_sharedResources.playerName.empty())
+        if (evt.key.key == SDLK_BACKSPACE && !m_sharedResources.playerName.empty())
         {
             m_sharedResources.playerName.pop_back();
             updateTextBox();
@@ -140,7 +140,7 @@ void GameOverState::handleMessage(const cro::Message& msg)
     if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             updateView();
         }
@@ -261,13 +261,13 @@ void GameOverState::load()
         {
             //insert name / score into high score list           
             cro::ConfigFile scores;
-            if (scores.loadFromFile(cro::App::getPreferencePath() + highscoreFile))
+            if (scores.loadFromFile(cro::App::getPreferencePath() / highscoreFile))
             {
                 scores.addProperty(std::to_string(m_sharedResources.score)).setValue(m_sharedResources.playerName);
-                scores.save(cro::App::getPreferencePath() + highscoreFile);
+                scores.save(cro::App::getPreferencePath() / highscoreFile);
             }
 
-            SDL_StopTextInput();
+            SDL_StopTextInput(cro::App::getWindow());
             requestStackClear();
             requestStackPush(States::MainMenu);
         }
@@ -338,7 +338,7 @@ void GameOverState::createTextBox(const cro::SpriteSheet& spriteSheet)
     {
         if (activated(evt))
         {
-            SDL_StartTextInput();
+            SDL_StartTextInput(cro::App::getWindow());
             ent.getComponent<cro::Sprite>().setTextureRect(activeArea);
             updateTextBox();
         }

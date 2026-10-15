@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -61,9 +61,9 @@ MyApp::MyApp()
 //public
 void MyApp::handleEvent(const cro::Event& evt)
 {
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
 #ifdef CRO_DEBUG_

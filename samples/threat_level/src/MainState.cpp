@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -120,7 +120,7 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context, Resour
         addSystems();
         loadAssets();
         createScene();
-        createMenus();
+        //createMenus();
     });
 
     updateView();
@@ -149,7 +149,7 @@ void MainState::handleMessage(const cro::Message& msg)
     if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             updateView();
         }
@@ -180,24 +180,24 @@ void MainState::addSystems()
     //buns = &m_backgroundScene.addSystem<cro::CommandSystem>(mb);
     m_backgroundScene.addSystem<RotateSystem>(mb);
     m_backgroundScene.addSystem<DriftSystem>(mb);
-    m_backgroundScene.addSystem<cro::AudioSystem>(mb);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
     //m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
+    m_backgroundScene.addSystem<cro::AudioSystem>(mb);
 
 #ifdef PLATFORM_DESKTOP
-    m_backgroundScene.addPostProcess<cro::PostChromeAB>();
+    //m_backgroundScene.addPostProcess<cro::PostChromeAB>();
 #endif
     
     m_commandSystem = m_menuScene.addSystem<cro::CommandSystem>(mb);
     m_menuScene.addSystem<SliderSystem>(mb);
     m_menuScene.addSystem<cro::CallbackSystem>(mb);
+    m_uiSystem = m_menuScene.addSystem<cro::UISystem>(mb);
     m_menuScene.addSystem<cro::SpriteSystem2D>(mb);
     m_menuScene.addSystem<cro::TextSystem>(mb);
-    m_menuScene.addSystem<cro::RenderSystem2D>(mb);
-    m_uiSystem = m_menuScene.addSystem<cro::UISystem>(mb);
-
     m_menuScene.addSystem<cro::CameraSystem>(mb);
+    m_menuScene.addSystem<cro::RenderSystem2D>(mb);
+
 }
 
 void MainState::loadAssets()

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -39,24 +39,24 @@ const std::uint32_t TextSmall = 32;
 
 const cro::Colour stateBackgroundColour(0.f, 0.f, 0.f, 0.6f);
 
-const std::string highscoreFile("high.scores");
+const std::filesystem::path highscoreFile("high.scores");
 
 static inline bool activated(const cro::ButtonEvent& evt)
 {
     switch (evt.type)
     {
     default: return false;
-    case SDL_MOUSEBUTTONUP:
-    case SDL_MOUSEBUTTONDOWN:
+    case SDL_EVENT_MOUSE_BUTTON_UP:
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:
         return evt.button.button == SDL_BUTTON_LEFT;
-    case SDL_CONTROLLERBUTTONUP:
-    case SDL_CONTROLLERBUTTONDOWN:
-        return evt.cbutton.button == SDL_CONTROLLER_BUTTON_A;
-    case SDL_FINGERUP:
-    case SDL_FINGERDOWN:
+    case SDL_EVENT_GAMEPAD_BUTTON_UP:
+    case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+        return evt.gbutton.button == SDL_GAMEPAD_BUTTON_SOUTH;
+    case SDL_EVENT_FINGER_UP:
+    case SDL_EVENT_FINGER_DOWN:
         return true;
-    case SDL_KEYUP:
-    case SDL_KEYDOWN:
-        return (evt.key.keysym.sym == SDLK_SPACE || evt.key.keysym.sym == SDLK_RETURN);
+    case SDL_EVENT_KEY_UP:
+    case SDL_EVENT_KEY_DOWN:
+        return (evt.key.key == SDLK_SPACE || evt.key.key == SDLK_RETURN);
     }
 }

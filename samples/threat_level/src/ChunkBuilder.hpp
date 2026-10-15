@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -42,7 +42,7 @@ class ChunkBuilder final : public cro::MeshBuilder
 public:
 
 private:
-    cro::Mesh::Data build() const override;
+    cro::Mesh::Data build(class cro::AllocationResource*) const override;
 };
 
 

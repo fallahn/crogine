@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -194,8 +194,8 @@ void NpcSystem::process(float dt)
 
         //check if entity has moved off-screen and
         //reset it if it has
-        bool visible = (entity.getComponent<cro::Model>().isVisible() && !hasCollision);
-        if (!visible && status.wantsReset) //moved out of area
+        //bool visible = (entity.getComponent<cro::Model>().isVisible() && !hasCollision);
+        if (/*!visible && */status.wantsReset) //moved out of area
         {
             status.wantsReset = false;
             status.active = false;
@@ -205,7 +205,7 @@ void NpcSystem::process(float dt)
             msg->npcType = status.type;
             msg->type = NpcEvent::ExitScreen;
         }
-        else if (visible)
+        else //if (visible)
         {
             //we've entered the visible area so will eventually want resetting
             status.wantsReset = true;

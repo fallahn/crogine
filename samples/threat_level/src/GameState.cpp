@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -139,9 +139,9 @@ bool GameState::handleEvent(const cro::Event& evt)
         return false;
     }
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        /*if (evt.key.keysym.sym == SDLK_p)
+        /*if (evt.key.key == SDLK_P)
         {
             auto* msg = getContext().appInstance.getMessageBus().post<PlayerEvent>(MessageID::PlayerMessage);
             msg->type = PlayerEvent::CollectedItem;
@@ -149,7 +149,7 @@ bool GameState::handleEvent(const cro::Event& evt)
 
         }
         else */
-        /*if (evt.key.keysym.sym == SDLK_o)
+        /*if (evt.key.key == SDLK_O)
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::MeatMan;
@@ -160,11 +160,11 @@ bool GameState::handleEvent(const cro::Event& evt)
             buns->sendCommand(cmd);
         }*/
 
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_ESCAPE:
-        case SDLK_p:
+        case SDLK_P:
         case SDLK_PAUSE:
             requestStackPush(States::PauseMenu);
             break;
@@ -199,9 +199,9 @@ bool GameState::handleEvent(const cro::Event& evt)
 #endif
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        if (evt.cbutton.button == SDL_CONTROLLER_BUTTON_START)
+        if (evt.gbutton.button == SDL_GAMEPAD_BUTTON_START)
         {
             requestStackPush(States::PauseMenu);
         }
@@ -221,7 +221,7 @@ void GameState::handleMessage(const cro::Message& msg)
     if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        if (data.event == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
         {
             updateView();
         }
@@ -293,8 +293,9 @@ void GameState::addSystems()
     m_scene.addDirector<SFXDirector>();
     m_scene.addDirector<ParticleDirector>(m_resources.textures);
 #ifdef PLATFORM_DESKTOP
-    m_scene.addPostProcess<cro::PostChromeAB>();
-    m_scene.addPostProcess<PostRadial>();
+    //hmm these don't exist any more
+    //m_scene.addPostProcess<cro::PostChromeAB>();
+    //m_scene.addPostProcess<PostRadial>();
 #endif
 
     //UI scene
@@ -496,7 +497,7 @@ void GameState::createHUD()
     auto spriteSize = spriteSheet.getSprite("emp").getSize();
     auto empPressedCallback = m_uiSystem->addCallback([this](cro::Entity entity, const cro::ButtonEvent& evt)
     {
-            if(evt.type == SDL_MOUSEBUTTONDOWN
+            if(evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN
                 && evt.button.button == SDL_BUTTON_LEFT)
             {
                 auto* msg = getContext().appInstance.getMessageBus().post<UIEvent>(MessageID::UIMessage);
@@ -507,7 +508,7 @@ void GameState::createHUD()
     entity.addComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = empPressedCallback;
     auto empReleasedCallback = m_uiSystem->addCallback([this](cro::Entity entity, const cro::ButtonEvent& evt)
     {
-            if (evt.type == SDL_MOUSEBUTTONUP
+            if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP
                 && evt.button.button == SDL_BUTTON_LEFT)
             {
                 auto* msg = getContext().appInstance.getMessageBus().post<UIEvent>(MessageID::UIMessage);

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -78,8 +78,8 @@ void BossSystem::processAppearance(cro::Entity entity, float dt)
 
     tx.move({ boss.moveSpeed * dt, 0.f, 0.f });
 
-    auto visible = entity.getComponent<cro::Model>().isVisible();
-    if (!visible && boss.wantsReset)
+    //auto visible = entity.getComponent<cro::Model>().isVisible();
+    if (/*!visible &&*/ boss.wantsReset)
     {
         tx.setPosition({ 100.f, 1000.f, 9.3f });
         boss.wantsReset = false;

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -45,7 +45,7 @@ source distribution.
 #include <crogine/core/GameController.hpp>
 #include <crogine/util/Maths.hpp>
 
-#include <SDL_events.h>
+#include <SDL3/SDL_events.h>
 
 #include <crogine/detail/glm/gtx/norm.hpp>
 
@@ -194,20 +194,20 @@ void PlayerDirector::handleEvent(const cro::Event& evt)
     switch (evt.type)
     {
     default: break;
-    case SDL_KEYDOWN:
-        switch (evt.key.keysym.sym)
+    case SDL_EVENT_KEY_DOWN:
+        switch (evt.key.key)
         {
         default: break;
-        case SDLK_w:
+        case SDLK_W:
             m_currentInput |= Up;
             break;
-        case SDLK_s:
+        case SDLK_S:
             m_currentInput |= Down;
             break;
-        case SDLK_a:
+        case SDLK_A:
             m_currentInput |= Left;
             break;
-        case SDLK_d:
+        case SDLK_D:
             m_currentInput |= Right;
             break;
         case SDLK_SPACE:
@@ -219,20 +219,20 @@ void PlayerDirector::handleEvent(const cro::Event& evt)
         }
         //m_currentInput |= StateChanged;
         break;
-    case SDL_KEYUP:
-        switch (evt.key.keysym.sym)
+    case SDL_EVENT_KEY_UP:
+        switch (evt.key.key)
         {
         default: break;
-        case SDLK_w:
+        case SDLK_W:
             m_currentInput &= ~Up;
             break;
-        case SDLK_s:
+        case SDLK_S:
             m_currentInput &= ~Down;
             break;
-        case SDLK_a:
+        case SDLK_A:
             m_currentInput &= ~Left;
             break;
-        case SDLK_d:
+        case SDLK_D:
             m_currentInput &= ~Right;
             break;
         case SDLK_SPACE:
@@ -244,58 +244,58 @@ void PlayerDirector::handleEvent(const cro::Event& evt)
         }
         //m_currentInput |= StateChanged;
         break;
-    case SDL_CONTROLLERAXISMOTION:
+    case SDL_EVENT_GAMEPAD_AXIS_MOTION:
         
         break;
-    case SDL_CONTROLLERBUTTONDOWN:
-        if (evt.cbutton.which == 0)
+    case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+        if (evt.gbutton.which == 0)
         {
-            switch (evt.cbutton.button)
+            switch (evt.gbutton.button)
             {
             default: break;
-            case SDL_CONTROLLER_BUTTON_DPAD_UP:
+            case SDL_GAMEPAD_BUTTON_DPAD_UP:
                 m_currentInput |= Up;
                 break;
-            case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+            case SDL_GAMEPAD_BUTTON_DPAD_DOWN:
                 m_currentInput |= Down;
                 break;
-            case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+            case SDL_GAMEPAD_BUTTON_DPAD_LEFT:
                 m_currentInput |= Left;
                 break;
-            case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+            case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:
                 m_currentInput |= Right;
                 break;
-            case SDL_CONTROLLER_BUTTON_A:
+            case SDL_GAMEPAD_BUTTON_SOUTH:
                 m_currentInput |= Fire;
                 break;
-            case SDL_CONTROLLER_BUTTON_B:
+            case SDL_GAMEPAD_BUTTON_EAST:
                 m_currentInput |= Special;
                 break;
             }
         }
         break;
-    case SDL_CONTROLLERBUTTONUP:
-        if (evt.cbutton.which == 0)
+    case SDL_EVENT_GAMEPAD_BUTTON_UP:
+        if (evt.gbutton.which == 0)
         {
-            switch (evt.cbutton.button)
+            switch (evt.gbutton.button)
             {
             default: break;
-            case SDL_CONTROLLER_BUTTON_DPAD_UP:
+            case SDL_GAMEPAD_BUTTON_DPAD_UP:
                 m_currentInput &= ~Up;
                 break;
-            case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+            case SDL_GAMEPAD_BUTTON_DPAD_DOWN:
                 m_currentInput &= ~Down;
                 break;
-            case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+            case SDL_GAMEPAD_BUTTON_DPAD_LEFT:
                 m_currentInput &= ~Left;
                 break;
-            case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+            case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:
                 m_currentInput &= ~Right;
                 break;
-            case SDL_CONTROLLER_BUTTON_A:
+            case SDL_GAMEPAD_BUTTON_SOUTH:
                 m_currentInput &= ~Fire;
                 break;
-            case SDL_CONTROLLER_BUTTON_B:
+            case SDL_GAMEPAD_BUTTON_EAST:
                 m_currentInput &= ~Special;
                 break;
             }
@@ -304,14 +304,14 @@ void PlayerDirector::handleEvent(const cro::Event& evt)
 
 
 #ifndef PLATFORM_DESKTOP //handle touch separately
-    case SDL_FINGERDOWN:
+    case SDL_EVENT_FINGER_DOWN:
         m_fingerDown = true;
         m_currentInput |= Fire;    
         m_touchCoords.x = evt.tfinger.x;
         m_touchCoords.y = evt.tfinger.y;
         m_touchVector = {};
         break;
-    case SDL_FINGERMOTION:
+    case SDL_EVENT_FINGER_MOTION:
         m_touchVector = getWorldCoords();
 
         m_touchCoords.x = evt.tfinger.x;
@@ -319,7 +319,7 @@ void PlayerDirector::handleEvent(const cro::Event& evt)
 
         m_touchVector = getWorldCoords() - m_touchVector;
         break;
-    case SDL_FINGERUP:
+    case SDL_EVENT_FINGER_UP:
         m_fingerDown = false;
         m_currentInput &= ~Fire;
 

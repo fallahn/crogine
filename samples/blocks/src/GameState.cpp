@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -328,6 +328,11 @@ bool GameState::simulate(float dt)
     m_uiScene.simulate(dt);
 
     return true;
+}
+
+void GameState::preRender()
+{
+    m_gameScene.preRender();
 }
 
 void GameState::render()

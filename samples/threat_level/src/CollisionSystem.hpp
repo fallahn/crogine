@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -90,5 +90,7 @@ namespace cro
         std::array<std::unique_ptr<btCompoundShape>, Detail::MinFreeIDs> m_compoundShapes;
 
         Detail::BulletDebug m_debugDrawer;
+
+        void flushEntity(cro::Entity) override {}
     };
 }

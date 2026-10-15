@@ -94,7 +94,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
     switch (evt.type)
     {
     default: break;
-    case SDL_KEYDOWN:
+    case SDL_EVENT_KEY_DOWN:
         {
             switch (evt.key.keysym.sym)
             {
@@ -108,7 +108,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             }
         }
         break;
-    case SDL_KEYUP:
+    case SDL_EVENT_KEY_UP:
         {
             switch (evt.key.keysym.sym)
             {
@@ -122,7 +122,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             }
         }
         break;
-    case SDL_FINGERDOWN:
+    case SDL_EVENT_FINGER_DOWN:
         {
             //cro::Command cmd;
             //cmd.targetFlags = Touch;
@@ -138,12 +138,12 @@ bool MenuState::handleEvent(const cro::Event& evt)
             lastFingerPos = { evt.tfinger.x, evt.tfinger.y };
         }
         break;
-    case SDL_FINGERUP:
+    case SDL_EVENT_FINGER_UP:
         {
             input &= ~FingerDown;
         }
         break;
-    case SDL_FINGERMOTION:
+    case SDL_EVENT_FINGER_MOTION:
         {
         
         glm::vec2 pos(evt.tfinger.x, evt.tfinger.y);

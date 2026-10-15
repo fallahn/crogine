@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -33,7 +33,7 @@ source distribution.
 
 
 //private
-cro::Mesh::Data ChunkBuilder::build() const
+cro::Mesh::Data ChunkBuilder::build(cro::AllocationResource*) const
 {
     cro::Mesh::Data data;
 
@@ -66,8 +66,8 @@ cro::Mesh::Data ChunkBuilder::build() const
     {
         indices[i] = i;
     }
-    glCheck(glGenBuffers(1, &data.indexData[0].ibo));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[0].ibo));
+    glCheck(glGenBuffers(1, &data.indexData[0].iboAllocation.bufferID));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[0].iboAllocation.bufferID));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(std::uint16_t), indices.data(), GL_DYNAMIC_DRAW));
     
     data.indexData[1].format = GL_UNSIGNED_SHORT;
@@ -78,8 +78,8 @@ cro::Mesh::Data ChunkBuilder::build() const
     {
         indices[i] += indexCount;
     }
-    glCheck(glGenBuffers(1, &data.indexData[1].ibo));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[1].ibo));
+    glCheck(glGenBuffers(1, &data.indexData[1].iboAllocation.bufferID));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.indexData[1].iboAllocation.bufferID));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(std::uint16_t), indices.data(), GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 

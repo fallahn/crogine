@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -87,9 +87,9 @@ NpcDirector::NpcDirector()
 //private
 void NpcDirector::handleEvent(const cro::Event& evt)
 {
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        if (evt.key.keysym.sym == SDLK_l)
+        if (evt.key.key == SDLK_L)
         {
             m_totalReleaseCount = 100;
         }
@@ -275,7 +275,7 @@ void NpcDirector::handleMessage(const cro::Message& msg)
 
 void NpcDirector::process(float dt)
 {   
-    DPRINT("NPC Count", std::to_string(m_npcCount));
+    //DPRINT("NPC Count", std::to_string(m_npcCount));
 
     //track how many enemies spawned / died
     //then switch to boss mode when needed
@@ -494,7 +494,7 @@ void NpcDirector::process(float dt)
         {
             if (!m_releaseActive) return;
             
-            if (entity.getComponent<cro::Model>().isVisible())
+            //if (entity.getComponent<cro::Model>().isVisible())
             {
                 const auto& tx = entity.getComponent<cro::Transform>();
                 float rotation = glm::eulerAngles(entity.getComponent<Family>().child.getComponent<cro::Transform>().getRotation()).z;

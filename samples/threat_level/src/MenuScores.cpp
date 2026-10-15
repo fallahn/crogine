@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -159,7 +159,7 @@ void MainState::createScoreMenu(std::uint32_t mouseEnterCallback, std::uint32_t 
     //load scores if we can, fill with fake if not yet created
     //yes these are plain text but you're daft to rig your own high scores
     cro::ConfigFile scores;
-    if (!scores.loadFromFile(cro::App::getPreferencePath() + highscoreFile))
+    if (!scores.loadFromFile(cro::App::getPreferencePath() / highscoreFile))
     {
         std::array<std::string, 10u> names =
         {
@@ -170,7 +170,7 @@ void MainState::createScoreMenu(std::uint32_t mouseEnterCallback, std::uint32_t 
         {
             scores.addProperty(std::to_string(cro::Util::Random::value(10000, 500000))).setValue(names[i]);
         }
-        if (!scores.save(cro::App::getPreferencePath() + highscoreFile))
+        if (!scores.save(cro::App::getPreferencePath() / highscoreFile))
         {
             cro::Logger::log("Failed saving default score file", cro::Logger::Type::Warning);
         }
@@ -264,7 +264,7 @@ void MainState::createScoreMenu(std::uint32_t mouseEnterCallback, std::uint32_t 
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_uiSystem->addCallback(
         [](cro::Entity entity, const cro::ButtonEvent& evt)
     {
-            if (evt.type == SDL_MOUSEBUTTONDOWN
+            if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN
                 && evt.button.button == SDL_BUTTON_LEFT)
             {
                 entity.getComponent<cro::UIDraggable>().flags |= (1 << SDL_BUTTON_LEFT);
@@ -273,7 +273,7 @@ void MainState::createScoreMenu(std::uint32_t mouseEnterCallback, std::uint32_t 
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiSystem->addCallback(
         [](cro::Entity entity, const cro::ButtonEvent& evt)
     {
-            if (evt.type == SDL_MOUSEBUTTONUP
+            if (evt.type == SDL_EVENT_MOUSE_BUTTON_UP
                 && evt.button.button == SDL_BUTTON_LEFT)
             {
                 entity.getComponent<cro::UIDraggable>().flags &= ~(1 << SDL_BUTTON_LEFT);

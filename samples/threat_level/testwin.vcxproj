@@ -173,9 +173,9 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl3\include;$(SolutionDir)extlibs\bullet\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>CRO_DEBUG_;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions);GLM_ENABLE_EXPERIMENTAL</PreprocessorDefinitions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -185,8 +185,8 @@
     </PostBuildEvent>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\bullet\lib\x64\Debug</AdditionalLibraryDirectories>
-      <AdditionalDependencies>crogine-d.lib;SDL2.lib;SDL2main.lib;BulletCollision_Debug.lib;LinearMath_Debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl3\lib\x64;$(SolutionDir)extlibs\bullet\lib\x64\Debug</AdditionalLibraryDirectories>
+      <AdditionalDependencies>crogine-d.lib;SDL3.lib;BulletCollision_Debug.lib;LinearMath_Debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StackReserveSize>
       </StackReserveSize>
     </Link>
@@ -196,9 +196,9 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl3\include;$(SolutionDir)extlibs\bullet\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>CRO_DEBUG_;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions);GLM_ENABLE_EXPERIMENTAL</PreprocessorDefinitions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <PostBuildEvent>
@@ -207,7 +207,7 @@
     </PostBuildEvent>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\bullet\lib\x64\Asan</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl3\lib\x64;$(SolutionDir)extlibs\bullet\lib\x64\Asan</AdditionalLibraryDirectories>
       <AdditionalDependencies>crogine-d-asan.lib;SDL2.lib;SDL2main.lib;BulletCollision_Debug.lib;LinearMath_Debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StackReserveSize>
       </StackReserveSize>
@@ -266,17 +266,17 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl3\include;$(SolutionDir)extlibs\bullet\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions);GLM_ENABLE_EXPERIMENTAL</PreprocessorDefinitions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\bullet\lib\x64\Release</AdditionalLibraryDirectories>
-      <AdditionalDependencies>crogine.lib;SDL2.lib;SDL2main.lib;BulletCollision.lib;LinearMath.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl3\lib\x64;$(SolutionDir)extlibs\bullet\lib\x64\Release</AdditionalLibraryDirectories>
+      <AdditionalDependencies>crogine.lib;SDL3.lib;BulletCollision.lib;LinearMath.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StackReserveSize>
       </StackReserveSize>
     </Link>
@@ -292,15 +292,15 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl3\include;$(SolutionDir)extlibs\bullet\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions);GLM_ENABLE_EXPERIMENTAL</PreprocessorDefinitions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\bullet\lib\x64\Release</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl3\lib\x64;$(SolutionDir)extlibs\bullet\lib\x64\Release</AdditionalLibraryDirectories>
       <AdditionalDependencies>crogine.lib;SDL2.lib;SDL2main.lib;BulletCollision.lib;LinearMath.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StackReserveSize>
       </StackReserveSize>

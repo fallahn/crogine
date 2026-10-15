@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -86,6 +86,11 @@ void MyApp::handleMessage(const cro::Message& msg)
 void MyApp::simulate(float dt)
 {
     m_stateStack.simulate(dt);
+}
+
+void MyApp::preRender()
+{
+    m_stateStack.preRender();
 }
 
 void MyApp::render()

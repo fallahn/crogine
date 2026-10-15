@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #include "MyApp.hpp"
 
