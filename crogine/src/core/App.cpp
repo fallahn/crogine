@@ -578,8 +578,10 @@ void App::run(bool resetSettings)
         //ish... doesn't acount for time overflow
         while (timeSinceLastFrameCount > frameCountTime)
         {
-            Console::updateFrameCount(framesRenderedPerSecond);
-            framesRenderedPerSecond = 0;
+            const std::int32_t rendered = static_cast<std::int32_t>(static_cast<float>(framesRenderedPerSecond) / timeSinceLastFrameCount);
+
+            Console::updateFrameCount(rendered);
+            framesRenderedPerSecond -= rendered;
             timeSinceLastFrameCount -= frameCountTime;
         }
 
