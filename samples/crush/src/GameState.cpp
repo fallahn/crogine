@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -266,14 +266,14 @@ bool GameState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_PAUSE:
         case SDLK_ESCAPE:
-        case SDLK_p:
+        case SDLK_P:
             requestStackPush(States::ID::Pause);
             break;
 #ifdef CRO_DEBUG_
@@ -309,12 +309,12 @@ bool GameState::handleEvent(const cro::Event& evt)
 #endif //CRO_DEBUG_
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
     {
-        switch (evt.cbutton.button)
+        switch (evt.gbutton.button)
         {
         default: break;
-        case SDL_CONTROLLER_BUTTON_START:
+        case SDL_GAMEPAD_BUTTON_START:
             requestStackPush(States::ID::Pause);
             break;
         }
@@ -461,6 +461,20 @@ bool GameState::simulate(float dt)
     return true;
 }
 
+void GameState::preRender()
+{
+    m_gameScene.preRender();
+
+#ifdef CRO_DEBUG_
+    //render a far view of the scene in debug to a render texture
+    auto oldCam = m_gameScene.setActiveCamera(m_debugCam);
+    m_debugViewTexture.clear();
+    m_gameScene.render();
+    m_debugViewTexture.display();
+    m_gameScene.setActiveCamera(oldCam);
+#endif
+}
+
 void GameState::render()
 {
     if (m_cameras.empty())
@@ -497,16 +511,6 @@ void GameState::render()
 
     m_gameScene.render(m_cameras);
     m_uiScene.render();
-
-
-#ifdef CRO_DEBUG_
-    //render a far view of the scene in debug to a render texture
-    auto oldCam = m_gameScene.setActiveCamera(m_debugCam);
-    m_debugViewTexture.clear();
-    m_gameScene.render();
-    m_debugViewTexture.display();
-    m_gameScene.setActiveCamera(oldCam);
-#endif
 }
 
 //private

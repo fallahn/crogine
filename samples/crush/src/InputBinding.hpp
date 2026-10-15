@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,7 +29,7 @@ source distribution.
 
 #pragma once
 
-#include <SDL_events.h>
+#include <SDL3/SDL_events.h>
 
 #include <array>
 #include <cstdint>
@@ -62,23 +62,23 @@ struct InputBinding final
     std::array<std::int32_t, Count> keys =
     {
         SDLK_SPACE,
-        SDLK_q,
-        SDLK_e,
+        SDLK_Q,
+        SDLK_E,
         SDLK_LCTRL,
         SDLK_LSHIFT,
-        SDLK_a,
-        SDLK_d,
-        SDLK_w,
-        SDLK_s
+        SDLK_A,
+        SDLK_D,
+        SDLK_W,
+        SDLK_S
     };
 
     std::array<std::int32_t, 5u> buttons =
     {
-        SDL_CONTROLLER_BUTTON_A,
-        SDL_CONTROLLER_BUTTON_X,
-        SDL_CONTROLLER_BUTTON_B,
-        SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
-        SDL_CONTROLLER_BUTTON_RIGHTSHOULDER
+        SDL_GAMEPAD_BUTTON_SOUTH,
+        SDL_GAMEPAD_BUTTON_WEST,
+        SDL_GAMEPAD_BUTTON_EAST,
+        SDL_GAMEPAD_BUTTON_LEFT_SHOULDER,
+        SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER
     };
     std::int32_t controllerID = -1;
 };

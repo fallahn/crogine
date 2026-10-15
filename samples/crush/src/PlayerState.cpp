@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -63,7 +63,7 @@ void PlayerState::punt(cro::Entity entity, cro::Scene& scene)
         {
             crate.state = Crate::State::Ballistic;
             crate.velocity.x = PuntVelocity * (player.puntLevel / Player::PuntCoolDown);
-            crate.velocity.x *= player.direction;
+            crate.velocity.x *= static_cast<float>(player.direction);
             crate.velocity.x *= Util::direction(player.collisionLayer);
             crate.owner = player.id;
 
@@ -127,7 +127,7 @@ void PlayerState::drop(cro::Entity entity, cro::Scene& scene)
             if (!player.local)
             {
                 auto offset = CrateCarryOffset;
-                offset.x *= player.direction;
+                offset.x *= static_cast<float>(player.direction);
                 offset.x *= Util::direction(player.collisionLayer);
                 crateEnt.getComponent<cro::Transform>().setPosition(entity.getComponent<cro::Transform>().getPosition() + offset);
                 crateEnt.getComponent<Crate>().collisionLayer = player.collisionLayer;
@@ -166,7 +166,7 @@ std::vector<cro::Entity> PlayerState::doBroadPhase(cro::Entity entity, cro::Scen
     bb += position;
 
     float searchDir = PuntOffset * Util::direction(player.collisionLayer);
-    searchDir *= player.direction;
+    searchDir *= static_cast<float>(player.direction);
 
     auto searchArea = PuntArea;
     searchArea.left += searchDir;

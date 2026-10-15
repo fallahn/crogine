@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -197,7 +197,7 @@ void PlayerSystem::processInput(cro::Entity entity)
     if (avatar.crateEnt.isValid())
     {
         auto offset = CrateCarryOffset;
-        offset.x *= player.direction;
+        offset.x *= static_cast<float>(player.direction);
         offset.x *= Util::direction(player.collisionLayer);
         avatar.crateEnt.getComponent<cro::Transform>().setPosition(entity.getComponent<cro::Transform>().getPosition() + offset);
     }

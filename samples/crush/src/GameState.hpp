@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -68,6 +68,7 @@ public:
     bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
     bool simulate(float) override;
+    void preRender() override;
     void render() override;
 
 private:
