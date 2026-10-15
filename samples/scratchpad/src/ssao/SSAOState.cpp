@@ -251,12 +251,21 @@ bool SSAOState::simulate(float dt)
     return true;
 }
 
-void SSAOState::render()
+void SSAOState::preRender()
 {
+    m_gameScene.preRender();
+
     m_renderBuffer.clear();
     m_gameScene.render();
     m_renderBuffer.display();
 
+    m_ssaoBuffer.clear(cro::Colour::CornflowerBlue);
+    updateSSAOData();
+    m_ssaoBuffer.display();
+}
+
+void SSAOState::render()
+{
     m_gameScene.getSystem<test::LightVolumeSystem>()->updateBuffer(m_gameScene.getActiveCamera());
 
 
@@ -265,10 +274,6 @@ void SSAOState::render()
     m_positionQuad.draw();
     m_depthQuad.draw();
     m_lightQuad.draw();
-
-    m_ssaoBuffer.clear(cro::Colour::CornflowerBlue);
-    updateSSAOData();
-    m_ssaoBuffer.display();
 
     m_ssaoQuad.draw();
     m_ssaoBlurQuad.draw();

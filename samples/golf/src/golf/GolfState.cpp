@@ -3807,7 +3807,15 @@ void GolfState::addSystems()
     m_trophyScene.addSystem<cro::SpriteAnimator>(mb);
     m_trophyScene.addSystem<cro::CallbackSystem>(mb);
     m_trophyScene.addSystem<cro::CameraSystem>(mb);
-    m_trophyScene.addSystem<cro::ParticleSystem>(mb);
+    m_trophyScene.addSystem<cro::ParticleSystem>(mb)->setRandomColours(
+        {
+            CD32::Colours[CD32::Yellow],
+            CD32::Colours[CD32::BlueLight],
+            CD32::Colours[CD32::BeigeLight],
+            CD32::Colours[CD32::GreenLight],
+            CD32::Colours[CD32::Orange],
+            CD32::Colours[CD32::Red]
+        });
     m_trophyScene.addSystem<cro::ModelRenderer>(mb);
     m_trophyScene.addSystem<cro::AudioPlayerSystem>(mb);
     m_trophyScene.setTitle("Trophy Scene");

@@ -391,15 +391,20 @@ bool BatcatState::simulate(float dt)
     return true;
 }
 
-void BatcatState::render()
+void BatcatState::preRender()
 {
+    m_scene.preRender();
+
     m_sceneTexture.clear();
     m_scene.render();
     m_sceneTexture.display();
 
-
     //feeds scene texture through post to output texture, which is in turn drawn by overlay
-    m_smaaPost.render(); 
+    m_smaaPost.render();
+}
+
+void BatcatState::render()
+{ 
     m_overlayScene.render();
 }
 

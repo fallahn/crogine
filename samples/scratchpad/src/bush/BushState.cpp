@@ -680,11 +680,18 @@ bool BushState::simulate(float dt)
     return true;
 }
 
-void BushState::render()
+void BushState::preRender()
 {
     m_windBuffer.bind();
     m_resolutionBuffer.bind();
 
+    glEnable(GL_PROGRAM_POINT_SIZE);
+
+    m_gameScene.preRender();
+}
+
+void BushState::render()
+{
     glEnable(GL_PROGRAM_POINT_SIZE);
     m_gameScene.render();
     m_uiScene.render();

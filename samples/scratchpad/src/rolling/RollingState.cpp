@@ -223,6 +223,11 @@ bool RollingState::simulate(float dt)
     return true;
 }
 
+void RollingState::preRender()
+{
+    m_gameScene.preRender();
+}
+
 void RollingState::render()
 {
     m_gameScene.render();

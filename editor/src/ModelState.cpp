@@ -237,7 +237,7 @@ void ModelState::preRender()
 {
     m_scene.preRender();
     //m_previewScene.preRender();
-    LogI << "buns" << std::endl;
+
     //render active material preview
     if (!m_materialDefs.empty())
     {

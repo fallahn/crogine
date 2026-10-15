@@ -182,6 +182,11 @@ void MyApp::simulate(float dt)
     m_stateStack.simulate(dt);
 }
 
+void MyApp::preRender()
+{
+    m_stateStack.preRender();
+}
+
 void MyApp::render()
 {
     m_stateStack.render();
@@ -233,8 +238,8 @@ bool MyApp::initialise()
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
     //m_stateStack.pushState(States::ScratchPad::TrackOverlay);
     //m_stateStack.pushState(States::ScratchPad::BatCat);
-    m_stateStack.pushState(States::ScratchPad::Surreal);
-    //m_stateStack.pushState(States::ScratchPad::PinballGame);
+    //m_stateStack.pushState(States::ScratchPad::Surreal);
+    m_stateStack.pushState(States::ScratchPad::SSAO);
 #else
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
     m_stateStack.pushState(States::ScratchPad::BatCat);

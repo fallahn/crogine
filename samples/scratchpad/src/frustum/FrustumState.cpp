@@ -316,14 +316,20 @@ bool FrustumState::simulate(float dt)
     return true;
 }
 
-void FrustumState::render()
+void FrustumState::preRender()
 {
+    m_gameScene.preRender();
+
     auto oldCam = m_gameScene.setActiveCamera(m_entities[EntityID::Camera]);
     m_cameraPreview.clear();
     m_gameScene.render();
     m_cameraPreview.display();
 
     m_gameScene.setActiveCamera(oldCam);
+}
+
+void FrustumState::render()
+{
     m_gameScene.render();
     m_uiScene.render();
 }

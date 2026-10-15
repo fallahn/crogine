@@ -155,8 +155,10 @@ bool SurrealState::simulate(float dt)
     return true;
 }
 
-void SurrealState::render()
+void SurrealState::preRender()
 {
+    m_gameScene.preRender();
+
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     cam.setActivePass(cro::Camera::Pass::Reflection);
     cam.reflectionBuffer.clear();
@@ -174,10 +176,11 @@ void SurrealState::render()
 
     cam.setRenderFlags(cro::Camera::Pass::Final, /*cro::RenderFlags::All*/RenderFlags::Final);
     cam.setActivePass(cro::Camera::Pass::Final);
+}
+
+void SurrealState::render()
+{
     m_gameScene.render();
-
-
-
     m_uiScene.render();
 }
 

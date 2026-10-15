@@ -422,14 +422,18 @@ bool ScrubGameState::simulate(float dt)
     return true;
 }
 
-void ScrubGameState::render()
+void ScrubGameState::preRender()
 {
+    m_gameScene.preRender();
+
     m_postTexture.clear();
     m_gameScene.render();
     m_postTexture.display();
+}
 
-    m_postQuad.draw();
-    
+void ScrubGameState::render()
+{
+    m_postQuad.draw();    
     m_uiScene.render();    
 }
 

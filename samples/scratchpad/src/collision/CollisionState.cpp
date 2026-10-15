@@ -181,6 +181,11 @@ bool CollisionState::simulate(float dt)
     return false;
 }
 
+void CollisionState::preRender()
+{
+    m_scene.preRender();
+}
+
 void CollisionState::render()
 {
     m_scene.render();

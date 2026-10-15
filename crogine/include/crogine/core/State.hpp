@@ -114,6 +114,7 @@ namespace cro
         \brief Provides an opportunity to render to offscreen targets
         after the State has been updated but before the main window has
         been set active.
+        Don't forget to implement App::preRender() and call StateStack::preRender() from it!
         */
         virtual void preRender() {}
 

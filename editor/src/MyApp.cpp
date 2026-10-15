@@ -101,6 +101,11 @@ void MyApp::simulate(float dt)
     m_stateStack.simulate(dt);
 }
 
+void MyApp::preRender()
+{
+    m_stateStack.preRender();
+}
+
 void MyApp::render()
 {
     m_stateStack.render();
