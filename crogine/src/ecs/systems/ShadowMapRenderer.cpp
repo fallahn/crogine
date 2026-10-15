@@ -66,7 +66,7 @@ source distribution.
 #include <mutex>
 #endif
 
-#ifdef CRO_DEBUG_
+#if defined (CRO_DEBUG_) || defined (DEBUG_UI)
 #include <crogine/gui/Gui.hpp>
 #endif
 

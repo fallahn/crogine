@@ -44,7 +44,7 @@ namespace
     {
         "Edwardo", "Cliff", "Theodora", "Annabelle", "Mr.Wilson", "Sarah"
     };
-    std::string configPath;
+    std::filesystem::path configPath;
 }
 
 MyApp::MyApp()
@@ -60,9 +60,9 @@ MyApp::MyApp()
 //public
 void MyApp::handleEvent(const cro::Event& evt)
 {
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
 #ifdef CRO_DEBUG_
@@ -102,7 +102,7 @@ bool MyApp::initialise()
 
     m_sharedData.clientConnection.netClient.create(4);
 
-    configPath = getPreferencePath() + "settings.cfg";
+    configPath = getPreferencePath() / "settings.cfg";
     loadSettings();
 
     return true;

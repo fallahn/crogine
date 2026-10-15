@@ -178,14 +178,14 @@ bool GameState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_PAUSE:
         case SDLK_ESCAPE:
-        case SDLK_p:
+        case SDLK_P:
             requestStackPush(States::ID::Pause);
             break;
         case SDLK_F3:

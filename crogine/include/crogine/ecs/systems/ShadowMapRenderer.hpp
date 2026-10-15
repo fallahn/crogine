@@ -37,7 +37,9 @@ source distribution.
 #include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/Shader.hpp>
 
-#ifdef CRO_DEBUG_
+//#define DEBUG_UI
+
+#if defined CRO_DEBUG_ || defined(DEBUG_UI)
 #include <crogine/gui/GuiClient.hpp>
 #endif
 
@@ -96,7 +98,7 @@ namespace cro
     \see Camera
     */
     class CRO_EXPORT_API ShadowMapRenderer final : public System, public Renderable
-#ifdef CRO_DEBUG_
+#if defined CRO_DEBUG_ || defined(DEBUG_UI)
         , public GuiClient
 #endif
     {
