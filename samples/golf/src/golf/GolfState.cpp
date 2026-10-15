@@ -3742,7 +3742,7 @@ void GolfState::addSystems()
             CD32::Colours[CD32::Yellow],
             CD32::Colours[CD32::BlueLight],
             CD32::Colours[CD32::BeigeLight],
-            CD32::Colours[CD32::GreyLight],
+            CD32::Colours[CD32::GreenLight],
             CD32::Colours[CD32::Orange],
             CD32::Colours[CD32::Red]
         });

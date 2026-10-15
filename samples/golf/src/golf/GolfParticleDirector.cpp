@@ -69,7 +69,7 @@ GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr, const Share
     m_emitterSettings[ParticleID::Puff].loadFromFile("assets/golf/particles/puff.cps", tr);
     m_emitterSettings[ParticleID::Star].loadFromFile("assets/golf/particles/star.cps", tr);
     m_emitterSettings[ParticleID::Trail].loadFromFile("assets/golf/particles/trail.cps", tr);
-    m_emitterSettings[ParticleID::Firework].loadFromFile("assets/golf/particles/firework.cps", tr);
+    m_emitterSettings[ParticleID::Firework].loadFromFile("assets/golf/particles/firework_animated.cps", tr);
     m_emitterSettings[ParticleID::Firework].blendmode = cro::EmitterSettings::BlendMode::Add;
 
     m_emitterSettings[ParticleID::Confetti].loadFromFile("assets/golf/particles/confetti.cps", tr);

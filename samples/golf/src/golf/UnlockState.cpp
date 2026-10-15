@@ -251,7 +251,15 @@ void UnlockState::addSystems()
     m_modelScene.addSystem<cro::SkeletalAnimator>(mb);
     m_modelScene.addSystem<cro::CameraSystem>(mb);
     m_modelScene.addSystem<cro::ModelRenderer>(mb);
-    m_modelScene.addSystem<cro::ParticleSystem>(mb);
+    m_modelScene.addSystem<cro::ParticleSystem>(mb)->setRandomColours(
+        {
+            CD32::Colours[CD32::Yellow],
+            CD32::Colours[CD32::BlueLight],
+            CD32::Colours[CD32::BeigeLight],
+            CD32::Colours[CD32::GreenLight],
+            CD32::Colours[CD32::Orange],
+            CD32::Colours[CD32::Red]
+        });
 
     m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_sharedData.sharedResources->audio);
     m_audioEnts[AudioID::Accept] = m_scene.createEntity();

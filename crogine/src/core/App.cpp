@@ -575,7 +575,6 @@ void App::run(bool resetSettings)
         timeSinceLastFrameCount += elapsed;
 
         //counts the number of frames actually rendered in a second
-        //ish... doesn't acount for time overflow
         while (timeSinceLastFrameCount > frameCountTime)
         {
             const std::int32_t rendered = static_cast<std::int32_t>(static_cast<float>(framesRenderedPerSecond) / timeSinceLastFrameCount);
