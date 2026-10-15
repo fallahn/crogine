@@ -748,11 +748,14 @@ bool ClubhouseState::simulate(float dt)
     return false;
 }
 
-void ClubhouseState::render()
+void ClubhouseState::preRender()
 {
     m_scaleBuffer.bind();
     m_resolutionBuffer.bind();
     m_windBuffer.bind();
+
+    m_backgroundScene.preRender();
+    m_tableScene.preRender();
 
     m_backgroundTexture.clear(cro::Colour::CornflowerBlue);
     m_backgroundScene.render();
@@ -779,7 +782,10 @@ void ClubhouseState::render()
 #ifndef CRO_DEBUG_
     }
 #endif
+}
 
+void ClubhouseState::render()
+{
     m_uiScene.render();
 }
 

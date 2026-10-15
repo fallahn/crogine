@@ -512,6 +512,14 @@ void Scene::forwardMessage(const Message& msg)
     }
 }
 
+void Scene::preRender()
+{
+    for (auto r : m_renderables)
+    {
+        r->preRender();
+    }
+}
+
 void Scene::render()
 {
     defaultRenderPath(*RenderTarget::getActiveTarget(), &m_activeCamera, 1);

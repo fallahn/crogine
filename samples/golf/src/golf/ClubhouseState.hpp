@@ -102,6 +102,8 @@ public:
 
     bool simulate(float) override;
 
+    void preRender() override;
+
     void render() override;
 
     struct MenuID final

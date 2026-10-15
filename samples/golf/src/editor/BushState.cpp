@@ -306,14 +306,15 @@ bool BushState::simulate(float dt)
     return true;
 }
 
-void BushState::render()
+void BushState::preRender()
 {
     m_windBuffer.bind();
     m_resolutionBuffer.bind();
     m_scaleBuffer.bind();
 
-    glEnable(GL_PROGRAM_POINT_SIZE);
+    m_gameScene.preRender();
 
+    glEnable(GL_PROGRAM_POINT_SIZE);
 
     glUseProgram(shaderUniform.shaderID);
     glUniform1f(shaderUniform.size, billboardScaleMultiplier * treeset.leafSize);
@@ -325,8 +326,13 @@ void BushState::render()
     glUseProgram(shaderUniform.shaderID);
     glUniform1f(shaderUniform.size, treeset.leafSize);
     m_gameScene.setActiveCamera(oldCam);
-    m_backgroundQuad.draw();
+}
 
+void BushState::render()
+{
+    glEnable(GL_PROGRAM_POINT_SIZE);
+
+    m_backgroundQuad.draw();
 
     m_skyScene.render();
     glClear(GL_DEPTH_BUFFER_BIT);

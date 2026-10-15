@@ -121,6 +121,11 @@ bool SBallBackgroundState::simulate(float dt)
     return false;
 }
 
+void SBallBackgroundState::preRender()
+{
+    m_scene.preRender();
+}
+
 void SBallBackgroundState::render()
 {
     m_renderTexture.clear();

@@ -2139,6 +2139,8 @@ void MenuState::preRender()
     m_resolutionBuffer.bind();
     m_windBuffer.bind();
 
+    m_backgroundScene.preRender();
+
     //render ball preview first
     if (m_currentMenu == MenuID::Avatar)
     {

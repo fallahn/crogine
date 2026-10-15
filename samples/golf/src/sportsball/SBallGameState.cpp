@@ -561,6 +561,11 @@ bool SBallGameState::simulate(float dt)
     return true;
 }
 
+void SBallGameState::preRender()
+{
+    m_gameScene.preRender();
+}
+
 void SBallGameState::render() 
 {
     m_gameScene.render();

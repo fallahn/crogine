@@ -361,6 +361,15 @@ namespace cro
         */
         void forwardMessage(const Message&);
 
+        /*!
+        \brief Draws any renderable systems with a preRender() function.
+        This should be called from the State's preRender() function to
+        ensure that off screen render targets are updated outside the
+        main window's binding. When using the ShadowMapSystem this will
+        need to be called to update the shadow maps.
+        */
+        void preRender();
+
 
         /*!
         \brief Draws any renderable systems in this scene, in the order in which they were added

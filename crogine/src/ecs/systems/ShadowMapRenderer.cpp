@@ -558,7 +558,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
     }
 }
 
-void ShadowMapRenderer::render(Entity, const RenderTarget&)
+void ShadowMapRenderer::preRender()
 {
     if (m_wantsRender)
     {

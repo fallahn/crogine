@@ -159,6 +159,11 @@ bool ScrubBackgroundState::simulate(float dt)
     return false;
 }
 
+void ScrubBackgroundState::preRender()
+{
+    m_scene.preRender();
+}
+
 void ScrubBackgroundState::render()
 {
 #ifdef HIDE_BACKGROUND

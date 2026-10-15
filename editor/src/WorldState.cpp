@@ -221,6 +221,14 @@ bool WorldState::simulate(float dt)
     return false;
 }
 
+void WorldState::preRender()
+{
+    if (getStateCount() == 1)
+    {
+        m_scene.preRender();
+    }
+}
+
 void WorldState::render()
 {
     if (getStateCount() == 1)

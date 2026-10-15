@@ -252,6 +252,11 @@ bool TrophyState::simulate(float dt)
     return true;
 }
 
+void TrophyState::preRender()
+{
+    m_scene.preRender();
+}
+
 void TrophyState::render()
 {
     m_trophyTexture.clear(cro::Colour::Transparent/*cro::Colour::Red*/);

@@ -233,8 +233,11 @@ bool ModelState::simulate(float dt)
     return false;
 }
 
-void ModelState::render()
+void ModelState::preRender() 
 {
+    m_scene.preRender();
+    //m_previewScene.preRender();
+    LogI << "buns" << std::endl;
     //render active material preview
     if (!m_materialDefs.empty())
     {
@@ -242,7 +245,10 @@ void ModelState::render()
         m_previewScene.render();
         m_materialDefs[m_selectedMaterial].previewTexture.display();
     }
+}
 
+void ModelState::render()
+{
     m_scene.render();
 }
 

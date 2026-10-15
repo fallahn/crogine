@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -88,6 +88,9 @@ namespace cro
     it can also improve the quality of shadows, particularly
     self shadows, where the depth difference is very small.
 
+    Scenes which use this system MUST call Scene::preRender()
+    for the shadowmaps to be updated.
+
     Note that the Camera's depthBuffer must be explicitly created:
     any camera without a valid depthBuffer will be skipped.
     \see Camera
@@ -130,7 +133,7 @@ namespace cro
         void process(float) override;
 
         void updateDrawList(Entity) override;
-        void render(Entity, const RenderTarget&) override;
+        void preRender() override;
 
     private:
         std::uint32_t m_interval;

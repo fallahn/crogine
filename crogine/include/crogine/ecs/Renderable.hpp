@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/SDLResource.hpp>
+#include <crogine/ecs/Entity.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 
 #include <array>
@@ -39,7 +40,6 @@ source distribution.
 namespace cro
 {
     struct Camera;
-    class Entity;
     class RenderTarget;
     /*!
     \brief Renderable interface for systems which draw parts of the scene.
@@ -71,14 +71,28 @@ namespace cro
         virtual void updateDrawList(Entity camera) = 0;
 
         /*!
-        \brief Renders this system.
+        \brief Pre render pass
+        Use this to render the system to a different render target, such as
+        an internal render texture or depth map. This function is always called
+        when the default frame buffer (the main window) is unbound, to prevent
+        unnecessarily binding it. To render to the main window use render()
+        */
+        virtual void preRender() {}
+
+
+        /*!
+        \brief Renders this system to the default render target (the window).
         \param camera Entity containing a camera and transform component, automatically
         passed in by the scene when this system is drawn. Use this to accurately draw the
         system, usually via the camera's draw list as determined by updateDrawList().
         \param target RenderTarget currently being drawn to. Provides information such as
-        the dimensions of the target
+        the dimensions of the target.
+        Note for performance reasons this should always be the main window, and is
+        left here for compatibility. For rendering to other targets used preRender()
+        which ensures the main window is not the active frame buffer and prevents
+        unnecessary switching.
         */
-        virtual void render(Entity camera, const RenderTarget& target) = 0;
+        virtual void render(Entity camera, const RenderTarget& target) {};
 
         /*!
         \brief Sets the function to render the Scene's skybox.

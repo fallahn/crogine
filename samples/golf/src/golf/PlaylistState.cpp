@@ -566,8 +566,10 @@ bool PlaylistState::simulate(float dt)
     return false;
 }
 
-void PlaylistState::render()
+void PlaylistState::preRender()
 {
+    m_gameScene.preRender();
+
     m_scaleBuffer.bind();
     m_windBuffer.bind();
     m_resolutionBuffer.bind();
@@ -606,7 +608,10 @@ void PlaylistState::render()
     glClear(GL_DEPTH_BUFFER_BIT);
     m_gameScene.render();
     m_gameSceneTexture.display();
+}
 
+void PlaylistState::render()
+{
     m_uiScene.render();
 }
 

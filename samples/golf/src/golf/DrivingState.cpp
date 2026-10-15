@@ -1123,11 +1123,13 @@ bool DrivingState::simulate(float dt)
     return true;
 }
 
-void DrivingState::render()
+void DrivingState::preRender()
 {
     m_scaleBuffer.bind();
     m_resolutionBuffer.bind();
     m_windBuffer.bind();
+
+    m_gameScene.preRender();
 
     m_backgroundTexture.clear();
     m_skyScene.render();
@@ -1138,7 +1140,10 @@ void DrivingState::render()
     m_gameScene.getSystem<BallSystem>()->renderDebug(cam.getActivePass().viewProjectionMatrix, m_backgroundTexture.getSize());
 #endif
     m_backgroundTexture.display();
+}
 
+void DrivingState::render()
+{
     m_uiScene.render();
 }
 

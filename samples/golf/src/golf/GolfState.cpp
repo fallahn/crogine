@@ -3528,6 +3528,9 @@ bool GolfState::simulate(float dt)
 
 void GolfState::preRender()
 {
+    //updates the shadow maps
+    m_gameScene.preRender();
+
     m_benchmark.update();
 
     m_scaleBuffer.bind();

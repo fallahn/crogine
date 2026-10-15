@@ -173,6 +173,11 @@ bool GCState::simulate(float dt)
     return m_processReturn;
 }
 
+void GCState::preRender()
+{
+    m_gameScene.preRender();
+}
+
 void GCState::render()
 {
     m_gameScene.render();

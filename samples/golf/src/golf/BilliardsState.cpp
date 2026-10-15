@@ -589,8 +589,10 @@ bool BilliardsState::simulate(float dt)
     return false;
 }
 
-void BilliardsState::render()
+void BilliardsState::preRender()
 {
+    m_gameScene.preRender();
+
     m_gameSceneTexture.clear(/*cro::Colour::AliceBlue*/);
     m_gameScene.render();
     
@@ -621,7 +623,10 @@ void BilliardsState::render()
         m_trophyTexture.display();
     }
     m_gameScene.setActiveCamera(oldCam);
+}
 
+void BilliardsState::render()
+{
     m_uiScene.render();
 
 #ifdef CRO_DEBUG_

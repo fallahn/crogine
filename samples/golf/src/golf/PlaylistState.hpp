@@ -62,6 +62,8 @@ public:
 
     bool simulate(float) override;
 
+    void preRender() override;
+
     void render() override;
 
     cro::StateID getStateID() const override { return StateID::Playlist; }

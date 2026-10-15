@@ -1011,11 +1011,13 @@ bool ChipInState::simulate(float dt)
     return true;
 }
 
-void ChipInState::render()
+void ChipInState::preRender()
 {
     m_scaleBuffer.bind();
     m_resolutionBuffer.bind();
     m_windBuffer.bind();
+
+    m_gameScene.preRender();
 
     m_backgroundTexture.clear();
     m_skyScene.render();
@@ -1026,7 +1028,10 @@ void ChipInState::render()
     m_gameScene.getSystem<BallSystem>()->renderDebug(cam.getActivePass().viewProjectionMatrix, m_backgroundTexture.getSize());
 #endif
     m_backgroundTexture.display();
+}
 
+void ChipInState::render()
+{
     m_uiScene.render();
 }
 
