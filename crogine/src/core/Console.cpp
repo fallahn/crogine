@@ -43,7 +43,6 @@ source distribution.
 #include <fstream>
 
 using namespace cro;
-namespace ui = ImGui;
 
 namespace
 {
@@ -111,6 +110,9 @@ int textEditCallback(ImGuiInputTextCallbackData* data);
 
 float Console::m_avgFrameTime = 0.f;
 std::int32_t Console::m_displayedFrames = 0;
+bool Console::m_showOverlay = false;
+std::int32_t Console::m_overlayCorner = 0;
+std::int32_t Console::m_overlayLevel = 0;
 
 //public
 const std::vector<Console::ResolutionData>& Console::getResolutionData()
@@ -343,15 +345,15 @@ void Console::draw()
 
     if (visible)
     {
-        ui::SetNextWindowSizeConstraints({ 640, 480 }, { 1024.f, 768.f });
-        if (ui::Begin("Console", &visible, ImGuiWindowFlags_NoScrollbar))
+        ImGui::SetNextWindowSizeConstraints({ 640, 480 }, { 1024.f, 768.f });
+        if (ImGui::Begin("Console", &visible, ImGuiWindowFlags_NoScrollbar))
         {
-            if (ui::BeginTabBar("Tabs"))
+            if (ImGui::BeginTabBar("Tabs"))
             {
                 //console
-                if (ui::BeginTabItem("Console"))
+                if (ImGui::BeginTabItem("Console"))
                 {
-                    ui::BeginChild("ScrollingRegion", ImVec2(0, -ui::GetFrameHeightWithSpacing()), false/*, ImGuiWindowFlags_HorizontalScrollbar*/);
+                    ImGui::BeginChild("ScrollingRegion", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()), false/*, ImGuiWindowFlags_HorizontalScrollbar*/);
                     static bool scrollToEnd = false;
 
                     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1));
@@ -369,11 +371,11 @@ void Console::draw()
                         ImGui::SetScrollHereY(1.0f);
                         scrollToEnd = false;
                     }
-                    ui::EndChild();
+                    ImGui::EndChild();
 
-                    ui::Separator();
+                    ImGui::Separator();
 
-                    ui::PushItemWidth(620.f);
+                    ImGui::PushItemWidth(620.f);
 
                     bool focus = false;
                     if ((focus = ImGui::InputText(" ", input, MAX_INPUT_CHARS,
@@ -384,7 +386,7 @@ void Console::draw()
                         doCommand(input);
                     }
 
-                    ui::PopItemWidth();
+                    ImGui::PopItemWidth();
 
                     ImGui::SetItemDefaultFocus();
                     if (focus || ImGui::IsItemHovered()
@@ -394,11 +396,11 @@ void Console::draw()
                         ImGui::SetKeyboardFocusHere(-1);
                     }
 
-                    ui::EndTabItem();
+                    ImGui::EndTabItem();
                 }
 
                 //video options
-                if (ui::BeginTabItem("Video"))
+                if (ImGui::BeginTabItem("Video"))
                 {
                     if (ImGui::BeginCombo("Resolution", resolutionData[currentResolution].label.c_str()))
                     {
@@ -419,7 +421,7 @@ void Console::draw()
                     }
 
                     static bool fullScreen = App::getWindow().isFullscreen();
-                    ui::Checkbox("Full Screen", &fullScreen);
+                    ImGui::Checkbox("Full Screen", &fullScreen);
 
                     bool exclusive = App::getWindow().getExclusiveFullscreen();
                     if (ImGui::Checkbox("Exclusive Full Screen", &exclusive))
@@ -459,7 +461,7 @@ void Console::draw()
                     ImGui::Text("Note not all platforms support this. Doesn't affect post processes or RenderTextures.");
                     ImGui::PopStyleColor();
 
-                    if (ui::Button("Apply", { 50.f, 20.f }))
+                    if (ImGui::Button("Apply", { 50.f, 20.f }))
                     {
                         //apply settings
                         if (fullScreen != App::getWindow().isFullscreen())
@@ -471,32 +473,32 @@ void Console::draw()
                             App::getWindow().setSize(resolutionData[currentResolution].size);
                         }
                     }
-                    ui::EndTabItem();
+                    ImGui::EndTabItem();
                 }
 
                 //audio
-                if (ui::BeginTabItem("Audio"))
+                if (ImGui::BeginTabItem("Audio"))
                 {
-                    ui::Text("NOTE: only AudioSystem sounds are affected.");
+                    ImGui::Text("NOTE: only AudioSystem sounds are affected.");
 
                     static float maxVol = AudioMixer::getMasterVolume();
-                    ui::SliderFloat("Master", &maxVol, 0.f, 1.f);
+                    ImGui::SliderFloat("Master", &maxVol, 0.f, 1.f);
                     AudioMixer::setMasterVolume(maxVol);
 
                     static std::array<float, AudioMixer::MaxChannels> channelVol;
                     for (auto i = 0u; i < AudioMixer::MaxChannels; ++i)
                     {
                         channelVol[i] = AudioMixer::getVolume(i);
-                        if (ui::SliderFloat(AudioMixer::getLabel(i).c_str(), &channelVol[i], 0.f, 1.f))
+                        if (ImGui::SliderFloat(AudioMixer::getLabel(i).c_str(), &channelVol[i], 0.f, 1.f))
                         {
                             AudioMixer::setVolume(channelVol[i], i);
                         }
                     }
-                    ui::EndTabItem();
+                    ImGui::EndTabItem();
                 }
 
                 //stats
-                if (ui::BeginTabItem("Stats"))
+                if (ImGui::BeginTabItem("Stats"))
                 {
                     const auto fpsUncapped = 1.f / m_avgFrameTime;
 
@@ -512,9 +514,9 @@ void Console::draw()
                     if (m_displayedFrames < minCappedFps) minCappedFps = m_displayedFrames;
                     if (m_displayedFrames > maxCappedFps) maxCappedFps = m_displayedFrames;
 
-                    //ui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-                    ui::Text("Average frame time: %.5f ms", m_avgFrameTime);
-                    ui::Text("%.3f FPS (Uncapped) Min: %.3f Max: %.3f", fpsUncapped, minUncappedFps, maxUncappedFps);
+                    //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+                    ImGui::Text("Average frame time: %.5f ms", m_avgFrameTime);
+                    ImGui::Text("%.3f FPS (Uncapped) Min: %.3f Max: %.3f", fpsUncapped, minUncappedFps, maxUncappedFps);
                     ImGui::SameLine();
                     if (ImGui::Button("Reset##1"))
                     {
@@ -522,20 +524,61 @@ void Console::draw()
                         maxUncappedFps = 0.f;
                     }
 
-                    ui::Text("%d FPS (Capped) Min: %d Max: %d", m_displayedFrames, minCappedFps, maxCappedFps);
+                    ImGui::Text("%d FPS (Capped) Min: %d Max: %d", m_displayedFrames, minCappedFps, maxCappedFps);
                     ImGui::SameLine();
                     if (ImGui::Button("Reset##2"))
                     {
                         minCappedFps = std::numeric_limits<std::int32_t>::max();
                         maxCappedFps = 0;
                     }
-                    ui::NewLine();
+                    
+                    ImGui::Checkbox("Show Stat Overlay", &m_showOverlay);
+                    static const std::vector<std::string> Corners = { "Top Left", "Top Right", "Bottom Left", "Bottom Right" };
+                    ImGui::SetNextItemWidth(120.f);
+                    if (ImGui::BeginCombo("Position", Corners[m_overlayCorner].c_str()))
+                    {
+                        for (auto i = 0u; i < Corners.size(); ++i)
+                        {
+                            const bool selected = (i == static_cast<std::int32_t>(m_overlayCorner));
+                            if (ImGui::Selectable(Corners[i].c_str(), false))
+                            {
+                                m_overlayCorner = i;
+                            }
+
+                            if (selected)
+                            {
+                                ImGui::SetItemDefaultFocus();
+                            }
+                        }
+                        ImGui::EndCombo();
+                    }
+                    static const std::vector<std::string> Levels = { "0","1" };
+                    ImGui::SetNextItemWidth(120.f);
+                    if (ImGui::BeginCombo("Detail Level", Levels[m_overlayLevel].c_str()))
+                    {
+                        for (auto i = 0u; i < Levels.size(); ++i)
+                        {
+                            const bool selected = (i == static_cast<std::int32_t>(m_overlayLevel));
+                            if (ImGui::Selectable(Levels[i].c_str(), false))
+                            {
+                                m_overlayLevel = i;
+                            }
+
+                            if (selected)
+                            {
+                                ImGui::SetItemDefaultFocus();
+                            }
+                        }
+                        ImGui::EndCombo();
+                    }
+                    
+                    ImGui::NewLine();
 
                     for (const auto& [f, _] : m_statFuncs)
                     {
                         f();
                     }
-                    ui::EndTabItem();
+                    ImGui::EndTabItem();
                 }
 
                 //display registered tabs
@@ -545,15 +588,15 @@ void Console::draw()
                     if (ImGui::BeginTabItem(name.c_str()))
                     {
                         func();
-                        ui::EndTabItem();
+                        ImGui::EndTabItem();
                     }
                 }
 
-                ui::EndTabBar();
+                ImGui::EndTabBar();
             }
         }
 
-        ui::End();
+        ImGui::End();
     }
     else
     {

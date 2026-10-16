@@ -1117,6 +1117,84 @@ void App::doImGui()
     //show other windows (console etc)
     Console::draw();
     
+    //renders the FPS overlay
+    if (Console::showOverlay())
+    {
+        static constexpr float FPSHeight = 32.f;
+        const auto winSize = glm::vec2(m_window.getSize());
+        ImVec2 position = { 0.f, 0.f };
+        ImVec2 size = { winSize.x, FPSHeight };
+
+        const auto corner = Console::getOverlayCorner();
+        const auto level = Console::getOverlayLevel();
+        if (level == 0)
+        {
+            size.x = 50.f;
+        }
+
+        switch (corner)
+        {
+        default:
+        case 0:
+            //TL
+            break;
+        case 1:
+            //TR
+            position.x = winSize.x - size.x;
+            break;
+        case 2:
+            //BL
+            position.y = winSize.y - size.y;
+            break;
+        case 3:
+            //BR
+            position.x = winSize.x - size.x;
+            position.y = winSize.y - size.y;
+            break;
+        }
+
+        //this is called at UpdateRate times per second
+        //so this is a hacky way of counting the time...
+        static std::int32_t counter = 0;
+        static float frameTime = 0.f;
+        static float uncapped = 0.f;
+
+        counter++;
+        if (counter > 30)
+        {
+            counter -= 30;
+
+            frameTime = Console::getAvgFrameTime();
+            uncapped = 1.f / frameTime;
+        }
+        const auto capped = Console::getRenderedFrameCount();
+        const auto colour = capped < 60 ?
+            (capped < 30 ? ImVec4(1.f, 0.f, 0.f, 1.f) : ImVec4(1.f, 0.5f, 0.f, 1.f)) : ImVec4(0.f, 1.f, 0.f, 1.f);
+        
+        ImGui::SetNextWindowPos(position);
+        ImGui::SetNextWindowSize(size);
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, { 0.f, 0.f, 0.f, 0.4f });
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {14.f, 8.f});
+        ImGui::Begin("FPS Counter", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBringToFrontOnFocus);
+        ImGui::PushStyleColor(ImGuiCol_Text, colour);
+        switch (level)
+        {
+        default:
+        case 0:
+            ImGui::Text("%d", capped);
+            break;
+        case 1:
+            ImGui::Text("Avg Frame Time: %.3fms Uncapped FPS: %.3f Capped FPS: %d", frameTime * 1000.f, uncapped, capped);
+            break;
+        }
+        ImGui::PopStyleColor();
+        ImGui::End();
+        ImGui::PopStyleVar(3); //border size, rounding, padding
+        ImGui::PopStyleColor(); //window BG
+    }
+
     for (const auto& f : m_guiWindows)
     {
         f.first();
@@ -1276,6 +1354,18 @@ App::WindowSettings App::loadSettings() const
             {
                 Console::setMaxFrames(prop.getValue<std::int32_t>());
             }
+            else if (prop.getName() == "show_overlay")
+            {
+                Console::m_showOverlay = prop.getValue<bool>();
+            }
+            else if (prop.getName() == "overlay_corner")
+            {
+                Console::m_overlayCorner = std::clamp(prop.getValue<std::int32_t>(), 0, 3);
+            }
+            else if (prop.getName() == "overlay_level")
+            {
+                Console::m_overlayLevel = std::clamp(prop.getValue<std::int32_t>(), 0, 1);
+            }
         }
 
         //load mixer settings
@@ -1338,6 +1428,9 @@ void App::saveSettings()
     saveSettings.addProperty("right_deadzone").setValue(cro::GameController::RightThumbDeadZone.getOffset());
     saveSettings.addProperty("trigger_deadzone").setValue(cro::GameController::TriggerDeadZone.getOffset());
     saveSettings.addProperty("max_frames").setValue(Console::getMaxFrames());
+    saveSettings.addProperty("show_overlay").setValue(Console::showOverlay());
+    saveSettings.addProperty("overlay_corner").setValue(Console::getOverlayCorner());
+    saveSettings.addProperty("overlay_level").setValue(Console::getOverlayLevel());
 
     auto* aObj = saveSettings.addObject("audio");
     aObj->addProperty("master").setValue(AudioMixer::getMasterVolume());

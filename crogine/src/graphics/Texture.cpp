@@ -253,7 +253,6 @@ bool Texture::loadFromFile(const std::filesystem::path& filePath, bool createMip
             temp.resize(size);
             SDL_ReadIO(f.filePtr(), temp.data(), size);
 
-            //if (const auto result = ktxTexture_CreateFromNamedFile(U8PATH_CAST(path), KTX_TEXTURE_CREATE_NO_FLAGS, &kTex);
             if (const auto result = ktxTexture_CreateFromMemory(temp.data(), size, KTX_TEXTURE_CREATE_NO_FLAGS, &kTex);
                 result != 0)
             {

@@ -171,6 +171,16 @@ namespace cro
         */
         static void setMaxFrames(std::int32_t);
 
+        /*!
+        \brief Returns the current average frame time
+        */
+        static float getAvgFrameTime() { return m_avgFrameTime; }
+
+        /*!
+        \brief Returns the number of rendered frames counted in the last second
+        */
+        static std::int32_t getRenderedFrameCount() { return m_displayedFrames; }
+
     private:
         friend class App;
         friend class ConsoleClient;
@@ -199,6 +209,15 @@ namespace cro
         static void updateFrameCount(std::int32_t fc) { m_displayedFrames = fc; }
 
         static cro::ConfigObject& getConvars();
+
+        static bool m_showOverlay;
+        static bool showOverlay() { return m_showOverlay; }
+
+        static std::int32_t m_overlayCorner;
+        static std::int32_t getOverlayCorner() { return m_overlayCorner; }
+
+        static std::int32_t m_overlayLevel;
+        static std::int32_t getOverlayLevel() { return m_overlayLevel; }
     };
 
 //#include "Console.inl"

@@ -1652,7 +1652,6 @@ void TerrainBuilder::threadFunc()
                         auto worldY = startY + (y / GridDensity);
 
                         auto terrain = readMap(mapImage, worldX, worldY).first;
-                        //TODO get world coords and sample collision mesh
                         if (terrain == TerrainID::Green)
                         {
                             float posX = static_cast<float>(x / GridDensity) + ((x % GridDensity) * GridSpacing) + startX;
@@ -1693,7 +1692,9 @@ void TerrainBuilder::threadFunc()
                             vert2.position.y = terrain.height - pinPos.y;
                             vert2.normal = terrain.normal;
 
-                            const glm::vec2 uv2 = { vert2.position.x * DashCount, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert.position)) * SlopeSpeed, 1.f) };
+                            auto uvSpeed = std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert.position)) * SlopeSpeed, 1.f);
+                            auto sgn = cro::Util::Maths::sgn(uvSpeed);
+                            const glm::vec2 uv2 = { vert2.position.x * DashCount, (std::abs(uvSpeed) * std::abs(uvSpeed)) * sgn };
                             const glm::vec2 uv1 = { vert.position.x * DashCount, uv2.y }; //must be constant across segment
                             vert2.texCoord = glm::packHalf2x16(uv2);
                             vert.texCoord = glm::packHalf2x16(uv1);
@@ -1719,7 +1720,9 @@ void TerrainBuilder::threadFunc()
                             vert4.position.y = terrain.height - pinPos.y;
                             vert4.normal = terrain.normal;
 
-                            const glm::vec2 uv4 = { vert4.position.z * DashCount, std::min(-glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed, 1.f) };
+                            uvSpeed = std::min(-glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed, 1.f);
+                            sgn = cro::Util::Maths::sgn(uvSpeed);
+                            const glm::vec2 uv4 = { vert4.position.z * DashCount, (std::abs(uvSpeed) * std::abs(uvSpeed)) * sgn };
                             const glm::vec2 uv3 = { vert3.position.z * DashCount, uv4.y };
                             vert4.texCoord = glm::packHalf2x16(uv4);
                             vert3.texCoord = glm::packHalf2x16(uv3);
