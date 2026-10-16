@@ -27,6 +27,8 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include "../detail/GLCheck.hpp"
+
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/detail/AllocationResource.hpp>
 #include <crogine/detail/IOStream.hpp>
@@ -34,7 +36,6 @@ source distribution.
 #include <crogine/graphics/BinaryMeshBuilder.hpp>
 #include <crogine/util/Maths.hpp>
 
-#include "../detail/GLCheck.hpp"
 
 using namespace cro;
 

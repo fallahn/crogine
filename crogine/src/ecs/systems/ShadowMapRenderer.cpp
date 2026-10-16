@@ -612,6 +612,8 @@ void ShadowMapRenderer::initBlurGeometry()
     m_blurQuad.cascadeUniform = m_blurShaderA.getUniformID("u_cascadeIndex");
 
     //TODO these should come from an active allocator
+    //which needs to be fed in from a MeshResource, preferably
+    //the one used to create the rest of the current Scene.
     glCheck(glGenBuffers(1, &m_blurQuad.vbo));
     glCheck(glGenVertexArrays(1, &m_blurQuad.vao));
 
