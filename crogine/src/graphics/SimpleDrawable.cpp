@@ -329,7 +329,7 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
     }
 
     //set projection
-    const auto& projectionMatrix = RenderTarget::getActiveTarget()->getProjectionMatrix();    
+    const auto& projectionMatrix = RenderTarget::getActiveTarget()->getProjectionMatrix();
        
     //bind shader
     glCheck(glUseProgram(m_uniforms.shaderID));
@@ -381,7 +381,7 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
     }
 
     //set viewport
-    auto vp = RenderTarget::getActiveTarget()->getViewport();
+    const auto vp = RenderTarget::getActiveTarget()->getViewport();
     glCheck(glViewport(vp.left, vp.bottom, vp.width, vp.height));
 
     //set culling/blend mode

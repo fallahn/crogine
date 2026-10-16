@@ -117,8 +117,6 @@ void main()
 #endif
     FRAG_OUT = colour;
 })";
-    std::int32_t cascadeUniform = -1;
-
     std::uint32_t intervalCounter = 0;
 
     constexpr float CascadeOverlap = 0.5f;
@@ -152,15 +150,7 @@ ShadowMapRenderer::ShadowMapRenderer(MessageBus& mb)
         });
 #endif
 
-    //TODO only create these if we get a request for a blur pass
-    //TODO make B5/B9 defines optional (number of taps)
-    m_blurShaderA.loadFromString(SimpleDrawable::getDefaultVertexShader(), BlurPassFrag, "#define H\n#define B5\n");
-    m_blurShaderB.loadFromString(SimpleDrawable::getDefaultVertexShader(), BlurPassFrag, "#define B5\n");
-
-    m_inputQuad.setShader(m_blurShaderA);
-    m_outputQuad.setShader(m_blurShaderB);
-
-    cascadeUniform = m_blurShaderA.getUniformID("u_cascadeIndex");
+    initBlurGeometry();
 
     std::iota(m_bufferIndices.rbegin(), m_bufferIndices.rend(), 0);
 
@@ -186,6 +176,19 @@ ShadowMapRenderer::ShadowMapRenderer(MessageBus& mb)
             ImGui::End();
         }, true);
 #endif
+}
+
+ShadowMapRenderer::~ShadowMapRenderer()
+{
+    if (m_blurQuad.vbo)
+    {
+        glCheck(glDeleteBuffers(1, &m_blurQuad.vbo));
+    }
+
+    if (m_blurQuad.vao)
+    {
+        glCheck(glDeleteVertexArrays(1, &m_blurQuad.vao));
+    }
 }
 
 //public
@@ -584,6 +587,74 @@ void ShadowMapRenderer::preRender()
 }
 
 //private
+void ShadowMapRenderer::initBlurGeometry()
+{
+    //TODO only create these if we get a request for a blur pass
+    //TODO make B5/B9 defines optional (number of taps)
+    m_blurShaderA.loadFromString(SimpleDrawable::getDefaultVertexShader(), BlurPassFrag, "#define H\n#define B5\n");
+    m_blurShaderB.loadFromString(SimpleDrawable::getDefaultVertexShader(), BlurPassFrag, "#define B5\n");
+
+    //set up texture uniforms which won't change and are always at 0
+    glCheck(glUseProgram(m_blurShaderA.getGLHandle()));
+    glCheck(glUniform1i(m_blurShaderA.getUniformID("u_texture"), 0));
+
+    glCheck(glUseProgram(m_blurShaderB.getGLHandle()));
+    glCheck(glUniform1i(m_blurShaderB.getUniformID("u_texture"), 0));
+
+    glUseProgram(0);
+
+    //stash the uniform location for world and proj matrices
+    m_blurQuad.firstPass.projMat = m_blurShaderA.getUniformID("u_projectionMatrix");
+    m_blurQuad.firstPass.worldMat = m_blurShaderA.getUniformID("u_worldMatrix");
+    m_blurQuad.secondPass.projMat = m_blurShaderB.getUniformID("u_projectionMatrix");
+    m_blurQuad.secondPass.worldMat = m_blurShaderB.getUniformID("u_worldMatrix");
+    //and cascade index
+    m_blurQuad.cascadeUniform = m_blurShaderA.getUniformID("u_cascadeIndex");
+
+    //TODO these should come from an active allocator
+    glCheck(glGenBuffers(1, &m_blurQuad.vbo));
+    glCheck(glGenVertexArrays(1, &m_blurQuad.vao));
+
+    glCheck(glBindVertexArray(m_blurQuad.vao));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_blurQuad.vbo));
+
+    constexpr auto stride = sizeof(QuadVertex); //size of a vert
+    const auto& attribs = m_blurShaderA.getAttribMap(); //this assumes both shaders use the same vertex stage
+
+    //pos
+    if (attribs[Mesh::Attribute::Position] > -1)
+    {
+        glCheck(glVertexAttribPointer(attribs[Mesh::Attribute::Position], 2, GL_FLOAT, GL_FALSE, stride, (void*)0));
+        glCheck(glEnableVertexAttribArray(0));
+    }
+    //else warn?
+
+    //uv
+    if (attribs[Mesh::Attribute::UV0] > -1)
+    {
+        glCheck(glVertexAttribPointer(attribs[Mesh::Attribute::UV0], 2, GL_FLOAT, GL_FALSE, stride, (void*)(2 * sizeof(float))));
+        glCheck(glEnableVertexAttribArray(1));
+    }
+
+    //we set this to a 1x1 quad as it's faster to set the
+    //scale in the matrix than set new vertex data for different
+    //sizes.
+    //TODO as these are all normalised values we could optimise
+    //firther by compressing the values into 16 bits or something.
+    std::vector<QuadVertex> data =
+    {
+        QuadVertex(0.f, 1.f, 0.f, 1.f),
+        QuadVertex(0.f, 0.f, 0.f, 0.f),
+        QuadVertex(1.f, 1.f, 1.f, 1.f),
+        QuadVertex(1.f, 0.f, 1.f, 0.f),
+    };
+
+    glCheck(glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(QuadVertex), data.data(), GL_STATIC_DRAW));
+
+    glCheck(glBindVertexArray(0));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+}
+
 void ShadowMapRenderer::render()
 {
 #ifdef CRO_DEBUG_
@@ -741,40 +812,74 @@ void ShadowMapRenderer::render()
             shadowMapBuffer.display();
 
 
-            //if blur enabled
-            //for each requested cascade
-            for (auto i = 0u; i < camera.m_blurPasses && m_drawLists[c].size(); ++i)
+            //if blur enabled TODO check this so we don't do an unecessary state change
+            if (camera.m_blurPasses != 0)
             {
-                //TODO we could optimise this a bit by setting up the OpenGL explicitly for
-                //the render quads - but only if this damages perf too much
-
-                //render to internal buffer
-                const auto passSize = shadowMapBuffer.getSize();
-                if (m_blurBuffer.getSize().x < passSize.x
-                    || m_blurBuffer.getSize().y < passSize.y)
-                {
-                    m_blurBuffer.create(passSize.x, passSize.y);
-                    //LogI << "Resized blur buffer" << std::endl;
-                }
-                //we create the internal buffer to the largest shadow map
-                //we encounter - so we may also have smaller ones which render
-                //to a sub-area of the the buffer.
-                const auto bufferSize = m_blurBuffer.getSize();
-                m_outputQuad.setTexture(m_blurBuffer.getTexture(), bufferSize);
                 
-                //we need to select the layer in the shader
-                glUseProgram(m_blurShaderA.getGLHandle());
-                glUniform1f(cascadeUniform, i);
+                //set culling/blend mode
+                glCheck(glDepthMask(GL_FALSE));
+                glCheck(glDisable(GL_DEPTH_TEST));
+                glCheck(glDisable(GL_CULL_FACE));
+                glCheck(glDisable(GL_BLEND));
+                
 
-                m_inputQuad.setTexture(shadowMapBuffer.getTexture(), passSize);
-                m_blurBuffer.clear();
-                m_inputQuad.draw();
-                m_blurBuffer.display();
+                //for each requested cascade
+                for (auto i = 0u; i < camera.m_blurPasses && m_drawLists[c].size(); ++i)
+                {
+                    //render to internal buffer
+                    const auto passSize = shadowMapBuffer.getSize();
+                    if (m_blurBuffer.getSize().x < passSize.x
+                        || m_blurBuffer.getSize().y < passSize.y)
+                    {
+                        m_blurBuffer.create(passSize.x, passSize.y);
+                        //LogI << "Resized blur buffer" << std::endl;
+                    }
+                    
+                    //bind texture / shader A
+                    glUseProgram(m_blurShaderA.getGLHandle());
+                    glUniform1f(m_blurQuad.cascadeUniform, i);
 
-                //render back to shadowmap
-                shadowMapBuffer.clear(i);
-                m_outputQuad.draw();
-                shadowMapBuffer.display();
+                    glm::mat4 worldMat = glm::scale(glm::mat4(1.f), glm::vec3(glm::vec2(passSize), 1.f));
+                    const auto& projectionMatrixA = m_blurBuffer.getProjectionMatrix();
+                    glCheck(glUniformMatrix4fv(m_blurQuad.firstPass.worldMat, 1, GL_FALSE, &worldMat[0][0]));
+                    glCheck(glUniformMatrix4fv(m_blurQuad.firstPass.projMat, 1, GL_FALSE, &projectionMatrixA[0][0]));
+
+                    glCheck(glActiveTexture(GL_TEXTURE0));
+                    glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, shadowMapBuffer.getTexture().textureID));
+
+                    auto vp = m_blurBuffer.getViewport();
+                    glCheck(glViewport(vp.left, vp.bottom, vp.width, vp.height));
+
+                    m_blurBuffer.clear();
+                    glCheck(glBindVertexArray(m_blurQuad.vao));
+                    glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+                    m_blurBuffer.display();
+
+
+                    //bind texture / shader B
+                    glUseProgram(m_blurShaderB.getGLHandle());
+
+                    //we create the internal buffer to the largest shadow map
+                    //we encounter - so we may also have smaller ones which render
+                    //to a sub-area of the the buffer.
+                    const auto bufferSize = m_blurBuffer.getSize();
+                    worldMat = glm::scale(glm::mat4(1.f), glm::vec3(glm::vec2(bufferSize), 1.f));
+                    const auto& projectionMatrixB = shadowMapBuffer.getProjectionMatrix();
+                    glCheck(glUniformMatrix4fv(m_blurQuad.secondPass.worldMat, 1, GL_FALSE, &worldMat[0][0]));
+                    glCheck(glUniformMatrix4fv(m_blurQuad.secondPass.projMat, 1, GL_FALSE, &projectionMatrixB[0][0]));
+
+                    glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, m_blurBuffer.getTexture().textureID));
+
+                    vp = shadowMapBuffer.getViewport();
+                    glCheck(glViewport(vp.left, vp.bottom, vp.width, vp.height));
+
+                    shadowMapBuffer.clear(i);
+                    glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+                    glCheck(glBindVertexArray(0));
+                    shadowMapBuffer.display();
+                }
+
+                glCheck(glDepthMask(GL_TRUE)); //TODO only do this if we disabled it
             }
         }
 #ifdef PLATFORM_DESKTOP

@@ -108,6 +108,13 @@ namespace cro
         \param mb Message bus instance
         */
         explicit ShadowMapRenderer(MessageBus& mb);
+        
+        ~ShadowMapRenderer();
+        ShadowMapRenderer(const ShadowMapRenderer&) = delete;
+        ShadowMapRenderer(ShadowMapRenderer&&) = delete;
+        const ShadowMapRenderer& operator = (const ShadowMapRenderer&) = delete;
+        ShadowMapRenderer& operator = (ShadowMapRenderer&&) = delete;
+
 
         /*!
         \brief DEPRECATED This function does nothing.
@@ -152,14 +159,6 @@ namespace cro
         //for each camera, for each camera cascade, a vector of entities
         std::vector<std::vector<std::vector<Drawable>>> m_drawLists;
 
-        //buffer to render first pass blur if soft shadowing
-        DepthTexture m_blurBuffer;
-        SimpleQuad m_inputQuad;
-        SimpleQuad m_outputQuad;
-
-        cro::Shader m_blurShaderA;
-        cro::Shader m_blurShaderB;
-
         static constexpr std::size_t MaxDepthMaps = 8;
         struct BufferResource final
         {
@@ -171,6 +170,41 @@ namespace cro
         };
         std::array<BufferResource, MaxDepthMaps> m_bufferResources = {};
         std::vector<std::int32_t> m_bufferIndices;
+
+        //geometry and shaders for blurring shadow map
+        struct QuadVertex final
+        {
+            float x = 0.f;
+            float y = 0.f;
+            float u = 0.f;
+            float v = 0.f;
+            QuadVertex() = default;
+            QuadVertex(float xp, float yp, float up, float vp)
+                : x(xp), y(yp), u(up), v(vp) { }
+        };
+
+        struct BlurQuad final
+        {
+            std::uint32_t vbo = 0;
+            std::uint32_t vao = 0;
+
+            std::int32_t cascadeUniform = -1;
+
+            struct Uniform final
+            {
+                std::int32_t worldMat = -1;
+                std::int32_t projMat = -1;
+            };
+            Uniform firstPass;
+            Uniform secondPass;
+        }m_blurQuad;
+
+        //buffer to render first pass blur if soft shadowing
+        DepthTexture m_blurBuffer;
+        cro::Shader m_blurShaderA;
+        cro::Shader m_blurShaderB;
+
+        void initBlurGeometry();
 
 
         void render();

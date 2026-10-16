@@ -598,7 +598,7 @@ void BatcatState::createScene()
 
     ent.getComponent<cro::Camera>().setMaxShadowDistance(142.f);
     ent.getComponent<cro::Camera>().setShadowExpansion(17.f);
-    //ent.getComponent<cro::Camera>().setBlurPassCount(1);
+    ent.getComponent<cro::Camera>().setBlurPassCount(1);
 
 
 #ifdef CRO_DEBUG_
