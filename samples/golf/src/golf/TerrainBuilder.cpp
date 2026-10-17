@@ -771,6 +771,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     resources.materials.get(materialID).blendMode = cro::Material::BlendMode::Alpha;
     //resources.materials.get(materialID).enableDepthTest = false;
 
+
     //auto vid = slopeShader.getUniformID("u_value");
     //registerWindow([&,vid]()
     //    {
@@ -1637,7 +1638,8 @@ void TerrainBuilder::threadFunc()
                 const std::int32_t startX = std::max(0, static_cast<std::int32_t>(std::floor(pinPos.x)) - HalfGridSize);
                 const std::int32_t startY = std::max(0, static_cast<std::int32_t>(-std::floor(pinPos.z)) - HalfGridSize);
                 static constexpr float DashCount = 2.f;// 80.f;
-                static constexpr float SlopeSpeed = -40.f;//REMEMBER this const is also used in the slope frag shader
+                //static constexpr float SlopeSpeed = -40.f;//REMEMBER this const is also used in the slope frag shader
+                //static constexpr float SlopeSpeed = -1.f;//actually pretty sure it isn't now...
                 static constexpr std::int32_t AvgDistance = 1;
                 static constexpr std::int32_t GridDensity = 8;// NormalMapMultiplier; //verts per metre, however grid size is half this.
                 static constexpr float GridSpacing = 1.f / GridDensity;
@@ -1692,9 +1694,9 @@ void TerrainBuilder::threadFunc()
                             vert2.position.y = terrain.height - pinPos.y;
                             vert2.normal = terrain.normal;
 
-                            auto uvSpeed = std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert.position)) * SlopeSpeed, 1.f);
+                            auto uvSpeed = std::clamp(-glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert.position))/* * SlopeSpeed*/, -1.f, 1.f);
                             auto sgn = cro::Util::Maths::sgn(uvSpeed);
-                            const glm::vec2 uv2 = { vert2.position.x * DashCount, (std::abs(uvSpeed) * std::abs(uvSpeed)) * sgn };
+                            const glm::vec2 uv2 = { vert2.position.x * DashCount, cro::Util::Easing::easeInQuad(std::abs(uvSpeed)) * sgn };
                             const glm::vec2 uv1 = { vert.position.x * DashCount, uv2.y }; //must be constant across segment
                             vert2.texCoord = glm::packHalf2x16(uv2);
                             vert.texCoord = glm::packHalf2x16(uv1);
@@ -1720,9 +1722,9 @@ void TerrainBuilder::threadFunc()
                             vert4.position.y = terrain.height - pinPos.y;
                             vert4.normal = terrain.normal;
 
-                            uvSpeed = std::min(-glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed, 1.f);
+                            uvSpeed = std::clamp(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position))/* * SlopeSpeed*/, -1.f, 1.f);
                             sgn = cro::Util::Maths::sgn(uvSpeed);
-                            const glm::vec2 uv4 = { vert4.position.z * DashCount, (std::abs(uvSpeed) * std::abs(uvSpeed)) * sgn };
+                            const glm::vec2 uv4 = { vert4.position.z * DashCount, cro::Util::Easing::easeInQuad(std::abs(uvSpeed)) * sgn };
                             const glm::vec2 uv3 = { vert3.position.z * DashCount, uv4.y };
                             vert4.texCoord = glm::packHalf2x16(uv4);
                             vert3.texCoord = glm::packHalf2x16(uv3);

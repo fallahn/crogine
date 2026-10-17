@@ -182,7 +182,7 @@ R"(
     const vec3 DotColour = vec3(1.0, 0.85, 0.5);
     const vec3 BaseColour = vec3(0.627, 0.699, 0.58); //0.94 stored as HSV to save on a conversion
     const float TAU = 6.2831855;
-    const float DotSpeed = 0.5;
+    const float DotSpeed = 140.0;
 
     #include HSV
 
