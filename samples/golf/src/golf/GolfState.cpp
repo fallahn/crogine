@@ -3742,12 +3742,12 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb)->setRandomColours(
         {
-            CD32::Colours[CD32::Yellow],
-            CD32::Colours[CD32::BlueLight],
-            CD32::Colours[CD32::BeigeLight],
-            CD32::Colours[CD32::GreenLight],
-            CD32::Colours[CD32::Orange],
-            CD32::Colours[CD32::Red]
+            0xffff14ff, //yellow
+            0x4affd7ff, //blue
+            0xffffddff, //white
+            0xb9ff00ff, //green
+            0xff6500ff, //orange
+            0xff0000ff //red
         });
     m_gameScene.addSystem<cro::AudioSystem>(mb);
 
