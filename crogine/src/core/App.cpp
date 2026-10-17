@@ -1186,6 +1186,16 @@ void App::doImGui()
             ImGui::Text("%d", capped);
             break;
         case 1:
+            if (corner == 1 || corner == 3)
+            {
+                static constexpr float textWidth = 480.f;
+                if (const auto width = winSize.x - textWidth; width > 10.f)
+                {
+                    ImGui::BeginChild("##padding", { width, 0.f });
+                    ImGui::EndChild();
+                    ImGui::SameLine();
+                }
+            }
             ImGui::Text("Avg Frame Time: %.3fms Uncapped FPS: %.3f Capped FPS: %d", frameTime * 1000.f, uncapped, capped);
             break;
         }
