@@ -3740,7 +3740,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<ChunkVisSystem>(mb, MapSize, &m_terrainBuilder);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setRenderInterval(/*m_sharedData.shadowQuality ? 2 : 3*/1); //set to 1 to remove flickering
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
-    m_gameScene.addSystem<cro::ParticleSystem>(mb)->setRandomColours(
+    m_gameScene.addSystem<cro::ParticleSystem>(mb)->setRandomColours( //dear future me: if you're changing these you probably want to update the trophy scene, below
         {
             0xffff14ff, //yellow
             0x4affd7ff, //blue
@@ -3809,12 +3809,12 @@ void GolfState::addSystems()
     m_trophyScene.addSystem<cro::CameraSystem>(mb);
     m_trophyScene.addSystem<cro::ParticleSystem>(mb)->setRandomColours(
         {
-            CD32::Colours[CD32::Yellow],
-            CD32::Colours[CD32::BlueLight],
-            CD32::Colours[CD32::BeigeLight],
-            CD32::Colours[CD32::GreenLight],
-            CD32::Colours[CD32::Orange],
-            CD32::Colours[CD32::Red]
+            0xffff14ff, //yellow
+            0x4affd7ff, //blue
+            0xffffddff, //white
+            0xb9ff00ff, //green
+            0xff6500ff, //orange
+            0xff0000ff //red
         });
     m_trophyScene.addSystem<cro::ModelRenderer>(mb);
     m_trophyScene.addSystem<cro::AudioPlayerSystem>(mb);

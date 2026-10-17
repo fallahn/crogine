@@ -3516,6 +3516,12 @@ void GolfState::createScoreboard()
             {
                 str += " - " + ScoreTypes[m_sharedData.scoreType];
             }
+#ifdef USE_GNS
+            else
+            {
+                leader = "Course Record: " + leader;
+            }
+#endif
         }
         else
         {
@@ -6463,7 +6469,7 @@ void GolfState::buildTrophyScene()
 
     cro::EmitterSettings emitterSettings;
     emitterSettings.loadFromFile("assets/golf/particles/firework_animated.cps", m_resources.textures);
-    emitterSettings.blendmode = cro::EmitterSettings::BlendMode::Add;
+    emitterSettings.blendmode = cro::EmitterSettings::BlendMode::Alpha;
     //emitterSettings.useRandomColour = true;
 
     if (emitterSettings.releaseCount == 0)

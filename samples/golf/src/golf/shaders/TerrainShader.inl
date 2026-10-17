@@ -206,7 +206,10 @@ R"(
 
 //colour.rgb *= 0.1; //additive blending
 //colour.rgb *= colour.a; //additive blending
-//LIGHT_OUT = vec4(FRAG_OUT.rgb * FRAG_OUT.a, 1.0);
+
+        //DEAR FUTURE ME: You've tried this and it doesn't do what you imagine it does.
+        //LIGHT_OUT = vec4(colour.rgb * colour.a, 1.0);
+        //NORM_OUT = vec4(vec3(0.0), colour.a);
 
         FRAG_OUT = colour;
         LIGHT_OUT = vec4(vec3(0.0), 1.0);
