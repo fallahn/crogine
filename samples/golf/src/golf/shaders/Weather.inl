@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -166,6 +166,7 @@ void main()
 static const inline std::string WeatherVertex = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
+    ATTRIBUTE vec2 a_texCoord0; //holds vertex offset for rain in X, and alpha in Y
 
 #include CAMERA_UBO
 
@@ -207,22 +208,27 @@ static const inline std::string WeatherVertex = R"(
         mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
         vec4 position = a_position;
 
-        float p = position.y - (u_windData.w * FallSpeed);
+        float p = (position.y - (u_windData.w * FallSpeed)) + a_texCoord0.x;
         p = mod(p, SystemHeight);
         //p = ease(0.2 + ((p / SystemHeight) * 0.8));
         p = ease((p / SystemHeight));
 
-        position.y  = p * SystemHeight;
+        position.y  = (p * SystemHeight) - a_texCoord0.x;
 
         position.x -= p * u_windData.x * u_windData.y * WindEffect;
         position.z -= p * u_windData.z * u_windData.y * WindEffect;
 
 
         gl_Position = wvp * position;
-        gl_PointSize = u_projectionMatrix[1][1] / gl_Position.w * 10.0 * u_pixelScale * (FallSpeed);
 
         vec4 worldPos = u_worldMatrix * position;
         v_colour = a_colour;
+
+#if !defined(EASE_SNOW)
+        v_colour.a *= a_texCoord0.y;
+#else
+        gl_PointSize = u_projectionMatrix[1][1] / gl_Position.w * 10.0 * u_pixelScale * (FallSpeed);
+#endif
 
 #if defined (CULLED)
         vec3 distance = worldPos.xyz - u_cameraWorldPosition;
@@ -253,14 +259,16 @@ static const inline std::string RainFragment = R"(
         
         //if alpha blended
         //colour.rgb += (1.0 - colour.a) * colour.rgb;
+
+/*
         colour.a *= 0.5 + (0.5 * ease(gl_PointCoord.y));
 
         float crop = step(0.495, gl_PointCoord.x);
         crop *= 1.0 - step(0.505, gl_PointCoord.x);
 
-        //if(crop < 0.05) discard;
-
         colour.a *= u_colour.a * crop;
+*/
+
         FRAG_OUT = colour;
 
         LIGHT_OUT = vec4(vec3(0.0), colour.a);

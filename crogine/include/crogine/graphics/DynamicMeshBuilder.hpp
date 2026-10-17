@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -36,6 +36,8 @@ namespace cro
     /*!
     \brief Helper struct for passing data to
     set buffer functions
+
+    TODO Turns out this is what C++20 Ranges are for. Who knew?
     */
     template <class T>
     struct DataArray final

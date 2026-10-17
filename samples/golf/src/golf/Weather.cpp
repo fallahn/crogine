@@ -239,29 +239,59 @@ cro::Entity GolfState::createSwarm(const GolfState::Swarm& info)
 
 void GolfState::createWeather(std::int32_t weatherType)
 {
+    //weatherType = WeatherType::Snow;
     //cro::Clock clock;
     const auto points = pd::PoissonDiskSampling(2.3f, WeatherAnimationSystem::AreaStart, WeatherAnimationSystem::AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
     //auto t = static_cast<float>(clock.elapsed().asMilliseconds()) / 1000.f;
     //LogI << "Generated " << points.size() << " in " << t << " seconds" << std::endl;
 
-    const auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS, GL_UNSIGNED_SHORT));
+    std::size_t meshID = 0;
+    const auto vertexFlags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::UV0;
+    if (weatherType == WeatherType::Snow)
+    {
+        meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(vertexFlags, 1, GL_POINTS, GL_UNSIGNED_SHORT));
+    }
+    else
+    {
+        meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(vertexFlags, 1, GL_LINES, GL_UNSIGNED_SHORT));
+    }
 
     auto* meshData = &m_resources.meshes.getMesh(meshID);
     meshData->attributes[cro::Mesh::Attribute::Colour].glType = GL_UNSIGNED_BYTE;
     meshData->attributes[cro::Mesh::Attribute::Colour].glNormalised = GL_TRUE;
     meshData->vertexSize = cro::MeshBuilder::getVertexSize(meshData->attributes);
 
-    std::vector<Vertex> verts;
+    struct LargeVertex final
+    {
+        glm::vec3 position = glm::vec3(0.f);
+        cro::Detail::ColourLowP colour = cro::Colour::White;
+        glm::vec2 vertexOffset = glm::vec2(0.f, 1.f); //TODO compress this to GL_HALF_FLOAT with glm::packHalf2x16(uv)
+
+        LargeVertex() = default;
+        LargeVertex(glm::vec3 pos, cro::Detail::ColourLowP c) : position(pos), colour(c) {}
+        LargeVertex(float x, float y, float z) : position(x, y, z) {}
+    };
+
+    static constexpr float RainLength = 2.f;
+
+    std::vector<LargeVertex> verts;
     std::vector<std::uint16_t> indices;
-    const std::uint32_t stride = weatherType == WeatherType::Snow ? 1 : 2;
+    const std::uint32_t stride = weatherType == WeatherType::Snow ? 1 : 3;
     for (auto i = 0u; i < points.size(); i += stride)
     {
+        indices.push_back(static_cast<std::uint16_t>(verts.size()));
         verts.emplace_back(points[i][0], points[i][1], points[i][2]);
 
-        indices.push_back(i);
+        if (weatherType == WeatherType::Rain)
+        {
+            verts.back().vertexOffset.y = 0.f; //sets the alpha to 0
+
+            indices.push_back(static_cast<std::uint16_t>(verts.size()));
+            verts.emplace_back(points[i][0], points[i][1] - RainLength, points[i][2]).vertexOffset.x = RainLength;
+        }
     }
 
-    meshData->vertexCount = points.size() / stride;
+    meshData->vertexCount = indices.size();
     cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
 
     auto* submesh = &meshData->indexData[0];
@@ -354,8 +384,10 @@ void GolfState::createWeather(std::int32_t weatherType)
     const auto& shader = m_resources.shaders.get(ShaderID::Weather);
     const auto materialID = m_resources.materials.add(shader);
     auto material = m_resources.materials.get(materialID);
-    //material.setProperty("u_colour", weatherColour); //this will override the fade animation
     material.blendMode = cro::Material::BlendMode::Alpha;
+
+
+    //material.setProperty("u_colour", weatherColour); //this will override the fade animation
     //material.blendMode = blendMode;
     ////ignored by snow as it has a different blendmode, but that's fine
     //material.blendData.blendFunc = { GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA };
