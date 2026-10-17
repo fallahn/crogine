@@ -3502,15 +3502,17 @@ void GolfState::createScoreboard()
 
 
         auto str = m_courseTitle;
+        cro::String leader;
 
         if (m_sharedData.scoreType == ScoreType::Stroke)
         {
-            const auto leader = Social::getLeader(m_sharedData.mapDirectory, m_sharedData.holeCount);
-            if (!leader.empty())
+            leader = Social::getLeader(m_sharedData.mapDirectory, m_sharedData.holeCount);
+            /*if (!leader.empty())
             {
                 str += " - " + leader;
             }
-            else
+            else*/
+            if (leader.empty())
             {
                 str += " - " + ScoreTypes[m_sharedData.scoreType];
             }
@@ -3534,7 +3536,7 @@ void GolfState::createScoreboard()
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 0);
             entity.getComponent<cro::Callback>().function =
-                [str](cro::Entity e, float dt)
+                [str, leader](cro::Entity e, float dt)
                 {
                     auto& [ct, state] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
                     ct += dt;
@@ -3544,7 +3546,14 @@ void GolfState::createScoreboard()
                         {
                             ct -= 8.f;
                             state = 1;
-                            e.getComponent<cro::Text>().setString("You're Playing on...");
+                            if (leader.empty())
+                            {
+                                e.getComponent<cro::Text>().setString("You're Playing on...");
+                            }
+                            else
+                            {
+                                e.getComponent<cro::Text>().setString(leader);
+                            }
                         }
                     }
                     else
