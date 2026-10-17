@@ -259,17 +259,20 @@ void GolfState::createWeather(std::int32_t weatherType)
     auto* meshData = &m_resources.meshes.getMesh(meshID);
     meshData->attributes[cro::Mesh::Attribute::Colour].glType = GL_UNSIGNED_BYTE;
     meshData->attributes[cro::Mesh::Attribute::Colour].glNormalised = GL_TRUE;
+
+    meshData->attributes[cro::Mesh::Attribute::UV0].glType = GL_HALF_FLOAT;
+    //meshData->attributes[cro::Mesh::Attribute::UV0].glNormalised = GL_TRUE;
     meshData->vertexSize = cro::MeshBuilder::getVertexSize(meshData->attributes);
 
     struct LargeVertex final
     {
         glm::vec3 position = glm::vec3(0.f);
         cro::Detail::ColourLowP colour = cro::Colour::White;
-        glm::vec2 vertexOffset = glm::vec2(0.f, 1.f); //TODO compress this to GL_HALF_FLOAT with glm::packHalf2x16(uv)
+        std::uint32_t vertexOffset = 0;
 
-        LargeVertex() = default;
-        LargeVertex(glm::vec3 pos, cro::Detail::ColourLowP c) : position(pos), colour(c) {}
-        LargeVertex(float x, float y, float z) : position(x, y, z) {}
+        LargeVertex() : vertexOffset(glm::packHalf2x16({0.f, 1.f})) {};
+        LargeVertex(glm::vec3 pos, cro::Detail::ColourLowP c) : position(pos), colour(c), vertexOffset(glm::packHalf2x16({ 0.f, 1.f })) {}
+        LargeVertex(float x, float y, float z) : position(x, y, z), vertexOffset(glm::packHalf2x16({ 0.f, 1.f })) {}
     };
 
     static constexpr float RainLength = 2.f;
@@ -284,10 +287,10 @@ void GolfState::createWeather(std::int32_t weatherType)
 
         if (weatherType == WeatherType::Rain)
         {
-            verts.back().vertexOffset.y = 0.f; //sets the alpha to 0
+            verts.back().vertexOffset = glm::packHalf2x16({ 0.f, 0.f }); //sets the alpha to 0
 
             indices.push_back(static_cast<std::uint16_t>(verts.size()));
-            verts.emplace_back(points[i][0], points[i][1] - RainLength, points[i][2]).vertexOffset.x = RainLength;
+            verts.emplace_back(points[i][0], points[i][1] - RainLength, points[i][2]).vertexOffset = glm::packHalf2x16({ RainLength, 1.f });
         }
     }
 
