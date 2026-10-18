@@ -1037,19 +1037,22 @@ struct SkyboxMaterials final
     //it's then up to the current game
     //mode to act on it.
     bool requestLensFlare = false;
+    bool nightTime = false;
     glm::vec3 sunPos = glm::vec3(0.f);
     cro::Colour sunColour = cro::Colour::White;
-
+    std::int32_t weatherType = WeatherType::Clear;
 };
 
 //returns the entity with the cloud ring (so we can apply material)
 //and sets requesting the lensflare effect if the sun position is found
 static inline cro::Entity loadSkybox(const std::filesystem::path& path, cro::Scene& skyScene, cro::ResourceCollection& resources, SkyboxMaterials& materials)
 {
-    auto skyTop = SkyTop;
+    const bool noRain = (materials.weatherType != WeatherType::Rain && materials.weatherType != WeatherType::Snow);
+
+    auto skyTop = noRain || materials.nightTime ? SkyTop : CD32::Colours[CD32::GreyMid];
     auto skyMid = TextNormalColour;
     float stars = 0.f;
-    bool loadClouds = true;
+    bool loadClouds = noRain;
 
     cro::ConfigFile cfg;
 
@@ -1071,7 +1074,8 @@ static inline cro::Entity loadSkybox(const std::filesystem::path& path, cro::Sce
             for (const auto& p : props)
             {
                 const auto& name = p.getName();
-                if (name == "sky_top")
+                if (name == "sky_top"
+                    && (noRain || materials.nightTime))
                 {
                     skyTop = p.getValue<cro::Colour>();
                 }
@@ -1079,7 +1083,8 @@ static inline cro::Entity loadSkybox(const std::filesystem::path& path, cro::Sce
                 {
                     skyMid = p.getValue<cro::Colour>();
                 }
-                else if (name == "stars")
+                else if (name == "stars"
+                    && noRain)
                 {
                     stars = p.getValue<float>();
                 }
@@ -1094,7 +1099,8 @@ static inline cro::Entity loadSkybox(const std::filesystem::path& path, cro::Sce
                 }
                 else if (name == "clouds")
                 {
-                    loadClouds = p.getValue<bool>();
+                    loadClouds = p.getValue<bool>()
+                        && loadClouds;
                 }
                 else if (name == "water")
                 {
@@ -1225,6 +1231,22 @@ static inline cro::Entity loadSkybox(const std::filesystem::path& path, cro::Sce
     skyScene.enableSkybox();
     skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);
     skyScene.setStarsAmount(stars);
+
+    //sun colour is only applied in the day time so we can dim it here
+    if (!noRain)
+    {
+        glm::vec4 c = materials.sunColour.getVec4();
+        c *= 0.5f;
+        materials.sunColour = c;
+
+        //add the overcast clouds
+        /*if (md.loadFromFile("assets/golf/models/skybox/overcast_clouds.cmt"))
+        {
+            auto entity = skyScene.createEntity();
+            entity.addComponent<cro::Transform>().setScale({ 3.f, 1.f, 3.f });
+            md.createModel(entity);
+        }*/
+    }
 
     cro::Entity cloudEnt;
     if (loadClouds &&

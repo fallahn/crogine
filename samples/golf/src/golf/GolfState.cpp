@@ -297,7 +297,14 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         }
     }
 
-    
+    //this is a hack but that's our own fault for playing on the moon
+    if (sd.mapDirectory == "course_13"
+        && (sd.weatherType == WeatherType::Rain || sd.weatherType == WeatherType::Random))
+    {
+        sd.weatherType = WeatherType::Clear;
+    }
+
+
     if (sd.weatherType == WeatherType::Random)
     {
         sd.weatherType = cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist);
@@ -5096,7 +5103,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         applyMaterialData(*m_ballModels.begin()->second, material);
     };
 
-    const auto matID = m_sharedData.nightTime ? MaterialID::BallNight : MaterialID::Ball;
+    const auto matID = m_sharedData.nightTime ? (ball->rollAnimation ? MaterialID::TeeNight : MaterialID::BallNight) : MaterialID::Ball;
     const auto matIDSkinned = m_sharedData.nightTime ? MaterialID::BallNightSkinned : MaterialID::BallSkinned;
 
     material = m_resources.materials.get(m_materialIDs[matID]);

@@ -467,6 +467,9 @@ void GolfState::loadMap()
     materials.horizonSun = m_materialIDs[MaterialID::HorizonSun];
     materials.skinned = m_materialIDs[MaterialID::CelTexturedSkinned];
     materials.glass = m_materialIDs[MaterialID::Glass];
+    materials.weatherType = m_sharedData.weatherType; //don't create the clouds if we're raining or snowing
+    materials.nightTime = m_sharedData.nightTime;
+
 
     auto cloudRing = loadSkybox(skyboxPath, m_skyScene, m_resources, materials);
     m_baseSkyColour = m_skyScene.getSkyboxColours().top; //used to dim the sky if it rains
@@ -507,6 +510,19 @@ void GolfState::loadMap()
     {
         m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(materials.sunColour);
         m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(materials.sunColour);
+
+        //const auto c = materials.sunColour.getVec4();
+        //registerWindow([this, c]()
+        //    {
+        //        static float amt = 1.f;
+        //        ImGui::Begin("Sun");
+        //        if (ImGui::SliderFloat("Light", &amt, 0.5f, 1.f))
+        //        {
+        //            m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(c * amt);
+        //            m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(c * amt);
+        //        }
+        //        ImGui::End();
+        //    });
     }
 
 
@@ -1821,7 +1837,7 @@ void GolfState::loadMap()
     m_windBuffer.addShader(*shader);
 
     //only create overhead clouds if the skybox
-    //requested we create any (and created the cloud ring
+    //requested we create any (and created the cloud ring)
     if (cloudRing.isValid())
     {
         createClouds();
