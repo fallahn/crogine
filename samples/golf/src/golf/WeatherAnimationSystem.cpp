@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "WeatherAnimationSystem.hpp"
+#include "../Colordome-32.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -35,8 +36,13 @@ source distribution.
 
 #include <crogine/detail/OpenGL.hpp>
 
-WeatherAnimationSystem::WeatherAnimationSystem(cro::MessageBus& mb)
+WeatherAnimationSystem::WeatherAnimationSystem(cro::MessageBus& mb, cro::Scene& skyboxScene)
     : cro::System   (mb, typeid(WeatherAnimationSystem)),
+    m_starsAmount   (0.f),
+    m_skyboxScene   (skyboxScene),
+    m_skyColour     (1.f),
+    m_overcastColour(CD32::Colours[CD32::GreyMid].getVec4()),
+    m_adaptSkyColour(false),
     m_hidden        (true),
     m_opacity       (0.f),
     m_targetOpacity (1.f),
@@ -72,6 +78,8 @@ void WeatherAnimationSystem::process(float dt)
             m_opacity = std::max(m_targetOpacity, m_opacity - (dt * 0.5f));
             updateShader();
 
+            updateSkyColour();
+
             if (m_opacity == 0)
             {
                 m_hidden = true;
@@ -86,6 +94,8 @@ void WeatherAnimationSystem::process(float dt)
         {
             m_opacity = std::min(m_targetOpacity, m_opacity + (dt * 0.5f));
             updateShader();
+
+            updateSkyColour();
         }
     }
 }
@@ -105,6 +115,7 @@ void WeatherAnimationSystem::setHidden(bool hidden)
             e.getComponent<cro::Model>().setHidden(false);
         }
     }
+    updateSkyColour();
 }
 
 void WeatherAnimationSystem::setMaterialData(const cro::Shader& shader, cro::Colour colour)
@@ -114,7 +125,33 @@ void WeatherAnimationSystem::setMaterialData(const cro::Shader& shader, cro::Col
     m_colour = colour;
 }
 
+void WeatherAnimationSystem::setClearSkyColour(cro::Colour c)
+{
+    m_adaptSkyColour = true;
+    m_skyColour = c.getVec4();
+}
+
 //private
+void WeatherAnimationSystem::updateSkyColour()
+{
+    if (m_adaptSkyColour)
+    {
+        //set the sunlight
+        const auto colour = cro::Colour::White.getVec4() * (((1.f - m_opacity) * 0.5f) + 0.5f);
+
+        getScene()->getSunlight().getComponent<cro::Sunlight>().setColour(colour);
+        m_skyboxScene.getSunlight().getComponent<cro::Sunlight>().setColour(colour);
+
+        //set sky colour
+        const auto skyColour = glm::mix(m_skyColour, m_overcastColour, m_opacity);
+        auto colours = m_skyboxScene.getSkyboxColours();
+        colours.top = skyColour;
+        m_skyboxScene.setSkyboxColours(colours);
+    }
+
+    m_skyboxScene.setStarsAmount(glm::mix(m_starsAmount, 0.f, m_opacity));
+}
+
 void WeatherAnimationSystem::updateShader()
 {
     glUseProgram(m_shaderID);

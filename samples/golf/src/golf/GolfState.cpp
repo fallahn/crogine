@@ -299,7 +299,9 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
     //this is a hack but that's our own fault for playing on the moon
     if (sd.mapDirectory == "course_13"
-        && (sd.weatherType == WeatherType::Rain || sd.weatherType == WeatherType::Random))
+        && (sd.weatherType == WeatherType::Rain 
+            || sd.weatherType == WeatherType::Showers
+            || sd.weatherType == WeatherType::Random))
     {
         sd.weatherType = WeatherType::Clear;
     }
@@ -3735,7 +3737,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<VatAnimationSystem>(mb);
     m_gameScene.addSystem<BallAnimationSystem>(mb);
     m_gameScene.addSystem<LightAnimationSystem>(mb);
-    m_gameScene.addSystem<WeatherAnimationSystem>(mb);
+    m_gameScene.addSystem<WeatherAnimationSystem>(mb, m_skyScene);
     m_gameScene.addSystem<cro::CommandSystem>(mb);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::SpriteSystem3D>(mb, 10.f); //water rings sprite :D

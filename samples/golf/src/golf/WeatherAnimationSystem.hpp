@@ -46,7 +46,7 @@ public:
     static constexpr std::array<float, 3u> AreaStart = { 0.f, 0.f, 0.f };
     static constexpr std::array<float, 3u> AreaEnd = { 20.f, 80.f, 20.f };
 
-    explicit WeatherAnimationSystem(cro::MessageBus&);
+    explicit WeatherAnimationSystem(cro::MessageBus&, cro::Scene&);
 
     void process(float) override;
 
@@ -56,7 +56,18 @@ public:
 
     float getOpacity() const { return m_opacity; }
 
+    void setClearSkyColour(cro::Colour);
+
+    void setStarsAmount(float a) { m_starsAmount = a; }
+
 private:
+    cro::Scene& m_skyboxScene;
+    
+    float m_starsAmount;
+    glm::vec4 m_skyColour;
+    glm::vec4 m_overcastColour;
+    bool m_adaptSkyColour;
+
     bool m_hidden;
     float m_opacity;
     float m_targetOpacity;
@@ -65,5 +76,6 @@ private:
     std::int32_t m_uniformID;
     cro::Colour m_colour;
 
+    void updateSkyColour();
     void updateShader();
 };

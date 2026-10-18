@@ -786,10 +786,10 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
                 //and reduce the slope effect near the hole because it's just painful
                 //const float holeStrength = 0.4f + (0.6f * std::clamp(len2, 0.f, 1.f));
-                const float holeStrength = 0.9f + (0.1f * std::clamp(len2, 0.f, 1.f));
+                //const float holeStrength = 0.9f + (0.1f * std::clamp(len2, 0.f, 1.f));
 
                 //move by slope from surface normal
-                ball.velocity += slope * slopeStrength * timeoutStrength * holeStrength;
+                ball.velocity += slope * slopeStrength * timeoutStrength;// *holeStrength;
                 ball.velocity *= friction;
 
                 CRO_ASSERT(!std::isnan(ball.velocity.x), "");

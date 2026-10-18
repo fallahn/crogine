@@ -41,6 +41,7 @@ source distribution.
 #include "TimeOfDay.hpp"
 #include "LightAnimationSystem.hpp"
 #include "RopeSystem.hpp"
+#include "WeatherAnimationSystem.hpp"
 
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
@@ -491,6 +492,18 @@ void GolfState::loadMap()
         cloudRing.getComponent<cro::Model>().setMaterial(0, material);
     }
 
+    //this enables the sky fade in the animation system
+    if (m_sharedData.weatherType == WeatherType::Showers)
+    {
+        if (m_sharedData.nightTime)
+        {
+            m_gameScene.getSystem<WeatherAnimationSystem>()->setStarsAmount(m_skyScene.getStarsAmount());
+        }
+        else
+        {
+            m_gameScene.getSystem<WeatherAnimationSystem>()->setClearSkyColour(m_skyScene.getSkyboxColours().top);
+        }
+    }
     
     if (!materials.showWater)
     {
@@ -510,19 +523,6 @@ void GolfState::loadMap()
     {
         m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(materials.sunColour);
         m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(materials.sunColour);
-
-        //const auto c = materials.sunColour.getVec4();
-        //registerWindow([this, c]()
-        //    {
-        //        static float amt = 1.f;
-        //        ImGui::Begin("Sun");
-        //        if (ImGui::SliderFloat("Light", &amt, 0.5f, 1.f))
-        //        {
-        //            m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(c * amt);
-        //            m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(c * amt);
-        //        }
-        //        ImGui::End();
-        //    });
     }
 
 
