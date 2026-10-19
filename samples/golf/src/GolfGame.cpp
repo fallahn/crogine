@@ -1697,6 +1697,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.grassDensity = std::clamp(prop.getValue<std::int32_t>(), 0, 1);
                 }
+                else if (name == "graphics_preset")
+                {
+                    m_sharedData.graphicsPreset = prop.getValue<std::int32_t>() % 4;
+                }
             }
         }
         /*else
@@ -2093,6 +2097,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("web_socket").setValue(m_sharedData.webSocket);
     cfg.addProperty("web_port").setValue(m_sharedData.webPort);
     cfg.addProperty("grass_density").setValue(m_sharedData.grassDensity);
+    cfg.addProperty("graphics_preset").setValue(m_sharedData.graphicsPreset);
     cfg.save(path);
 
 

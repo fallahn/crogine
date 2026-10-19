@@ -372,6 +372,7 @@ struct SharedStateData final
     std::int32_t preferredClubSet = 0; //this is what the player chooses, may be overridden by game rules
     std::int32_t crowdDensity = 1;
     std::int32_t grassDensity = 0;
+    std::int32_t graphicsPreset = 0;
 
     bool pressHold = false; //press and hold the action button to select power
     bool useTTS = false;

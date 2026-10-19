@@ -120,13 +120,14 @@ namespace
 using namespace UI;
 
 OptionsStateV2::OptionsStateV2(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
-    : cro::State        (ss, ctx),
-    m_scene             (ctx.appInstance.getMessageBus(), 192),
-    m_sharedData        (sd),
-    m_uiLayout          (TabID::Count, sd),
-    m_keybindIndex      (-1),
-    m_keybindItemIndex  (-1),
-    m_activeController  (0)
+    : cro::State            (ss, ctx),
+    m_scene                 (ctx.appInstance.getMessageBus(), 192),
+    m_sharedData            (sd),
+    m_refreshDisplayItems   (false),
+    m_uiLayout              (TabID::Count, sd),
+    m_keybindIndex          (-1),
+    m_keybindItemIndex      (-1),
+    m_activeController      (0)
 {
     //sigh, the window resized event might not necessarily mean
     //that the window resized (I know, I know,) so we track the
@@ -578,6 +579,12 @@ void OptionsStateV2::handleMessage(const cro::Message& msg)
 
 bool OptionsStateV2::simulate(float dt)
 {
+    if (m_refreshDisplayItems)
+    {
+        createDisplayItems();
+        m_refreshDisplayItems = false;
+    }
+
     m_uiLayout.scrollToTarget(dt);
 
     const auto maskTest =
@@ -2729,18 +2736,90 @@ void OptionsStateV2::createDisplayItems()
         item->description = "Tip: disable Threaded Optimization in the nvidia control panel and restart the game if you experience stuttering.";
     }
 
-    //TODO Presets
+    //TODO Quality Presets
+    item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
+    item->title = "Preset";
+    item->description = "Select a quality preset";
+    item->activated = [&](Menu::Item& i)
+        {
+            m_sharedData.graphicsPreset = i.selectedIndex;
+
+            switch (i.selectedIndex)
+            {
+            default:
+            case 3:
+                //don't do anything let user decide
+                m_refreshDisplayItems = true;
+                return;
+            
+            case 0: //low
+                //AA
+                toggleAntialiasing(m_sharedData, false, AASamples[0]);
+                //tree
+                m_sharedData.treeQuality = 1;
+                //shadow
+                m_sharedData.shadowQuality = 0;
+                //crowd
+                m_sharedData.crowdDensity = 0;
+                //grass
+                m_sharedData.grassDensity = 0;
+                break;
+            case 1:  //med
+                toggleAntialiasing(m_sharedData, true, AASamples[1]);
+                m_sharedData.treeQuality = 2;
+                m_sharedData.shadowQuality = 1;
+                m_sharedData.crowdDensity = 1;
+                m_sharedData.grassDensity = 0;
+                break;
+            case 2: //high
+                toggleAntialiasing(m_sharedData, true, AASamples[3]);
+                m_sharedData.treeQuality = 2;
+                m_sharedData.shadowQuality = 2;
+                m_sharedData.crowdDensity = 3;
+                m_sharedData.grassDensity = 1;
+                break;            
+            }
+
+            //refresh tree setting
+            auto* msg1 = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+            msg1->type = SystemEvent::TreeQualityChanged;
+
+            //refresh shadow setting
+            auto* msg2 = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+            msg2->type = SystemEvent::ShadowQualityChanged;
+
+            //refresh crowd setting
+            auto* msg3 = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+            msg3->type = SystemEvent::CrowdDensityChanged;
+
+            //refresh grass setting
+            auto* msg4 = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+            msg4->type = SystemEvent::GrassDensityChanged;
+
+            //we can't recreate the display directly
+            //as we're in the middle of the function right now
+            //so mark it as needing to be done next process()
+            m_refreshDisplayItems = true;
+        };
+    item->labels = { "Low", "Medium", "High", "Custom"};
+    item->selectedIndex = m_sharedData.graphicsPreset;
+
+
 
 
     //anti-aliasing
     item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
     item->title = "Antialiasing";
-    //item->description = "Switch between billboard and 3D trees. Classic trees are applied when the game is loaded";
-    //cro::Util::String::wordWrap(item->description, WordWrapSmall);
     item->activated = [&](Menu::Item& i)
         {
             //sets shared data value
             toggleAntialiasing(m_sharedData, AASamples[i.selectedIndex] != 0, AASamples[i.selectedIndex]);
+
+            if (m_sharedData.graphicsPreset != 3)
+            {
+                m_sharedData.graphicsPreset = 3;
+                m_refreshDisplayItems = true;
+            }
         };
     item->labels = { "None", "2x MSAA", "4x MSAA", "8x MSAA" };
     item->selectedIndex = AAIndexMap[m_sharedData.multisamples];
@@ -2921,6 +3000,12 @@ void OptionsStateV2::createDisplayItems()
             m_sharedData.treeQuality = i.selectedIndex;
             auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
             msg->type = SystemEvent::TreeQualityChanged;
+
+            if (m_sharedData.graphicsPreset != 3)
+            {
+                m_sharedData.graphicsPreset = 3;
+                m_refreshDisplayItems = true;
+            }
         };
     item->labels = { "Classic", "Low", "High" };
     item->selectedIndex = m_sharedData.treeQuality;
@@ -2936,6 +3021,13 @@ void OptionsStateV2::createDisplayItems()
             m_sharedData.shadowQuality = i.selectedIndex;
             auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
             msg->type = SystemEvent::ShadowQualityChanged;
+
+            //flips the preset setting to 'custom'
+            if (m_sharedData.graphicsPreset != 3)
+            {
+                m_sharedData.graphicsPreset = 3;
+                m_refreshDisplayItems = true;
+            }
         };
     item->labels = { "Very Low", "Low", "High", "Very High", "Classic" };
     item->selectedIndex = m_sharedData.shadowQuality;
@@ -2951,6 +3043,12 @@ void OptionsStateV2::createDisplayItems()
             m_sharedData.crowdDensity = i.selectedIndex;
             auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
             msg->type = SystemEvent::CrowdDensityChanged;
+
+            if (m_sharedData.graphicsPreset != 3)
+            {
+                m_sharedData.graphicsPreset = 3;
+                m_refreshDisplayItems = true;
+            }
         };
     item->labels = { "Low", "Normal", "High", "Extreme", "None" };
     item->selectedIndex = m_sharedData.crowdDensity;
@@ -2960,7 +3058,6 @@ void OptionsStateV2::createDisplayItems()
         //grass density
         item = &m_uiLayout.menuLayout.items[TabID::Display].emplace_back();
         item->title = "Grass Density";
-        //item->description = "Changes the appearance of the grass in the rough. Setting this to Low can improve performance";
         item->description = "Changes the density of the grass in the rough. Setting this to Low can improve performance. Takes affect when the next hole loads.";
         cro::Util::String::wordWrap(item->description, WordWrapSmall);
         item->activated = [&](Menu::Item& i)
@@ -2968,6 +3065,12 @@ void OptionsStateV2::createDisplayItems()
                 m_sharedData.grassDensity = i.selectedIndex;
                 auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
                 msg->type = SystemEvent::GrassDensityChanged;
+
+                if (m_sharedData.graphicsPreset != 3)
+                {
+                    m_sharedData.graphicsPreset = 3;
+                    m_refreshDisplayItems = true;
+                }
             };
         item->labels = { "Low", "High" };
         item->selectedIndex = m_sharedData.grassDensity;

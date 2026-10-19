@@ -65,6 +65,7 @@ private:
 
     cro::Scene m_scene;
     SharedStateData& m_sharedData;
+    bool m_refreshDisplayItems; //TODO we could make this generic and refresh whichever tab is active when this is signalled.
 
     cro::Entity m_rootNode;
     void loadAssets();
