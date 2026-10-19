@@ -108,6 +108,7 @@ namespace
 }
 int textEditCallback(ImGuiInputTextCallbackData* data);
 
+float Console::m_avgUpdateTime = 0.f;
 float Console::m_avgFrameTime = 0.f;
 std::int32_t Console::m_displayedFrames = 0;
 bool Console::m_showOverlay = false;
@@ -514,8 +515,11 @@ void Console::draw()
                     if (m_displayedFrames < minCappedFps) minCappedFps = m_displayedFrames;
                     if (m_displayedFrames > maxCappedFps) maxCappedFps = m_displayedFrames;
 
+                    static constexpr float Timestep = 1.f / 60.f;
+                    ImGui::Text("Average update time %.2fms (%.2f%% of timestep)", m_avgUpdateTime * 1000.f, (m_avgUpdateTime / Timestep) * 100.f);
+
                     //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-                    ImGui::Text("Average frame time: %.5f ms", m_avgFrameTime);
+                    ImGui::Text("Average render time: %.2f ms", m_avgFrameTime * 1000.f);
                     ImGui::Text("%.3f FPS (Uncapped) Min: %.3f Max: %.3f", fpsUncapped, minUncappedFps, maxUncappedFps);
                     ImGui::SameLine();
                     if (ImGui::Button("Reset##1"))
@@ -552,7 +556,7 @@ void Console::draw()
                         }
                         ImGui::EndCombo();
                     }
-                    static const std::vector<std::string> Levels = { "0","1" };
+                    static const std::vector<std::string> Levels = { "0","1","2" };
                     ImGui::SetNextItemWidth(120.f);
                     if (ImGui::BeginCombo("Detail Level", Levels[m_overlayLevel].c_str()))
                     {
@@ -830,6 +834,13 @@ void Console::refreshResolutionList()
         res.label = width + " x " + height;
         res.size = *r;
     }
+}
+
+void Console::updateAverageUpdateTime(float ft)
+{
+    static constexpr float alpha = 0.2f;
+    static constexpr float alphaInv = 1.f - alpha;
+    m_avgUpdateTime = (alpha * ft) + alphaInv * m_avgUpdateTime;
 }
 
 void Console::updateAverageRenderTime(float ft)

@@ -172,7 +172,12 @@ namespace cro
         static void setMaxFrames(std::int32_t);
 
         /*!
-        \brief Returns the current average frame time
+        \brief Returns the average amount of time taken to complete an update step
+        */
+        static float getAvgUpdateTime() { return m_avgUpdateTime; }
+
+        /*!
+        \brief Returns the current average frame time in seconds.
         */
         static float getAvgFrameTime() { return m_avgFrameTime; }
 
@@ -201,6 +206,9 @@ namespace cro
         static void finalise();
 
         static void refreshResolutionList();
+
+        static float m_avgUpdateTime;
+        static void updateAverageUpdateTime(float);
 
         static float m_avgFrameTime;
         static void updateAverageRenderTime(float);

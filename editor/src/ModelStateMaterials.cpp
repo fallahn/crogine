@@ -353,7 +353,7 @@ void ModelState::exportMaterial() const
         auto getTextureName = [&](std::uint32_t id)
         {
             const auto& t = m_materialTextures.at(id);
-            return t.relPath + t.name;
+            return t.relPath + "/" + t.name;
         };
 
         if (matDef.textureIDs[MaterialDefinition::Diffuse] != 0)

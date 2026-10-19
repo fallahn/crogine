@@ -566,7 +566,8 @@ void App::run(bool resetSettings)
 
     static constexpr std::int32_t MaxUpdates = 20;
 
-    HiResTimer renderClock;
+    HiResTimer updateClock; //measures how long an update step took
+    HiResTimer renderClock; //measures how long it took to render a frame
 
     while (m_running)
     {
@@ -589,6 +590,7 @@ void App::run(bool resetSettings)
         while (timeSinceLastUpdate > frameTime)
         {
             timeSinceLastUpdate -= frameTime;
+            updateClock.restart();
 
             Console::newFrame();
 
@@ -608,6 +610,8 @@ void App::run(bool resetSettings)
                 simulate(timeSinceLastUpdate);
                 timeSinceLastUpdate = 0;
             }
+
+            Console::updateAverageUpdateTime(updateClock.restart());
         }
 
 
@@ -1158,12 +1162,14 @@ void App::doImGui()
         static std::int32_t counter = 0;
         static float frameTime = 0.f;
         static float uncapped = 0.f;
+        static float updateTime = 0.f;
 
         counter++;
         if (counter > 30)
         {
             counter -= 30;
 
+            updateTime = Console::getAvgUpdateTime();
             frameTime = Console::getAvgFrameTime();
             uncapped = 1.f / frameTime;
         }
@@ -1171,6 +1177,33 @@ void App::doImGui()
         const auto colour = capped < 60 ?
             (capped < 30 ? ImVec4(1.f, 0.f, 0.f, 1.f) : ImVec4(1.f, 0.5f, 0.f, 1.f)) : ImVec4(0.f, 1.f, 0.f, 1.f);
         
+        const auto renderLvl1 = [&]()
+            {
+                ImGui::Text("Avg Render Time:");
+                ImGui::SameLine();
+
+                ImGui::PushStyleColor(ImGuiCol_Text, colour);
+                ImGui::Text("%.3fms", frameTime * 1000.f);
+                ImGui::SameLine();
+                ImGui::PopStyleColor();
+
+                ImGui::Text("Uncapped FPS:");
+                ImGui::SameLine();
+
+                ImGui::PushStyleColor(ImGuiCol_Text, colour);
+                ImGui::Text("%.3f", uncapped);
+                ImGui::SameLine();
+                ImGui::PopStyleColor();
+
+                ImGui::Text("Capped FPS:");
+                ImGui::SameLine();
+
+                ImGui::PushStyleColor(ImGuiCol_Text, colour);
+                ImGui::Text("%d", capped);
+                ImGui::SameLine();
+                ImGui::PopStyleColor();
+            };
+
         ImGui::SetNextWindowPos(position);
         ImGui::SetNextWindowSize(size);
         ImGui::PushStyleColor(ImGuiCol_WindowBg, { 0.f, 0.f, 0.f, 0.4f });
@@ -1178,28 +1211,64 @@ void App::doImGui()
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {14.f, 8.f});
         ImGui::Begin("FPS Counter", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBringToFrontOnFocus);
-        ImGui::PushStyleColor(ImGuiCol_Text, colour);
         switch (level)
         {
         default:
         case 0:
+            ImGui::PushStyleColor(ImGuiCol_Text, colour);
             ImGui::Text("%d", capped);
+            ImGui::PopStyleColor();
             break;
         case 1:
             if (corner == 1 || corner == 3)
             {
-                static constexpr float textWidth = 480.f;
-                if (const auto width = winSize.x - textWidth; width > 10.f)
+                static constexpr float padding = 480.f;
+                if (const auto width = winSize.x - padding; width > 10.f)
                 {
                     ImGui::BeginChild("##padding", { width, 0.f });
                     ImGui::EndChild();
                     ImGui::SameLine();
                 }
             }
-            ImGui::Text("Avg Frame Time: %.3fms Uncapped FPS: %.3f Capped FPS: %d", frameTime * 1000.f, uncapped, capped);
+            renderLvl1();
+            
+            break;
+        case 2:
+        {
+            if (corner == 1 || corner == 3)
+            {
+                static constexpr float padding = 810.f;
+                if (const auto width = winSize.x - padding; width > 10.f)
+                {
+                    ImGui::BeginChild("##padding", { width, 0.f });
+                    ImGui::EndChild();
+                    ImGui::SameLine();
+                }
+            }
+
+            //const auto updateTime = Console::getAvgUpdateTime();
+            const auto updatePc = (updateTime / frameTime) * 100.f;
+
+            ImVec4 c = { 0.f, 1.f, 0.f, 1.f };
+            if (updatePc > 90.f)
+            {
+                c = { 1.f, 0.f, 0.f, 1.f };
+            }
+            else if (updatePc > 60.f)
+            {
+                c = { 1.f, 0.5f, 0.f, 1.f };
+            }
+            ImGui::Text("Update time:");
+            ImGui::SameLine();
+            ImGui::PushStyleColor(ImGuiCol_Text, c);
+            ImGui::Text("%.3fms (%.2f%% of timestep)", updateTime * 1000.f, updatePc);
+            ImGui::SameLine();
+            ImGui::PopStyleColor();
+
+            renderLvl1();
+        }
             break;
         }
-        ImGui::PopStyleColor();
         ImGui::End();
         ImGui::PopStyleVar(3); //border size, rounding, padding
         ImGui::PopStyleColor(); //window BG
@@ -1374,7 +1443,7 @@ App::WindowSettings App::loadSettings() const
             }
             else if (prop.getName() == "overlay_level")
             {
-                Console::m_overlayLevel = std::clamp(prop.getValue<std::int32_t>(), 0, 1);
+                Console::m_overlayLevel = std::clamp(prop.getValue<std::int32_t>(), 0, 2);
             }
         }
 
