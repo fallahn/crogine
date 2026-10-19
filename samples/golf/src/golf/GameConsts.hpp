@@ -1236,7 +1236,7 @@ static inline cro::Entity loadSkybox(const std::filesystem::path& path, cro::Sce
     if (!noRain)
     {
         glm::vec4 c = materials.sunColour.getVec4();
-        c *= 0.5f;
+        c *= 0.65f;
         materials.sunColour = c;
 
         //add the overcast clouds

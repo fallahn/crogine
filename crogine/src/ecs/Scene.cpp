@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -45,9 +45,9 @@ source distribution.
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 
+#ifdef DEBUG_UI
 #include <crogine/gui/Gui.hpp>
-
-#include "../detail/GLCheck.hpp"
+#endif
 
 using namespace cro;
 
@@ -79,8 +79,12 @@ namespace
     const std::string skyboxFrag = 
         R"(
         OUTPUT
-//layout (location = 1) out vec4 POS_OUT;
-//layout (location = 2) out vec4 NORM_OUT;
+
+#if defined (CLOUDMAP)
+        uniform samplerCube u_cloudmap;
+        uniform float u_cloudAmount = 0.0;
+#endif
+
         uniform LOW vec3 u_darkColour;
         uniform LOW vec3 u_midColour;
         uniform LOW vec3 u_lightColour;
@@ -97,22 +101,33 @@ namespace
         const vec3 Up = vec3(0.0, 1.0, 0.0);
 
 #include NOISE_3D
+#include NOISE_VALUE
 
         void main()
         {
-            float amount = dot(normalize(v_texCoords), Up);
+            vec3 texCoords = normalize(v_texCoords);
+            float amount = dot(texCoords, Up);
             amount += 1.0;
             amount /= 2.0;
 
             vec3 top = mix(u_midColour, u_lightColour, smoothstep(u_stepEnd, /*0.545*/u_stepEnd + 0.03, amount));
             FRAG_OUT = vec4(mix(u_darkColour, top, smoothstep(u_stepStart, u_stepEnd, amount)), 1.0);
 
-            vec3 viewDirection = normalize(v_texCoords);
-            float stars = pow(clamp(noise(viewDirection * 200.0), 0.0f, 1.0f), Threshold) * Exposure;
+#if defined(CLOUDMAP)
+            //would be nice to avoid sampling below the horizon completely...
+            //vec3 cloudmap = FRAG_OUT.rgb * mix(vec3(1.0), TEXTURE_CUBE(u_cloudmap, v_texCoords).rgb, smoothstep(u_stepStart, u_stepEnd, amount));
+            vec3 cloudmap = mix(u_darkColour, TEXTURE_CUBE(u_cloudmap, v_texCoords).rgb, smoothstep(u_stepStart, u_stepEnd, amount));
+            //hmmm would this be smart enough to not call the sampler when set to 0, assuming the sampler was inline with mix()?
+            FRAG_OUT.rgb = mix(FRAG_OUT.rgb, cloudmap, u_cloudAmount); 
+#endif
+
+            vec3 viewDirection = texCoords;
+            float stars = pow(clamp(noise(viewDirection * 200.0), 0.0f, 1.0), Threshold) * Exposure;
             stars *= mix(0.4, 1.4, noise(viewDirection * 100.0));
-//NORM_OUT = vec4(0.5,0.5,0.0,1.0);
-//POS_OUT.r = 10000.0;//hack to make the sky distance a long way away
+
             FRAG_OUT.rgb = mix(FRAG_OUT.rgb, vec3(1.0), stars * amount * u_starsAmount);
+
+//FRAG_OUT.rgb = vec3(noise2D(viewDirection.xy * 200.0));
 
         })";
     const std::string skyboxFragTextured =
@@ -175,6 +190,7 @@ Scene::Scene(MessageBus& mb, std::size_t initialPoolSize, std::uint32_t infoFlag
     m_waterLevel            (0.f),
     m_activeSkyboxTexture   (0),
     m_starsUniform          (-1),
+    m_cloudsUniform         (-1),
     m_shaderIndex           (0)
 {
     auto defaultCamera = createEntity();
@@ -348,7 +364,7 @@ void Scene::enableSkybox()
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
             m_skybox.setShader(*m_skyboxShaders[Coloured]);
-            setSkyboxColours(cro::Colour::Blue, cro::Colour::Green, cro::Colour::Red);
+            //setSkyboxColours(cro::Colour::Blue, cro::Colour::Green, cro::Colour::Red);
 
             m_shaderIndex = SkyboxType::Coloured;
 
@@ -356,6 +372,28 @@ void Scene::enableSkybox()
             m_skyColourUniforms[1] = m_skyboxShaders[SkyboxType::Coloured]->getUniformID("u_midColour");
             m_skyColourUniforms[2] = m_skyboxShaders[SkyboxType::Coloured]->getUniformID("u_lightColour");
             m_starsUniform = m_skyboxShaders[SkyboxType::Coloured]->getUniformID("u_starsAmount");
+
+            /*const auto threshold = m_skyboxShaders[SkyboxType::Coloured]->getUniformID("u_threshold");
+            const auto exposure = m_skyboxShaders[SkyboxType::Coloured]->getUniformID("u_exposure");
+            registerWindow([this, threshold, exposure]() 
+                {
+                    ImGui::Begin("Skybox");
+                    static float t = 8.f;
+                    static float e = 100.f;
+                    if (ImGui::SliderFloat("Threshold", &t, 0.f, 50.f))
+                    {
+                        glUseProgram(m_skyboxShaders[SkyboxType::Coloured]->getGLHandle());
+                        glUniform1f(threshold, t);
+                    }
+
+                    if (ImGui::SliderFloat("Exposure", &e, 0.f, 500.f))
+                    {
+                        glUseProgram(m_skyboxShaders[SkyboxType::Coloured]->getGLHandle());
+                        glUniform1f(exposure, e);
+                    }
+
+                    ImGui::End();
+                });*/
         }
         else
         {
@@ -383,6 +421,9 @@ void Scene::setCubemap(const std::filesystem::path& path)
     //create shader if it doesn't exist
     if (!m_skyboxShaders[SkyboxType::Cubemap])
     {
+        //TODO check if the cloudmap is already
+        //loaded then pass in the defines here
+
         m_shaderResource->loadFromString(SkyboxType::Cubemap, skyboxVertex, skyboxFragTextured);
         m_skyboxShaders[SkyboxType::Cubemap] = &m_shaderResource->get(SkyboxType::Cubemap);
     }
@@ -424,6 +465,69 @@ void Scene::setCubemap(const EnvironmentMap& map)
 CubemapID Scene::getCubemap() const
 {
     return CubemapID(m_activeSkyboxTexture);
+}
+
+void Scene::setCloudmap(const std::filesystem::path& path)
+{
+    LogE << FILE_LINE << " Don't use this, it's broken" << std::endl;
+    return;
+
+    if (m_skyboxCloudmap.loadFromFile(path))
+    {
+        //this also creates the default colour shader if not yet done
+        //TODO we could pass in the fact that we're using a cloudmap
+        //to save recreating the shader immediately afterwards.
+        enableSkybox();
+
+        //TODO track if this is a subsequent call to this
+        //func, in which case we don't need to recreate the shader...
+        if (m_skyboxShaders[m_shaderIndex] != nullptr)
+        {
+            //hmm we can't do this as we rely on the shader resource to pre-parse includes etc
+            //if (m_skyboxShaders[m_shaderIndex]->loadFromString(skyboxVertex, skyboxFrag/*, "#define CLOUDMAP\n"*/))
+            
+            if(m_shaderResource->loadFromString(SkyboxType::Coloured * 2, skyboxVertex, skyboxFrag, "#define CLOUDMAP\n"))
+            {
+                m_skyboxShaders[m_shaderIndex] = &m_shaderResource->get(SkyboxType::Coloured * 2);
+
+                m_skybox.setShader(*m_skyboxShaders[m_shaderIndex]);
+                m_starsUniform = m_skyboxShaders[m_shaderIndex]->getUniformID("u_starsAmount");
+                m_cloudsUniform = m_skyboxShaders[m_shaderIndex]->getUniformID("u_cloudAmount");
+                applyStars();
+
+                if (m_shaderIndex == SkyboxType::Coloured)
+                {
+                    m_skyColourUniforms[0] = m_skyboxShaders[SkyboxType::Coloured]->getUniformID("u_darkColour");
+                    m_skyColourUniforms[1] = m_skyboxShaders[SkyboxType::Coloured]->getUniformID("u_midColour");
+                    m_skyColourUniforms[2] = m_skyboxShaders[SkyboxType::Coloured]->getUniformID("u_lightColour");
+
+                    applySkyboxColours();
+                }
+            }
+        }
+
+        else
+        {
+            //TODO we shouldn't ever reach here because
+            //enableSkybox() should at least have created the default colour shader
+        }
+
+        m_skybox.cloudmapTexture = m_skyboxCloudmap.getGLHandle();
+    }
+}
+
+CubemapID Scene::getCloudmap() const
+{
+    return CubemapID(m_skyboxCloudmap.getGLHandle());
+}
+
+void Scene::setCloudmapAmount(float amount)
+{
+    if (m_cloudsUniform != -1)
+    {
+        glCheck(glUseProgram(m_skyboxShaders[m_shaderIndex]->getGLHandle()));
+        glCheck(glUniform1f(m_cloudsUniform, amount));
+    }
 }
 
 void Scene::setSkyboxColours(Colour dark, Colour mid, Colour light)
@@ -639,6 +743,13 @@ void Scene::renderSkybox(const Camera& cam)
             glCheck(glActiveTexture(GL_TEXTURE0));
             glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_activeSkyboxTexture));
             glCheck(glUniform1i(m_skybox.textureUniform, 0));
+        }
+
+        if (m_skybox.cloudmapTexture)
+        {
+            glCheck(glActiveTexture(GL_TEXTURE1));
+            glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_skybox.cloudmapTexture));
+            glCheck(glUniform1i(m_skybox.cloudmapUniform, 1));
         }
 
         //set sun colour if shader expects it

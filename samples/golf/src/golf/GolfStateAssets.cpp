@@ -355,6 +355,7 @@ void GolfState::loadMap()
         m_courseTitle = title->getValue<cro::String>();
     }
 
+
     std::string skyboxPath;
 
     ThemeSettings theme;
@@ -1979,6 +1980,22 @@ void GolfState::loadMap()
     }
 
     initAudio(theme.treesets.size() > 2, cloudRing.isValid());
+
+
+
+    //m_gameScene.setCubemap("assets/golf/images/skybox/overcast/cubemap.ccm");
+    /*registerWindow([this]()
+        {
+            ImGui::Begin("Skybox");
+            static float amt = 0.f;
+            if (ImGui::SliderFloat("Clouds", &amt, 0.f, 1.f))
+            {
+                amt = std::clamp(amt, 0.f, 1.f);
+                m_gameScene.setCloudmapAmount(amt);
+            }
+
+            ImGui::End();
+        });*/
 }
 
 void GolfState::loadMaterials()

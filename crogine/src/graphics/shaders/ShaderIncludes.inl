@@ -413,3 +413,54 @@ float noise(vec3 p)
 const float Threshold = 8.0;
 const float Exposure = 100.0;
 )";
+
+
+//include NOISE_VALUE
+/*
+https://www.shadertoy.com/view/lsf3WH
+The MIT License
+Copyright 2013 Inigo Quilez
+*/
+static inline const std::string NoiseValue =
+R"(
+float hash2D(ivec2 p)
+{
+    //2D -> 1D
+    int n = p.x * 3 + p.y * 113;
+
+    //1D hash by Hugo Elias
+	n = (n << 13) ^ n;
+    n = n * (n * n * 15731 + 789221) + 1376312589;
+    return -1.0 + 2.0 * float(n & 0x0fffffff) / float(0x0fffffff);
+}
+
+float noise2D(vec2 p)
+{
+    ivec2 i = ivec2(floor(p));
+    vec2 f = fract(p);
+	
+    //cubic interpolant
+    vec2 u = f * f * (3.0 - 2.0 * f);
+   
+    return mix(mix(hash2D(i + ivec2(0,0)), 
+                   hash2D(i + ivec2(1,0)), u.x),
+               mix(hash2D(i + ivec2(0,1)), 
+                   hash2D(i + ivec2(1,1)), u.x), u.y);
+}
+
+float getNoise2D(vec2 uv)
+{
+    float f = 0.0;
+	uv *= 8.0;
+    mat2 m = mat2(1.6,  1.2, -1.2,  1.6);
+	f  = 0.5000 * noise2D(uv); uv = m * uv;
+	f += 0.2500 * noise2D(uv); uv = m * uv;
+	f += 0.1250 * noise2D(uv); uv = m * uv;
+	f += 0.0625 * noise2D(uv); uv = m * uv;
+
+	f = 0.5 + 0.5 * f;
+	
+    f *= smoothstep(0.0, 0.005, abs(uv.x - 0.6));
+
+    return f;
+})";

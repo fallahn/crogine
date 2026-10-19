@@ -145,6 +145,22 @@ void SurrealState::handleMessage(const cro::Message& msg)
 
 bool SurrealState::simulate(float dt)
 {
+    //float move = 0.f;
+    //if (cro::Keyboard::isKeyPressed(SDLK_UP))
+    //{
+    //    move += 1.f;
+    //}
+    //if (cro::Keyboard::isKeyPressed(SDLK_DOWN))
+    //{
+    //    move -= 1.f;
+    //}
+    //if (move != 0)
+    //{
+    //    auto cam = m_gameScene.getActiveCamera();
+    //    cam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, move * dt);
+    //}
+
+
     static float accum = 0.f;
     accum += dt;
     glUseProgram(m_waveShader.ID);
@@ -205,7 +221,7 @@ void SurrealState::loadAssets()
 
 void SurrealState::createScene()
 {
-    m_gameScene.setCubemap("assets/skybox/blue/cubemap.ccm");
+    m_gameScene.setCubemap("assets/skybox/overcast/cubemap.ccm");
 
     auto skyWave = cro::Util::Wavetable::sine(0.005f);
     for (auto& f : skyWave)

@@ -110,6 +110,20 @@ void PinballGameState::handleMessage(const cro::Message& msg)
 
 bool PinballGameState::simulate(float dt)
 {
+    float move = 0.f;
+    if (cro::Keyboard::isKeyPressed(SDLK_UP))
+    {
+        move += 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_DOWN))
+    {
+        move -= 1.f;
+    }
+    if (move != 0.f)
+    {
+        m_gameScene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, move * dt);
+    }
+
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
     return true;
@@ -142,6 +156,33 @@ void PinballGameState::addSystems()
 
 void PinballGameState::loadAssets()
 {
+    //m_gameScene.setCloudmap("assets/skybox/overcast/cubemap.ccm");
+    m_gameScene.enableSkybox();
+    m_gameScene.setSkyboxColours(cro::Colour::Blue, cro::Colour(0xfff8e1ff), cro::Colour(0x6b6f72ff));
+
+    registerWindow([this]() 
+        {
+            ImGui::Begin("Skybox");
+            static float amt = 0.f;
+            if (ImGui::SliderFloat("Clouds", &amt, 0.f, 1.f))
+            {
+                amt = std::clamp(amt, 0.f, 1.f);
+                m_gameScene.setCloudmapAmount(amt);
+            }
+
+            ImGui::End();
+        });
+
+    const auto resize = 
+        [](cro::Camera& c)
+        {
+            const glm::vec2 winSize = cro::App::getWindow().getSize();
+            c.setPerspective(70.f * cro::Util::Const::degToRad, winSize.x / winSize.y, 0.01f, 10.f);
+        };
+
+    auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+    cam.resizeCallback = resize;
+    resize(cam);
 }
 
 void PinballGameState::createScene()

@@ -54,6 +54,11 @@ source distribution.
 #include <functional>
 #include <memory>
 
+#define DEBUG_UI
+#ifdef DEBUG_UI
+#include <crogine/gui/GuiClient.hpp>
+#endif
+
 namespace cro
 {
     class MessageBus;
@@ -72,6 +77,9 @@ namespace cro
     */
 
     class CRO_EXPORT_API Scene final
+#ifdef DEBUG_UI
+        : public GuiClient
+#endif
     {
     public:
 
@@ -199,7 +207,7 @@ namespace cro
         Enabling this creates the default coloured skybox for the scene.
         Skyboxes may be cubemapped by supplying a cubemap texture. By
         default skyboxes are disabled until enableSkybox() or setCubemap()
-        are called.
+        is called.
         \see setCubemap()
         */
         void enableSkybox();
@@ -246,6 +254,27 @@ namespace cro
         This is useful for setting cubemap properties of materials.
         */
         CubemapID getCubemap() const;
+
+
+        /*!
+        \brief Sets a cubmap texture used to render clouds.
+        This texture is multiplied with the current active skybox,
+        be it the default colour output, or the textured output
+        \param path A path pointing to a *ccm file describing
+        the cubemap textures to use
+        */
+        void setCloudmap(const std::filesystem::path& path);
+
+        /*!
+        \brief Returns the GL handle to the cloud map, if set
+        */
+        CubemapID getCloudmap() const;
+
+        /*!
+        \brief Sets the visible amount of the cloudmap texture
+        if it is present. The range is 0 - 1
+        */
+        void setCloudmapAmount(float amount);
 
 
         struct SkyColours final
@@ -470,15 +499,19 @@ namespace cro
         float m_waterLevel;
 
         cro::CubemapTexture m_skyboxCubemap;
+        cro::CubemapTexture m_skyboxCloudmap;
         struct Skybox final
         {
             std::uint32_t vbo = 0;
             std::uint32_t vao = 0;
-            std::uint32_t modelViewUniform = 0;
-            std::uint32_t projectionUniform = 0;
+            std::int32_t modelViewUniform = -1;
+            std::int32_t projectionUniform = -1;
             std::uint32_t texture = 0;
             std::int32_t textureUniform = -1;
             std::int32_t skyColourUniform = -1;
+
+            std::uint32_t cloudmapTexture = 0;
+            std::int32_t cloudmapUniform = -1;
 
             const Shader* activeShader = nullptr;
 
@@ -495,6 +528,7 @@ namespace cro
                 projectionUniform = shader.getUniformID("u_projectionMatrix");
                 textureUniform = shader.getUniformID("u_skybox");
                 skyColourUniform = shader.getUniformID("u_skyColour");
+                cloudmapUniform = shader.getUniformID("u_cloudmap");
             }
         }m_skybox;
 
@@ -506,6 +540,7 @@ namespace cro
             Count
         };
         std::int32_t m_starsUniform;
+        std::int32_t m_cloudsUniform;
         std::array<std::int32_t, 3u> m_skyColourUniforms = {};
         std::array<Shader*, SkyboxType::Count> m_skyboxShaders = {};
         std::size_t m_shaderIndex;
