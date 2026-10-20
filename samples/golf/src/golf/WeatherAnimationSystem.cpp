@@ -147,6 +147,8 @@ void WeatherAnimationSystem::updateSkyColour()
         auto colours = m_skyboxScene.getSkyboxColours();
         colours.top = skyColour;
         m_skyboxScene.setSkyboxColours(colours);
+        
+        m_skyboxScene.setCloudmapAmount(0.5f + (0.5f * m_opacity));
     }
 
     m_skyboxScene.setStarsAmount(glm::mix(m_starsAmount, 0.f, m_opacity));

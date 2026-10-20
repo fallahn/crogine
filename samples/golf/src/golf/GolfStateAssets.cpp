@@ -472,6 +472,13 @@ void GolfState::loadMap()
     materials.weatherType = m_sharedData.weatherType; //don't create the clouds if we're raining or snowing
     materials.nightTime = m_sharedData.nightTime;
 
+    if (m_sharedData.weatherType == WeatherType::Rain
+        || m_sharedData.weatherType == WeatherType::Snow
+        || m_sharedData.weatherType == WeatherType::Showers)
+    {
+        m_skyScene.setCloudmap("assets/golf/images/skybox/overcast/edited/cubemap.ccm");
+        m_skyScene.setCloudmapAmount(1.f);
+    }
 
     auto cloudRing = loadSkybox(skyboxPath, m_skyScene, m_resources, materials);
     m_baseSkyColour = m_skyScene.getSkyboxColours().top; //used to dim the sky if it rains

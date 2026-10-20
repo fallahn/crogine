@@ -101,7 +101,6 @@ namespace
         const vec3 Up = vec3(0.0, 1.0, 0.0);
 
 #include NOISE_3D
-#include NOISE_VALUE
 
         void main()
         {
@@ -115,8 +114,8 @@ namespace
 
 #if defined(CLOUDMAP)
             //would be nice to avoid sampling below the horizon completely...
-            //vec3 cloudmap = FRAG_OUT.rgb * mix(vec3(1.0), TEXTURE_CUBE(u_cloudmap, v_texCoords).rgb, smoothstep(u_stepStart, u_stepEnd, amount));
-            vec3 cloudmap = mix(u_darkColour, TEXTURE_CUBE(u_cloudmap, v_texCoords).rgb, smoothstep(u_stepStart, u_stepEnd, amount));
+            vec3 cloudmap = FRAG_OUT.rgb * mix(vec3(1.0), TEXTURE_CUBE(u_cloudmap, v_texCoords).rgb, smoothstep(u_stepStart, u_stepEnd + 0.03, amount));
+            //vec3 cloudmap = mix(u_darkColour, TEXTURE_CUBE(u_cloudmap, v_texCoords).rgb, smoothstep(u_stepStart, u_stepEnd + 0.03, amount));
             //hmmm would this be smart enough to not call the sampler when set to 0, assuming the sampler was inline with mix()?
             FRAG_OUT.rgb = mix(FRAG_OUT.rgb, cloudmap, u_cloudAmount); 
 #endif
@@ -126,9 +125,6 @@ namespace
             stars *= mix(0.4, 1.4, noise(viewDirection * 100.0));
 
             FRAG_OUT.rgb = mix(FRAG_OUT.rgb, vec3(1.0), stars * amount * u_starsAmount);
-
-//FRAG_OUT.rgb = vec3(noise2D(viewDirection.xy * 200.0));
-
         })";
     const std::string skyboxFragTextured =
         R"(
@@ -469,8 +465,8 @@ CubemapID Scene::getCubemap() const
 
 void Scene::setCloudmap(const std::filesystem::path& path)
 {
-    LogE << FILE_LINE << " Don't use this, it's broken" << std::endl;
-    return;
+    //LogE << FILE_LINE << " Don't use this, it's broken" << std::endl;
+    //return;
 
     if (m_skyboxCloudmap.loadFromFile(path))
     {

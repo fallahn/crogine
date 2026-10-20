@@ -156,7 +156,7 @@ void PinballGameState::addSystems()
 
 void PinballGameState::loadAssets()
 {
-    //m_gameScene.setCloudmap("assets/skybox/overcast/cubemap.ccm");
+    m_gameScene.setCloudmap("assets/skybox/overcast/cubemap.ccm");
     m_gameScene.enableSkybox();
     m_gameScene.setSkyboxColours(cro::Colour::Blue, cro::Colour(0xfff8e1ff), cro::Colour(0x6b6f72ff));
 
