@@ -113,7 +113,7 @@ namespace
     //accurate than converting to a Time and
     //back as the underlying SDL timer only
     //supports milliseconds
-    constexpr float frameTime = 1.f / 60.f;
+    constexpr float FrameTime = 1.f / 60.f;
     float timeSinceLastUpdate = 0.f;
 
 #include "../detail/DefaultIcon.inl"
@@ -587,9 +587,9 @@ void App::run(bool resetSettings)
 
         //main update loop
         std::int32_t updates = 0;
-        while (timeSinceLastUpdate > frameTime)
+        while (timeSinceLastUpdate > FrameTime)
         {
-            timeSinceLastUpdate -= frameTime;
+            timeSinceLastUpdate -= FrameTime;
             updateClock.restart();
 
             Console::newFrame();
@@ -599,7 +599,7 @@ void App::run(bool resetSettings)
 
             m_osk->update();
 
-            simulate(frameTime);
+            simulate(FrameTime);
             doImGui();
 
             framesRendered = 0;
@@ -1247,7 +1247,7 @@ void App::doImGui()
             }
 
             //const auto updateTime = Console::getAvgUpdateTime();
-            const auto updatePc = (updateTime / frameTime) * 100.f;
+            const auto updatePc = (updateTime / FrameTime) * 100.f;
 
             ImVec4 c = { 0.f, 1.f, 0.f, 1.f };
             if (updatePc > 90.f)

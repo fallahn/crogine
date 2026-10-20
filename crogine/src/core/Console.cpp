@@ -841,6 +841,7 @@ void Console::updateAverageUpdateTime(float ft)
     static constexpr float alpha = 0.2f;
     static constexpr float alphaInv = 1.f - alpha;
     m_avgUpdateTime = (alpha * ft) + alphaInv * m_avgUpdateTime;
+    //m_avgUpdateTime = ft;
 }
 
 void Console::updateAverageRenderTime(float ft)
