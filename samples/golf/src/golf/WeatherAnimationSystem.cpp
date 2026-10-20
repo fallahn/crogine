@@ -59,7 +59,8 @@ void WeatherAnimationSystem::process(float dt)
 {
     if (!m_hidden)
     {
-        auto camPos = getScene()->getActiveCamera().getComponent<cro::Transform>().getPosition();
+        const auto& camTx = getScene()->getActiveCamera().getComponent<cro::Transform>();
+        auto camPos = camTx.getPosition() + camTx.getForwardVector() * 10.f;
         //camPos.x = std::floor(camPos.x / AreaEnd[0]);
         //camPos.z = std::floor(camPos.z / AreaEnd[2]);
 
@@ -137,7 +138,7 @@ void WeatherAnimationSystem::updateSkyColour()
     if (m_adaptSkyColour)
     {
         //set the sunlight
-        const auto colour = cro::Colour::White.getVec4() * (((1.f - m_opacity) * 0.35f) + 0.65f);
+        const auto colour = cro::Colour::White.getVec4() * (((1.f - m_opacity) * 0.45f) + 0.55f);
 
         getScene()->getSunlight().getComponent<cro::Sunlight>().setColour(colour);
         m_skyboxScene.getSunlight().getComponent<cro::Sunlight>().setColour(colour);
@@ -148,7 +149,7 @@ void WeatherAnimationSystem::updateSkyColour()
         colours.top = skyColour;
         m_skyboxScene.setSkyboxColours(colours);
         
-        m_skyboxScene.setCloudmapAmount(0.3f + (0.5f * m_opacity));
+        m_skyboxScene.setCloudmapAmount(0.3f + (0.55f * m_opacity));
     }
 
     m_skyboxScene.setStarsAmount(glm::mix(m_starsAmount, 0.f, m_opacity));

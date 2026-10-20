@@ -476,7 +476,7 @@ void GolfState::loadMap()
         || m_sharedData.weatherType == WeatherType::Snow
         || m_sharedData.weatherType == WeatherType::Showers)
     {
-        m_skyScene.setCloudmap("assets/golf/images/skybox/overcast/edited/cubemap.ccm");
+        m_skyScene.setCloudmap("assets/golf/images/skybox/overcast/cubemap.ccm");
         m_skyScene.setCloudmapAmount(1.f);
     }
 
