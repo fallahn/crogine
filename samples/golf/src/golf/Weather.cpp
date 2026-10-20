@@ -63,8 +63,8 @@ namespace
 #include "shaders/SwarmShader.inl"
 
 
-    constexpr std::int32_t GridX = 3;
-    constexpr std::int32_t GridY = 3;
+    constexpr std::int32_t GridX = 1;// 3;
+    constexpr std::int32_t GridY = 1;// 3;
 }
 
 cro::Entity GolfState::createSwarm(const GolfState::Swarm& info)
@@ -306,15 +306,20 @@ void GolfState::createWeather(std::int32_t weatherType)
     meshData->boundingSphere.centre = meshData->boundingBox[0] + ((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
     meshData->boundingSphere.radius = glm::length((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
 
+    //TODO we could convert this from the const values
+    //though it's a faff to work around the formatting of floats...
+    std::string minBounds = "#define MinBounds vec2(-20.0)\n";
+    std::string maxBounds = "#define MaxBounds vec2(20.0)\n";
+
     auto weatherColour = LeaderboardTextLight;
     //auto blendMode = cro::Material::BlendMode::None;
     if (weatherType == WeatherType::Snow)
     {
-        m_resources.shaders.loadFromString(ShaderID::Weather, WeatherVertex, WireframeFragment, "#define EASE_SNOW\n");
+        m_resources.shaders.loadFromString(ShaderID::Weather, WeatherVertex, WireframeFragment, "#define EASE_SNOW\n" + minBounds + maxBounds);
     }
     else
     {
-        m_resources.shaders.loadFromString(ShaderID::Weather, WeatherVertex, RainFragment);
+        m_resources.shaders.loadFromString(ShaderID::Weather, WeatherVertex, RainFragment, minBounds + maxBounds);
         weatherColour = cro::Colour(0.8f, 0.81f, 0.873f, 0.6f);
         //blendMode = cro::Material::BlendMode::Custom;
 
@@ -400,21 +405,21 @@ void GolfState::createWeather(std::int32_t weatherType)
 
     m_gameScene.getSystem<WeatherAnimationSystem>()->setMaterialData(shader, weatherColour);
 
-    constexpr glm::vec3 Offset(WeatherAnimationSystem::AreaEnd[0] * -1.5f, 0.f, WeatherAnimationSystem::AreaEnd[2] * -1.5f);
-    for (auto y = 0; y < GridY; ++y)
-    {
-        for (auto x = 0; x < GridX; ++x)
-        {
-            glm::vec3 basePos(WeatherAnimationSystem::AreaEnd[0] * x, 0.f, WeatherAnimationSystem::AreaEnd[2] * y);
-            basePos += Offset;
+    //constexpr glm::vec3 Offset(WeatherAnimationSystem::AreaEnd[0] * -1.5f, 0.f, WeatherAnimationSystem::AreaEnd[2] * -1.5f);
+    //for (auto y = 0; y < GridY; ++y)
+    //{
+    //    for (auto x = 0; x < GridX; ++x)
+    //    {
+    //        glm::vec3 basePos(WeatherAnimationSystem::AreaEnd[0] * x, 0.f, WeatherAnimationSystem::AreaEnd[2] * y);
+    //        basePos += Offset;
 
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>();
             entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
             entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::FlightCam));
-            entity.addComponent<WeatherAnimation>().basePosition = basePos;
-        }
-    }
+            entity.addComponent<WeatherAnimation>();// .basePosition = basePos; //this is deprecated but we still use the animation
+    //    }
+    //}
     m_windBuffer.addShader(shader);
     m_scaleBuffer.addShader(shader);
 

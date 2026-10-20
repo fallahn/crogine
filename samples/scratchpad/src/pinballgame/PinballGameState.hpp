@@ -27,6 +27,8 @@ private:
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
 
+    cro::Entity m_vertEnt;
+
     void addSystems();
     void loadAssets();
     void createScene();

@@ -1179,7 +1179,7 @@ void App::doImGui()
         
         const auto renderLvl1 = [&]()
             {
-                ImGui::Text("Avg Render Time:");
+                ImGui::Text("Avg Time (GPU):");
                 ImGui::SameLine();
 
                 ImGui::PushStyleColor(ImGuiCol_Text, colour);
@@ -1258,7 +1258,7 @@ void App::doImGui()
             {
                 c = { 1.f, 0.5f, 0.f, 1.f };
             }
-            ImGui::Text("Update time:");
+            ImGui::Text("Update (CPU):");
             ImGui::SameLine();
             ImGui::PushStyleColor(ImGuiCol_Text, c);
             ImGui::Text("%.3fms (%.2f%% of timestep)", updateTime * 1000.f, updatePc);

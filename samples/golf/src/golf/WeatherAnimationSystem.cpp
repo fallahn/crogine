@@ -60,17 +60,17 @@ void WeatherAnimationSystem::process(float dt)
     if (!m_hidden)
     {
         auto camPos = getScene()->getActiveCamera().getComponent<cro::Transform>().getPosition();
-        camPos.x = std::floor(camPos.x / AreaEnd[0]);
-        camPos.z = std::floor(camPos.z / AreaEnd[2]);
+        //camPos.x = std::floor(camPos.x / AreaEnd[0]);
+        //camPos.z = std::floor(camPos.z / AreaEnd[2]);
 
-        camPos.x *= AreaEnd[0];
+        //camPos.x *= AreaEnd[0];
         camPos.y = 0.f;
-        camPos.z *= AreaEnd[2];
+        //camPos.z *= AreaEnd[2];
 
         for (auto entity : getEntities())
         {
             const auto& anim = entity.getComponent<WeatherAnimation>();
-            entity.getComponent<cro::Transform>().setPosition(anim.basePosition + camPos);
+            entity.getComponent<cro::Transform>().setPosition(/*anim.basePosition +*/ camPos);
         }
 
         if (m_targetOpacity < m_opacity)

@@ -43,7 +43,7 @@ struct WeatherAnimation final
 class WeatherAnimationSystem final : public cro::System 
 {
 public:
-    static constexpr std::array<float, 3u> AreaStart = { 0.f, 0.f, 0.f };
+    static constexpr std::array<float, 3u> AreaStart = { -20.f, 0.f, -20.f };
     static constexpr std::array<float, 3u> AreaEnd = { 20.f, 80.f, 20.f };
 
     explicit WeatherAnimationSystem(cro::MessageBus&, cro::Scene&);

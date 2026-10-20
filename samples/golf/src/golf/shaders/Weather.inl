@@ -215,6 +215,13 @@ static const inline std::string WeatherVertex = R"(
 
         position.y  = (p * SystemHeight) - a_texCoord0.x;
 
+        //offset rel to world pos so it remains 'in-place'
+        position.xz -= u_worldMatrix[3].xz;
+        //then wrap-around
+        vec2 bounds = MaxBounds - MinBounds;
+        position.xz += floor(-(position.xz + MinBounds) / bounds) * bounds;
+
+//TODO swizzle
         position.x -= p * u_windData.x * u_windData.y * WindEffect;
         position.z -= p * u_windData.z * u_windData.y * WindEffect;
 

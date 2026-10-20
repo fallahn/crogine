@@ -3,6 +3,7 @@
 #include "PinballGameState.hpp"
 #include "PinballSystem.hpp"
 #include "PinballConsts.hpp"
+#include "../PoissonDisk.hpp"
 
 #include <box2d/box2d.h>
 
@@ -23,6 +24,8 @@
 #include <crogine/graphics/Shape2D.hpp>
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/util/Constants.hpp>
+
+namespace pd = thinks;
 
 namespace
 {
@@ -110,6 +113,7 @@ void PinballGameState::handleMessage(const cro::Message& msg)
 
 bool PinballGameState::simulate(float dt)
 {
+    //moves the camera
     float move = 0.f;
     if (cro::Keyboard::isKeyPressed(SDLK_UP))
     {
@@ -121,8 +125,33 @@ bool PinballGameState::simulate(float dt)
     }
     if (move != 0.f)
     {
-        m_gameScene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, move * dt);
+        m_gameScene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, (move / 2.f) * dt);
     }
+
+
+    //moves the cross/verts test
+    glm::vec2 movement = glm::vec2(0.f);
+    if (cro::Keyboard::isKeyPressed(SDLK_KP_4))
+    {
+        movement.x -= 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_KP_6))
+    {
+        movement.x += 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_KP_2))
+    {
+        movement.y -= 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_KP_8))
+    {
+        movement.y += 1.f;
+    }
+    if (glm::length2(movement) > 1)
+    {
+        movement = glm::normalize(movement);
+    }
+    m_vertEnt.getComponent<cro::Transform>().move(movement * dt);
 
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
@@ -132,7 +161,10 @@ bool PinballGameState::simulate(float dt)
 void PinballGameState::render()
 {
     m_gameScene.render();
+
+    glEnable(GL_PROGRAM_POINT_SIZE);
     m_uiScene.render();
+    glDisable(GL_PROGRAM_POINT_SIZE);
 }
 
 //private
@@ -416,7 +448,6 @@ void PinballGameState::createScene()
 
 void PinballGameState::createUI()
 {
-
     //camera has 0,0 at centre of screen
     //TODO change this when we move to 3D rendering
     auto resize = [](cro::Camera& cam)
@@ -435,6 +466,79 @@ void PinballGameState::createUI()
     resize(cam);
 
     m_uiScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ TableSize.x / 2.f, 0.f, 0.f });
+
+
+
+
+    //stuff for wrapping vertices - note we're using metres as units *sigh*
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();// .setPosition({ 300.f, 300.f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINES);
+    entity.getComponent<cro::Drawable2D>().setVertexData({
+        cro::Vertex2D(glm::vec2(0.f, 0.1f), cro::Colour::Yellow),
+        cro::Vertex2D(glm::vec2(0.f, -0.1f), cro::Colour::Yellow),
+        cro::Vertex2D(glm::vec2(-0.1f, 0.f), cro::Colour::Yellow),
+        cro::Vertex2D(glm::vec2(0.1f, 0.f), cro::Colour::Yellow),
+        });
+    m_vertEnt = entity;
+
+
+    const std::string vertShader =
+R"(
+uniform mat4 u_worldMatrix;
+uniform mat4 u_viewProjectionMatrix;
+
+ATTRIBUTE vec2 a_position;
+ATTRIBUTE MED vec2 a_texCoord0;
+ATTRIBUTE LOW vec4 a_colour;
+
+VARYING_OUT LOW vec4 v_colour;
+
+const vec2 MinBounds = vec2(-0.25);
+const vec2 MaxBounds = vec2(0.25);
+
+void main()
+{
+    vec3 txPos = u_worldMatrix[3].xyz;
+
+    vec2 position = a_position;
+    position -= txPos.xy;
+
+    vec2 bounds = MaxBounds - MinBounds;
+    position += floor(-(position + MinBounds) / bounds) * bounds;
+
+    gl_Position = u_viewProjectionMatrix * u_worldMatrix * vec4(position, 0.0, 1.0);
+    v_colour = a_colour;
+    gl_PointSize = 5.0;
+}
+)";
+
+    const auto shaderID = 1000;
+    m_resources.shaders.loadFromString(shaderID, vertShader, cro::RenderSystem2D::getDefaultFragmentShader());
+    auto& shader = m_resources.shaders.get(shaderID);
+
+
+    static constexpr std::array<float, 2U> MaxBounds = { 0.25f, 0.25f };
+    static constexpr std::array<float, 2U> MinBounds = { -0.25f, -0.25f };
+    const auto points = pd::PoissonDiskSampling(0.05f, MinBounds, MaxBounds);
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();// .setPosition({ 300.f, 300.f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_POINTS);
+    entity.getComponent<cro::Drawable2D>().setShader(&shader);
+
+    std::vector<cro::Vertex2D> verts;// (points.size());
+    for (auto i = 0u; i < points.size(); ++i)
+    {
+        const auto pos = glm::vec2(points[i][0], points[i][1]);
+        //if (glm::length(pos) < 0.25f)
+        {
+            verts.emplace_back(pos, cro::Colour::Cyan);
+        }
+    }
+    entity.getComponent<cro::Drawable2D>().setVertexData(verts);
+
+    m_vertEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void PinballGameState::spawnBall()
