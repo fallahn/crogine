@@ -187,18 +187,23 @@ static inline const std::string CloudOverheadFragment = R"(
 #include CAMERA_UBO
 #include LIGHT_UBO
 
+#if defined (ALPHA_FADE)
+    uniform float u_alphaFade = 0.0;
+#endif
+
     VARYING_IN vec3 v_normal;
     VARYING_IN vec3 v_worldPosition;
     VARYING_IN vec4 v_colour;
 
 #if defined (FEATHER_EDGE)
-#if !defined(MAX_RADIUS)
+#if !defined (MAX_RADIUS)
     const float MaxDist = 200.0;
 #else
     const float MaxDist = MAX_RADIUS;
 #endif
+#endif
 
-
+#if defined (FEATHER_EDGE) || defined (ALPHA_FADE)
 #include BAYER_MATRIX
 #endif
 
@@ -214,7 +219,7 @@ static inline const std::string CloudOverheadFragment = R"(
         vec3 normal = normalize(v_normal);
         vec3 viewDirection = normalize(u_cameraWorldPosition - v_worldPosition);
 
-#if defined(POINT_LIGHT)
+#if defined (POINT_LIGHT)
         float rim = smoothstep(0.1, 0.95, 1.0 - dot(normal, viewDirection));
 
         vec3 lightDirection = normalize(vec3(u_worldCentre.x, 4.0, u_worldCentre.y) - v_worldPosition);
@@ -239,7 +244,7 @@ static inline const std::string CloudOverheadFragment = R"(
         vec4 colour = vec4(mix(BaseColour.rgb, u_skyColourTop.rgb, colourAmount * 0.7), 1.0);
         colour.rgb = mix(colour.rgb, u_skyColourBottom.rgb * 1.25, rim * 0.7);
 
-#if defined(REFLECTION)
+#if defined (REFLECTION)
         colour.rgb = mix(WaterColour * u_lightColour.rgb, colour.rgb, v_colour.g);
 #endif
 
@@ -249,15 +254,32 @@ static inline const std::string CloudOverheadFragment = R"(
     POS_OUT.r = 10000.0; //lighting hack
 #endif
 
-#if defined(FEATHER_EDGE)
-        float amount = 1.0 - smoothstep(0.8, 0.95, (length(v_worldPosition.xz - u_worldCentre) / MaxDist));
 
+
+
+
+
+#if defined (FEATHER_EDGE)
+        float amount = 1.0 - smoothstep(0.8, 0.95, (length(v_worldPosition.xz - u_worldCentre) / MaxDist));  
+#if defined (ALPHA_FADE)
+        amount *= u_alphaFade;
+#endif
+#endif
+
+#if !defined (FEATHER_EDGE)
+#if defined (ALPHA_FADE)
+        float amount = u_alphaFade;
+#endif
+#endif
+
+
+#if defined (FEATHER_EDGE) || defined(ALPHA_FADE)
         vec2 xy = gl_FragCoord.xy;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
         float alpha = findClosest(x, y, amount);
 
-        if(alpha * FRAG_OUT.a < 0.18)
+        if (alpha * FRAG_OUT.a < 0.18)
         {
             discard;
         }

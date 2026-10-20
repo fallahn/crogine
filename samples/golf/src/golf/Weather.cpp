@@ -483,6 +483,11 @@ void GolfState::createClouds()
             wobble += "#define USE_MRT\n";
         }
 
+        if (m_sharedData.weatherType == WeatherType::Showers)
+        {
+            wobble += "#define ALPHA_FADE\n";
+        }
+
         m_resources.shaders.loadFromString(ShaderID::Cloud, CloudOverheadVertex, CloudOverheadFragment, "#define FEATHER_EDGE\n" + wobble);
         auto& shader = m_resources.shaders.get(ShaderID::Cloud);
 
@@ -494,6 +499,8 @@ void GolfState::createClouds()
         auto matID = m_resources.materials.add(shader);
         auto material = m_resources.materials.get(matID);
 
+        //TODO these don't change during the run so can be
+        //const defines instead.
         material.setProperty("u_skyColourTop", m_skyScene.getSkyboxColours().top);
         material.setProperty("u_skyColourBottom", m_skyScene.getSkyboxColours().middle);
         material.setProperty("u_worldCentre", glm::vec2(MapSizeFloat.x / 2.f, -MapSizeFloat.y / 2.f));
@@ -752,6 +759,8 @@ void GolfState::handleWeatherChange(std::uint8_t v)
         FogShader composite;
         FogShader compositeDOF;
         FogShader minimap;
+        FogShader clouds;
+        FogShader cloudRing;
         const auto skyColour = m_gameScene.getSunlight().getComponent<cro::Sunlight>().getColour().getVec4();
 
         auto* shader = &m_resources.shaders.get(ShaderID::Composite);
@@ -770,6 +779,14 @@ void GolfState::handleWeatherChange(std::uint8_t v)
         minimap.density = shader->getUniformID("u_density");
         minimap.end = shader->getUniformID("u_fogEnd");
 
+        shader = &m_resources.shaders.get(ShaderID::Cloud);
+        clouds.id = shader->getGLHandle();
+        clouds.density = shader->getUniformID("u_alphaFade");
+
+        shader = &m_resources.shaders.get(ShaderID::CloudRing);
+        cloudRing.id = shader->getGLHandle();
+        cloudRing.density = shader->getUniformID("u_alphaFade");
+
         static constexpr float FogAmount = 0.3f;
         struct FogProgress final
         {
@@ -785,7 +802,7 @@ void GolfState::handleWeatherChange(std::uint8_t v)
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().setUserData<FogProgress>(progress);
         entity.getComponent<cro::Callback>().function =
-            [&, composite, compositeDOF, minimap, skyColour, v](cro::Entity e, float dt)
+            [this, composite, compositeDOF, minimap, skyColour, v, clouds, cloudRing](cro::Entity e, float dt)
         {
             const float Speed = dt * 0.5f * FogAmount;
             auto& [current, target] = e.getComponent<cro::Callback>().getUserData<FogProgress>();
@@ -810,6 +827,13 @@ void GolfState::handleWeatherChange(std::uint8_t v)
             glUniform1f(minimap.end, 280.f);
             glUniform1f(minimap.density, current);
             glUniform4f(minimap.colour, skyColour.r, skyColour.g, skyColour.b, skyColour.a);
+
+            const auto cloudAmount = 1.f - (current / FogAmount);
+            glUseProgram(clouds.id);
+            glUniform1f(clouds.density, cloudAmount);
+
+            glUseProgram(cloudRing.id);
+            glUniform1f(cloudRing.density, cloudAmount);
 
             m_waterEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_rainAmount", current);
 

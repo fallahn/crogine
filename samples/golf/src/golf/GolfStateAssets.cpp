@@ -490,6 +490,12 @@ void GolfState::loadMap()
         {
             cloudDefs += "#define USE_MRT\n";
         }
+
+        if (m_sharedData.weatherType == WeatherType::Showers)
+        {
+            cloudDefs += "#define ALPHA_FADE\n";
+        }
+
         m_resources.shaders.loadFromString(ShaderID::CloudRing, CloudOverheadVertex, CloudOverheadFragment, cloudDefs);
         auto& shader = m_resources.shaders.get(ShaderID::CloudRing);
 

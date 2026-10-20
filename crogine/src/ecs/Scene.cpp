@@ -114,7 +114,7 @@ namespace
 
 #if defined(CLOUDMAP)
             //would be nice to avoid sampling below the horizon completely...
-            vec3 cloudmap = FRAG_OUT.rgb * mix(vec3(1.0), TEXTURE_CUBE(u_cloudmap, v_texCoords).rgb, smoothstep(u_stepStart, u_stepEnd + 0.03, amount));
+            vec3 cloudmap = FRAG_OUT.rgb * mix(vec3(1.0), TEXTURE_CUBE(u_cloudmap, v_texCoords).rgb, smoothstep(u_stepStart, u_stepEnd + 0.001, amount));
             //vec3 cloudmap = mix(u_darkColour, TEXTURE_CUBE(u_cloudmap, v_texCoords).rgb, smoothstep(u_stepStart, u_stepEnd + 0.03, amount));
             //hmmm would this be smart enough to not call the sampler when set to 0, assuming the sampler was inline with mix()?
             FRAG_OUT.rgb = mix(FRAG_OUT.rgb, cloudmap, u_cloudAmount); 
