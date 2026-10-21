@@ -1332,6 +1332,7 @@ void GolfState::inflate()
         };
 }
 
+#ifdef BENCHMARK
 void GolfState::dumpBenchmark()
 {
     auto outFile = cro::App::getPreferencePath() / "benchmark";
@@ -1388,3 +1389,4 @@ void GolfState::dumpBenchmark()
 
     m_benchmark.reset();
 }
+#endif

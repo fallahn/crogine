@@ -36,6 +36,10 @@ source distribution.
 
 #include <crogine/detail/OpenGL.hpp>
 
+#ifdef DEBUG_UI
+#include <crogine/gui/Gui.hpp>
+#endif
+
 WeatherAnimationSystem::WeatherAnimationSystem(cro::MessageBus& mb, cro::Scene& skyboxScene)
     : cro::System   (mb, typeid(WeatherAnimationSystem)),
     m_starsAmount   (0.f),
@@ -52,6 +56,16 @@ WeatherAnimationSystem::WeatherAnimationSystem(cro::MessageBus& mb, cro::Scene& 
     requireComponent<WeatherAnimation>();
     requireComponent<cro::Model>();
     requireComponent<cro::Transform>();
+
+#ifdef DEBUG_UI
+    registerWindow([this]() 
+        {
+            ImGui::Begin("Weather");
+            ImGui::Text("Opacity %.2f", m_opacity);
+            ImGui::Text("Target %.2f", m_targetOpacity);
+            ImGui::End();
+        });
+#endif
 }
 
 //public
@@ -135,24 +149,25 @@ void WeatherAnimationSystem::setClearSkyColour(cro::Colour c)
 //private
 void WeatherAnimationSystem::updateSkyColour()
 {
+    const auto opacity = std::clamp(m_opacity, 0.f, 1.f);
     if (m_adaptSkyColour)
     {
         //set the sunlight
-        const auto colour = cro::Colour::White.getVec4() * (((1.f - m_opacity) * 0.45f) + 0.55f);
+        const auto colour = cro::Colour::White.getVec4() * ((std::max(0.f, (1.f - opacity)) * 0.45f) + 0.55f);
 
         getScene()->getSunlight().getComponent<cro::Sunlight>().setColour(colour);
         m_skyboxScene.getSunlight().getComponent<cro::Sunlight>().setColour(colour);
 
         //set sky colour
-        const auto skyColour = glm::mix(m_skyColour, m_overcastColour, m_opacity);
+        const auto skyColour = glm::mix(m_skyColour, m_overcastColour, opacity);
         auto colours = m_skyboxScene.getSkyboxColours();
         colours.top = skyColour;
         m_skyboxScene.setSkyboxColours(colours);
         
-        m_skyboxScene.setCloudmapAmount(0.3f + (0.55f * m_opacity));
+        m_skyboxScene.setCloudmapAmount(0.3f + (0.55f * opacity));
     }
 
-    m_skyboxScene.setStarsAmount(glm::mix(m_starsAmount, 0.f, m_opacity));
+    m_skyboxScene.setStarsAmount(glm::mix(m_starsAmount, 0.f, opacity));
 }
 
 void WeatherAnimationSystem::updateShader()

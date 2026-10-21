@@ -537,3 +537,222 @@ std::vector<cro::Vertex2D> strokeIndicatorFromPoints(const std::vector<glm::vec2
 
     return ret;
 }
+
+cro::Entity loadSkybox(const std::filesystem::path& path, cro::Scene& skyScene, cro::ResourceCollection& resources, SkyboxMaterials& materials)
+{
+    const bool noRain = (materials.weatherType != WeatherType::Rain && materials.weatherType != WeatherType::Snow);
+
+    auto skyTop = noRain || materials.nightTime ? SkyTop : CD32::Colours[CD32::GreyMid];
+    auto skyMid = TextNormalColour;
+    float stars = 0.f;
+    bool loadClouds = noRain;
+
+    cro::ConfigFile cfg;
+
+    struct PropData final
+    {
+        std::string path;
+        glm::vec3 position = glm::vec3(0.f);
+        glm::vec3 scale = glm::vec3(0.f);
+        float rotation = 0.f;
+        bool useSunlight = false;
+    };
+    std::vector<PropData> propModels;
+
+    if (!path.empty()
+        && cfg.loadFromFile(path))
+    {
+        {
+            const auto& props = cfg.getProperties();
+            for (const auto& p : props)
+            {
+                const auto& name = p.getName();
+                if (name == "sky_top"
+                    && (noRain || materials.nightTime))
+                {
+                    skyTop = p.getValue<cro::Colour>();
+                }
+                else if (name == "sky_bottom")
+                {
+                    skyMid = p.getValue<cro::Colour>();
+                }
+                else if (name == "stars"
+                    && noRain)
+                {
+                    stars = p.getValue<float>();
+                }
+                else if (name == "sun_pos")
+                {
+                    materials.requestLensFlare = true;
+                    materials.sunPos = p.getValue<glm::vec3>();
+                }
+                else if (name == "sun_colour")
+                {
+                    materials.sunColour = p.getValue<cro::Colour>();
+                }
+                else if (name == "clouds")
+                {
+                    loadClouds = p.getValue<bool>()
+                        && loadClouds;
+                }
+                else if (name == "water")
+                {
+                    materials.showWater = p.getValue<bool>();
+                }
+            }
+        }
+
+        const auto& objs = cfg.getObjects();
+        for (const auto& obj : objs)
+        {
+            const auto& name = obj.getName();
+            if (name == "prop")
+            {
+                auto& data = propModels.emplace_back();
+                const auto& props = obj.getProperties();
+                for (const auto& p : props)
+                {
+                    const auto& propName = p.getName();
+                    if (propName == "model")
+                    {
+                        data.path = p.getValue<std::string>();
+                    }
+                    else if (propName == "position")
+                    {
+                        data.position = p.getValue<glm::vec3>();
+                    }
+                    else if (propName == "rotation")
+                    {
+                        data.rotation = p.getValue<float>();
+                    }
+                    else if (propName == "scale")
+                    {
+                        data.scale = p.getValue<glm::vec3>();
+                    }
+                    else if (propName == "skylight")
+                    {
+                        data.useSunlight = p.getValue<bool>();
+                    }
+                }
+            }
+        }
+    }
+
+    cro::ModelDefinition md(resources);
+    for (const auto& model : propModels)
+    {
+        if (md.loadFromFile(model.path))
+        {
+            auto entity = skyScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(model.position);
+            entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, model.rotation * cro::Util::Const::degToRad);
+            entity.getComponent<cro::Transform>().setScale(model.scale);
+            entity.setLabel(U8PATH_CAST(cro::FileSystem::getFileName(model.path)));
+            md.createModel(entity);
+
+            std::int32_t matID = -1;
+            if (model.useSunlight
+                && materials.horizonSun != -1)
+            {
+                matID = materials.horizonSun;
+            }
+            else
+            {
+                //might have a moon shader
+                if (!entity.getComponent<cro::Model>().getMaterialData(cro::Mesh::IndexData::Final, 0).customShader)
+                {
+                    matID = materials.horizon;
+                }
+            }
+
+            if (matID > -1)
+            {
+                auto material = resources.materials.get(matID);
+
+                if (md.hasSkeleton() && materials.skinned > -1)
+                {
+                    material = resources.materials.get(materials.skinned);
+                    entity.getComponent<cro::Skeleton>().play(0);
+                }
+
+                for (auto i = 0u; i < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++i)
+                {
+                    if (md.hasTag(i, "glass"))
+                    {
+                        if (materials.glass != -1)
+                        {
+                            auto glassMat = resources.materials.get(materials.glass);
+                            applyMaterialData(md, glassMat, i);
+                            entity.getComponent<cro::Model>().setMaterial(i, glassMat);
+                        }
+                        else
+                        {
+                            LogW << "Model " << model.path << " has glass material but no material available." << std::endl;
+                            applyMaterialData(md, material, i);
+                            entity.getComponent<cro::Model>().setMaterial(i, material);
+                        }
+                    }
+                    else
+                    {
+                        //don't apply this material if a custom one was loaded with the model
+                        if (!entity.getComponent<cro::Model>().getMaterialData(cro::Mesh::IndexData::Final, i).customShader)
+                        {
+                            applyMaterialData(md, material, i);
+                            entity.getComponent<cro::Model>().setMaterial(i, material);
+                        }
+                    }
+                }
+            }
+
+            //add auto rotation if this model is set to > 360
+            if (model.rotation > 360)
+            {
+                float speed = (std::fmod(model.rotation, 360.f) * cro::Util::Const::degToRad) / 4.f;
+
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+                entity.getComponent<cro::Callback>().function =
+                    [speed](cro::Entity e, float dt)
+                    {
+                        auto currSpeed = speed * e.getComponent<cro::Callback>().getUserData<float>();
+                        e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, currSpeed * dt);
+                    };
+            }
+        }
+    }
+
+    skyScene.enableSkybox();
+    skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);
+    skyScene.setStarsAmount(stars);
+
+    //sun colour is only applied in the day time so we can dim it here
+    if (!noRain)
+    {
+        glm::vec4 c = materials.sunColour.getVec4();
+        c *= 0.55f;
+        materials.sunColour = c;
+    }
+
+    cro::Entity cloudEnt;
+    if (loadClouds &&
+        md.loadFromFile(std::filesystem::path("assets/golf/models/skybox/cloud_ring.cmt")))
+    {
+        auto entity = skyScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+
+        const float speed = cro::Util::Const::degToRad / 4.f;
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+        entity.getComponent<cro::Callback>().function =
+            [speed](cro::Entity e, float dt)
+            {
+                auto currSpeed = speed * e.getComponent<cro::Callback>().getUserData<float>();
+                e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, currSpeed * dt);
+            };
+
+        cloudEnt = entity;
+    }
+
+    return cloudEnt;
+}

@@ -54,7 +54,7 @@ source distribution.
 #include <functional>
 #include <memory>
 
-#define DEBUG_UI
+//#define DEBUG_UI
 #ifdef DEBUG_UI
 #include <crogine/gui/GuiClient.hpp>
 #endif

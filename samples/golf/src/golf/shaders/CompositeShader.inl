@@ -122,6 +122,7 @@ VARYING_IN vec4 v_colour;
 
 OUTPUT
 
+//#include FOG_BUFFER
 #include FOG_COLOUR
 #if defined (LIGHT_COLOUR)
 #include BAYER_MATRIX

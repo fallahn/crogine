@@ -86,6 +86,7 @@ static inline const std::string MinimapFragment = R"(
         const float scale = 2.0;
         const float invScale = 0.5;
 
+//#include FOG_BUFFER
 #include FOG_COLOUR
 
 #if defined (LIGHT_COLOUR)

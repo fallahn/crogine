@@ -264,6 +264,7 @@ private:
 
     }m_targetShader;
 
+    //cro::UniformBuffer<float> m_fogBuffer;
     cro::UniformBuffer<float> m_scaleBuffer;
     cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
     cro::UniformBuffer<WindData> m_windBuffer;
@@ -979,6 +980,7 @@ private:
         std::string awardStatus;
     }m_achievementDebug;
 
+#ifdef BENCHMARK
     struct Benchmark final
     {
         float minRate = std::numeric_limits<float>::max();
@@ -1022,4 +1024,5 @@ private:
         cro::HiResTimer m_timer;
     }m_benchmark;
     void dumpBenchmark();
+#endif
 };

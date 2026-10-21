@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -57,7 +57,8 @@ void WeatherDirector::handleMessage(const cro::Message&)
 
 void WeatherDirector::process(float)
 {
-    if (m_timer.elapsed() > Times[m_timeIndex])
+    static constexpr auto temp = cro::seconds(8.f);
+    if (m_timer.elapsed() > Times[m_timeIndex]/*temp*/)
     {
         m_timer.restart();
         m_timeIndex = (m_timeIndex + 1) % Times.size();

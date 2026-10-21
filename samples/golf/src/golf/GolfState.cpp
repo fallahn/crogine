@@ -202,6 +202,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_allowAchievements     (false),
     m_deferredGameState     (-1),
     m_lightVolumeDefinition (m_resources),
+    //m_fogBuffer             ("FogBuffer"),
     m_scaleBuffer           ("PixelScale"),
     m_resolutionBuffer      ("ScaledResolution"),
     m_windBuffer            ("WindValues"),
@@ -3540,8 +3541,11 @@ void GolfState::preRender()
     //updates the shadow maps
     m_gameScene.preRender();
 
+#ifdef BENCHMARK
     m_benchmark.update();
+#endif
 
+    //m_fogBuffer.bind();
     m_scaleBuffer.bind();
     m_resolutionBuffer.bind();
     m_windBuffer.bind();
@@ -3717,6 +3721,8 @@ void GolfState::preRender()
 
 void GolfState::render()
 {
+    //m_fogBuffer.bind();
+
     //m_uiScene.setActiveCamera(uiCam);
     m_uiScene.render();
 }
@@ -6924,12 +6930,13 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
         }
     }
 
-
+#ifdef BENCHMARK
     if (hole != m_currentHole
         && m_sharedData.logBenchmarks)
     {
         dumpBenchmark();
     }
+#endif
 
 
     //if this is the final hole repeated then we're in skins sudden death

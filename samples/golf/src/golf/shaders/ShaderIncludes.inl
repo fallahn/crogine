@@ -68,6 +68,14 @@ static inline const std::string ScaleBuffer = R"(
         float u_pixelScale;
     };)";
 
+
+//#include FOG_BUFFER
+static inline const std::string FogBuffer = R"(
+    layout (std140) uniform FogBuffer
+    {
+        uniform float u_density;
+    };)";
+
 /*
 function based on example by martinsh.blogspot.com
 8x8 Bayer ordered dithering
@@ -261,6 +269,9 @@ static inline const std::string OutputLocation = R"(
 
 )";
 
+
+//requires #include FOG_BUFFER before
+//#include FOG_COLOUR
 static inline const std::string FogColour = R"(
 const float ZNear = 0.1;
 #if !defined(ZFAR)
@@ -343,6 +354,7 @@ static inline const std::unordered_map<std::string, const char*> IncludeMappings
     std::make_pair("WIND_BUFFER", WindBuffer.c_str()),
     std::make_pair("RESOLUTION_BUFFER", ResolutionBuffer.c_str()),
     std::make_pair("SCALE_BUFFER", ScaleBuffer.c_str()),
+    std::make_pair("FOG_BUFFER", FogBuffer.c_str()),
     std::make_pair("BAYER_MATRIX", BayerMatrix.c_str()),
     std::make_pair("RANDOM", Random.c_str()),
     std::make_pair("HSV", HSV.c_str()),

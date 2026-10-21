@@ -432,23 +432,24 @@ void GolfState::createWeather(std::int32_t weatherType)
 
 void GolfState::setFog(float density)
 {
+    //m_fogBuffer.setData(density);
     const auto skyColour = m_gameScene.getSunlight().getComponent<cro::Sunlight>().getColour().getVec4();
     
     auto* shader = &m_resources.shaders.get(ShaderID::Composite);
     glUseProgram(shader->getGLHandle());
-    glUniform1f(shader->getUniformID("u_density"), density);
     glUniform4f(shader->getUniformID("u_lightColour"), skyColour.r, skyColour.g, skyColour.b, skyColour.a);
+    glUniform1f(shader->getUniformID("u_density"), density);
 
     shader = &m_resources.shaders.get(ShaderID::CompositeDOF);
     glUseProgram(shader->getGLHandle());
-    glUniform1f(shader->getUniformID("u_density"), density);
     glUniform4f(shader->getUniformID("u_lightColour"), skyColour.r, skyColour.g, skyColour.b, skyColour.a);
+    glUniform1f(shader->getUniformID("u_density"), density);
 
     shader = &m_resources.shaders.get(ShaderID::Minimap);
     glUseProgram(shader->getGLHandle());
     glUniform1f(shader->getUniformID("u_fogEnd"), 280.f);
-    glUniform1f(shader->getUniformID("u_density"), density);
     glUniform4f(shader->getUniformID("u_lightColour"), skyColour.r, skyColour.g, skyColour.b, skyColour.a);
+    glUniform1f(shader->getUniformID("u_density"), density);
 }
 
 void GolfState::createClouds()
@@ -765,20 +766,27 @@ void GolfState::handleWeatherChange(std::uint8_t v)
 
         auto* shader = &m_resources.shaders.get(ShaderID::Composite);
         composite.id = shader->getGLHandle();
-        composite.colour = shader->getUniformID("u_lightColour");
         composite.density = shader->getUniformID("u_density");
+        composite.colour = shader->getUniformID("u_lightColour");
 
         shader = &m_resources.shaders.get(ShaderID::CompositeDOF);
         compositeDOF.id = shader->getGLHandle();
-        compositeDOF.colour = shader->getUniformID("u_lightColour");
         compositeDOF.density = shader->getUniformID("u_density");
+        compositeDOF.colour = shader->getUniformID("u_lightColour");
 
         shader = &m_resources.shaders.get(ShaderID::Minimap);
         minimap.id = shader->getGLHandle();
-        minimap.colour = shader->getUniformID("u_lightColour");
         minimap.density = shader->getUniformID("u_density");
+        minimap.colour = shader->getUniformID("u_lightColour");
         minimap.end = shader->getUniformID("u_fogEnd");
 
+
+        /*shader = &m_resources.shaders.get(ShaderID::Horizon);
+        FogShader sun;
+        sun.id = shader->getGLHandle();
+        sun.density = shader->getUniformID("u_density");*/
+
+        //TODO correctly name these
         shader = &m_resources.shaders.get(ShaderID::Cloud);
         clouds.id = shader->getGLHandle();
         clouds.density = shader->getUniformID("u_alphaFade");
@@ -802,7 +810,7 @@ void GolfState::handleWeatherChange(std::uint8_t v)
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().setUserData<FogProgress>(progress);
         entity.getComponent<cro::Callback>().function =
-            [this, composite, compositeDOF, minimap, skyColour, v, clouds, cloudRing](cro::Entity e, float dt)
+            [this, composite, compositeDOF, minimap, skyColour, v, clouds, cloudRing/*, sun*/](cro::Entity e, float dt)
         {
             const float Speed = dt * 0.5f * FogAmount;
             auto& [current, target] = e.getComponent<cro::Callback>().getUserData<FogProgress>();
@@ -815,18 +823,23 @@ void GolfState::handleWeatherChange(std::uint8_t v)
                 current = std::min(target, current + Speed);
             }
 
+            //m_fogBuffer.setData(current);
+
+            /*glUseProgram(sun.id);
+            glUniform1f(sun.density, current);*/
+
             glUseProgram(composite.id);
-            glUniform1f(composite.density, current);
             glUniform4f(composite.colour, skyColour.r, skyColour.g, skyColour.b, skyColour.a);
+            glUniform1f(composite.density, current);
 
             glUseProgram(compositeDOF.id);
-            glUniform1f(compositeDOF.density, current);
             glUniform4f(compositeDOF.colour, skyColour.r, skyColour.g, skyColour.b, skyColour.a);
+            glUniform1f(compositeDOF.density, current);
 
             glUseProgram(minimap.id);
             glUniform1f(minimap.end, 280.f);
-            glUniform1f(minimap.density, current);
             glUniform4f(minimap.colour, skyColour.r, skyColour.g, skyColour.b, skyColour.a);
+            glUniform1f(minimap.density, current);
 
             const auto cloudAmount = 1.f - (current / FogAmount);
             glUseProgram(clouds.id);

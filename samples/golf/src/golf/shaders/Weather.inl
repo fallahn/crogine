@@ -47,6 +47,7 @@ uniform sampler2D u_diffuseMap;
 
 uniform mat2 u_rotation = mat2(1.0);
 uniform vec3 u_lightDir = vec3(0.0, 0.0, 1.0);
+//#include FOG_BUFFER //TODO doesn't work for some reason.
 
 VARYING_IN vec2 v_texCoord0;
 VARYING_IN vec4 v_colour;
@@ -82,6 +83,7 @@ void main()
     coord += 0.5;
 
     vec4 colour = TEXTURE(u_diffuseMap, coord);
+    //colour.rgb *= (1.f - u_density); //darkens with fog
 
     vec3 normal = sphericalNormal(coord);
     float amount = smoothstep(-0.1, 0.1, dot(normal, DIRECTION));

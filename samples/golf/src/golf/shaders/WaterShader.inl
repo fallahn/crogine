@@ -272,6 +272,9 @@ uniform sampler2DArray u_depthMap;
 
     uniform sampler2D u_diffuseMap;
     uniform vec4 u_lightColour = vec4(1.0);
+    //including FOG_BUFFER doesn't work
+    //uniform float u_density = 0.0;
+//#include FOG_BUFFER
 
     VARYING_IN vec4 v_colour;
     VARYING_IN vec2 v_texCoord;
@@ -284,6 +287,7 @@ uniform sampler2DArray u_depthMap;
         vec4 colour = TEXTURE(u_diffuseMap, v_texCoord) * u_lightColour;
 #else
         vec4 colour = TEXTURE(u_diffuseMap, v_texCoord);
+        //colour.rgb *= (1.0 - u_density); //use the fog density to dim items - TODO for some reason the value always reads as >= 1
 #endif
         FRAG_OUT = vec4(mix(WaterColour, colour.rgb, v_colour.g), 1.0);
 #if defined(USE_MRT)

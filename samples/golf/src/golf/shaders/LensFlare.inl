@@ -44,6 +44,7 @@ OUTPUT
 
 const float Cutoff = 0.3;
 
+//#include FOG_BUFFER
 #include FOG_COLOUR
 
 void main()

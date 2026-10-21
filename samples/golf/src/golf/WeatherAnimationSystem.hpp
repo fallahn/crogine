@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -35,12 +35,20 @@ source distribution.
 
 #include <array>
 
+//#define DEBUG_UI
+#ifdef DEBUG_UI
+#include <crogine/gui/GuiClient.hpp>
+#endif
+
 struct WeatherAnimation final
 {
     glm::vec3 basePosition = glm::vec3(0.f);
 };
 
 class WeatherAnimationSystem final : public cro::System 
+#ifdef DEBUG_UI
+    , public cro::GuiClient
+#endif
 {
 public:
     static constexpr std::array<float, 3u> AreaStart = { -20.f, 0.f, -20.f };

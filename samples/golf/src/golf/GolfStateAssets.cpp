@@ -554,6 +554,10 @@ void GolfState::loadMap()
             const auto& shader = m_resources.shaders.get(ShaderID::LensFlare);
             m_lensFlare.shaderID = shader.getGLHandle();
             m_lensFlare.positionUniform = shader.getUniformID("u_sourcePosition");
+
+            //doesn't actually use fogging, but has the include
+            //for the depth-calc *sigh* - needs refactoring.
+            //m_fogBuffer.addShader(shader);
         }
     }
 
@@ -2162,10 +2166,11 @@ void GolfState::loadMaterials()
     earthDefs += "#define ROTATION mat2(vec2(" + std::to_string(rot.y) + "," + std::to_string(-rot.x) + "), vec2(" + std::to_string(rot.x) + "," + std::to_string(rot.y) + "))\n";
 
     const auto lazyLoadEarth =
-        [&, earthDefs](cro::ShaderResource& shaders)
+        [this, earthDefs](cro::ShaderResource& shaders)
         {
             shaders.loadFromString(ShaderID::Earth,
                 cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), MoonFrag, "#define TEXTURED\n#define VERTEX_COLOUR\n" + earthDefs);
+            //m_fogBuffer.addShader(shaders.get(ShaderID::Earth));
         };
     m_resources.shaders.addLazyLoader(ShaderID::Earth, lazyLoadEarth);
     m_resources.shaders.mapStringID("earth", ShaderID::Earth);
@@ -2178,10 +2183,11 @@ void GolfState::loadMaterials()
         moonDefs += "#define ROTATION mat2(vec2(" + std::to_string(rot.y) + "," + std::to_string(-rot.x) + "), vec2(" + std::to_string(rot.x) + "," + std::to_string(rot.y) + "))\n";
 
         const auto lazyLoadMoon =
-            [&, moonDefs](cro::ShaderResource& shaders)
+            [this, moonDefs](cro::ShaderResource& shaders)
             {
                 shaders.loadFromString(ShaderID::Moon,
                     cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), MoonFrag, "#define TEXTURED\n#define VERTEX_COLOUR\n" + moonDefs);
+                //m_fogBuffer.addShader(shaders.get(ShaderID::Moon));
             };
         m_resources.shaders.addLazyLoader(ShaderID::Moon, lazyLoadMoon);
         m_resources.shaders.mapStringID("moon", ShaderID::Moon);
@@ -2635,11 +2641,13 @@ void GolfState::loadMaterials()
     m_resources.shaders.loadFromString(ShaderID::Composite, CompositeVert, CompositeFrag, "#define ZFAR 320.0\n" + defines);
     shader = &m_resources.shaders.get(ShaderID::Composite);
     m_postProcesses[PostID::Composite].shader = shader;
+    //m_fogBuffer.addShader(*shader);
     //depth uniform is set after creating the UI once we know the render texture is created
 
     defines += "#define DOF\n";
     m_resources.shaders.loadFromString(ShaderID::CompositeDOF, CompositeVert, CompositeFrag, "#define ZFAR 320.0\n" + defines);
     shader = &m_resources.shaders.get(ShaderID::CompositeDOF);
+    //m_fogBuffer.addShader(*shader);
     m_postProcesses[PostID::CompositeDOF].shader = shader;
 
 
@@ -2683,10 +2691,12 @@ void GolfState::loadMaterials()
     shader = &m_resources.shaders.get(ShaderID::Minimap);
     m_scaleBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
+    //m_fogBuffer.addShader(*shader);
 
     //minimap - course view
     m_resources.shaders.loadFromString(ShaderID::MinimapView, MinimapViewVertex, MinimapViewFragment);
     shader = &m_resources.shaders.get(ShaderID::MinimapView);
+    //m_fogBuffer.addShader(*shader);
     //m_minimapZoom.shaderID = shader->getGLHandle();
     //m_minimapZoom.matrixUniformID = shader->getUniformID("u_coordMatrix");
 
@@ -2762,12 +2772,6 @@ void GolfState::loadMaterials()
     }
 
  
-    //std::string horizonDefs;
-    //if (m_sharedData.nightTime)
-    //{
-    //    horizonDefs = "#define USE_MRT\n";
-    //}
-
     //this version is affected by the sunlight colour of the scene
     m_resources.shaders.loadFromString(ShaderID::HorizonSun, HorizonVert, HorizonFrag, "#define SUNLIGHT\n" + mrt);
     shader = &m_resources.shaders.get(ShaderID::HorizonSun);
@@ -2775,6 +2779,7 @@ void GolfState::loadMaterials()
 
     m_resources.shaders.loadFromString(ShaderID::Horizon, HorizonVert, HorizonFrag, mrt);
     shader = &m_resources.shaders.get(ShaderID::Horizon);
+    //m_fogBuffer.addShader(*shader); //dims items like the sun with fog - except it just doesn't work for some reason
     m_materialIDs[MaterialID::Horizon] = m_resources.materials.add(*shader);
 
     //mmmm... bacon
@@ -2787,6 +2792,8 @@ void GolfState::loadMaterials()
     m_materialIDs[MaterialID::Target] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Target));
     m_resources.materials.get(m_materialIDs[MaterialID::Target]).blendMode = cro::Material::BlendMode::Additive;
     m_resources.materials.get(m_materialIDs[MaterialID::Target]).doubleSided = true;
+
+    //m_fogBuffer.setData(0.f);
 }
 
 void GolfState::loadSprites()

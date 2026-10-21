@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2023
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -215,7 +215,7 @@ bool ProfileDB::insertPersonalBestRecord(const PersonalBestRecord& record)
 {
     if (record.hole > 17 || record.course > MaxCourse)
     {
-        LogE << "Could not insert personal best - hole or course index out of range." << std::endl;
+        LogW << "Could not insert personal best - hole or course index out of range, most likely DLC" << std::endl;
         return false;
     }
 
