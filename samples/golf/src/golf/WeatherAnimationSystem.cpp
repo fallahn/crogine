@@ -153,8 +153,11 @@ void WeatherAnimationSystem::updateSkyColour()
     if (m_adaptSkyColour)
     {
         //set the sunlight
-        const auto colour = cro::Colour::White.getVec4() * ((std::max(0.f, (1.f - opacity)) * 0.45f) + 0.55f);
+        //const auto colour = cro::Colour::White.getVec4() * ((std::max(0.f, (1.f - opacity)) * 0.45f) + 0.55f);
+        glm::vec4 colour(std::clamp(((std::max(0.f, (1.f - opacity)) * 0.45f) + 0.55f), 0.55f, 1.f));
 
+        //TODO for some reason we get a slight dip in brightness when
+        //opacity starts to drop as if it was > 1 - but the numbers all check out OK
         getScene()->getSunlight().getComponent<cro::Sunlight>().setColour(colour);
         m_skyboxScene.getSunlight().getComponent<cro::Sunlight>().setColour(colour);
 
@@ -164,7 +167,7 @@ void WeatherAnimationSystem::updateSkyColour()
         colours.top = skyColour;
         m_skyboxScene.setSkyboxColours(colours);
         
-        m_skyboxScene.setCloudmapAmount(0.3f + (0.55f * opacity));
+        m_skyboxScene.setCloudmapAmount(0.35f + (0.55f * opacity));
     }
 
     m_skyboxScene.setStarsAmount(glm::mix(m_starsAmount, 0.f, opacity));

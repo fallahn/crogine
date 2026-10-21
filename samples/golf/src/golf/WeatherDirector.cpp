@@ -58,7 +58,8 @@ void WeatherDirector::handleMessage(const cro::Message&)
 void WeatherDirector::process(float)
 {
     static constexpr auto temp = cro::seconds(8.f);
-    if (m_timer.elapsed() > Times[m_timeIndex]/*temp*/)
+    //if (m_timer.elapsed() > temp)
+    if (m_timer.elapsed() > Times[m_timeIndex])
     {
         m_timer.restart();
         m_timeIndex = (m_timeIndex + 1) % Times.size();
