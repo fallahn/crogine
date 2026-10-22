@@ -1664,7 +1664,7 @@ void MenuState::LobbyMenu::createCourseTab()
                 }
 
             };
-        item->labels = { "All", "Front", " Back" };
+        item->labels = { "All", "Front", "Back" };
         item->selectedIndex = m_sharedData.holeCount;
 
 
