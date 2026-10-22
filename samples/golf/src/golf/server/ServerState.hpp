@@ -114,7 +114,7 @@ namespace sv
         std::atomic_int32_t leagueID = 0;
 
         std::int32_t bigBalls = 0;
-        //std::int32_t noAssist = 0;
+        std::int32_t noAssist = 0;
 
         std::mutex mutex;
         std::string customTournament;

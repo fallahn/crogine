@@ -142,11 +142,11 @@ void LobbyState::netEvent(const net::NetEvent& evt)
                 {
                     m_sharedData.bigBalls = value;
                 }
-                //this is up to the client...
-                /*else if (rule == RuleMod::NoAssist)
+                //this is up to the client, but we track it here to broadcast new joiners
+                else if (rule == RuleMod::NoAssist)
                 {
                     m_sharedData.noAssist = value;
-                }*/
+                }
 
                 m_sharedData.host.broadcastPacket(PacketID::RuleMod, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
@@ -413,6 +413,21 @@ void LobbyState::broadcastRules()
     m_sharedData.host.broadcastPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.host.broadcastPacket(PacketID::FastCPU, m_sharedData.fastCPU, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.host.broadcastPacket(PacketID::TeamMode, m_sharedData.teamMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    //TODO if we stored this in an array it'd be simpler to iterate over...
+    const auto sendMod = [this](std::uint8_t mod, bool enabled)
+        {
+            std::uint16_t data = (mod << 8);
+            if (enabled)
+            {
+                data |= std::uint8_t(1);
+            }
+            return data;
+        };
+    m_sharedData.host.broadcastPacket(PacketID::RuleMod, sendMod(RuleMod::Snek, m_sharedData.snekEnabled), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.host.broadcastPacket(PacketID::RuleMod, sendMod(RuleMod::BigBalls, m_sharedData.bigBalls), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.host.broadcastPacket(PacketID::RuleMod, sendMod(RuleMod::NoAssist, m_sharedData.noAssist), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
 
 
     //check for can and do a delayed spawn
