@@ -1480,6 +1480,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_P:
             showOptions();
             break;
+        break;
         /*case SDLK_F11:
             cro::Console::doCommand("al_config");
             break;*/
@@ -3986,7 +3987,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 #ifdef NEW_LOBBY
             m_lobbyMenu.m_ruleMods[ruleType] = value;
             m_lobbyDirty = true;
-#endif
+#else
             switch (ruleType)
             {
             default: break;
@@ -4022,6 +4023,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 break;
             }
             playMessageSound();
+#endif
 
             WebSock::broadcastPacket(evt.packet.getDataRaw());
         }

@@ -536,7 +536,7 @@ void Console::draw()
                         maxCappedFps = 0;
                     }
                     
-                    ImGui::Checkbox("Show Stat Overlay", &m_showOverlay);
+                    ImGui::Checkbox("Show Stat Overlay (Ctrl+F1)", &m_showOverlay);
                     static const std::vector<std::string> Corners = { "Top Left", "Top Right", "Bottom Left", "Bottom Right" };
                     ImGui::SetNextItemWidth(120.f);
                     if (ImGui::BeginCombo("Position", Corners[m_overlayCorner].c_str()))
@@ -558,7 +558,7 @@ void Console::draw()
                     }
                     static const std::vector<std::string> Levels = { "0","1","2" };
                     ImGui::SetNextItemWidth(120.f);
-                    if (ImGui::BeginCombo("Detail Level", Levels[m_overlayLevel].c_str()))
+                    if (ImGui::BeginCombo("Detail Level (Ctrl+1 - 3)", Levels[m_overlayLevel].c_str()))
                     {
                         for (auto i = 0u; i < Levels.size(); ++i)
                         {

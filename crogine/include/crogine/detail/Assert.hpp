@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -31,14 +31,50 @@ source distribution.
 
 #pragma once
 
+#include <crogine/core/FileSystem.hpp>
 #include <crogine/core/Log.hpp>
 
-#include <sstream>
 #include <cassert>
+#include <source_location>
+#include <sstream>
 
 #ifdef _MSC_VER
 #define __func__ __FUNCTION__
 #endif //_MSC_VER
+
+//provide this as a function parameter to print the calling function
+//then on an assert or error log caller.function_name()
+#if defined CRO_CALLER_ID_ || defined CRO_DEBUG_
+
+#ifdef _MSC_VER
+#pragma message(": Warning <CALLER_ID active> : undefine CRO_CALLER_ID_ in release builds")
+#endif
+
+static inline void printCaller(const std::source_location& caller, bool showMessageBox, std::source_location thrower = std::source_location::current())
+{
+    std::stringstream ss;
+    ss << "Assertion failed in " << thrower.function_name() << "\n called from: " 
+        << cro::FileSystem::getFileName(caller.file_name()) << ", line " << caller.line() << ", col " << caller.column() << "\n"
+        << caller.function_name();
+    const auto str = ss.str();
+    LogE << str << std::endl;
+    if (showMessageBox)
+    {
+        cro::FileSystem::showMessageBox("Error", str);
+    }
+}
+
+//function parameter for prototypes
+#define CALLER_ID std::source_location caller = std::source_location::current()
+//function paramter for definition
+#define CALLER std::source_location caller
+//assertion - condition, show message box
+#define CALLER_ASSERT(x, y) if(!x) printCaller(caller, y);
+#else
+#define CALLER_ID
+#define CALLER
+#define CALLER_ASSERT(x, y)
+#endif
 
 #ifdef CRO_DEBUG_
 #define CRO_ASSERT(condition, message) assert(condition)

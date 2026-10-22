@@ -913,24 +913,58 @@ void App::handleEvents()
             }
             break;
         case SDL_EVENT_KEY_UP:
-            if (evt.key.scancode == SDL_SCANCODE_GRAVE)
+            switch (evt.key.scancode)
             {
+            default: break;
+            case SDL_SCANCODE_F1:
+                if (evt.key.mod & SDL_KMOD_CTRL)
+                {
+                    Console::m_showOverlay = !Console::m_showOverlay;
+                    saveSettings();
+                }
+                break;
+            case SDL_SCANCODE_1:
+                if (evt.key.mod & SDL_KMOD_CTRL)
+                {
+                    Console::m_overlayLevel = 0;
+                    saveSettings();
+                }
+                break;
+            case SDL_SCANCODE_2:
+                if (evt.key.mod & SDL_KMOD_CTRL)
+                {
+                    Console::m_overlayLevel = 1;
+                    saveSettings();
+                }
+                break;
+            case SDL_SCANCODE_3:
+                if (evt.key.mod & SDL_KMOD_CTRL)
+                {
+                    Console::m_overlayLevel = 2;
+                    saveSettings();
+                }
+                break;
+            case SDL_SCANCODE_GRAVE:
                 Console::show();
                 if (!Console::isVisible())
                 {
                     saveSettings();
                 }
-                return;
+                //return;
+                break;
             }
                 
             switch (evt.key.key)
             {
             default: break;
             case SDLK_F1:
-                Console::show();
-                if (!Console::isVisible())
+                if ((evt.key.mod & SDL_KMOD_CTRL) == 0)
                 {
-                    saveSettings();
+                    Console::show();
+                    if (!Console::isVisible())
+                    {
+                        saveSettings();
+                    }
                 }
                 break;
 #ifdef __APPLE__

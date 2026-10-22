@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -40,9 +40,9 @@ source distribution.
 #include <crogine/ecs/Component.hpp>
 
 #include <bitset>
-#include <vector>
 #include <deque>
 #include <memory>
+#include <vector>
 
 namespace cro
 {  
@@ -106,10 +106,10 @@ namespace cro
         \brief Returns a reference to the component if it exists
         */
         template <typename T>
-        T& getComponent();
+        T& getComponent(CALLER_ID);
 
         template <typename T>
-        const T& getComponent() const;
+        const T& getComponent(CALLER_ID) const;
 
         /*!
         \brief Returns a reference to the CompnentMask associated with this entity

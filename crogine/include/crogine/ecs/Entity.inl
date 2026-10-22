@@ -51,16 +51,22 @@ bool Entity::hasComponent() const
 }
 
 template <typename T>
-T& Entity::getComponent()
+T& Entity::getComponent(CALLER)
 {
+    CALLER_ASSERT(isValid(), true);
+    CALLER_ASSERT(hasComponent<T>(), true);
+
     CRO_ASSERT(isValid(), "Not a valid Entity");
     CRO_ASSERT(hasComponent<T>(), std::string(typeid(T).name()) + ": Component does not exist!");
     return m_entityManager->getComponent<T>(*this);
 }
 
 template <typename T>
-const T& Entity::getComponent() const
+const T& Entity::getComponent(CALLER) const
 {
+    CALLER_ASSERT(isValid(), true);
+    CALLER_ASSERT(hasComponent<T>(), true);
+
     CRO_ASSERT(isValid(), "Not a valid Entity");
     CRO_ASSERT(hasComponent<T>(), std::string(typeid(T).name()) + ": Component does not exist!");
     return m_entityManager->getComponent<T>(*this);
