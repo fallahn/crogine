@@ -44,7 +44,7 @@ source distribution.
 class PlayerAvatar final : public ProfileTexture
 {
 public:
-    explicit PlayerAvatar(const std::filesystem::path&);
+    explicit PlayerAvatar(const struct AvatarInfo&);
 
     cro::Entity previewModel;
 

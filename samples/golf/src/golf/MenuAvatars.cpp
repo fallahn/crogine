@@ -121,7 +121,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         auto& pf = m_profileData.playerProfiles.emplace_back();
         pf.playerData =  m_sharedData.localConnectionData.playerData[0];
         pf.loadout.read(pf.playerData.profileID);
-        m_profileTextures.emplace_back(m_sharedData.avatarInfo[indexFromAvatarID(m_sharedData.localConnectionData.playerData[0].skinID)].texturePath);
+        m_profileTextures.emplace_back(m_sharedData.avatarInfo[indexFromAvatarID(m_sharedData.localConnectionData.playerData[0].skinID)]);
         updateProfileTextures(0, m_profileTextures.size());
     }
     else
@@ -1028,7 +1028,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
                     //create profile texture
                     auto avtIdx = indexFromAvatarID(profile.skinID);
-                    m_profileTextures.emplace_back(m_sharedData.avatarInfo[avtIdx].texturePath);
+                    m_profileTextures.emplace_back(m_sharedData.avatarInfo[avtIdx]);
                     updateProfileTextures(m_profileTextures.size() - 1, 1);
 
                     //set the AV audio as the default voice

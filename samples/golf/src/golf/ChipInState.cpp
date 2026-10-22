@@ -2380,7 +2380,7 @@ void ChipInState::createPlayer()
     const auto indexFromSkinID = [&](std::uint32_t skinID)->std::size_t
     {
         auto result = std::find_if(m_sharedData.avatarInfo.begin(), m_sharedData.avatarInfo.end(),
-            [skinID](const SharedStateData::AvatarInfo& ai)
+            [skinID](const AvatarInfo& ai)
             {
                 return skinID == ai.uid;
             });
@@ -2499,7 +2499,7 @@ void ChipInState::createPlayer()
 
     auto idx = indexFromSkinID(playerData.skinID);
 
-    ProfileTexture av(m_sharedData.avatarInfo[idx].texturePath);
+    ProfileTexture av(m_sharedData.avatarInfo[idx]);
     for (auto j = 0u; j < playerData.avatarFlags.size(); ++j)
     {
         av.setColour(pc::ColourKey::Index(j), playerData.avatarFlags[j]);

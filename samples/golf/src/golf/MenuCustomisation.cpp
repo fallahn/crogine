@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -754,7 +754,7 @@ void MenuState::parseAvatarDirectory()
     {
         for (auto i = start; i < m_sharedData.avatarInfo.size(); ++i)
         {
-            m_sharedData.avatarInfo[i].type = SharedStateData::AvatarInfo::Unlock;
+            m_sharedData.avatarInfo[i].type = AvatarInfo::Unlock;
         }
     }
     start = m_sharedData.avatarInfo.size();
@@ -788,7 +788,7 @@ void MenuState::parseAvatarDirectory()
     {
         for (auto i = start; i < m_sharedData.avatarInfo.size(); ++i)
         {
-            m_sharedData.avatarInfo[i].type = SharedStateData::AvatarInfo::Custom;
+            m_sharedData.avatarInfo[i].type = AvatarInfo::Custom;
         }
     }
 
@@ -1067,7 +1067,7 @@ void MenuState::parseAvatarDirectory()
             profile.playerData.ballID = 0;
         }
 
-        m_profileTextures.emplace_back(m_sharedData.avatarInfo[indexFromAvatarID(profile.playerData.skinID)].texturePath);
+        m_profileTextures.emplace_back(m_sharedData.avatarInfo[indexFromAvatarID(profile.playerData.skinID)]);
 
         if (!profile.playerData.mugshot.empty())
         {
@@ -1094,7 +1094,7 @@ void MenuState::processAvatarList(bool locked, const std::vector<std::filesystem
             cro::ConfigFile cfg;
             if (cfg.loadFromFile(searchPath / file, relative))
             {
-                SharedStateData::AvatarInfo info;
+                AvatarInfo info;
 
                 const auto& props = cfg.getProperties();
                 for (const auto& prop : props)
@@ -1131,6 +1131,10 @@ void MenuState::processAvatarList(bool locked, const std::vector<std::filesystem
                     {
                         info.uid = prop.getValue<std::uint32_t>();
                     }
+                    else if (name == "colour_swap")
+                    {
+                        info.allowColourSwap = prop.getValue<bool>();
+                    }
                 }
 
                 if (!info.modelPath.empty())
@@ -1148,7 +1152,7 @@ void MenuState::processAvatarList(bool locked, const std::vector<std::filesystem
 
                     //check uid doesn't exist
                     auto result = std::find_if(m_sharedData.avatarInfo.begin(), m_sharedData.avatarInfo.end(),
-                        [&info](const SharedStateData::AvatarInfo& i)
+                        [&info](const AvatarInfo& i)
                         {
                             return info.uid == i.uid;
                         });
@@ -1158,7 +1162,7 @@ void MenuState::processAvatarList(bool locked, const std::vector<std::filesystem
                         info.workshopID = findWorkshopID(U8PATH_CAST(searchPath));
                         info.locked = locked;
                         m_sharedData.avatarInfo.push_back(info);
-                        m_playerAvatars.emplace_back(info.texturePath);
+                        m_playerAvatars.emplace_back(info);
                     }
                     else
                     {
@@ -1309,7 +1313,7 @@ void MenuState::createAvatarScene()
     m_sharedData.avatarInfo.erase(std::remove_if(
         m_sharedData.avatarInfo.begin(),
         m_sharedData.avatarInfo.end(),
-        [](const SharedStateData::AvatarInfo& ai)
+        [](const AvatarInfo& ai)
         {
             return ai.modelPath.empty();
         }),
@@ -1398,7 +1402,7 @@ void MenuState::createAvatarScene()
 std::int32_t MenuState::indexFromAvatarID(std::uint32_t id)
 {
     auto avatar = std::find_if(m_sharedData.avatarInfo.begin(), m_sharedData.avatarInfo.end(),
-        [id](const SharedStateData::AvatarInfo& info)
+        [id](const AvatarInfo& info)
         {
             return info.uid == id;
         });
@@ -1503,7 +1507,7 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
             LogI << "Installed remote avatar" << std::endl;
             for (auto i = start; i < m_sharedData.avatarInfo.size(); ++i)
             {
-                m_sharedData.avatarInfo[i].type = SharedStateData::AvatarInfo::Custom;
+                m_sharedData.avatarInfo[i].type = AvatarInfo::Custom;
             }
         }
         else

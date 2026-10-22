@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -27,6 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include "AvatarInfo.hpp"
 #include "PlayerAvatar.hpp"
 
 #include <crogine/graphics/Colour.hpp>
@@ -36,8 +37,8 @@ namespace
 
 }
 
-PlayerAvatar::PlayerAvatar(const std::filesystem::path& path)
-    : ProfileTexture(path)
+PlayerAvatar::PlayerAvatar(const AvatarInfo& info)
+    : ProfileTexture(info)
 {
  
 }

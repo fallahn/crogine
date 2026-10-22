@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include "AvatarInfo.hpp"
 #include "InputBinding.hpp"
 #include "Networking.hpp"
 #include "CommonConsts.hpp"
@@ -232,20 +233,6 @@ struct SharedStateData final
     std::vector<BallInfo> ballInfo;
 
     //available avatar models mapped to ID
-    struct AvatarInfo final
-    {
-        enum
-        {
-            Regular, Unlock, Custom
-        }type = Regular;
-
-        std::uint32_t uid = 0;
-        std::filesystem::path modelPath;
-        std::filesystem::path texturePath;
-        std::string audioscape;
-        std::uint64_t workshopID = 0;
-        bool locked = false;
-    };
     std::vector<AvatarInfo> avatarInfo;
 
     //available hair models mapped to ID

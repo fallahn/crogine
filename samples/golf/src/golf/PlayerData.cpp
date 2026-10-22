@@ -27,6 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include "AvatarInfo.hpp"
 #include "PlayerData.hpp"
 #include "PlayerColours.hpp"
 #include "GameConsts.hpp"
@@ -328,11 +329,12 @@ bool PlayerData::loadProfile(const std::filesystem::path& path, const std::strin
 
 //------------------------------------------------------------
 
-ProfileTexture::ProfileTexture(const std::filesystem::path& path)
-    : m_imageBuffer (std::make_unique<cro::Image>(true)),
-    m_texture       (std::make_unique<cro::Texture>())
+ProfileTexture::ProfileTexture(const AvatarInfo& info)
+    : m_imageBuffer     (std::make_unique<cro::Image>(true)),
+    m_texture           (std::make_unique<cro::Texture>()),
+    m_allowColourSwap   (info.allowColourSwap)
 {
-    if (m_imageBuffer->loadFromFile(path) //MUST be RGBA for colour replace to work.
+    if (m_imageBuffer->loadFromFile(info.texturePath) //MUST be RGBA for colour replace to work.
         && m_imageBuffer->getFormat() == cro::ImageFormat::RGBA)
     {
         //cache color indices
@@ -380,7 +382,7 @@ ProfileTexture::ProfileTexture(const std::filesystem::path& path)
     }
     else
     {
-        LogE << path << ": file not loaded or not RGBA" << std::endl;
+        LogE << info.texturePath << ": file not loaded or not RGBA" << std::endl;
         m_imageBuffer->create(48, 52, cro::Colour::Magenta);
     }
 }
@@ -412,6 +414,11 @@ const cro::Colour& ProfileTexture::getColour(pc::ColourKey::Index idx) const
 
 void ProfileTexture::apply(cro::Texture* dst)
 {
+    if (!m_allowColourSwap)
+    {
+        return;
+    }
+
     if (dst)
     {
         dst->loadFromImage(*m_imageBuffer);

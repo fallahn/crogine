@@ -901,6 +901,7 @@
     <ClInclude Include="src\editor\GrassProcessing.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\golf\AvatarAnimation.hpp" />
+    <ClInclude Include="src\golf\AvatarInfo.hpp" />
     <ClInclude Include="src\golf\AvatarRotationSystem.hpp" />
     <ClInclude Include="src\golf\BallAnimationSystem.hpp" />
     <ClInclude Include="src\golf\BallSystem.hpp" />

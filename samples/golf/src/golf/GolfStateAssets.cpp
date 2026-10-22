@@ -2970,7 +2970,7 @@ void GolfState::loadModels()
     const auto indexFromSkinID = [&](std::uint32_t skinID, bool& isRandom)->std::size_t
         {
             auto result = std::find_if(m_sharedData.avatarInfo.begin(), m_sharedData.avatarInfo.end(),
-                [skinID](const SharedStateData::AvatarInfo& ai)
+                [skinID](const AvatarInfo& ai)
                 {
                     return skinID == ai.uid;
                 });

@@ -31,6 +31,7 @@ source distribution.
 
 #include <Content.hpp>
 
+#include <crogine/core/Log.hpp>
 #include <crogine/detail/IOStream.hpp>
 
 #include <array>

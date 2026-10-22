@@ -3324,7 +3324,7 @@ void ProfileStateV2::loadAvatarTextures()
     for (auto i = 0u; i < m_sharedData.avatarInfo.size(); ++i)
     {
         //need to pad out the vector anyway for correct indexing
-        auto& t = m_profileTextures.emplace_back(m_sharedData.avatarInfo[i].texturePath);
+        auto& t = m_profileTextures.emplace_back(m_sharedData.avatarInfo[i]);
 
         if (!m_sharedData.avatarInfo[i].locked)
         {
@@ -3723,7 +3723,7 @@ std::int32_t ProfileStateV2::indexFromAvatarID(std::uint32_t skinID) const
     const auto& avatarInfo = m_sharedData.avatarInfo;
 
     if (auto result = std::find_if(avatarInfo.cbegin(), avatarInfo.cend(),
-        [skinID](const SharedStateData::AvatarInfo& a) {return a.uid == skinID; }); result != avatarInfo.cend())
+        [skinID](const AvatarInfo& a) {return a.uid == skinID; }); result != avatarInfo.cend())
     {
         return static_cast<std::int32_t>(std::distance(avatarInfo.cbegin(), result));
     }

@@ -29,8 +29,8 @@ source distribution.
 
 #pragma once
 
-#include "PlayerColours.hpp"
 #include "Inventory.hpp"
+#include "PlayerColours.hpp"
 
 #include <crogine/core/String.hpp>
 #include <crogine/graphics/Colour.hpp>
@@ -135,7 +135,7 @@ struct PlayerData final
 
 struct ProfileTexture
 {
-    explicit ProfileTexture(const std::filesystem::path&);
+    explicit ProfileTexture(const struct AvatarInfo&);
 
     void setColour(pc::ColourKey::Index, std::int8_t);
     const cro::Colour& getColour(pc::ColourKey::Index) const;
@@ -157,4 +157,6 @@ private:
     std::array<std::vector<std::uint32_t>, pc::ColourKey::Count> m_keyIndices;
 
     std::array<cro::Colour, pc::ColourKey::Count> m_colours;
+
+    bool m_allowColourSwap;
 };
