@@ -4,6 +4,7 @@
 
 #include <crogine/core/OSK.hpp>
 #include <crogine/gui/Gui.hpp>
+#include <crogine/gui/Codepoints.inl>
 
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -11,6 +12,7 @@
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/Text.hpp>
 
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
@@ -19,6 +21,7 @@
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/TextSystem.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Easings.hpp>
@@ -211,6 +214,7 @@ void SurrealState::addSystems()
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
 
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
+    m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
 }
@@ -221,7 +225,7 @@ void SurrealState::loadAssets()
 
 void SurrealState::createScene()
 {
-    m_gameScene.setCubemap("assets/skybox/overcast/cubemap.ccm");
+    m_gameScene.setCubemap("assets/skybox/blue/cubemap.ccm");
 
     auto skyWave = cro::Util::Wavetable::sine(0.005f);
     for (auto& f : skyWave)
@@ -578,6 +582,43 @@ void SurrealState::createScene()
 
 void SurrealState::createUI()
 {
+    m_resources.fonts.load(10, "assets/fonts/kenney_input_xbox_series.ttf");
+    m_resources.fonts.load(11, "assets/fonts/VeraMono.ttf");
+
+    cro::FontAppendmentContext ctx;
+    ctx.allowFillColour = false;
+    ctx.allowBold = false;
+    ctx.allowOutline = false;
+    ctx.codepointRange = { 0xE000, 0xE016 };
+    m_resources.fonts.get(11).appendFromFile("assets/fonts/kenney_input_xbox_series.ttf", ctx);
+    ctx.codepointRange = cro::CodePointRange::EmojiLower;
+    m_resources.fonts.get(11).appendFromFile("assets/fonts/TwemojiCOLRv0.ttf", ctx);
+    ctx.codepointRange = cro::CodePointRange::EmojiMid;
+    m_resources.fonts.get(11).appendFromFile("assets/fonts/TwemojiCOLRv0.ttf", ctx);
+    ctx.codepointRange = cro::CodePointRange::EmojiUpper;
+    m_resources.fonts.get(11).appendFromFile("assets/fonts/TwemojiCOLRv0.ttf", ctx);
+
+    cro::String str(std::uint32_t(0xE00C));
+    str += std::uint32_t(0xE002);
+    str += std::uint32_t(0xE004);
+    str += std::uint32_t(0xE012);
+    str += EmAngry;
+    str += EmRedHeart;
+
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 20.f, 100.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(m_resources.fonts.get(11)).setString(str);
+    //entity.getComponent<cro::Text>().setFillColour(cro::Colour::Green);
+    //entity.getComponent<cro::Text>().setFillColour(cro::Colour::Red, 1);
+    //entity.getComponent<cro::Text>().setFillColour(cro::Colour::Blue, 2);
+    //entity.getComponent<cro::Text>().setFillColour(cro::Colour::Yellow, 3);
+    entity.getComponent<cro::Text>().setCharacterSize(30);
+    //entity.addComponent<cro::Text>(m_resources.fonts.get(11)).setString("Hello World!");
+
+
+
+
     auto resize = [](cro::Camera& cam)
     {
         glm::vec2 size(cro::App::getWindow().getSize());
