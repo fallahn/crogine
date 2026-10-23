@@ -680,6 +680,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
     m_detailSprites[DetailSprite::TickerCentre] = spriteSheet.getSprite("ticker_middle");
     m_detailSprites[DetailSprite::TickerRight] = spriteSheet.getSprite("ticker_right");
     m_detailSprites[DetailSprite::GameRules] = spriteSheet.getSprite("game_rules");
+    m_detailSprites[DetailSprite::StartGame] = spriteSheet.getSprite("start_game");
 
 
 
@@ -1418,6 +1419,7 @@ void MenuState::LobbyMenu::createPlayerTab()
     item->title = "Player Menu";
     item->displayType = Menu::Item::Heading;
 
+    auto sprite = m_detailSprites[DetailSprite::StartGame];
 
     //ready-up / start game
     item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
@@ -1442,6 +1444,8 @@ void MenuState::LobbyMenu::createPlayerTab()
         };
     item->labels = { "Let\'s Go!" };
     item->selectedIndex = 0;
+    item->texture = sprite.getTexture();
+    item->uv = sprite.getTextureRect();
 
 #ifdef USE_GNS
     //invite friends

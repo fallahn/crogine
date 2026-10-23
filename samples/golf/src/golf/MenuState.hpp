@@ -581,6 +581,7 @@ private:
                 TickerCentre,
                 TickerRight,
                 GameRules,
+                StartGame,
 
                 Count
             };
