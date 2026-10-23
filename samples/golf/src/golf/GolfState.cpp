@@ -203,6 +203,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_deferredGameState     (-1),
     m_lightVolumeDefinition (m_resources),
     //m_fogBuffer             ("FogBuffer"),
+    //m_rainBuffer            ("RainAmount"),
     m_scaleBuffer           ("PixelScale"),
     m_resolutionBuffer      ("ScaledResolution"),
     m_windBuffer            ("WindValues"),
@@ -3546,6 +3547,7 @@ void GolfState::preRender()
 #endif
 
     //m_fogBuffer.bind();
+    //m_rainBuffer.bind();
     m_scaleBuffer.bind();
     m_resolutionBuffer.bind();
     m_windBuffer.bind();

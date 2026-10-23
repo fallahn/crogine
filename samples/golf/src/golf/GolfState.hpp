@@ -216,7 +216,8 @@ private:
     cro::RenderTexture m_trophySceneTexture;
     cro::CubemapTexture m_reflectionMap;
 
-    cro::ArrayTexture<std::uint8_t, 18> m_rainSurfaceTexture;
+    cro::ArrayTexture<std::uint8_t, 18> m_rainWaterTexture;
+    cro::ArrayTexture<std::uint8_t, 18> m_rainGroundTexture;
 
     //renders 'out of focus'
     cro::RenderTexture m_focusTexture;
@@ -264,10 +265,22 @@ private:
 
     }m_targetShader;
 
+    //TODO there's something odd here, neither the
+    //fog nor rain buffers seem to send their data
+    //the uniforms in the shaders always have a value
+    //of 1...
     //cro::UniformBuffer<float> m_fogBuffer;
+    //cro::UniformBuffer<float> m_rainBuffer;
     cro::UniformBuffer<float> m_scaleBuffer;
     cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
     cro::UniformBuffer<WindData> m_windBuffer;
+
+    struct RainUniform final
+    {
+        std::uint32_t shaderID = 0;
+        std::int32_t uniformID = -1;
+    };
+    std::vector<RainUniform> m_rainUniforms;
 
     struct WindUpdate final
     {

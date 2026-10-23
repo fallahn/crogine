@@ -224,12 +224,12 @@ void Detail::UniformBufferImpl::addShader(std::uint32_t handle)
         //force rebind the shaders on next bind
         unbind();
     }
-#ifdef CRO_DEBUG_
+//#ifdef CRO_DEBUG_
     else
     {
         LogW << "Shader " << handle << " was not added to " << m_blockName << std::endl;
     }
-#endif
+//#endif
 #endif
 }
 

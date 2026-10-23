@@ -2432,14 +2432,26 @@ void GolfState::loadMaterials()
 
 
 
-
+    std::string waterDefines;
+    if (m_sharedData.weatherType == WeatherType::Rain
+        || m_sharedData.weatherType == WeatherType::Showers)
+    {
+        waterDefines = "#define RAIN\n";
+    }
     const std::string targetDefines = (m_sharedData.scoreType == ScoreType::MultiTarget || Social::getMonth() == 2) ? "#define MULTI_TARGET\n" : "";// "#define SHOW_CASCADES\n";
 
-    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n#define TERRAIN_CLIP\n" + wobble + targetDefines);
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n#define TERRAIN_CLIP\n" + wobble + targetDefines + waterDefines);
     shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
+    if (!waterDefines.empty())
+    {
+        //m_rainBuffer.addShader(*shader);
+        auto& u = m_rainUniforms.emplace_back();
+        u.shaderID = shader->getGLHandle();
+        u.uniformID = shader->getUniformID("u_rainAmount");
+    }
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
 
     //set when spawning bullseye model
@@ -2471,11 +2483,18 @@ void GolfState::loadMaterials()
     //m_ballShadows.shaders[0].shader = shader->getGLHandle();
     //m_ballShadows.shaders[0].uniform = shader->getUniformID("u_ballPosition");
 
-    m_resources.shaders.loadFromString(ShaderID::CourseGreen, CelVertexShader, CelFragmentShader, "#define HOLE_HEIGHT\n#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CourseGreen, CelVertexShader, CelFragmentShader, "#define HOLE_HEIGHT\n#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble + waterDefines);
     shader = &m_resources.shaders.get(ShaderID::CourseGreen);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
+    if (!waterDefines.empty())
+    {
+        //m_rainBuffer.addShader(*shader);
+        auto& u = m_rainUniforms.emplace_back();
+        u.shaderID = shader->getGLHandle();
+        u.uniformID = shader->getUniformID("u_rainAmount");
+    }
 
     m_gridShaders[0].shaderID = shader->getGLHandle();
     m_gridShaders[0].transparency = shader->getUniformID("u_transparency");
@@ -2484,11 +2503,18 @@ void GolfState::loadMaterials()
     //m_ballShadows.shaders[1].shader = shader->getGLHandle();
     //m_ballShadows.shaders[1].uniform = shader->getUniformID("u_ballPosition");
 
-    m_resources.shaders.loadFromString(ShaderID::CourseGrid, CelVertexShader, CelFragmentShader, "#define HOLE_HEIGHT\n#define TEXTURED\n#define RX_SHADOWS\n#define CONTOUR\n" + wobble + targetDefines);
+    m_resources.shaders.loadFromString(ShaderID::CourseGrid, CelVertexShader, CelFragmentShader, "#define HOLE_HEIGHT\n#define TEXTURED\n#define RX_SHADOWS\n#define CONTOUR\n" + wobble + targetDefines + waterDefines);
     shader = &m_resources.shaders.get(ShaderID::CourseGrid);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
+    if (!waterDefines.empty())
+    {
+        //m_rainBuffer.addShader(*shader);
+        auto& u = m_rainUniforms.emplace_back();
+        u.shaderID = shader->getGLHandle();
+        u.uniformID = shader->getUniformID("u_rainAmount");
+    }
 
     //these are set when the target is spawned as it may vary
     //from hole to hole
@@ -2701,19 +2727,6 @@ void GolfState::loadMaterials()
     //m_minimapZoom.matrixUniformID = shader->getUniformID("u_coordMatrix");
 
     //water
-    std::string waterDefines;
-    if (m_sharedData.weatherType == WeatherType::Rain
-        || m_sharedData.weatherType == WeatherType::Showers)
-    {
-        waterDefines = "#define RAIN\n";
-    }
-
-    /*static const std::string DepthConsts = "\nconst float ColCount = " + std::to_string(m_depthMap.getGridCount().x) 
-        + ".0;\nconst float MetresPerTexture = "+ std::to_string(m_depthMap.getMetresPerTile())
-        + ".0;\nconst float MaxTiles = "
-        + std::to_string(m_depthMap.getTileCount() - 1) + ".0;\n";
-    m_resources.shaders.addInclude("DEPTH_CONSTS", DepthConsts.c_str());*/
-
     m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment, "#define NO_DEPTH\n#define USE_MRT\n" + lightingDefs + waterDefines);
     shader = &m_resources.shaders.get(ShaderID::Water);
     m_scaleBuffer.addShader(*shader);
@@ -2733,7 +2746,7 @@ void GolfState::loadMaterials()
     if (!waterDefines.empty())
     {
         static constexpr auto TileSize = 128;
-        static const std::array<std::string, 18u> paths =
+        const std::array<std::string, 18u> paths =
         {
             "assets/golf/images/rain/water_surface/rain01.png",
             "assets/golf/images/rain/water_surface/rain02.png",
@@ -2757,18 +2770,59 @@ void GolfState::loadMaterials()
         cro::ImageArray<std::uint8_t> arr;
 
         //ofc template params are compile time...
-        m_rainSurfaceTexture.create(TileSize, TileSize);
+        //ideally we should be reading the dimensions of the image.
+        m_rainWaterTexture.create(TileSize, TileSize);
         for (auto i = 0u; i < paths.size(); ++i)
         {
             arr.loadFromFile(paths[i]);
-            m_rainSurfaceTexture.insertLayer(arr, i);
+            m_rainWaterTexture.insertLayer(arr, i);
         }
-        auto waterTex = cro::TextureID(m_rainSurfaceTexture.getGLHandle(), true);
+        auto waterTex = cro::TextureID(m_rainWaterTexture.getGLHandle(), true);
 
         //auto& waterTex = m_resources.textures.get("assets/golf/images/rain_water.png");
         //waterTex.setRepeated(true);
         m_resources.materials.get(m_materialIDs[MaterialID::Water]).setProperty("u_rainTexture", waterTex);
         m_resources.materials.get(m_materialIDs[MaterialID::Water]).setProperty("u_rainAmount", 1.f);
+
+
+        const std::array<std::string, 18u> paths2 =
+        {
+            "assets/golf/images/rain/ground_surface/rain01.png",
+            "assets/golf/images/rain/ground_surface/rain02.png",
+            "assets/golf/images/rain/ground_surface/rain03.png",
+            "assets/golf/images/rain/ground_surface/rain04.png",
+            "assets/golf/images/rain/ground_surface/rain05.png",
+            "assets/golf/images/rain/ground_surface/rain06.png",
+            "assets/golf/images/rain/ground_surface/rain07.png",
+            "assets/golf/images/rain/ground_surface/rain08.png",
+            "assets/golf/images/rain/ground_surface/rain09.png",
+            "assets/golf/images/rain/ground_surface/rain10.png",
+            "assets/golf/images/rain/ground_surface/rain11.png",
+            "assets/golf/images/rain/ground_surface/rain12.png",
+            "assets/golf/images/rain/ground_surface/rain13.png",
+            "assets/golf/images/rain/ground_surface/rain14.png",
+            "assets/golf/images/rain/ground_surface/rain15.png",
+            "assets/golf/images/rain/ground_surface/rain16.png",
+            "assets/golf/images/rain/ground_surface/rain17.png",
+            "assets/golf/images/rain/ground_surface/rain18.png",
+        };
+
+        m_rainGroundTexture.create(TileSize * 2, TileSize * 2);
+        for (auto i = 0u; i < paths2.size(); ++i)
+        {
+            arr.loadFromFile(paths2[i]);
+            m_rainGroundTexture.insertLayer(arr, i);
+        }
+
+        //apply to ground material
+        cro::TextureID groundTex(m_rainGroundTexture.getGLHandle(), true);
+        m_resources.materials.get(m_materialIDs[MaterialID::Course]).setProperty("u_rainTexture", groundTex);
+        
+        //only do this if not showers else it overrides the animation
+        if (m_sharedData.weatherType == WeatherType::Rain)
+        {
+            m_resources.materials.get(m_materialIDs[MaterialID::Course]).setProperty("u_rainAmount", 0.6f);
+        }
     }
 
  

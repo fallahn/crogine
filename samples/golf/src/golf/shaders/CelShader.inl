@@ -288,6 +288,14 @@ static inline const std::string CelFragmentShader = R"(
 //dirX, strength, dirZ, elapsedTime
 #include WIND_BUFFER
 
+#if defined (RAIN)
+#include MAP_SIZE
+    uniform sampler2DArray u_rainTexture;
+    uniform float u_rainAmount = 1.0;
+    const vec2 TileCount = MapSize / 4.0;
+    const float FrameRate = 1.0 / 24.0;
+#endif
+
 
 #if defined (RX_SHADOWS)
 #include SHADOWMAP_UNIFORMS_FRAG
@@ -486,6 +494,15 @@ static inline const std::string CelFragmentShader = R"(
         vec4 c = texture(u_arrayMap, vec3(texCoord, 0.0));
 #else
         vec4 c = TEXTURE(u_diffuseMap, texCoord);
+#if defined (RAIN)
+    float frame = mod(floor(u_windData.w / FrameRate), 18.0);
+
+    vec2 uv = v_worldPosition.xz / MapSize;
+    vec3 blendedColour = (TEXTURE(u_rainTexture, vec3(uv * TileCount, frame)).rgb * u_rainAmount * 0.7) / 3.0 + (c.rgb);
+
+    c.rgb = mix(c.rgb, blendedColour, smoothstep(0.85, 0.9,dot(vec3(0.0,1.0,0.0), normalize(v_normal)))); //TODO don't normalize twice
+
+#endif
 #endif
 
 #if defined (MASK_MAP)
@@ -579,9 +596,7 @@ static inline const std::string CelFragmentShader = R"(
         float minHeight = u_holePosition.y - 0.25;
         float maxHeight = u_holePosition.y + 0.008;
         float holeHeight = clamp((v_worldPosition.y - minHeight) / (maxHeight - minHeight), 0.0, 1.0);
-        //colour.rgb += clamp(height, 0.0, 1.0) * 0.1;
 
-        //complementaryColour(colour.rgb)
         vec3 holeColour = mix(colour.rgb * vec3(0.67, 0.757, 0.41), colour.rgb, 0.65 + (0.35 * holeHeight));
         holeColour.r = (smoothstep(0.45, 0.99, holeHeight) * 0.01) + holeColour.r;
         holeColour.g = (smoothstep(0.65, 0.999, holeHeight) * 0.01) + holeColour.g;
@@ -599,10 +614,6 @@ static inline const std::string CelFragmentShader = R"(
 #endif
 
 #if defined(TERRAIN)
-        //float ballShadow = smoothstep(0.015, 0.03, length(v_worldPosition - u_ballPosition));
-        //ballShadow = 0.8 + (0.2 * ballShadow);
-        //colour.rgb *= ballShadow;
-
         vec2 texCheck = v_texCoord * 4096.0;
         int texX = int(mod(texCheck.x, MatrixSize));
         int texY = int(mod(texCheck.y, MatrixSize));

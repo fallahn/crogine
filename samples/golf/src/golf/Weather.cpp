@@ -849,6 +849,14 @@ void GolfState::handleWeatherChange(std::uint8_t v)
             glUniform1f(cloudRing.density, cloudAmount);
 
             m_waterEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_rainAmount", current);
+            //m_rainBuffer.setData(current);
+
+            //TODO fix the rain (and fog) buffers
+            for (auto [shader, uniform] : m_rainUniforms)
+            {
+                glUseProgram(shader);
+                glUniform1f(uniform, current * 2.f);
+            }
 
             if (current == target)
             {
