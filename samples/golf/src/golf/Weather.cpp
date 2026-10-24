@@ -325,7 +325,8 @@ void GolfState::createWeather(std::int32_t weatherType)
 
         //create audio entity
         cro::AudioScape audioscape;
-        if (audioscape.loadFromFile("assets/golf/sound/rain.xas", m_resources.audio))
+        if (cro::AudioMixer::hasAudioRenderer() &&
+            audioscape.loadFromFile("assets/golf/sound/rain.xas", m_resources.audio))
         {
             const auto callback = 
                 [&](cro::Entity e, float)

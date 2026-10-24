@@ -35,6 +35,7 @@ source distribution.
 #include "glad.hpp"
 #endif
 
+#include <source_location>
 #include <string>
 #include <sstream>
 
@@ -43,10 +44,10 @@ source distribution.
 #ifdef CRO_DEBUG_
 #if defined(PLATFORM_DESKTOP) && !defined(GL41)
 //use the gl debug context instead (see App.cpp)
-#define glCheck(x) do{x; cro::Detail::printLocation(__FILE__, __LINE__, #x);}while (false)
+#define glCheck(x) do{x; cro::Detail::printLocation(/*__FILE__, __LINE__,*/ #x);}while (false)
 //#define glCheck(x) do{x; cro::Detail::glErrorCheck(__FILE__, __LINE__, #x);}while (false)
 #else
-#define glCheck(x) do{x; cro::Detail::glErrorCheck(__FILE__, __LINE__, #x);}while (false)
+#define glCheck(x) do{x; cro::Detail::glErrorCheck(/*__FILE__, __LINE__, */#x);}while (false)
 #endif
 #else
 #define glCheck(x) (x)
@@ -74,16 +75,22 @@ namespace cro
             }
         }
 
+        static inline std::string locationString(const std::source_location& location)
+        {
+            std::string fileString = U8PATH_CAST(cro::FileSystem::getFileName(location.file_name()));// file;
+            fileString += " Line: " + std::to_string(location.line()) + " Col: " + std::to_string(location.column());
+            return fileString;
+        }
 
-        static inline void printLocation(const char* file, unsigned int line, const char* expression)
+        static inline void printLocation(/*const char* file, unsigned int line, */const char* expression, std::source_location location = std::source_location::current())
         {
             const GLenum errorCode = glGetError();
             if (errorCode != GL_NO_ERROR)
             {
-                std::string fileString = file;
+                std::string fileString = locationString(location);
 
                 std::stringstream ss;
-                ss << fileString.substr(fileString.find_last_of("\\/") + 1) << "(" << line << ").\n" 
+                ss << fileString//.substr(fileString.find_last_of("\\/") + 1) << "(" << line << ").\n" 
                     << glErrorString(errorCode)
                     << " Expression: " << expression
                     << std::endl;
@@ -91,13 +98,13 @@ namespace cro
             }
         }
 
-        static inline void glErrorCheck(const char* file, unsigned int line, const char* expression)
+        static inline void glErrorCheck(/*const char* file, unsigned int line, */const char* expression, std::source_location location = std::source_location::current())
         {
             //get the last error
             GLenum errorCode = glGetError();
             while (errorCode != GL_NO_ERROR)
             {
-                std::string fileString = file;
+                const auto fileString = locationString(location);
                 std::string error = "Unknown error";
                 std::string description = "No description";
 
@@ -151,7 +158,7 @@ namespace cro
                 //log the error
                 std::stringstream ss;
                 ss << "An internal OpenGL call failed in "
-                    << fileString.substr(fileString.find_last_of("\\/") + 1) << "(" << line << ")."
+                    << fileString//.substr(fileString.find_last_of("\\/") + 1) << "(" << line << ")."
                     << "\nExpression:\n   " << expression
                     << "\nError description:\n   " << error << "\n   " << description << "\n"
                     << std::endl;

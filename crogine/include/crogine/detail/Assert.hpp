@@ -46,7 +46,7 @@ source distribution.
 //then on an assert or error log caller.function_name()
 #if defined CRO_CALLER_ID_ || defined CRO_DEBUG_
 
-#ifdef _MSC_VER
+#if defined _MSC_VER && !defined CRO_DEBUG_
 #pragma message(": Warning <CALLER_ID active> : undefine CRO_CALLER_ID_ in release builds")
 #endif
 

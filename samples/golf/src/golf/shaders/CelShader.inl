@@ -291,7 +291,7 @@ static inline const std::string CelFragmentShader = R"(
 #if defined (RAIN)
 #include MAP_SIZE
     uniform sampler2DArray u_rainTexture;
-    uniform float u_rainAmount = 1.0;
+    uniform float u_rainAmount = 0.6; //this is FogAmount * 2 from handleWeatherChange()
     const vec2 TileCount = MapSize / 4.0;
     const float FrameRate = 1.0 / 24.0;
 #endif
@@ -498,7 +498,7 @@ static inline const std::string CelFragmentShader = R"(
     float frame = mod(floor(u_windData.w / FrameRate), 18.0);
 
     vec2 uv = v_worldPosition.xz / MapSize;
-    vec3 blendedColour = (TEXTURE(u_rainTexture, vec3(uv * TileCount, frame)).rgb * u_rainAmount * 0.7) / 3.0 + (c.rgb);
+    vec3 blendedColour = (TEXTURE(u_rainTexture, vec3(uv * TileCount, frame)).rgb * u_rainAmount * 0.85) / 3.0 + (c.rgb);
 
     c.rgb = mix(c.rgb, blendedColour, smoothstep(0.85, 0.9,dot(vec3(0.0,1.0,0.0), normalize(v_normal)))); //TODO don't normalize twice
 

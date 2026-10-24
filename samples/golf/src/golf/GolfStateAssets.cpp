@@ -2821,6 +2821,7 @@ void GolfState::loadMaterials()
         //only do this if not showers else it overrides the animation
         if (m_sharedData.weatherType == WeatherType::Rain)
         {
+            //TODO this is FogAmount * 2 from handleWeatherChange() - needs to be constified.
             m_resources.materials.get(m_materialIDs[MaterialID::Course]).setProperty("u_rainAmount", 0.6f);
         }
     }
@@ -3829,6 +3830,27 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
                     entity.addComponent<cro::AudioEmitter>() = as.getEmitter(emitterNames[currIdx]);
                     entity.getComponent<cro::AudioEmitter>().play();
                     entity.getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(i));
+
+                    //attentuate if raining
+                    if (m_sharedData.weatherType == WeatherType::Rain)
+                    {
+                        entity.getComponent<cro::AudioEmitter>().setVolume(entity.getComponent<cro::AudioEmitter>().getVolume() * 0.25f);
+                    }
+                    //or fade with showers
+                    else if (m_sharedData.weatherType == WeatherType::Showers)
+                    {
+                        entity.addComponent<cro::Callback>().active = true;
+                        entity.getComponent<cro::Callback>().setUserData<const float>(entity.getComponent<cro::AudioEmitter>().getVolume());
+                        entity.getComponent<cro::Callback>().function = 
+                            [this](cro::Entity e, float dt)
+                            {
+                                static constexpr float MinAmount = 0.25f;
+                                static constexpr float MaxAmount = 1.f - MinAmount;
+                                const auto baseVolume = e.getComponent<cro::Callback>().getUserData<const float>();
+                                const auto multiplier = 1.f - m_gameScene.getSystem<WeatherAnimationSystem>()->getOpacity();
+                                e.getComponent<cro::AudioEmitter>().setVolume((baseVolume * MinAmount) + (baseVolume * MaxAmount * multiplier));
+                            };
+                    }
 
                     rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
                 }
