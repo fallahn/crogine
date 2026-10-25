@@ -362,7 +362,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             sd.clientConnection.netClient.disconnect();
         }
 
-
         //reset the state if we came from the tutorial (this is
         //also set if the player quit the game from the pause menu)
         if ((sd.gameMode != GameMode::FreePlay
@@ -1202,8 +1201,14 @@ bool MenuState::handleEvent(const cro::Event& evt)
             switch (m_uiScene.getSystem<cro::UISystem>()->getActiveGroup())
             {
             default:
+#ifndef NEW_LOBBY
+                //TODO hmmm this is a bit of a fudge really
+                //as this gets called in the new lobby sometimes
+                //despite the active group never actually supposed
+                //to be set to this value, so there's a deeper bug somewhere.
             case MenuID::Lobby:
                 enterConfirmCallback(true);
+#endif
                 break;
             case MenuID::ConfirmQuit:
                 quitConfirmCallback();
@@ -4050,6 +4055,10 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             }
 
             WebSock::broadcastPacket(evt.packet.getDataRaw());
+#ifdef NEW_LOBBY
+            //m_lobbyMenu.clientStatusChanged();
+            m_lobbyMenu.refreshTabs();
+#endif
         }
             break;
         case PacketID::TeamData:
@@ -4326,6 +4335,9 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage)->type = Social::SocialEvent::LobbyUpdated;
 
             WebSock::broadcastPacket(evt.packet.getDataRaw());
+#ifdef NEW_LOBBY
+            m_lobbyMenu.clientStatusChanged();
+#endif
         }
             break;
         case PacketID::LobbyReady:

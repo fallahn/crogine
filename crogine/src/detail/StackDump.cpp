@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2025
+Matt Marchant 2023 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -34,6 +34,7 @@ source distribution.
 
 #include "ust.hpp"
 
+#include <crogine/core/App.hpp>
 #include <crogine/core/Console.hpp>
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/detail/StackDump.hpp>
@@ -76,7 +77,7 @@ void StackDump::dump(int type)
     FileSystem::showMessageBox("Stack Trace", ss.str());
 #endif
 
-    std::ofstream file("stack_dump" + str + ".txt");
+    std::ofstream file(App::getPreferencePath() / ("stack_dump" + str + ".txt"));
     file << str << "\n";
     switch (type)
     {

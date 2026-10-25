@@ -4317,7 +4317,8 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
     }
 
 #ifdef NEW_LOBBY
-    m_lobbyMenu.clientStatusChanged();
+    //m_lobbyMenu.clientStatusChanged();
+    m_lobbyMenu.refreshTabs();
 #endif
 }
 

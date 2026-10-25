@@ -280,7 +280,7 @@ void Console::dumpBuffer(const std::string& str)
     //FileSystem::showMessageBox("Console Output", "Something went wrong :(\nIf you'd like to help fix this crash please take a screen shot\nof this message and send it to the developer.\n\n" + s);
 #endif
 
-    std::ofstream ofile(fileName);
+    std::ofstream ofile(App::getPreferencePath() / fileName);
     if (ofile.is_open() && ofile.good())
     {
         ofile << s;

@@ -1495,89 +1495,91 @@ void MenuState::LobbyMenu::createPlayerTab()
         item->labels = { "No", "Yes" };
         item->selectedIndex = m_sharedData.teamMode ? 1 : 0;
 
-
-        //select player
-        item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
-        item->title = "Select Player";
-        item->description = "Select the active player.";
-        item->activated = [this](Menu::Item& i)
-            {
-                //TODO update index
-                if (i.activationDirection == Menu::Item::Left)
+        LogI << "display size " << m_menuState.m_displayOrder.size()<< std::endl;
+        if (m_menuState.m_displayOrder.size() > 1)
+        {
+            //select player
+            item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
+            item->title = "Select Player";
+            item->description = "Select the active player.";
+            item->activated = [this](Menu::Item& i)
                 {
-                    m_menuState.m_selectedDisplayMember = std::max(0, m_menuState.m_selectedDisplayMember - 1);
-                }
-                else if (i.activationDirection == Menu::Item::Right)
-                {
-                    m_menuState.m_selectedDisplayMember = std::min(static_cast<std::int32_t>(m_menuState.m_displayOrder.size() - 1),
-                                                                    m_menuState.m_selectedDisplayMember + 1);
-                }
-                updatePlayersTab();
-            };
-        item->labels = { "Select", "Select" }; //we don't want the label to change, but to offer left/right buttons
-        item->selectedIndex = 0;
-
-
-        //move selected
-        item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
-        item->title = "Move Selected Player";
-        item->description = "Moving the selected player decides which team they appear in.";
-        cro::Util::String::wordWrap(item->description, WordWrapSmall);
-        item->activated = [this](Menu::Item& i)
-            {
-                //tbh this probably doesn't matter if teams aren't active
-                //if (m_sharedData.teamMode)
-                {
+                    //TODO update index
                     if (i.activationDirection == Menu::Item::Left)
                     {
-                        if (m_menuState.m_selectedDisplayMember > 0)
-                        {
-                            m_menuState.moveDisplayMemberUp();
-                        }
+                        m_menuState.m_selectedDisplayMember = std::max(0, m_menuState.m_selectedDisplayMember - 1);
                     }
                     else if (i.activationDirection == Menu::Item::Right)
                     {
-                        if (m_menuState.m_selectedDisplayMember < static_cast<std::int32_t>(m_menuState.m_displayOrder.size()) - 1)
+                        m_menuState.m_selectedDisplayMember = std::min(static_cast<std::int32_t>(m_menuState.m_displayOrder.size() - 1),
+                            m_menuState.m_selectedDisplayMember + 1);
+                    }
+                    updatePlayersTab();
+                };
+            item->labels = { "Select", "Select" }; //we don't want the label to change, but to offer left/right buttons
+            item->selectedIndex = 0;
+
+
+            //move selected
+            item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
+            item->title = "Move Selected Player";
+            item->description = "Moving the selected player decides which team they appear in.";
+            cro::Util::String::wordWrap(item->description, WordWrapSmall);
+            item->activated = [this](Menu::Item& i)
+                {
+                    //tbh this probably doesn't matter if teams aren't active
+                    //if (m_sharedData.teamMode)
+                    {
+                        if (i.activationDirection == Menu::Item::Left)
                         {
-                            m_menuState.moveDisplayMemberDown();
+                            if (m_menuState.m_selectedDisplayMember > 0)
+                            {
+                                m_menuState.moveDisplayMemberUp();
+                            }
+                        }
+                        else if (i.activationDirection == Menu::Item::Right)
+                        {
+                            if (m_menuState.m_selectedDisplayMember < static_cast<std::int32_t>(m_menuState.m_displayOrder.size()) - 1)
+                            {
+                                m_menuState.moveDisplayMemberDown();
+                            }
                         }
                     }
-                }
-            };
-        item->labels = { "Move", "Move" };
-        item->selectedIndex = 0;
+                };
+            item->labels = { "Move", "Move" };
+            item->selectedIndex = 0;
 
-        //poke selected
-        item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
-        item->title = "Poke Player";
-        item->description = "Give the selected player a little poke.";
-        cro::Util::String::wordWrap(item->description, WordWrapSmall);
-        item->activated = [this](Menu::Item& i)
-            {
-                m_buttonFlags |= ButtonFlags::Action;
-                setProgressColour(CD32::Colours[CD32::Yellow]);
+            //poke selected
+            item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
+            item->title = "Poke Player";
+            item->description = "Give the selected player a little poke.";
+            cro::Util::String::wordWrap(item->description, WordWrapSmall);
+            item->activated = [this](Menu::Item& i)
+                {
+                    m_buttonFlags |= ButtonFlags::Action;
+                    setProgressColour(CD32::Colours[CD32::Yellow]);
 
-                m_timeoutCallback = std::bind(&LobbyMenu::pokePlayer, this);
-            };
-        item->labels = { u8"↓ Poke" };
-        item->selectedIndex = 0;
+                    m_timeoutCallback = std::bind(&LobbyMenu::pokePlayer, this);
+                };
+            item->labels = { u8"↓ Poke" };
+            item->selectedIndex = 0;
 
 
-        //kick selected
-        item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
-        item->title = "Kick Player";
-        item->description = "Kick the selected player. This will also remove all players on the same client!";
-        cro::Util::String::wordWrap(item->description, WordWrapSmall);
-        item->activated = [this](Menu::Item& i)
-            {
-                m_buttonFlags |= ButtonFlags::Action;
-                setProgressColour(CD32::Colours[CD32::Red]);
+            //kick selected
+            item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
+            item->title = "Kick Player";
+            item->description = "Kick the selected player. This will also remove all players on the same client!";
+            cro::Util::String::wordWrap(item->description, WordWrapSmall);
+            item->activated = [this](Menu::Item& i)
+                {
+                    m_buttonFlags |= ButtonFlags::Action;
+                    setProgressColour(CD32::Colours[CD32::Red]);
 
-                m_timeoutCallback = std::bind(&LobbyMenu::kickPlayer, this);
-            };
-        item->labels = { u8"↓ Kick" };
-        item->selectedIndex = 0;
-
+                    m_timeoutCallback = std::bind(&LobbyMenu::kickPlayer, this);
+                };
+            item->labels = { u8"↓ Kick" };
+            item->selectedIndex = 0;
+        }
     }
 }
 
@@ -1591,36 +1593,6 @@ void MenuState::LobbyMenu::createCourseTab()
 
     if (m_sharedData.hosting)
     {
-        const bool hasUserCourses = m_menuState.m_sharedCourseData.courseData.size() > m_menuState.m_courseIndices[Range::Official].count;
-        if (hasUserCourses)
-        {
-            //user courses
-            item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
-            item->title = "User Courses";
-            item->description = "Select from courses created in the Course Remixer.";
-            cro::Util::String::wordWrap(item->description, WordWrapSmall);
-            item->activated = [this](Menu::Item& i)
-                {
-                    //hmm the game still has a space for workshop
-                    //courses, but the count (for now) will always
-                    //be zero
-                    do
-                    {
-                        m_menuState.m_currentRange = (m_menuState.m_currentRange + (Range::Count - 1)) % Range::Count;
-                        m_sharedData.courseIndex = m_menuState.m_courseIndices[m_menuState.m_currentRange].start;
-                    } while (m_menuState.m_courseIndices[m_menuState.m_currentRange].count == 0);
-
-                    i.selectedIndex = m_menuState.m_currentRange;
-
-                    //silly hack which sends the server updaetd course info to refresh clients
-                    m_menuState.prevCourse();
-                    m_menuState.nextCourse();
-                };
-            item->labels = { "No", "Yes", /*"Workshop"*/ };
-            item->selectedIndex = m_menuState.m_currentRange;
-        }
-
-
         const auto resetScroll =
             [this]() 
             {
@@ -1650,6 +1622,34 @@ void MenuState::LobbyMenu::createCourseTab()
         item->labels = { "Select", "Select" };
         item->selectedIndex = 0;
 
+        const bool hasUserCourses = m_menuState.m_sharedCourseData.courseData.size() > m_menuState.m_courseIndices[Range::Official].count;
+        if (hasUserCourses)
+        {
+            //user courses
+            item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
+            item->title = "User Courses";
+            item->description = "Select from courses created in the Course Remixer.";
+            cro::Util::String::wordWrap(item->description, WordWrapSmall);
+            item->activated = [this](Menu::Item& i)
+                {
+                    //hmm the game still has a space for workshop
+                    //courses, but the count (for now) will always
+                    //be zero
+                    do
+                    {
+                        m_menuState.m_currentRange = (m_menuState.m_currentRange + (Range::Count - 1)) % Range::Count;
+                        m_sharedData.courseIndex = m_menuState.m_courseIndices[m_menuState.m_currentRange].start;
+                    } while (m_menuState.m_courseIndices[m_menuState.m_currentRange].count == 0);
+
+                    i.selectedIndex = m_menuState.m_currentRange;
+
+                    //silly hack which sends the server updaetd course info to refresh clients
+                    m_menuState.prevCourse();
+                    m_menuState.nextCourse();
+                };
+            item->labels = { "No", "Yes", /*"Workshop"*/ };
+            item->selectedIndex = m_menuState.m_currentRange;
+        }
 
         //hole count
         item = &m_uiLayout.menuLayout.items[TabID::Course].emplace_back();
@@ -1785,6 +1785,7 @@ void MenuState::LobbyMenu::createRulesTab()
         item->labels = { "Select", "Select" };
         item->selectedIndex = 0;
 
+
         //set gimme radius
         item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();
         item->title = "Gimme Radius";
@@ -1797,7 +1798,7 @@ void MenuState::LobbyMenu::createRulesTab()
                                                                     net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             };
         //item->labels = { "None", "Under the Leather", "Under the Putter" };
-        item->labels = { "Select", "Select", "Select" }; //rely on the details pain to explain this
+        item->labels = { "None", "Leather", "Putter" }; //rely on the details pain to explain this
         item->selectedIndex = m_sharedData.gimmeRadius;
 
 
@@ -1850,6 +1851,7 @@ void MenuState::LobbyMenu::createRulesTab()
             };
         item->labels = { "No", "Yes" };
         item->selectedIndex = 0;
+
 
         //allow assists
         item = &m_uiLayout.menuLayout.items[TabID::Rules].emplace_back();

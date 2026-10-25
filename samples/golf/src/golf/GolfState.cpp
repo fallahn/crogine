@@ -687,7 +687,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
     }
 
 
-
     const auto scrollScores = [&](std::int32_t step)
     {
         if (m_holeData.size() > 9)
