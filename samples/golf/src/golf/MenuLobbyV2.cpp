@@ -518,6 +518,39 @@ void MenuState::LobbyMenu::clientStatusChanged()
 {
     //whereas this just refreshes
     //the detail textures
+    
+    //although we need to check if the player count has grown
+    //bigger than one and rebuild the player tab to hide or
+    //display the extra buttons for moving players around
+    if (m_playerListSize <= 1)
+    {
+        //see if we added players
+        if (m_menuState.m_displayOrder.size() > 1)
+        {
+            createPlayerTab();
+
+            //force redraw
+            if (m_uiLayout.tabBar.activeIndex == TabID::Players)
+            {
+                m_uiLayout.activateTab(TabID::Players);
+            }
+        }
+    }
+    else
+    {
+        //see if we removed players
+        if (m_menuState.m_displayOrder.size() <= 1)
+        {
+            createPlayerTab();
+
+            if (m_uiLayout.tabBar.activeIndex == TabID::Players)
+            {
+                m_uiLayout.activateTab(TabID::Players);
+            }
+        }
+    }
+    m_playerListSize = m_menuState.m_displayOrder.size();
+
     updatePlayersTab();
     updateCourseTab();
     updateRulesTab();
@@ -1495,7 +1528,6 @@ void MenuState::LobbyMenu::createPlayerTab()
         item->labels = { "No", "Yes" };
         item->selectedIndex = m_sharedData.teamMode ? 1 : 0;
 
-        LogI << "display size " << m_menuState.m_displayOrder.size()<< std::endl;
         if (m_menuState.m_displayOrder.size() > 1)
         {
             //select player
@@ -2158,13 +2190,16 @@ void MenuState::LobbyMenu::updatePlayersTab(bool resized)
     }
 
     //set verts to yellow and render over selected player position
-    m_detailArray.setPosition({ 0.f, Top - ((m_menuState.m_selectedDisplayMember + 1) * Height) });
-    for (auto& v : verts)
+    if (m_playerListSize > 1)
     {
-        v.colour = CD32::Colours[CD32::Yellow];
+        m_detailArray.setPosition({ 0.f, Top - ((m_menuState.m_selectedDisplayMember + 1) * Height) });
+        for (auto& v : verts)
+        {
+            v.colour = CD32::Colours[CD32::Yellow];
+        }
+        m_detailArray.setVertexData(verts);
+        m_detailArray.draw();
     }
-    m_detailArray.setVertexData(verts);
-    m_detailArray.draw();
 
     //draws the edge border
     m_detailArray.setVertexData({

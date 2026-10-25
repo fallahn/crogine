@@ -502,6 +502,7 @@ private:
             : m_menuState           (ms),
             m_sharedData            (sd),
             m_uiLayout              (TabID::Count, sd),
+            m_playerListSize        (m_menuState.m_displayOrder.size()),
             m_progressUniform       (-1),
             m_progressColourUniform (-1),
             m_buttonHoldTimer       (0.f),
@@ -588,6 +589,7 @@ private:
         };
         std::array<cro::Sprite, DetailSprite::Count> m_detailSprites = {};
 
+        std::size_t m_playerListSize;
         //redraws the detail pane for corresponding tab
         std::vector<cro::Entity> m_playerDetailIcons; //children of player detail entity
         cro::Entity m_introTicker;

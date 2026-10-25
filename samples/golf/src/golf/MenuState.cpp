@@ -4056,8 +4056,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 
             WebSock::broadcastPacket(evt.packet.getDataRaw());
 #ifdef NEW_LOBBY
-            //m_lobbyMenu.clientStatusChanged();
-            m_lobbyMenu.refreshTabs();
+            m_lobbyMenu.clientStatusChanged();
 #endif
         }
             break;
