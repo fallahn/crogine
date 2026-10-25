@@ -5829,22 +5829,68 @@ void MenuState::createPreviousScoreCard(cro::Entity parent)
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     //bounds = m_lobbyWindowEntities[LobbyEntityID::Background].getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setPosition({ cro::App::getWindow().getSize().x / 2, ScoresOffscreenPos, 1.95f});
-
-    //registerWindow([entity]()
-    //    {
-    //        const auto pos = entity.getComponent<cro::Transform>().getPosition();
-    //        const auto worldPos = entity.getComponent<cro::Transform>().getWorldPosition();
-    //        ImGui::Begin("Scores");
-    //        ImGui::Text("Pos %3.2f, %3.2f", pos.x, pos.y);
-    //        ImGui::Text("World Pos %3.2f, %3.2f", worldPos.x, worldPos.y);
-    //        ImGui::End();
-    //    });
 
     ScorecardCallbackData cd;
     cd.targetPos = static_cast<float>(cro::App::getWindow().getSize().y) / 2.f;
     entity.addComponent<cro::Callback>().setUserData<ScorecardCallbackData>(cd);
     entity.getComponent<cro::Callback>().function =
+#ifdef NEW_LOBBY
+        [this](cro::Entity e, float dt)
+        {
+            const float Speed = dt * 7.f;
+
+            const auto viewScale = getViewScale();
+            auto targetPos = glm::vec2(cro::App::getWindow().getSize() / 2u) / viewScale;
+            targetPos.x = std::round(targetPos.x);
+            targetPos.y = std::round(targetPos.y);
+
+            auto& [dir, bgScale, dest] = e.getComponent<cro::Callback>().getUserData<ScorecardCallbackData>();
+            if (dir == 0)
+            {
+                //moving out
+                targetPos.y *= -1.f;
+            }
+
+            auto pos = e.getComponent<cro::Transform>().getPosition();
+            const auto movement = targetPos - glm::vec2(pos);
+            
+            //this is read by the background fade callback
+            bgScale = std::clamp((pos.y + targetPos.y) / (targetPos.y * 2.f), 0.f, 1.f);
+
+            if (glm::length2(movement) < 0.1f)
+            {
+                pos.x = targetPos.x;
+                pos.y = targetPos.y;
+                e.getComponent<cro::Callback>().active = false;
+
+                if (dir == 0)
+                {
+                    if (dest == MenuID::LobbyV2)
+                    {
+                        m_currentMenu = MenuID::LobbyV2;
+                        m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::LobbyV2);
+                        dest = MenuID::Dummy;
+                    }
+                }
+                else
+                {
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Scorecard);
+                    dest = MenuID::LobbyV2;
+                    m_currentMenu = MenuID::LobbyV2;
+                }
+            }
+            else
+            {
+                pos += glm::vec3(movement, 0.f) * Speed;
+            }
+            e.getComponent<cro::Transform>().setPosition(pos);
+                
+        };
+    const auto viewScale = getViewScale();
+    auto pos = glm::vec2(cro::App::getWindow().getSize() / 2u) / viewScale;
+    pos.y *= -1.f;
+    entity.getComponent<cro::Transform>().setPosition(glm::vec3(pos, 1.95f));
+#else
         [this](cro::Entity e, float dt)
     {
         const float Speed = dt * 6.f;
@@ -5910,6 +5956,9 @@ void MenuState::createPreviousScoreCard(cro::Entity parent)
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
+        entity.getComponent<cro::Transform>().setPosition({ cro::App::getWindow().getSize().x / 2, ScoresOffscreenPos, 1.95f });
+#endif
+
 
     //m_lobbyWindowEntities[LobbyEntityID::Background].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -5930,10 +5979,25 @@ void MenuState::createPreviousScoreCard(cro::Entity parent)
     );
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
+#ifdef NEW_LOBBY
+        [this](cro::Entity e, float)
+        {
+            const auto& [_1, scale, _2] = m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Callback>().getUserData<ScorecardCallbackData>();
+            const glm::vec2 scaleSize = glm::vec2(cro::App::getWindow().getSize()) / getViewScale();
+
+            e.getComponent<cro::Transform>().setScale(scaleSize);
+
+            const auto alpha = cro::Util::Easing::easeInExpo(scale);
+            for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
+            {
+                v.colour.setAlpha(BackgroundAlpha * alpha);
+            }
+        };
+#else
         [this](cro::Entity e, float)
     {
         auto pos = m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Transform>().getPosition().y;
-        const auto [_1, targetPos, _2] = m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Callback>().getUserData<ScorecardCallbackData>();
+        const auto& [_1, targetPos, _2] = m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Callback>().getUserData<ScorecardCallbackData>();
         pos -= ScoresOffscreenPos;
         pos /= (targetPos - ScoresOffscreenPos);
 
@@ -5944,6 +6008,7 @@ void MenuState::createPreviousScoreCard(cro::Entity parent)
             v.colour.setAlpha(BackgroundAlpha * pos);
         }
     };
+#endif
     m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 

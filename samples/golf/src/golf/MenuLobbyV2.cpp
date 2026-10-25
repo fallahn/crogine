@@ -689,9 +689,7 @@ void MenuState::LobbyMenu::onShown()
     updateRulesTab(true);
     updateScoresTab(true);
 
-    //m_uiLayout.tabBar.activeIndex = TabID::Players;
     m_uiLayout.activateTab(TabID::Players);
-    LogI << "Set tab to players" << std::endl;
 }
 
 void MenuState::LobbyMenu::resetRepeatTimer(std::int32_t i, cro::Time resetTime)
