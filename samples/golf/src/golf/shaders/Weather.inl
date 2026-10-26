@@ -203,6 +203,7 @@ static const inline std::string WeatherVertex = R"(
     }
     const float FallSpeed = 32.0;//16.0;
     const float WindEffect = 10.0;
+    const float RainLength = 2.0; //must match value in Weather.cpp!
 #endif
 
     void main()
@@ -223,9 +224,16 @@ static const inline std::string WeatherVertex = R"(
         vec2 bounds = MaxBounds - MinBounds;
         position.xz += floor(-(position.xz + MinBounds) / bounds) * bounds;
 
+        float windMultiplier = 1.0;
+
+#if !defined(EASE_SNOW)
+        //offset more at the bottom of the rain
+        windMultiplier += (a_texCoord0.x / RainLength) / 10.0;
+#endif
+
 //TODO swizzle
-        position.x -= p * u_windData.x * u_windData.y * WindEffect;
-        position.z -= p * u_windData.z * u_windData.y * WindEffect;
+        position.x -= p * u_windData.x * u_windData.y * WindEffect * windMultiplier;
+        position.z -= p * u_windData.z * u_windData.y * WindEffect * windMultiplier;
 
 
         gl_Position = wvp * position;
