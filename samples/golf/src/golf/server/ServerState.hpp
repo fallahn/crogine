@@ -75,10 +75,11 @@ namespace sv
 
     struct ClientConnection final
     {
+        net::NetPeer peer;
         bool ready = false; //< player is ready to recieve game data, not lobby readiness (see GameState)
         bool mapLoaded = false;
         bool connected = false;
-        net::NetPeer peer;
+        bool spectator = false; //if true players on this client aren't added to the actual player list
         
         //TODO this is basically the same as the ConnectionData struct in client shared data
         std::uint8_t playerCount = 0;

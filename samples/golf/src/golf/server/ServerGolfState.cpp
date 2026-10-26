@@ -1944,7 +1944,8 @@ void GolfState::initScene()
     std::int32_t playerCount = 0; //used for score setting, below
     for (auto i = 0u; i < m_sharedData.clients.size(); ++i)
     {
-        if (m_sharedData.clients[i].connected)
+        if (m_sharedData.clients[i].connected
+            && !m_sharedData.clients[i].spectator)
         {
             clientCount++;
             clientSortData.emplace_back().clientID = static_cast<std::uint8_t>(i);
