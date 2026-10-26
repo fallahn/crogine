@@ -958,6 +958,32 @@ bool GolfGame::initialise()
 
             ImGui::NewLine();
 
+            ImGui::Text("Web socket");
+            ImGui::SetNextItemWidth(120.f);
+            if (ImGui::InputInt("Port", &m_sharedData.webPort, WebSock::MinPort, WebSock::MaxPort))
+            {
+                m_sharedData.webPort = std::clamp(m_sharedData.webPort, WebSock::MinPort, WebSock::MaxPort);
+            }
+            toolTip("Restart the websocket for changes to take effect.");
+            if (WebSock::isRunning())
+            {
+                ImGui::Text("Status: Active, Port: %d", WebSock::getPort());
+                ImGui::SameLine();
+                if (ImGui::Button("Stop"))
+                {
+                    WebSock::stop();
+                }
+            }
+            else
+            {
+                ImGui::Text("Status: Inactive");
+                ImGui::SameLine();
+                if (ImGui::Button("Start"))
+                {
+                    WebSock::start(m_sharedData.webPort);
+                }
+            }
+
             /*ImVec4 c = m_sharedData.mumLink->connected() ? ImVec4(0.f, 1.f, 0.f, 1.f) : ImVec4(1.f, 0.f, 0.f, 1.f);
             ImGui::ColorButton("##mumble", c, 0, { 24.f,24.f });
             ImGui::SameLine();

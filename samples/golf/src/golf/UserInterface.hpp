@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025
+Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/detail/Types.hpp>
+#include <crogine/gui/Gui.hpp>
 
 #include <string>
 
@@ -51,7 +52,17 @@ struct HelpNav final
     static constexpr float ScrollAmount = 12.f;
 };
 
-void showTip(const std::string&);
+static inline void toolTip(const std::string& msg)
+{
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(450.0f);
+        ImGui::TextUnformatted(msg.c_str());
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
 
 //called from main golf game handler to close active windows
 bool handleTopLevelEvent(const cro::Event&, SharedStateData&, HelpNav&);
