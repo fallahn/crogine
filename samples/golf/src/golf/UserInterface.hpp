@@ -52,7 +52,7 @@ struct HelpNav final
     static constexpr float ScrollAmount = 12.f;
 };
 
-static inline void toolTip(const std::string& msg)
+static inline void showToolTip(const std::string& msg)
 {
     if (ImGui::IsItemHovered())
     {

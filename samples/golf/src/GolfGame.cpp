@@ -991,7 +991,7 @@ bool GolfGame::initialise()
             {
                 m_sharedData.webPort = std::clamp(m_sharedData.webPort, WebSock::MinPort, WebSock::MaxPort);
             }
-            toolTip("Restart the websocket for changes to take effect.");
+            showToolTip("Restart the websocket for changes to take effect.");
             if (WebSock::isRunning())
             {
                 ImGui::Text("Status: Active, Port: %d", WebSock::getPort());
