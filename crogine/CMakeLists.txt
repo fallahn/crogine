@@ -32,7 +32,7 @@ SET(TARGET_ANDROID FALSE CACHE BOOL "Build the library for Android devices")
 SET(USE_GL_41 FALSE CACHE BOOL "Use OpenGL 4.1 instead of 4.6 on desktop builds.")
 SET(USE_PARALLEL_EXECUTION TRUE CACHE BOOL "Enable parallel execution, requires compiler support")
 SET(BUILD_KTX TRUE CACHE BOOL "Choose to fetch and build libktx instead of using the binary included in the repository")
-SET(BUILD_SDL FALSE BOOL "Choose to fetch and build libsdl3 instead of using the binary installed on the system")
+SET(BUILD_SDL FALSE CACHE BOOL "Choose to fetch and build libsdl3 instead of using the binary installed on the system")
 
 if(${TARGET_ANDROID})
   SET(${CMAKE_TOOLCHAIN_FILE} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/toolchains/android-arm.cmake")
@@ -127,10 +127,11 @@ else()
   SET(SDL_X11_XSCRNSAVER OFF CACHE BOOL "Disable screensaver" FORCE)
   SET(SDL_TESTS OFF CACHE BOOL "Build the SDL tests directory" FORCE)
   SET(SDL_TEST_LIBRARY OFF CACHE BOOL "Build the SDL test library" FORCE)
+  SET(SDL_JACK OFF CACHE BOOL "Use jack audio" FORCE)
   FetchContent_Declare(
       SDL3
       GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-      GIT_TAG origin/main
+      GIT_TAG release-3.4.18
       OVERRIDE_FIND_PACKAGE
   )
   FetchContent_MakeAvailable(SDL3)
