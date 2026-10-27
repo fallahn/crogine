@@ -55,6 +55,7 @@ source distribution.
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/util/Maths.hpp>
+#include <crogine/util/Wavetable.hpp>
 
 #include <Input.hpp>
 
@@ -4190,6 +4191,94 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
         }
 
 
+        //monitors wind speed and adjusts volume accordingly
+        struct WindVol final
+        {
+            float maxVolume = 0.f; //modulates the maximum volume
+            float targetMaxVolume = 0.f; //read directly from wind speed, max volume is eased towards this
+
+            float lfoVolume = 0.5f; //this is a multiplier so runs 0.5 - 1.f
+            float targetLfoVolume = 1.f;
+
+            float finalVolume = 0.f; //includes any LFO modulation
+
+            std::int32_t status = 0; //0 for stopped 1 for playing
+
+
+            //used for LFO
+            std::size_t lfoIndex = 0;
+            std::int32_t stepCount = 0;
+            const std::int32_t MaxSteps = 30; //this many update steps before reading the table output. ie 30x slower
+            const std::vector<float> WaveTable = cro::Util::Wavetable::noise(3.f);
+        };
+
+        auto windEnt = m_gameScene.createEntity();
+        windEnt.addComponent<cro::Transform>();
+        windEnt.addComponent<cro::Callback>().active = true;
+        windEnt.getComponent<cro::Callback>().setUserData<WindVol>();
+        windEnt.getComponent<cro::Callback>().function =
+            [this](cro::Entity e, float dt)
+            {
+                static constexpr float MinThreshold = 0.35f; //don't start until wind is at least this fast
+                static constexpr float MaxThreshold = 3.f; //absolute max wind (usually only 1, this is in extreme weather)
+                static constexpr float MaxRange = MaxThreshold - MinThreshold;
+
+                static constexpr float MinLFOAmount = 0.3f;
+
+                //calc max vol based on wind speed
+                auto& data = e.getComponent<cro::Callback>().getUserData<WindVol>();
+                data.targetMaxVolume = cro::Util::Easing::easeOutExpo(std::clamp((m_windUpdate.currentWindSpeed - MinThreshold) / MaxRange, 0.f, 1.f));
+                data.maxVolume = data.maxVolume + ((data.targetMaxVolume - data.maxVolume) * dt);
+
+                //use noise table to create LFO
+                data.stepCount = (data.stepCount + 1) % data.MaxSteps;
+                if (data.stepCount == 0)
+                {
+                    data.lfoIndex = (data.lfoIndex + 1) % data.WaveTable.size();
+                }
+
+                data.targetLfoVolume = (data.WaveTable[data.lfoIndex] + 1.f) / 2.f;
+                data.lfoVolume = data.lfoVolume + ((data.targetLfoVolume - data.lfoVolume) * dt);
+
+                //final volume is max vol modulated by LFO
+                data.finalVolume = data.maxVolume * (MinLFOAmount + (data.lfoVolume * (1.f - MinLFOAmount)));
+                data.status = data.maxVolume > 0.05f ? 1 : 0;
+
+                //TODO actually implement this
+                /*e.getComponent<cro::AudioEmitter>().setVolume(data.finalVolume);
+                if (data.status && e.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Paused)
+                {
+                    e.getComponent<cro::AudioEmitter>().play();
+                }
+                else if (!data.status && e.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing)
+                {
+                    e.getComponent<cro::AudioEmitter>().pause();
+                }*/
+            };
+
+        registerWindow([this, windEnt]() 
+            {
+                ImGui::Begin("Wind");
+                const auto& data = windEnt.getComponent<cro::Callback>().getUserData<WindVol>();
+
+                ImGui::Text("Wind speed %.2f", m_windUpdate.currentWindSpeed);
+                ImGui::Text("Final vol %.2f", data.finalVolume);
+
+                ImGui::Separator();
+                ImGui::Text("Target vol %.2f", data.targetMaxVolume);
+                ImGui::Text("Max vol %.2f", data.maxVolume);
+
+                ImGui::Separator();
+                ImGui::Text("Target LFO %.2f", data.targetLfoVolume);
+                ImGui::Text("Current LFO %.2f", data.lfoVolume);
+
+                ImGui::Separator();
+                const std::string s = data.status ? "Playing" : "Stopped";
+                ImGui::Text("Status: %s", s.c_str());
+                ImGui::End();
+            });
+
+
         //fades in the audio
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Callback>().active = true;
@@ -4210,7 +4299,6 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
                     m_gameScene.destroyEntity(e);
                 }
             };
-
     }
 }
 

@@ -129,7 +129,7 @@ namespace cro
             \brief Returns a vector containing a looping table of 1D noise
             for the given duration at the given sample rate
             \param duration Number of seconds the noise table should last for
-            \param amplitude The maxmium value of the voise table. Defaults to 1
+            \param amplitude The maxmium value of the noise table. Defaults to 1
             \param sampleRate The rate at which this table will be iterated in fps. Defaults to 60
             */
             static inline std::vector<float> noise(float duration, float amplitude = 1.f, float sampleRate = 60.f)
