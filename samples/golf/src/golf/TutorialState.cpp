@@ -3716,7 +3716,9 @@ void TutorialState::showContinue()
 
 void TutorialState::doCurrentAction()
 {
-    if (m_actionActive)
+    if (m_actionActive
+        //have to range check this because there's an edge case where this is activated before being reset
+        && m_currentAction < m_actionCallbacks.size()) 
     {
         //hide message
         m_messageEnt.getComponent<cro::Text>().setFillColour(cro::Colour::Transparent);
