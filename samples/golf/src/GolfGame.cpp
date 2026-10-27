@@ -210,6 +210,31 @@ namespace
             }
         }
     }
+
+    void updateDebugSymbols()
+    {
+        //pdb files are filtered out by the content system
+        //despite being highly useful in gathering user bug reports.
+        //to hack around this they are distributed as *.foo files
+        //and this function renames them as needed.
+        const auto basePath = SDL_GetBasePath();
+        const auto files = cro::FileSystem::listFiles(basePath);
+        for (const auto& file : files)
+        {
+            if (file.extension() == ".foo")
+            {
+                auto dest = file;
+                dest.replace_extension(".pdb");
+                std::error_code ec;
+                std::filesystem::rename(basePath / file, basePath / dest, ec);
+
+                if (ec)
+                {
+                    LogW << "Could not rename debug file: " << ec.message() << std::endl;
+                }
+            }
+        }
+    }
 }
 
 cro::RenderTarget* GolfGame::m_renderTarget = nullptr;
@@ -221,6 +246,8 @@ GolfGame::GolfGame(const std::vector<std::string>& args)
 {
 #ifdef _WIN32
     getWindow().setCursor(&m_cursor);
+
+    updateDebugSymbols();
 #endif
     //must be set before anything, else cfg is still loaded from default path
     setApplicationStrings("Trederia", "golf");
