@@ -1,6 +1,6 @@
 model Sun
 {
-	mesh = quad
+	mesh = "quad"
 	size = 9.0,9.0
 	//uv = 1.78, 1.0
 
@@ -8,7 +8,7 @@ model Sun
 	{
 		diffuse = "assets/materials/sun.png"
 		repeat = true
-		blendmode = add
+		blendmode = "add"
 		smooth = true
 	}
 }

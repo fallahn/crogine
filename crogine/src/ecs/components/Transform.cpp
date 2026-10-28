@@ -148,6 +148,11 @@ Transform& Transform::operator=(Transform&& other) noexcept
         If you get errors here in debug build chances are
         your project requires PARALLEL_GLOBAL_DISABLE to be defined
         */
+#ifdef CRO_DEBUG_
+#ifndef PARALLEL_GLOBAL_DISABLE
+        static_assert(false, "define PARALLEL_GLOBAL_DISABLE")
+#endif
+#endif
 
         //orphan any children
         for (auto c : m_children)

@@ -120,7 +120,7 @@ MainState::MainState(cro::StateStack& stack, cro::State::Context context, Resour
         addSystems();
         loadAssets();
         createScene();
-        //createMenus();
+        createMenus();
     });
 
     updateView();
@@ -171,6 +171,10 @@ void MainState::render()
 {
     m_backgroundScene.render();
     m_menuScene.render();
+
+    //TODO post processes have been separated out
+    //so we need to move background rendering to
+    //preRender() then render a post-pass here
 }
 
 //private

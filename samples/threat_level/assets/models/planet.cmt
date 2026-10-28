@@ -2,7 +2,7 @@ model GasPlanet
 {
 	//mesh = "assets/models/quad_sphere.cmf"
 	radius = 2.2
-	mesh = sphere
+	mesh = "sphere"
 
 	//cast_shadows = true
 

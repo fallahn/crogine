@@ -37,8 +37,8 @@ using namespace cro;
 
 SimpleText::SimpleText()
     : m_fontTexture (nullptr),
-    m_dirtyFlags    (DirtyFlags::All),
-    m_lastTextureID (0)
+    m_lastTextureID (0),
+    m_dirtyFlags    (DirtyFlags::All)
 {
     setPrimitiveType(GL_TRIANGLES);
 }

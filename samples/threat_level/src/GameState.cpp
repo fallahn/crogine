@@ -251,6 +251,9 @@ bool GameState::simulate(float dt)
 
 void GameState::render()
 {
+    //TODO post processes have been removed from
+    //the scene class so we need to preRender()
+    //the game scene then post-process here
     m_scene.render();
     m_uiScene.render();
 }

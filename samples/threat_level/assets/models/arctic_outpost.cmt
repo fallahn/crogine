@@ -16,6 +16,6 @@ model arctic_outpost
 	{
 		colour = 0.1, 0.1, 0.1, 0.4
 		mask_colour = 1.0, 1.0, 0.0
-		blendmode = alpha
+		blendmode = "alpha"
 	}
 }
