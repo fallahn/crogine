@@ -44,10 +44,10 @@ source distribution.
 #ifdef CRO_DEBUG_
 #if defined(PLATFORM_DESKTOP) && !defined(GL41)
 //use the gl debug context instead (see App.cpp)
-#define glCheck(x) do{x; cro::Detail::printLocation(/*__FILE__, __LINE__,*/ #x);}while (false)
-//#define glCheck(x) do{x; cro::Detail::glErrorCheck(__FILE__, __LINE__, #x);}while (false)
+#define glCheck(x) do{x; cro::Detail::printLocation(#x);}while (false)
+//#define glCheck(x) do{x; cro::Detail::glErrorCheck(#x);}while (false)
 #else
-#define glCheck(x) do{x; cro::Detail::glErrorCheck(/*__FILE__, __LINE__, */#x);}while (false)
+#define glCheck(x) do{x; cro::Detail::glErrorCheck(#x);}while (false)
 #endif
 #else
 #define glCheck(x) (x)
@@ -82,7 +82,7 @@ namespace cro
             return fileString;
         }
 
-        static inline void printLocation(/*const char* file, unsigned int line, */const char* expression, std::source_location location = std::source_location::current())
+        static inline void printLocation(const char* expression, std::source_location location = std::source_location::current())
         {
             const GLenum errorCode = glGetError();
             if (errorCode != GL_NO_ERROR)
@@ -90,15 +90,15 @@ namespace cro
                 std::string fileString = locationString(location);
 
                 std::stringstream ss;
-                ss << fileString//.substr(fileString.find_last_of("\\/") + 1) << "(" << line << ").\n" 
-                    << glErrorString(errorCode)
+                ss << fileString 
+                    << " " << glErrorString(errorCode)
                     << " Expression: " << expression
                     << std::endl;
                 Logger::log(ss.str(), Logger::Type::Error);
             }
         }
 
-        static inline void glErrorCheck(/*const char* file, unsigned int line, */const char* expression, std::source_location location = std::source_location::current())
+        static inline void glErrorCheck(const char* expression, std::source_location location = std::source_location::current())
         {
             //get the last error
             GLenum errorCode = glGetError();
@@ -158,7 +158,7 @@ namespace cro
                 //log the error
                 std::stringstream ss;
                 ss << "An internal OpenGL call failed in "
-                    << fileString//.substr(fileString.find_last_of("\\/") + 1) << "(" << line << ")."
+                    << fileString
                     << "\nExpression:\n   " << expression
                     << "\nError description:\n   " << error << "\n   " << description << "\n"
                     << std::endl;

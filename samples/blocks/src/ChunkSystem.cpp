@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2025
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -42,6 +42,7 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/systems/ModelRenderer.hpp>
 
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -61,9 +62,10 @@ namespace
             ATTRIBUTE vec3 a_normal;
             ATTRIBUTE MED vec2 a_texCoord0;
 
-            uniform mat4 u_worldMatrix;
-            uniform mat4 u_worldViewMatrix;
-            uniform mat4 u_projectionMatrix;
+            //uniform mat4 u_worldMatrix;
+            //uniform mat4 u_worldViewMatrix;
+            //uniform mat4 u_projectionMatrix;
+#include WVP_UNIFORMS
 
             VARYING_OUT MED vec3 v_colour;
             VARYING_OUT MED vec2 v_texCoord;
@@ -159,9 +161,9 @@ namespace
             ATTRIBUTE vec4 a_position;
             ATTRIBUTE vec3 a_colour;
 
-            uniform mat4 u_worldViewMatrix;
-            uniform mat4 u_projectionMatrix;
-
+            //uniform mat4 u_worldViewMatrix;
+            //uniform mat4 u_projectionMatrix;
+#include WVP_UNIFORMS
             VARYING_OUT MED vec3 v_colour;
 
             void main()
@@ -315,7 +317,7 @@ void ChunkSystem::process(float dt)
 
     auto forwardVector = getScene()->getActiveCamera().getComponent<cro::Transform>().getForwardVector();
     //auto camPos = getScene()->getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
-    const auto& cam = getScene()->getActiveCamera().getComponent<cro::Camera>();
+    //const auto& cam = getScene()->getActiveCamera().getComponent<cro::Camera>();
     
 
     auto& entities = getEntities();
@@ -415,9 +417,11 @@ void ChunkSystem::parseChunkData(const cro::NetEvent::Packet& packet)
 
                 auto waterMaterial = m_resources.materials.get(m_materialIDs[MaterialID::ChunkWater]);
                 entity.getComponent<cro::Model>().setMaterial(SubMeshID::Water, waterMaterial);
+                //entity.getComponent<cro::Model>().setMaterial(SubMeshID::Water, material);
 
                 auto detailMaterial = m_resources.materials.get(m_materialIDs[MaterialID::ChunkDetail]);
                 entity.getComponent<cro::Model>().setMaterial(SubMeshID::Foliage, detailMaterial);
+                //entity.getComponent<cro::Model>().setMaterial(SubMeshID::Foliage, material);
 
                 //remember to update this if the chunk is updated
                 //this can nearly double the frame rate when skipping a lot of empty chunks!
@@ -448,9 +452,11 @@ void ChunkSystem::updateMesh()
 {
     VertexOutput vertexOutput;
 
-    m_chunkMutex->lock();
+    //m_chunkMutex->lock();
     if (!m_outputQueue.empty())
     {
+        std::scoped_lock lock(*m_chunkMutex);
+
         auto& front = m_outputQueue.front();
         vertexOutput.position = front.position;
         vertexOutput.vertexData.swap(front.vertexData);
@@ -460,7 +466,7 @@ void ChunkSystem::updateMesh()
         vertexOutput.triangles.swap(front.triangles);
         m_outputQueue.pop();
     }
-    m_chunkMutex->unlock();
+    //m_chunkMutex->unlock();
 
     if (!vertexOutput.vertexData.empty() && (!vertexOutput.solidIndices.empty() || !vertexOutput.waterIndices.empty()))
     {
@@ -505,11 +511,13 @@ void ChunkSystem::threadFunc()
         ChunkComponent::MeshType meshType = ChunkComponent::Greedy;
 
         //lock the input queue
-        m_chunkMutex->lock();
+        //m_chunkMutex->lock();
 
         //check queue
         if (!m_inputQueue.empty())
         {
+            std::scoped_lock l(*m_chunkMutex);
+
             //check the chunk is even visible before updating it
             auto entity = m_inputQueue.front();
             //const auto& model = entity.getComponent<cro::Model>();
@@ -531,7 +539,7 @@ void ChunkSystem::threadFunc()
         }
 
         //unlock queue
-        m_chunkMutex->unlock();
+        //m_chunkMutex->unlock();
 
         //if input do work
         if (chunk)

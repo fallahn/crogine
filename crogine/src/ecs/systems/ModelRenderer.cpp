@@ -419,6 +419,9 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
                     //draw skybox if it's available
                     drawSkybox(camComponent);
                     skyboxDrawn = true;
+                    //hmm for some reason when we move to transparent
+                    //passes the shader becomes unbound - TODO find out why.
+                    activeShader = 0;
                 }
                 previousMode = material.blendMode;
 
@@ -429,6 +432,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
                     sSwitches++;
                     activeShader = material.shader;
                 }
+                assert(material.shader != 0);
 
                 //apply shader uniforms from material
                 //DEAR FUTURE ME: if you end up back here wondering why the matrices aren't calculated correctly

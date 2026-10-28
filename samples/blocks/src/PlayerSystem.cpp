@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -130,7 +130,7 @@ void PlayerSystem::processInput(cro::Entity entity)
     //update all the inputs until 1 before next
     //free input. Remember to take into account
     //the wrap around of the indices
-    auto lastIdx = (player.nextFreeInput + (Player::HistorySize - 1)) % Player::HistorySize;
+    const auto lastIdx = (player.nextFreeInput + (Player::HistorySize - 1)) % Player::HistorySize;
     while (player.lastUpdatedInput != lastIdx)
     {
         processMovement(entity, player.inputStack[player.lastUpdatedInput]);

@@ -180,14 +180,24 @@ bool GameState::handleEvent(const cro::Event& evt)
 
     if (evt.type == SDL_EVENT_KEY_UP)
     {
+        switch (evt.key.scancode)
+        {
+        default: break;
+        case SDL_SCANCODE_LALT:
+            cro::App::getWindow().setMouseCaptured(true);
+            break;
+        }
+
         switch (evt.key.key)
         {
         default: break;
+#ifndef CRO_DEBUG_
         case SDLK_PAUSE:
         case SDLK_ESCAPE:
         case SDLK_P:
             requestStackPush(States::ID::Pause);
             break;
+#endif
         case SDLK_F3:
             //first/third person camera
             updateCameraPosition();
@@ -256,6 +266,17 @@ bool GameState::handleEvent(const cro::Event& evt)
         }
         break;
 
+        }
+    }
+
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
+    {
+        switch (evt.key.scancode)
+        {
+        default: break;
+        case SDL_SCANCODE_LALT:
+            cro::App::getWindow().setMouseCaptured(false);
+            break;
         }
     }
 
@@ -350,9 +371,9 @@ void GameState::addSystems()
     m_gameScene.addSystem<InterpolationSystem>(mb);
     m_gameScene.addSystem<PlayerSystem>(mb, m_chunkManager, m_voxelData);
     m_gameScene.addSystem<cro::CallbackSystem>(mb); //currently used to update body model positions so needs to come after player update
+    m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<ChunkSystem>(mb, m_resources, m_chunkManager, m_voxelData);
-    m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);

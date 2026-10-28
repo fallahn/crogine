@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -243,6 +243,7 @@ void PauseState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Camera>().resizeCallback = std::bind(&PauseState::updateView, this, std::placeholders::_1);
+    updateView(entity.getComponent<cro::Camera>());
 
     m_scene.setActiveCamera(entity);
 }
