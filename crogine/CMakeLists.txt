@@ -111,12 +111,6 @@ else()
   add_definitions(-DCRO_BUILD)
 endif()
 
-if (LINUX AND BUILD_KTX)
-#for some reason the CI on github has started requiring this
-#when building libktx - is this going to affect the rest of
-#the source too??
-remove_definitions(-D__AVX__ -D__AVX2__ -D__AVX512F__)
-endif () 
 
 SET (CMAKE_DEBUG_POSTFIX -d)
 
@@ -185,7 +179,7 @@ if (APPLE OR BUILD_KTX)
   FetchContent_Declare(
           fetch_ktx
           GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software
-          GIT_TAG        v4.4.2
+          GIT_TAG        origin/main
   )
   FetchContent_MakeAvailable(fetch_ktx)
 
