@@ -12,6 +12,7 @@
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/SpriteAnimation.hpp>
 #include <crogine/ecs/components/Text.hpp>
 
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -19,9 +20,13 @@
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
+#include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
+#include <crogine/ecs/systems/SpriteSystem3D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
+
+#include <crogine/graphics/SpriteSheet.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Easings.hpp>
@@ -209,6 +214,8 @@ void SurrealState::addSystems()
     auto& mb = getContext().appInstance.getMessageBus();
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
+    m_gameScene.addSystem<cro::SpriteAnimationSystem>(mb);
+    m_gameScene.addSystem<cro::SpriteSystem3D>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
@@ -528,6 +535,22 @@ void SurrealState::createScene()
                 break;
             }
         };
+
+
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/sprites/poopsnail.spt", m_resources.textures);
+
+    for (auto i = 0; i < 3; ++i)
+    {
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(glm::vec3(1.f) / 32.f);
+        entity.getComponent<cro::Transform>().setPosition({ i - 1, 1.f - 1.f });
+        entity.addComponent<cro::Model>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("poopsnail");
+        entity.addComponent<cro::SpriteAnimation>().play(0);
+    }
+
+
 
 
     auto resize = [](cro::Camera& cam)

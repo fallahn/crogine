@@ -1,7 +1,7 @@
 sprite_sheet poopsnail
 {
 	src = "assets/images/poopsnail.png"
-	blendmode = alpha	
+	blendmode = "alpha"
 
 	sprite poopsnail
 	{
