@@ -40,6 +40,7 @@ endif()
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/")
 
+#--Flags--
 if(CMAKE_COMPILER_IS_GNUCXX)
   if(PROJECT_STATIC_RUNTIME)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-comment -std=c++20 -static")
@@ -51,6 +52,9 @@ endif()
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-potentially-evaluated-expression")
 endif()
+
+
+#--Definitions--
 
 #glm wants this now
 add_definitions(-DGLM_ENABLE_EXPERIMENTAL)
@@ -107,9 +111,16 @@ else()
   add_definitions(-DCRO_BUILD)
 endif()
 
+if (LINUX AND BUILD_KTX)
+#for some reason the CI on github has started requiring this
+#when building libktx - is this going to affect the rest of
+#the source too??
+remove_definitions(-D__AVX__ -D__AVX2__ -D__AVX512F__)
+endif () 
+
 SET (CMAKE_DEBUG_POSTFIX -d)
 
-# We're using c++20
+#We're using c++20
 SET (CMAKE_CXX_STANDARD 20)
 SET (CMAKE_CXX_STANDARD_REQUIRED ON)
 
