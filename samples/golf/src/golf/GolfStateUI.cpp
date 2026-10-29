@@ -2341,23 +2341,26 @@ void GolfState::createPowerBars(cro::Entity rootNode)
 
     //displays the range of the selected putter
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(bounds.width + 10.f, 12.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(bounds.width + 2.f, 12.f));
+    //entity.addComponent<cro::Transform>().setPosition(glm::vec2(bounds.width, bounds.height + 7.f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Left);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PuttPower;
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    auto rangeEnt = entity;
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().rotate(cro::Util::Const::PI);
-    entity.getComponent<cro::Transform>().setPosition({ 3.f, 11.f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("slope_indicator");
-    entity.addComponent<cro::SpriteAnimation>();
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PuttPower;
-    rangeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    //auto rangeEnt = entity;
+    //entity = m_uiScene.createEntity();
+    //entity.addComponent<cro::Transform>().rotate(cro::Util::Const::PI);
+    //entity.getComponent<cro::Transform>().setPosition({ 3.f, 11.f });
+    //entity.addComponent<cro::Drawable2D>();
+    //entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("slope_indicator");
+    //entity.addComponent<cro::SpriteAnimation>();
+    //entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PuttPower;
+    //rangeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //power bar
@@ -2427,29 +2430,32 @@ void GolfState::createPowerBars(cro::Entity rootNode)
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::BarEntLarge;
     entity.addComponent<cro::Sprite>() = m_sharedData.decimatePowerBar ? m_sprites[SpriteID::PowerBarDouble10] : m_sprites[SpriteID::PowerBarDouble];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, (bounds.height / 2.f) - 2.f, -0.07f));
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, std::floor(bounds.height / 3.f) - 2.f, -0.07f));
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     barEnt = entity;
 
     //current selected range
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(bounds.width + 8.f, 12.f));
+    //entity.addComponent<cro::Transform>().setPosition(glm::vec2(bounds.width + 8.f, 12.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(bounds.width - 24.f, bounds.height -9.f, 0.3f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PuttPower;
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    rangeEnt = entity;
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().rotate(cro::Util::Const::PI);
-    entity.getComponent<cro::Transform>().setPosition({ 3.f, 11.f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("slope_indicator");
-    entity.addComponent<cro::SpriteAnimation>();
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PuttPower;
-    rangeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    //rangeEnt = entity;
+    //entity = m_uiScene.createEntity();
+    //entity.addComponent<cro::Transform>().rotate(cro::Util::Const::PI);
+    //entity.getComponent<cro::Transform>().setPosition({ 3.f, 11.f });
+    //entity.addComponent<cro::Drawable2D>();
+    //entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("slope_indicator");
+    //entity.addComponent<cro::SpriteAnimation>();
+    //entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PuttPower;
+    //rangeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //power bar
     BarCentre = bounds.width / 2.f;
@@ -2497,7 +2503,7 @@ void GolfState::createPowerBars(cro::Entity rootNode)
 
     //flag power/distance when putting
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(2.f, BarHeight, -0.05f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(2.f, BarHeight - 16.f, -0.05f));
     entity.getComponent<cro::Transform>().setOrigin({ -12.f, 6.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MiniFlagLarge];

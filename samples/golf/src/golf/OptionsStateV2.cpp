@@ -1580,13 +1580,13 @@ void OptionsStateV2::createSettingsItems()
 
     //use imperial measurements
     item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
-    item->title = "Use Imperial Measurements";
-    item->description = "Render distances in Yards, Feet and Inches instead of Metres and Centimetres";
+    item->title = "Measurement Units";
+    item->description = "Render distances in Yards, Feet and Inches or Metres and Centimetres";
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.imperialMeasurements = i.selectedIndex == 1;
         };
-    item->labels = { "No", "Yes" };
+    item->labels = { "Metric", "Imperial" };
     item->selectedIndex = m_sharedData.imperialMeasurements ? 1 : 0;
 
 

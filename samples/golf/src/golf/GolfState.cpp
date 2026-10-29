@@ -2173,16 +2173,10 @@ void GolfState::handleMessage(const cro::Message& msg)
                         {
                             if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
                             {
-                                auto club = getClub();
-                                if (club == ClubID::Putter)
-                                {
-                                    const auto str = Clubs[ClubID::Putter].getName(m_sharedData.imperialMeasurements, m_distanceToHole);
-                                    e.getComponent<cro::Text>().setString(str.substr(str.find_last_of(' ') + 1));
-                                }
-                                else
-                                {
-                                    e.getComponent<cro::Text>().setString(" ");
-                                }
+                                const auto club = getClub();
+                                const auto dampening = club == ClubID::Putter ? 1.f : getDampening();
+                                const auto str = Clubs[club].getName(m_sharedData.imperialMeasurements, m_distanceToHole, dampening);
+                                e.getComponent<cro::Text>().setString(str.substr(str.find_last_of(' ') + 1));
                             }
                             else
                             {
@@ -2706,16 +2700,10 @@ void GolfState::handleMessage(const cro::Message& msg)
                         if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
                         {
 
-                            auto club = getClub();
-                            if (club == ClubID::Putter)
-                            {
-                                auto str = Clubs[ClubID::Putter].getName(m_sharedData.imperialMeasurements, m_distanceToHole);
-                                e.getComponent<cro::Text>().setString(str.substr(str.find_last_of(' ') + 1));
-                            }
-                            else
-                            {
-                                e.getComponent<cro::Text>().setString(" ");
-                            }
+                            const auto club = getClub();
+                            const float dampening = club == ClubID::Putter ? 1.f : getDampening();
+                            const auto str = Clubs[club].getName(m_sharedData.imperialMeasurements, m_distanceToHole, dampening);
+                            e.getComponent<cro::Text>().setString(str.substr(str.find_last_of(' ') + 1));
                         }
                         else
                         {
