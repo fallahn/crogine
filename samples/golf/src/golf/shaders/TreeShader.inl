@@ -41,6 +41,9 @@ R"(
 #include INSTANCE_ATTRIBS
 #else
     uniform mat3 u_normalMatrix;
+//saves an assignment just to rename a var
+#define worldMatrix u_worldMatrix
+#define normalMatrix u_normalMatrix
 #endif
     uniform mat4 u_worldMatrix;
 
@@ -79,7 +82,7 @@ R"(
     const float Amp = 0.01;
 
     const float MinVisibility = 0.3;
-    const float MinWindDistance = 50.0;
+    const float MinWindDistance = 80.0;
 
 #include WATER_LEVEL
 
@@ -96,12 +99,9 @@ R"(
 
     #if defined (INSTANCING)
 #include INSTANCE_MATRICES
-    #else
-        mat4 worldMatrix = u_worldMatrix;
-        mat3 normalMatrix = u_normalMatrix;
     #endif
 
-vec4 translation = worldMatrix[3];
+        vec4 translation = worldMatrix[3];
 
         float randVal = rand(vec2(translation.x + gl_VertexID, translation.z + gl_VertexID));
         float offset = randVal * u_randAmount;
@@ -132,7 +132,7 @@ float distance = length(worldPosition.xyz - u_cameraWorldPosition);
     #if defined (HQ)
 if(visibility > MinVisibility
     && distance < MinWindDistance){
-        float strength = clamp(u_windData.y, 0.0, 1.1) * (1.0 - smoothstep(0.8, 0.99, distance / MinWindDistance));
+        float strength = clamp(u_windData.y, 0.0, 2.4) * (1.0 - smoothstep(0.7, 0.99, distance / MinWindDistance));
 
         WindResult windResult = getWindData(position.xz, worldPosition.xz);
         windResult.lowFreq *= (0.5 * strength) + 0.5;
@@ -145,8 +145,9 @@ if(visibility > MinVisibility
         vec3 windDir = normalize(vec3(u_windData.x, 0.f, u_windData.z));
         float dirStrength = dot(v_data.normal, windDir);
 
-        x *= 3.0;
-        vec2 rot = vec2(sin(x * strength), cos(x * strength));
+        //x *= 3.0;
+        float rotStrength = clamp(strength, 0.0, 1.1);
+        vec2 rot = vec2(sin(x * rotStrength), cos(x * rotStrength));
         v_data.rotation[0] = vec2(rot.y, -rot.x);
         v_data.rotation[1]= rot;
 

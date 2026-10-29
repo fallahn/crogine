@@ -205,7 +205,7 @@ static inline const std::string WindCalc = R"(
         retVal.lowFreq = freqSample.bb;
 
 
-        float windStrength = clamp(u_windData.y, 0.0, 1.1);
+        float windStrength = clamp(u_windData.y, 0.0, 2.4);
         retVal.highFreq *= 2.0;
         retVal.highFreq -= 1.0;
         retVal.highFreq *= windStrength;
