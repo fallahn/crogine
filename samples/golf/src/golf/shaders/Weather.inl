@@ -228,7 +228,7 @@ static const inline std::string WeatherVertex = R"(
 
 #if !defined(EASE_SNOW)
         //offset more at the bottom of the rain
-        windMultiplier += (a_texCoord0.x / RainLength) / 10.0;
+        windMultiplier -= (a_texCoord0.x / RainLength) / 10.0;
 #endif
 
 //TODO swizzle

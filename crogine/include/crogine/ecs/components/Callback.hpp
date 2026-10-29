@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -58,9 +58,10 @@ namespace cro
          - or modify the userData member directly
         */
         template <typename T, typename... Args>
-        void setUserData(Args&&... args)
+        T& setUserData(Args&&... args)
         {
             userData = std::make_any<T>(std::forward<Args>(args)...);
+            return getUserData<T>();
         }
 
         /*!
