@@ -132,7 +132,7 @@ float distance = length(worldPosition.xyz - u_cameraWorldPosition);
     #if defined (HQ)
 if(visibility > MinVisibility
     && distance < MinWindDistance){
-        float strength = clamp(u_windData.y, 0.0, 2.4) * (1.0 - smoothstep(0.7, 0.99, distance / MinWindDistance));
+        float strength = clamp(u_windData.y, 0.0, 1.2) * (1.0 - smoothstep(0.7, 0.99, distance / MinWindDistance));
 
         WindResult windResult = getWindData(position.xz, worldPosition.xz);
         windResult.lowFreq *= (0.5 * strength) + 0.5;
@@ -174,7 +174,7 @@ if(visibility > MinVisibility
         float dirStrength = a_colour.b;
 
         windOffset = (windDir * u_windData.y * dirStrength) + windOffset;
-        worldPosition.xyz = (windOffset * MaxWindOffset * u_windData.y) + worldPosition.xyz;
+        worldPosition.xyz = (windOffset * MaxWindOffset * clamp(u_windData.y, 0.0, 2.4)) + worldPosition.xyz;
     #endif
 
 #if defined(WOBBLE)

@@ -3852,6 +3852,10 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
                                 e.getComponent<cro::AudioEmitter>().setVolume((baseVolume * MinAmount) + (baseVolume * MaxAmount * multiplier));
                             };
                     }
+                    else
+                    {
+                        //TODO duck the audio with the strength of the wind
+                    }
 
                     rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
                 }
@@ -4135,62 +4139,6 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
         }
 
 
-
-        if (loadTrees)
-        {
-            const std::array<std::string, 3u> paths =
-            {
-                "assets/golf/sound/ambience/trees01.ogg",
-                "assets/golf/sound/ambience/trees03.ogg",
-                "assets/golf/sound/ambience/trees02.ogg"
-            };
-
-            /*const std::array positions =
-            {
-                glm::vec3(80.f, 4.f, -66.f),
-                glm::vec3(240.f, 4.f, -66.f),
-                glm::vec3(160.f, 4.f, -66.f),
-                glm::vec3(240.f, 4.f, -123.f),
-                glm::vec3(160.f, 4.f, -123.f),
-                glm::vec3(80.f, 4.f, -123.f)
-            };
-
-            auto callback = [&](cro::Entity e, float)
-            {
-                float amount = std::min(1.f, m_windUpdate.currentWindSpeed);
-                float pitch = 0.5f + (0.8f * amount);
-                float volume = 0.05f + (0.3f * amount);
-
-                e.getComponent<cro::AudioEmitter>().setPitch(pitch);
-                e.getComponent<cro::AudioEmitter>().setVolume(volume);
-            };
-
-            //this works but... meh
-            for (auto i = 0u; i < paths.size(); ++i)
-            {
-                if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + paths[i]))
-                {
-                    for (auto j = 0u; j < 2u; ++j)
-                    {
-                        auto id = m_resources.audio.load(paths[i], true);
-
-                        auto entity = m_gameScene.createEntity();
-                        entity.addComponent<cro::Transform>().setPosition(positions[i + (j * paths.size())]);
-                        entity.addComponent<cro::AudioEmitter>().setSource(m_resources.audio.get(id));
-                        entity.getComponent<cro::AudioEmitter>().setVolume(0.f);
-                        entity.getComponent<cro::AudioEmitter>().setLooped(true);
-                        entity.getComponent<cro::AudioEmitter>().setRolloff(0.f);
-                        entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
-                        entity.getComponent<cro::AudioEmitter>().play();
-
-                        entity.addComponent<cro::Callback>().active = true;
-                        entity.getComponent<cro::Callback>().function = callback;
-                    }
-                }
-            }*/
-        }
-
-
         //monitors wind speed and adjusts volume accordingly
         struct WindVol final
         {
@@ -4212,6 +4160,7 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
             const std::vector<float> WaveTable = cro::Util::Wavetable::noise(3.f);
 
             float minThreshold = 0.15f; //don't start until wind is at least this fast
+            float limitMultiplier = 0.5f; //allows capping the max volume
         };
 
         if (m_sharedData.mapDirectory != "course_13"
@@ -4242,7 +4191,7 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
                 data.lfoVolume = data.lfoVolume + ((data.targetLfoVolume - data.lfoVolume) * dt);
 
                 //final volume is max vol modulated by LFO
-                data.finalVolume = data.maxVolume * (MinLFOAmount + (data.lfoVolume * (1.f - MinLFOAmount)));
+                data.finalVolume = data.maxVolume * (MinLFOAmount + (data.lfoVolume * (1.f - MinLFOAmount))) * data.limitMultiplier;
                 data.status = data.maxVolume > 0.05f ? 1 : 0;
 
                 e.getComponent<cro::AudioEmitter>().setVolume(data.finalVolume);
@@ -4254,6 +4203,8 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
                 {
                     e.getComponent<cro::AudioEmitter>().pause();
                 }
+
+                e.getComponent<cro::Transform>().setPosition(m_gameScene.getActiveListener().getComponent<cro::Transform>().getWorldPosition() + glm::vec3(0.f, 0.15f, 0.f));
             };
 
             auto windEnt = m_gameScene.createEntity();
@@ -4262,7 +4213,7 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
             windEnt.getComponent<cro::AudioEmitter>().setVolume(0.f);
             windEnt.getComponent<cro::AudioEmitter>().play();
             windEnt.addComponent<cro::Callback>().active = true;
-            windEnt.getComponent<cro::Callback>().setUserData<WindVol>();
+            windEnt.getComponent<cro::Callback>().setUserData<WindVol>().limitMultiplier = 0.68f;
             windEnt.getComponent<cro::Callback>().function = callback;
 
             windEnt = m_gameScene.createEntity();
