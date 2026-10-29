@@ -419,8 +419,8 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
                     //draw skybox if it's available
                     drawSkybox(camComponent);
                     skyboxDrawn = true;
-                    //hmm for some reason when we move to transparent
-                    //passes the shader becomes unbound - TODO find out why.
+                    //drawing the skybox will change the active program
+                    //so we need to reset this.
                     activeShader = 0;
                 }
                 previousMode = material.blendMode;

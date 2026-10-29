@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -1293,10 +1293,26 @@ void DrivingState::createPowerBars(cro::Entity rootNode)
         m_sprites[SpriteID::PowerBarDouble10] : 
         m_sprites[SpriteID::PowerBarDouble];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, std::floor(bounds.height / 3.f)));
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     barEnt = entity;
+
+
+    const auto str = Clubs[m_inputParser.getClub()].getName(m_sharedData.imperialMeasurements, 0.f);
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(bounds.width - 24.f, bounds.height - 9.f, 0.3f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setString(str.substr(str.find_last_of(' ') + 1));
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PuttPower;
+    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     //inner bar
     barCentre = bounds.width / 2.f;

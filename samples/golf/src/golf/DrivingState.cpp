@@ -822,6 +822,21 @@ void DrivingState::handleMessage(const cro::Message& msg)
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
 
+
+            //update the power bar label (only appears on large power bar)
+            cmd.targetFlags = CommandID::UI::PuttPower;
+            cmd.action = [this](cro::Entity e, float)
+                {
+                    if (e.hasComponent<cro::Text>())
+                    {
+                        const auto str = Clubs[m_inputParser.getClub()].getName(m_sharedData.imperialMeasurements, 0.f);
+                        e.getComponent<cro::Text>().setString(str.substr(str.find_last_of(' ') + 1));
+                    }
+                };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
+
             //set the correct club model on our attachment
             const auto club = m_inputParser.getClub();
             if (m_avatar.hands)
