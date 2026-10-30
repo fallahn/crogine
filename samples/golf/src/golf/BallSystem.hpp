@@ -134,7 +134,7 @@ public:
 
     glm::vec3 getWindDirection() const;
     void forceWindChange();
-    void setMaxStrengthMultiplier(float m) { m_maxStrengthMultiplier = std::clamp(m, 1.f, 5.f); }
+    void setMaxStrengthMultiplier(float m) { m_maxStrengthMultiplier = std::clamp(m, 0.5f, 5.f); }
     void enableRandomWind(bool e) { m_useRandomWind = e; }
 
     //this will modify the hole data by reading the collision

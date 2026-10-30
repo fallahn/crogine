@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -133,7 +133,7 @@ struct WindEffectCallback final
 
         if (current > 0)
         {
-            auto colour = glm::mix(static_cast<glm::vec4>(TextGoldColour), static_cast<glm::vec4>(TextHighlightColour), current);
+            auto colour = glm::mix(static_cast<glm::vec4>(TextGoldColour), static_cast<glm::vec4>(TextHighlightColour), std::clamp(current, 0.f ,1.f));
             auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
             for (auto& v : verts)
             {

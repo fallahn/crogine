@@ -1875,9 +1875,25 @@ void GolfState::initScene()
 
     auto& mb = m_sharedData.messageBus;
     m_scene.addSystem<cro::CallbackSystem>(mb);
+
+    auto maxWind = m_sharedData.maxWind;
+    switch (m_sharedData.weatherType)
+    {
+    default: break;
+    case WeatherType::Mist:
+        //hmm it's generally not windy while misty, however we
+        //don't want to subvert expectations if the player chose high winds
+        maxWind *= 0.5f; 
+        break;
+    case WeatherType::Rain:
+        //whereas full on rain tends to be more blustery.
+        maxWind = std::min(maxWind * 1.5f, 3.f);
+        break;
+    }
+
     auto* bs = m_scene.addSystem<BallSystem>(mb);
     bs->setGimmeRadius(m_sharedData.gimmeRadius);
-    bs->setMaxStrengthMultiplier(m_sharedData.maxWind);
+    bs->setMaxStrengthMultiplier(maxWind);
     bs->enableRandomWind(m_sharedData.randomWind);
 
     if (m_sharedData.weatherType == WeatherType::Showers)
