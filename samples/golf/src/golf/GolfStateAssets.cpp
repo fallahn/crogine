@@ -3801,6 +3801,18 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
                 e.getComponent<cro::Transform>().move(dir * 10.f * dt);
             };
 
+        //calculates ducking volume based on wind speed
+        const auto calcWindVolume = 
+            [this](float currVolume, float dt)
+            {
+                static constexpr float MinThreshold = 0.2f;
+                static constexpr float MaxThreshold = 3.f;
+                static constexpr float MaxRange = MaxThreshold - MinThreshold;
+
+                const float targetMaxVolume = cro::Util::Easing::easeOutExpo(std::clamp((m_windUpdate.currentWindSpeed - MinThreshold) / MaxRange, 0.f, 1.f));
+                return currVolume + ((targetMaxVolume - currVolume) * dt);
+            };
+
         cro::AudioScape as;
         if (as.loadFromFile(m_audioPath, m_resources.audio))
         {
@@ -3837,24 +3849,38 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
                     {
                         entity.getComponent<cro::AudioEmitter>().setVolume(entity.getComponent<cro::AudioEmitter>().getVolume() * 0.25f);
                     }
-                    //or fade with showers
-                    else if (m_sharedData.weatherType == WeatherType::Showers)
+                    else
                     {
+                        //duck the audio with the strength of the wind
+                        //and optionally showers
                         entity.addComponent<cro::Callback>().active = true;
-                        entity.getComponent<cro::Callback>().setUserData<const float>(entity.getComponent<cro::AudioEmitter>().getVolume());
-                        entity.getComponent<cro::Callback>().function = 
-                            [this](cro::Entity e, float dt)
+                        entity.getComponent<cro::Callback>().setUserData<std::pair<const float, float>>(
+                            entity.getComponent<cro::AudioEmitter>().getVolume(), 1.f);
+                        entity.getComponent<cro::Callback>().function =
+                            [this, calcWindVolume](cro::Entity e, float dt)
                             {
                                 static constexpr float MinAmount = 0.25f;
                                 static constexpr float MaxAmount = 1.f - MinAmount;
-                                const auto baseVolume = e.getComponent<cro::Callback>().getUserData<const float>();
-                                const auto multiplier = 1.f - m_gameScene.getSystem<WeatherAnimationSystem>()->getOpacity();
+                                auto& [baseVolume, windMultiplier] = e.getComponent<cro::Callback>().getUserData<std::pair<const float, float>>();
+                                windMultiplier = calcWindVolume(windMultiplier, dt);
+                                auto multiplier = (1.f - windMultiplier);
+                                if (m_sharedData.weatherType == WeatherType::Showers)
+                                {
+                                    multiplier *= (1.f - m_gameScene.getSystem<WeatherAnimationSystem>()->getOpacity());
+                                }
                                 e.getComponent<cro::AudioEmitter>().setVolume((baseVolume * MinAmount) + (baseVolume * MaxAmount * multiplier));
                             };
-                    }
-                    else
-                    {
-                        //TODO duck the audio with the strength of the wind
+
+                        //registerWindow([entity, i]()
+                        //    {
+                        //        const std::string label = "Window##" + std::to_string(i);
+                        //        ImGui::Begin(label.c_str());
+                        //        const auto baseVol = entity.getComponent<cro::Callback>().getUserData<std::pair<const float, float>>().first;
+                        //        ImGui::Text("Base Vol: %.2f", baseVol);
+                        //        const auto vol = entity.getComponent<cro::AudioEmitter>().getVolume();
+                        //        ImGui::Text("Volume: %.2f", vol);
+                        //        ImGui::End();
+                        //    });
                     }
 
                     rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

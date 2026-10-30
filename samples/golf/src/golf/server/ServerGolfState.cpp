@@ -1887,7 +1887,7 @@ void GolfState::initScene()
         break;
     case WeatherType::Rain:
         //whereas full on rain tends to be more blustery.
-        maxWind = std::min(maxWind * 1.5f, 3.f);
+        maxWind = std::min(maxWind * 1.25f, 3.f);
         break;
     }
 
