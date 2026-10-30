@@ -2175,7 +2175,9 @@ void GolfState::handleMessage(const cro::Message& msg)
                             {
                                 const auto club = getClub();
                                 const auto dampening = club == ClubID::Putter ? 1.f : getDampening();
-                                const auto str = Clubs[club].getName(m_sharedData.imperialMeasurements, m_distanceToHole, dampening);
+                                auto str = Clubs[club].getName(m_sharedData.imperialMeasurements, m_distanceToHole, dampening);
+                                cro::Util::String::replace(str, " (F)", "");
+                                cro::Util::String::replace(str, " (P)", "");
                                 e.getComponent<cro::Text>().setString(str.substr(str.find_last_of(' ') + 1));
                             }
                             else
@@ -2702,7 +2704,9 @@ void GolfState::handleMessage(const cro::Message& msg)
 
                             const auto club = getClub();
                             const float dampening = club == ClubID::Putter ? 1.f : getDampening();
-                            const auto str = Clubs[club].getName(m_sharedData.imperialMeasurements, m_distanceToHole, dampening);
+                            auto str = Clubs[club].getName(m_sharedData.imperialMeasurements, m_distanceToHole, dampening);
+                            cro::Util::String::replace(str, " (F)", "");
+                            cro::Util::String::replace(str, " (P)", "");
                             e.getComponent<cro::Text>().setString(str.substr(str.find_last_of(' ') + 1));
                         }
                         else
