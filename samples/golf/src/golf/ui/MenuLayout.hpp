@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/audio/TextToSpeech.hpp>
 #include <crogine/core/String.hpp>
+#include <crogine/detail/Assert.hpp>
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/graphics/Colour.hpp>

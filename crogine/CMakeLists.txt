@@ -179,7 +179,7 @@ if (APPLE OR BUILD_KTX)
   FetchContent_Declare(
           fetch_ktx
           GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software
-          GIT_TAG        origin/main
+          GIT_TAG        v4.4.2
   )
   FetchContent_MakeAvailable(fetch_ktx)
 

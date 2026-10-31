@@ -2118,7 +2118,10 @@ bool MenuState::simulate(float dt)
     m_windBuffer.setData(wind);
 
 #ifdef NEW_LOBBY
-    m_lobbyMenu.simulate(dt);
+    if (/*m_uiScene.getSystem<cro::UISystem>()->getActiveGroup()*/m_currentMenu == MenuID::LobbyV2)
+    {
+        m_lobbyMenu.simulate(dt);
+    }
 #endif
     m_backgroundScene.simulate(dt);
     //processing these with options open only slows things down.

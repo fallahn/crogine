@@ -90,7 +90,7 @@ void WeatherAnimationSystem::process(float dt)
 
         if (m_targetOpacity < m_opacity)
         {
-            m_opacity = std::max(m_targetOpacity, m_opacity - (dt * 0.5f));
+            m_opacity = std::max(m_targetOpacity, m_opacity - (dt * 0.15f));
             updateShader();
 
             updateSkyColour();
@@ -107,7 +107,7 @@ void WeatherAnimationSystem::process(float dt)
         }
         else if (m_targetOpacity > m_opacity)
         {
-            m_opacity = std::min(m_targetOpacity, m_opacity + (dt * 0.5f));
+            m_opacity = std::min(m_targetOpacity, m_opacity + (dt * 0.15f));
             updateShader();
 
             updateSkyColour();

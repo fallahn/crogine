@@ -1216,7 +1216,7 @@ bool GolfGame::initialise()
     cro::AudioMixer::setLabel("Menu Music", MixerChannel::Music);
     cro::AudioMixer::setLabel("Effects", MixerChannel::Effects);
     cro::AudioMixer::setLabel("Menu", MixerChannel::Menu);
-    cro::AudioMixer::setLabel("Announcer", MixerChannel::Voice);
+    cro::AudioMixer::setLabel("Voices", MixerChannel::Voice);
     cro::AudioMixer::setLabel("Vehicles", MixerChannel::Vehicles);
     cro::AudioMixer::setLabel("Environment", MixerChannel::Environment);
     cro::AudioMixer::setLabel("Game Music", MixerChannel::UserMusic);

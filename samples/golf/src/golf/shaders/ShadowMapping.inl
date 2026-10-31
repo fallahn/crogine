@@ -182,13 +182,15 @@ static inline const std::string ShadowVertex = R"(
     #endif
 
     #if defined(LEAF_SIZE)
-
+//TODO this should be using the same calc from the TreeShader 
         vec4 worldPosition = worldMatrix * position;
         vec3 normal = u_normalMatrix * a_normal;
 
+float strength = clamp(u_windData.y, 0.0, 1.2);
+
 WindResult windResult = getWindData(position.xz, worldPosition.xz);
-windResult.lowFreq *= 0.5 + (0.5 * u_windData.y);
-windResult.highFreq *= 0.5 + (0.5 * u_windData.y);
+windResult.lowFreq *= 0.5 + (0.5 * strength);
+windResult.highFreq *= 0.5 + (0.5 * strength);
 
 float x = windResult.highFreq.x;
 float y = windResult.lowFreq.y;
@@ -204,8 +206,8 @@ vec3 windOffset = vec3(x, y, windResult.highFreq.y) * 5.0;
         dirStrength += 1.0;
         dirStrength /= 2.0;
 
-        windOffset += windDir * u_windData.y * dirStrength * 2.0;
-        worldPosition.xyz += windOffset * MaxWindOffset * u_windData.y;
+        windOffset += windDir * strength * dirStrength * 2.0;
+        worldPosition.xyz += windOffset * MaxWindOffset * strength;
 
 worldPosition.x += windResult.lowFreq.x;
 worldPosition.z += windResult.lowFreq.y;
