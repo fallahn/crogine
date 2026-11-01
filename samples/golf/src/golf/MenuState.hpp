@@ -508,7 +508,7 @@ private:
             m_buttonHoldTimer       (0.f),
             m_buttonFlags           (0)
         {
-            std::fill(m_ruleMods.begin(), m_ruleMods.end(), 0);
+            
         }
 
         void handleEvent(const cro::Event&);
@@ -612,7 +612,6 @@ private:
 #endif
         void updateCourseTab(bool resized = false);
 
-        std::array<std::int32_t, RuleMod::Count> m_ruleMods = {};
         cro::String m_ruleViolation; //invalid number of players for current rule set - used to display message on Players tab
         void updateRulesTab(bool resized = false);
 

@@ -151,7 +151,7 @@ struct Menu final
         bool alwaysActivate = false; //hack to always call activation callback regardless of input
         bool wrapValue = true; //value wraps back to the beginning instead of clamping
         std::int32_t selectedIndex = 0; //currently selected entry
-        std::int32_t activatedAudioID = 1; //defaults to MenuSoundEvent::Activate
+        std::int32_t activatedAudioID = 1; //defaults to MenuSoundEvent::Activate - set to -1 to mute
 
         std::vector<cro::String> labels; //display text for each setting when cycled
         cro::String title; //main display title

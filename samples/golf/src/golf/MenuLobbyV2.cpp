@@ -1459,28 +1459,30 @@ void MenuState::LobbyMenu::createPlayerTab()
     //ready-up / start game
     item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
     item->title = m_sharedData.hosting ?  u8"↓ Start Game" : u8"↓ Ready Up";
-    item->description = m_sharedData.hosting ? "Press and Hold to Start" : "Press and Hold to Ready Up";
+    item->description = m_sharedData.hosting ? "Start the game" : "Ready Up";
     item->selected = [this](Menu::Item& i)
         {
             i.description = m_sharedData.hosting ? 
-                m_ruleViolation.empty() ? "Press and Hold to Start" : m_ruleViolation
-                : "Press and Hold to Ready Up";
+                m_ruleViolation.empty() ? "Start the game" : m_ruleViolation
+                : "Ready Up";
         };
     item->activated = [this](Menu::Item& i)
         {
             //press / hold to start or ready up
-            m_buttonFlags |= ButtonFlags::Action;
-            setProgressColour(CD32::Colours[CD32::GreenLight]);
+            //m_buttonFlags |= ButtonFlags::Action;
+            //setProgressColour(CD32::Colours[CD32::GreenLight]);
 
-            //set a callback to be activated when timer expires
-            //(when we get the update from the server the detail
-            //pane is redrawn for us)
-            m_timeoutCallback = std::bind(&LobbyMenu::readyStart, this);
+            ////set a callback to be activated when timer expires
+            ////(when we get the update from the server the detail
+            ////pane is redrawn for us)
+            //m_timeoutCallback = std::bind(&LobbyMenu::readyStart, this);
+            readyStart();
         };
     item->labels = { "Let\'s Go!" };
     item->selectedIndex = 0;
     item->texture = sprite.getTexture();
     item->uv = sprite.getTextureRect();
+    item->activatedAudioID = -1;
 
 #ifdef USE_GNS
     //invite friends
@@ -1867,7 +1869,7 @@ void MenuState::LobbyMenu::createRulesTab()
                 }
             };
         item->labels = { "No", "Yes" };
-        item->selectedIndex = 0;
+        item->selectedIndex = m_sharedData.ruleMods[RuleMod::Snek];
 
 
         //enable big balls
@@ -1884,7 +1886,7 @@ void MenuState::LobbyMenu::createRulesTab()
                 }
             };
         item->labels = { "No", "Yes" };
-        item->selectedIndex = 0;
+        item->selectedIndex = m_sharedData.ruleMods[RuleMod::BigBalls];
 
 
         //allow assists
@@ -1901,7 +1903,7 @@ void MenuState::LobbyMenu::createRulesTab()
                 }
             };
         item->labels = { "Yes", "No" };
-        item->selectedIndex = 0;
+        item->selectedIndex = m_sharedData.ruleMods[RuleMod::NoAssist];
 
         if (GROUP_ENABLED)
         {
@@ -2618,11 +2620,11 @@ void MenuState::LobbyMenu::updateRulesTab(bool resized)
     //list other items players won't see when not hosting
     cro::String str = m_sharedData.fastCPU ? EmCheck : EmCross;
     str += " Skip CPU\n";
-    str += m_ruleMods[RuleMod::Snek] ? EmCheck : EmCross;
+    str += m_sharedData.ruleMods[RuleMod::Snek] ? EmCheck : EmCross;
     str += " Snek\n";
-    str += m_ruleMods[RuleMod::BigBalls] ? EmCheck : EmCross;
+    str += m_sharedData.ruleMods[RuleMod::BigBalls] ? EmCheck : EmCross;
     str += " Big Balls\n";
-    str += m_ruleMods[RuleMod::NoAssist] ? EmCross : EmCheck;
+    str += m_sharedData.ruleMods[RuleMod::NoAssist] ? EmCross : EmCheck;
     str += " Allow Assists";
     //if (GROUP_ENABLED)
     //{

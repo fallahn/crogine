@@ -348,9 +348,13 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         {
             if (e.previewModel != m_playerAvatars[idx].previewModel)
             {
-                e.previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 1;
-                e.previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().progress = 1.f;
-                e.previewModel.getComponent<cro::Callback>().active = true;
+                //hmmm something not right here as this may be invalid or component doesn't exist...
+                if (e.previewModel.isValid() && e.previewModel.hasComponent<cro::Callback>())
+                {
+                    e.previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 1;
+                    e.previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().progress = 1.f;
+                    e.previewModel.getComponent<cro::Callback>().active = true;
+                }
             }
         }
         
@@ -927,7 +931,9 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                     m_sharedData.preferredClubSet = (m_sharedData.preferredClubSet + 1) % (Social::getClubLevel() + 1);
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
+#ifndef NEW_LOBBY
                     m_clubsetButtons.lobby.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
+#endif
                     m_clubsetButtons.roster.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
                 }
             });

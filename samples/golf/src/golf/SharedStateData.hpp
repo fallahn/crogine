@@ -30,14 +30,15 @@ source distribution.
 #pragma once
 
 #include "AvatarInfo.hpp"
-#include "InputBinding.hpp"
-#include "Networking.hpp"
 #include "CommonConsts.hpp"
-#include "PlayerData.hpp"
-#include "LeagueNames.hpp"
-#include "Tournament.hpp"
 #include "CustomTournament.hpp"
+#include "InputBinding.hpp"
 #include "Inventory.hpp"
+#include "LeagueNames.hpp"
+#include "Networking.hpp"
+#include "PacketIDs.hpp"
+#include "PlayerData.hpp"
+#include "Tournament.hpp"
 #include "server/Server.hpp"
 
 #include <crogine/audio/MumbleLink.hpp>
@@ -290,7 +291,7 @@ struct SharedStateData final
     std::int32_t quickplayOpponents = 0; //1-3 if quickplay, 0 to disable
     std::int32_t groupMode = 0; //experimental group mode - buggy as all balls.
     std::int32_t teamMode = 0;
-
+    std::array<std::int32_t, RuleMod::Count> ruleMods = {};
 
     GameMode gameMode = GameMode::FreePlay;
     bool hosting = false;

@@ -2118,7 +2118,7 @@ bool MenuState::simulate(float dt)
     m_windBuffer.setData(wind);
 
 #ifdef NEW_LOBBY
-    if (/*m_uiScene.getSystem<cro::UISystem>()->getActiveGroup()*/m_currentMenu == MenuID::LobbyV2)
+    if (m_currentMenu == MenuID::LobbyV2)
     {
         m_lobbyMenu.simulate(dt);
     }
@@ -3993,7 +3993,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             const auto ruleType = (data & 0xff00) >> 8;
             const auto value = (data & 0x00ff);
 #ifdef NEW_LOBBY
-            m_lobbyMenu.m_ruleMods[ruleType] = value;
+            m_sharedData.ruleMods[ruleType] = value;
             m_lobbyDirty = true;
 #else
             switch (ruleType)
