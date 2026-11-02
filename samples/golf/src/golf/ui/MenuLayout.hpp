@@ -101,6 +101,9 @@ struct TabBar final
         cro::Sprite sprite;
 
         std::function<void()> selected;
+        
+        cro::String infoString; //displayed on the info pane below the item list
+        bool showInfoPane = false; //if true a final item is rendered to fill the rest of the column, assuming it fits the window
     };
 
     cro::Entity background;
@@ -118,6 +121,7 @@ struct TabBar final
 
     std::array<cro::FloatRect, 2U> navLeftRects = {};
     std::array<cro::FloatRect, 2U> navRightRects = {};
+
 };
 
 struct Menu final

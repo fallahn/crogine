@@ -500,7 +500,6 @@ void UILayout::updateMenuItems()
                 m_menuTextLarge.draw();
                 break;
             }
-
         };
 
     constexpr float Stride = UI::ItemHeight + UI::ItemSpacing;
@@ -550,6 +549,22 @@ void UILayout::updateMenuItems()
         //the visible area, but it's not presenting a problem yet.
         renderItem(item, pos, i++);
         pos.y -= Stride;
+    }
+
+    //render an additional info pane if it's requested
+    //and it fits the window
+    if (tabBar.items[tabBar.activeIndex].showInfoPane
+        && !tabBar.items[tabBar.activeIndex].infoString.empty())
+    {
+        //hmm we might not want to word wrap it here as we may have applied special
+        //formatting by hand...
+        //cro::Util::String::wordWrap(tabBar.items[tabBar.activeIndex].infoString, UI::WordWrapLarge);
+        m_menuText.setFillColour(TextNormalColour);
+        m_menuText.setPosition(pos + glm::vec2(UI::ItemSpacing, UI::ItemHeight - UI::ItemSpacing));
+        m_menuText.setShadowOffset({ 1.f, -1.f });
+        m_menuText.setString(tabBar.items[tabBar.activeIndex].infoString);
+        m_menuText.draw();
+        m_menuText.setShadowOffset({ 0.f, 0.f });
     }
 
     menuLayout.texture.display();
@@ -674,7 +689,8 @@ void UILayout::resizeItemGraphics()
     const auto viewScale = cro::UIElementSystem::getViewScale();
 
     //calc max texture size and resize first if necessary
-    const auto texHeight = static_cast<std::uint32_t>(((UI::ItemHeight + UI::ItemSpacing) * items.size() + UI::ItemSpacing));
+    const std::uint32_t MinHeight = tabBar.items[tabBar.activeIndex].showInfoPane ? static_cast<std::uint32_t>(getWindowSize().y / viewScale) : 0; //we'll be filling this out with a pane
+    const auto texHeight = std::max(MinHeight, static_cast<std::uint32_t>(((UI::ItemHeight + UI::ItemSpacing) * items.size() + UI::ItemSpacing)));
     const auto texWidth = static_cast<std::uint32_t>(getWindowSize().x / viewScale);
 
     if (!menuLayout.texture.available()

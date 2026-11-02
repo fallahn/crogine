@@ -2701,7 +2701,6 @@ void GolfState::handleMessage(const cro::Message& msg)
                     {
                         if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
                         {
-
                             const auto club = getClub();
                             const float dampening = club == ClubID::Putter ? 1.f : getDampening();
                             auto str = Clubs[club].getName(m_sharedData.imperialMeasurements, m_distanceToHole, dampening);

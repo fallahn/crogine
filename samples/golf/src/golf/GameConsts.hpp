@@ -65,6 +65,11 @@ source distribution.
 #include <iomanip>
 #include <sstream>
 
+namespace
+{
+#include <crogine/gui/Codepoints.inl>
+}
+
 static inline constexpr float ToYards = 1.09361f;
 static inline constexpr float ToFeet = 3.281f;
 static inline constexpr float ToInches = 12.f;
@@ -265,6 +270,11 @@ static inline const std::array<cro::String, WeatherType::Count> WeatherStrings =
     "Clear", "Rain",
     "Showers", "Mist",
     "Random"
+};
+
+static inline constexpr std::array<std::uint32_t, WeatherType::Count> WeatherIcons =
+{
+    EmSun, EmRainCloud, EmRainbow, EmMist, static_cast<std::uint32_t>(char32_t('?'))
 };
 
 struct MRTIndex final

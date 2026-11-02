@@ -50,6 +50,9 @@ namespace
 #include "shaders/ProgressShader.inl"
 #include <crogine/gui/Codepoints.inl>
 
+    const std::vector<cro::String> HoleCountStrings = { "All", "Front", "Back" };
+    const std::vector<cro::String> ClubStrings = { "Casual", "Regular", "Pro" };
+
     const std::array ItemLabels =
     {
         "Players", "Course", "Rules", "Scores"
@@ -550,6 +553,17 @@ void MenuState::LobbyMenu::clientStatusChanged()
         }
     }
     m_playerListSize = m_menuState.m_displayOrder.size();
+
+    auto& str = m_uiLayout.tabBar.items[TabID::Players].infoString;
+    str = "Course: " + m_courseDetails.title + "\n";
+    str += "Holes: " + HoleCountStrings[m_sharedData.holeCount] + "\n\n";
+    str += ScoreTypes[m_sharedData.scoreType] + "\n";
+    str += "Gimme: "+ GimmeString[m_sharedData.gimmeRadius] +"\n";
+    str += "Night Time: ";
+    str += m_sharedData.nightTime ? "Yes\n" : "No\n";
+    str += "Weather: " + WeatherStrings[m_sharedData.weatherType] + " ";
+    str += WeatherIcons[m_sharedData.weatherType]; str += "\n";
+    str += "Club Set: " + ClubStrings[m_sharedData.clubSet];
 
     updatePlayersTab();
     updateCourseTab();
@@ -1449,6 +1463,7 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
 void MenuState::LobbyMenu::createPlayerTab()
 {
     m_uiLayout.menuLayout.items[TabID::Players].clear();
+    m_uiLayout.tabBar.items[TabID::Players].showInfoPane = !m_sharedData.hosting;
 
     auto* item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
     item->title = "Player Menu";
@@ -1704,7 +1719,7 @@ void MenuState::LobbyMenu::createCourseTab()
                 }
 
             };
-        item->labels = { "All", "Front", "Back" };
+        item->labels = HoleCountStrings;
         item->selectedIndex = m_sharedData.holeCount;
 
 
@@ -1797,7 +1812,7 @@ void MenuState::LobbyMenu::createRulesTab()
         {
             m_sharedData.clubSet = m_sharedData.preferredClubSet = i.selectedIndex;
         };
-    item->labels = { "Casual", "Regular", "Pro" };
+    item->labels = ClubStrings;
     item->selectedIndex = m_sharedData.clubSet;
 
 
