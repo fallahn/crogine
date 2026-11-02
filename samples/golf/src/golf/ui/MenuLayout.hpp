@@ -297,6 +297,7 @@ private:
 
     cro::SimpleText m_menuText;
     cro::SimpleText m_menuTextLarge;
+    cro::SimpleText m_labelText;
     cro::SimpleQuad m_menuQuad; //item image/thumb if it exists
     cro::SimpleVertexArray m_itemSlider;
 

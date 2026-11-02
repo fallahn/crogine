@@ -554,16 +554,19 @@ void MenuState::LobbyMenu::clientStatusChanged()
     }
     m_playerListSize = m_menuState.m_displayOrder.size();
 
+    cro::String courseTitle = m_courseDetails.title;
+    cro::Util::String::wordWrap(courseTitle, UI::WordWrapLarge);
+
     auto& str = m_uiLayout.tabBar.items[TabID::Players].infoString;
-    str = "Course: " + m_courseDetails.title + "\n";
-    str += "Holes: " + HoleCountStrings[m_sharedData.holeCount] + "\n\n";
-    str += ScoreTypes[m_sharedData.scoreType] + "\n";
-    str += "Gimme: "+ GimmeString[m_sharedData.gimmeRadius] +"\n";
+    str = courseTitle + "\n\n";
+    str += "Holes:      " + HoleCountStrings[m_sharedData.holeCount] + "\n";
+    str += "Rules:      "+ ScoreTypes[m_sharedData.scoreType] + "\n";
+    str += "Gimme:      "+ GimmeString[m_sharedData.gimmeRadius] +"\n";
     str += "Night Time: ";
     str += m_sharedData.nightTime ? "Yes\n" : "No\n";
-    str += "Weather: " + WeatherStrings[m_sharedData.weatherType] + " ";
+    str += "Weather:    " + WeatherStrings[m_sharedData.weatherType] + " ";
     str += WeatherIcons[m_sharedData.weatherType]; str += "\n";
-    str += "Club Set: " + ClubStrings[m_sharedData.clubSet];
+    str += "Club Set:   " + ClubStrings[m_sharedData.clubSet];
 
     updatePlayersTab();
     updateCourseTab();
@@ -1463,13 +1466,17 @@ void MenuState::LobbyMenu::create(cro::Entity/* parent*/)
 void MenuState::LobbyMenu::createPlayerTab()
 {
     m_uiLayout.menuLayout.items[TabID::Players].clear();
+#ifdef USE_GNS
     m_uiLayout.tabBar.items[TabID::Players].showInfoPane = !m_sharedData.hosting;
+#else
+    m_uiLayout.tabBar.items[TabID::Players].showInfoPane = true;
+#endif
 
     auto* item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
     item->title = "Player Menu";
     item->displayType = Menu::Item::Heading;
 
-    auto sprite = m_detailSprites[DetailSprite::StartGame];
+    const auto& sprite = m_detailSprites[DetailSprite::StartGame];
 
     //ready-up / start game
     item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();

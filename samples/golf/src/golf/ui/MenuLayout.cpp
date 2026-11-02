@@ -85,6 +85,10 @@ void UILayout::loadAssets(cro::ResourceCollection & resources)
     m_menuTextLarge.setCharacterSize(UITextSize);
     m_menuTextLarge.setAlignment(cro::SimpleText::Alignment::Centre);
 
+    const auto& labelFont = resources.fonts.get(FontID::Label);
+    m_labelText.setFont(labelFont);
+    m_labelText.setCharacterSize(LabelTextSize);
+
     m_itemSlider.setPrimitiveType(GL_TRIANGLES);
 
     cro::SpriteSheet spriteSheet;
@@ -559,12 +563,12 @@ void UILayout::updateMenuItems()
         //hmm we might not want to word wrap it here as we may have applied special
         //formatting by hand...
         //cro::Util::String::wordWrap(tabBar.items[tabBar.activeIndex].infoString, UI::WordWrapLarge);
-        m_menuText.setFillColour(TextNormalColour);
-        m_menuText.setPosition(pos + glm::vec2(UI::ItemSpacing, UI::ItemHeight - UI::ItemSpacing));
-        m_menuText.setShadowOffset({ 1.f, -1.f });
-        m_menuText.setString(tabBar.items[tabBar.activeIndex].infoString);
-        m_menuText.draw();
-        m_menuText.setShadowOffset({ 0.f, 0.f });
+        m_labelText.setFillColour(TextNormalColour);
+        m_labelText.setPosition(pos + glm::vec2(UI::ItemSpacing, UI::ItemHeight - (UI::ItemSpacing * 4.f)));
+        m_labelText.setShadowOffset({ 1.f, -1.f });
+        m_labelText.setString(tabBar.items[tabBar.activeIndex].infoString);
+        m_labelText.draw();
+        //m_labelText.setShadowOffset({ 0.f, 0.f });
     }
 
     menuLayout.texture.display();
