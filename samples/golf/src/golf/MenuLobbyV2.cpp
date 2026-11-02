@@ -1637,8 +1637,26 @@ void MenuState::LobbyMenu::createPlayerTab()
                 };
             item->labels = { u8"↓ Kick" };
             item->selectedIndex = 0;
+
+#ifndef USE_GNS
+            //disable this as there's no room now
+            m_uiLayout.tabBar.items[TabID::Players].showInfoPane = false;
+#endif
         }
     }
+    //else
+    //{
+    //    item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
+    //    item->title = "Spectate Only";
+    //    item->description = "Spectate the game without taking part";
+    //    item->activated = [this](Menu::Item& i)
+    //        {
+    //            /*m_sharedData.teamMode ? cro::Console::doCommand("sv_team_mode 0")
+    //                : cro::Console::doCommand("sv_team_mode 1");*/
+    //        };
+    //    item->labels = { "No", "Yes" };
+    //    item->selectedIndex = 0;
+    //}
 }
 
 void MenuState::LobbyMenu::createCourseTab()

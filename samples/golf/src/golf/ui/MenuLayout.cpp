@@ -564,7 +564,7 @@ void UILayout::updateMenuItems()
         //formatting by hand...
         //cro::Util::String::wordWrap(tabBar.items[tabBar.activeIndex].infoString, UI::WordWrapLarge);
         m_labelText.setFillColour(TextNormalColour);
-        m_labelText.setPosition(pos + glm::vec2(UI::ItemSpacing, UI::ItemHeight - (UI::ItemSpacing * 4.f)));
+        m_labelText.setPosition(pos + glm::vec2(UI::ItemSpacing, UI::ItemHeight - (UI::ItemSpacing * 3.f)));
         m_labelText.setShadowOffset({ 1.f, -1.f });
         m_labelText.setString(tabBar.items[tabBar.activeIndex].infoString);
         m_labelText.draw();

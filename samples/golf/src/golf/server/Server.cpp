@@ -538,6 +538,8 @@ std::uint8_t Server::addClient(const net::NetPeer& peer, std::uint8_t playerCoun
                 m_sharedData.clients[i].peer = peer;
                 //m_sharedData.clients[i].peerID = peer.getID(); //if the peer becomes disconnected we keep a record of who they were
 
+                //m_sharedData.clients[i].spectator = i != 0;
+
                 //broadcast to all connected clients
                 //so they can update lobby view.
                 m_sharedData.host.broadcastPacket(PacketID::ClientConnected, i, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
