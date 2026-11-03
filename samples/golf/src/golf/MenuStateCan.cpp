@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025
+Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -228,7 +228,7 @@ void MenuState::canScore(std::uint32_t data)
         cmd.action =
             [this, score](cro::Entity e, float)
             {
-                const auto pos = e.getComponent<cro::Transform>().getWorldPosition() + glm::vec3(12.f, 48.f, 0.2f);
+                static constexpr auto pos = glm::vec3(8.f, 48.f, 0.2f);
 
                 auto entity = m_uiScene.createEntity();
                 entity.addComponent<cro::Transform>().setPosition(pos);
@@ -238,11 +238,12 @@ void MenuState::canScore(std::uint32_t data)
                 entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
                 entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
                 entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+                entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
 
                 entity.addComponent<cro::Callback>().active = true;
                 entity.getComponent<cro::Callback>().setUserData<float>(0.f);
                 entity.getComponent<cro::Callback>().function =
-                    [this, pos](cro::Entity ent, float dt)
+                    [this](cro::Entity ent, float dt)
                     {
                         auto& ct = ent.getComponent<cro::Callback>().getUserData<float>();
                         ct = std::min(1.f, ct + dt);
@@ -256,6 +257,8 @@ void MenuState::canScore(std::uint32_t data)
                             m_uiScene.destroyEntity(ent);
                         }
                     };
+
+                e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
