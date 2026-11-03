@@ -186,6 +186,14 @@ static const inline std::string WeatherVertex = R"(
     const float SystemHeight = 80.0;
 #endif
 
+//if this is on the menu these aren't defined
+#if !defined (MinBounds)
+#define MinBounds vec2(-20.0)
+#endif
+#if !defined (MaxBounds)
+#define MaxBounds vec2(20.0)
+#endif
+
 #if defined(EASE_SNOW)
     const float PI = 3.1412;
     float ease(float i)
