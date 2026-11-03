@@ -40,7 +40,8 @@ struct Coin final
     static constexpr glm::vec2 Gravity = glm::vec2(0.f, -9.5f * PixelsPerMetre);
     
     glm::vec2 velocity = InitialVelocity;
-    std::uint64_t owner = 0;
+    std::uint64_t owner = 0; //TODO this is probably unneccessary and can be replaced with the regular ID
+    std::uint8_t clientID = 0;
     bool collisionStart = false;
     bool hadCollisionLastFrame = false;
 };

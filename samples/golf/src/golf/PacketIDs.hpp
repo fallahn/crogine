@@ -267,7 +267,7 @@ namespace PacketID
         CanUpdate, //CanInfo struct
         CoinSpawn, //float power - sent to server. Result comes back as actor spawn
         CoinRemove, //uint32_t server ID
-        CoinBucketed, //coin was removed because it landed in the bucket uint64_t peerID
+        CoinBucketed, //coin was removed because it landed in the bucket uint32_t clientID | score
 
 //ADDING NEW VALUES MUST BE SEQUENTIAL FROM HERE FOR WEBSOCKET
 

@@ -2388,7 +2388,7 @@ void MenuState::updateLobbyAvatars()
 
         //use the display list to create the name string / ready icons
         std::int32_t row = 0;
-        for (const auto [cID, pID] : m_displayOrder)
+        for (const auto [_, cID, pID] : m_displayOrder)
         {
             const auto& c = m_sharedData.connectionData[cID];
 

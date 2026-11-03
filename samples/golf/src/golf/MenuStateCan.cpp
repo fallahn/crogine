@@ -97,7 +97,7 @@ void MenuState::spawnActor(const ActorInfo& info)
         buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::CanButton];
         const auto anim = (cro::GameController::getControllerCount() || Social::isSteamdeck()) ? hasPSLayout(0) ? 1 : 0 : 2;
         buttonEnt.addComponent<cro::SpriteAnimation>().play(anim);
-        buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CanButton;;
+        buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CanButton;
         buttonEnt.addComponent<cro::Callback>().active = true;
         buttonEnt.getComponent<cro::Callback>().function =
             [&, entity](cro::Entity e, float)
@@ -120,6 +120,11 @@ void MenuState::spawnActor(const ActorInfo& info)
 
         createCanControl(entity);
         m_canActive = true;
+
+#ifdef NEW_LOBBY
+        //refresh to display scores
+        m_lobbyMenu.clientStatusChanged();
+#endif
 
         m_backgroundScene.getDirector<MenuSoundDirector>()->playSound(MenuSoundDirector::AudioID::BucketSpawn, 0.25f);
     }
@@ -197,6 +202,66 @@ void MenuState::updateActor(const CanInfo& info)
             }
         };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+}
+
+void MenuState::canScore(std::uint32_t data)
+{
+    const std::uint16_t clientID = ((data & 0xffff0000) >> 16);
+    const std::uint16_t score = data & 0xffff;
+
+    for (auto& p : m_displayOrder)
+    {
+        if (p.client == clientID)
+        {
+            p.coinScore += score;
+        }
+    }
+    m_lobbyMenu.clientStatusChanged();
+
+    if (clientID == m_sharedData.clientConnection.connectionID)
+    {
+        //this is us so show a floating score - as we don't
+        //know the positions of any of the relevant entities
+        //this targets the button icon for want of anything else
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::Menu::CanButton;
+        cmd.action =
+            [this, score](cro::Entity e, float)
+            {
+                const auto pos = e.getComponent<cro::Transform>().getWorldPosition() + glm::vec3(12.f, 48.f, 0.2f);
+
+                auto entity = m_uiScene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition(pos);
+                entity.addComponent<cro::Drawable2D>();
+                entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info)).setString("+" + std::to_string(score));
+                entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+                entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+                entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+                entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+                entity.getComponent<cro::Callback>().function =
+                    [this, pos](cro::Entity ent, float dt)
+                    {
+                        auto& ct = ent.getComponent<cro::Callback>().getUserData<float>();
+                        ct = std::min(1.f, ct + dt);
+
+                        const auto offset = cro::Util::Easing::easeOutCubic(ct) * 16.f;
+                        ent.getComponent<cro::Transform>().setPosition(pos + glm::vec3(0.f, offset, 0.f));
+
+                        if (ct == 1)
+                        {
+                            ent.getComponent<cro::Callback>().active = false;
+                            m_uiScene.destroyEntity(ent);
+                        }
+                    };
+            };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    }
+
+    m_backgroundScene.getDirector<MenuSoundDirector>()->playSound(
+        cro::Util::Random::value(MenuSoundDirector::AudioID::Land01, MenuSoundDirector::AudioID::Land01 + 2), 0.5f);
 }
 
 void MenuState::createCanControl(cro::Entity can)

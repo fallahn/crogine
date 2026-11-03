@@ -271,6 +271,7 @@ private:
     cro::Entity m_canEnt;
     void spawnActor(const ActorInfo&);
     void updateActor(const CanInfo&);
+    void canScore(std::uint32_t);
 
     struct CanControl final
     {

@@ -155,7 +155,19 @@ void LobbyState::netEvent(const net::NetEvent& evt)
             m_sharedData.host.broadcastPacket(PacketID::DisplayList, evt.packet.as<DisplayList>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             break;
         case PacketID::CoinSpawn:
-            spawnCoin(evt.packet.as<float>(), evt.peer.getID());
+        {
+            std::uint8_t clientID = 0;
+            if (const auto result = std::find_if(m_sharedData.clients.cbegin(), m_sharedData.clients.cend(), 
+                [&evt](const sv::ClientConnection& c)
+                {
+                    return evt.peer.getID() == c.peer.getID();
+                });
+                result != m_sharedData.clients.cend())
+            {
+                clientID = static_cast<std::uint8_t>(std::distance(m_sharedData.clients.cbegin(), result));
+            }
+            spawnCoin(evt.packet.as<float>(), evt.peer.getID(), clientID);
+        }
             break;
         case PacketID::ServerCommand:
             doServerCommand(evt);

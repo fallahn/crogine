@@ -2326,8 +2326,9 @@ void MenuState::LobbyMenu::updatePlayersTab(bool resized)
     const auto& displayMembers = m_menuState.m_displayOrder;
     static constexpr float RowSpacing = 14.f;
     cro::String nameString;
+    cro::String scoreString;
     std::int32_t row = 0;
-    for (const auto [cID, pID] : displayMembers)
+    for (const auto [score, cID, pID] : displayMembers)
     {
         const auto& c = m_sharedData.connectionData[cID];
 
@@ -2339,7 +2340,7 @@ void MenuState::LobbyMenu::updatePlayersTab(bool resized)
         }
 
         nameString += c.playerData[pID].name.substr(0, ConstVal::MaxStringChars - charOffset) + "\n";
-
+        scoreString += std::to_string(score) + "\n";
 
         const glm::vec3 iconPos(2.f, (Top - (row * RowSpacing)) - 10.f, 0.1f);
         row++;
@@ -2371,6 +2372,20 @@ void MenuState::LobbyMenu::updatePlayersTab(bool resized)
     m_playerDetailIcons.push_back(entity);
     m_detailEntities[TabID::Players].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //displays the mini-game scores
+    if (m_menuState.m_canActive)
+    {
+        entity = m_menuState.m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ Width - 16.f, Top - 3.f, 0.1f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::UI)).setString(scoreString);
+        entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setVerticalSpacing(6.f);
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
+        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+        m_playerDetailIcons.push_back(entity);
+        m_detailEntities[TabID::Players].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
 
     //update the ticker output
     TickerData td =

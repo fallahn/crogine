@@ -4477,7 +4477,7 @@ void MenuState::refreshTeams()
     {
         std::int32_t currIndex = 0;
 
-        for (const auto& [c, p] : m_displayOrder)
+        for (const auto& [_, c, p] : m_displayOrder)
         {
             const auto idx = m_sharedData.teamMode ? (currIndex++ / 2) : -1;
             m_sharedData.connectionData[c].playerData[p].teamIndex = idx;

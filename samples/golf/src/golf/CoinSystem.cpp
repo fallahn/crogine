@@ -32,6 +32,7 @@ source distribution.
 #include "server/ServerState.hpp"
 
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
@@ -142,7 +143,14 @@ void CoinSystem::process(float dt)
                     }
                     else if (testCollision(bucketBottom, bottomCentre))
                     {
-                        m_sharedData.host.broadcastPacket(PacketID::CoinBucketed, coin.owner, net::NetFlag::Reliable);
+                        std::uint16_t score = 1;
+                        if (m_bucketEnt.getComponent<cro::Callback>().getUserData<CanData>().state == CanData::Move)
+                        {
+                            //bonus point for moving target
+                            score++;
+                        }
+                        const std::uint32_t data = (std::uint16_t(coin.clientID) << 16) | score;
+                        m_sharedData.host.broadcastPacket(PacketID::CoinBucketed, data, net::NetFlag::Reliable);
 
                         const auto id = static_cast<std::uint32_t>(entity.getIndex());
                         getScene()->destroyEntity(entity);

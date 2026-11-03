@@ -47,6 +47,7 @@ struct Team final
     
     struct Player final
     {
+        std::uint16_t coinScore = 0; //for lobby minigame
         std::uint8_t client = ConstVal::NullValue;
         std::uint8_t player = ConstVal::NullValue;
         Player() = default;

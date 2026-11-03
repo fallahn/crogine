@@ -4080,8 +4080,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         }
             break;
         case PacketID::CoinBucketed:
-            m_backgroundScene.getDirector<MenuSoundDirector>()->playSound(
-                cro::Util::Random::value(MenuSoundDirector::AudioID::Land01, MenuSoundDirector::AudioID::Land01 + 2), 0.5f);
+            canScore(evt.packet.as<std::uint32_t>());
             break;
         case PacketID::CoinRemove:
         {
