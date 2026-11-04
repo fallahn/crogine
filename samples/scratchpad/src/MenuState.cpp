@@ -1509,6 +1509,7 @@ bool MenuState::createStub(const std::string& name) const
         headerFile << "    bool handleEvent(const cro::Event&) override;\n";
         headerFile << "    void handleMessage(const cro::Message&) override;\n";
         headerFile << "    bool simulate(float) override;\n";
+        headerFile << "    void preRender() override;\n\n";
         headerFile << "    void render() override;\n\n";
 
         headerFile << "private:\n\n";
@@ -1618,6 +1619,13 @@ bool MenuState::createStub(const std::string& name) const
 }
 
 )";
+
+        cppFile << "void " << className << "State::preRender()";
+        cppFile << R"(
+{
+    m_gameScene.preRender();
+}
+
         cppFile << "void " << className << "State::render()";
         cppFile << R"(
 {
