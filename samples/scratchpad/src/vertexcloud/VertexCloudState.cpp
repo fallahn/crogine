@@ -131,9 +131,9 @@ bool VertexCloudState::handleEvent(const cro::Event& evt)
             {
                 for (auto e : m_cloudEnts)
                 {
-                    e.getComponent<cro::Model>().setHidden(true);
+                    e.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
                 }
-                m_cloudEnts[idx].getComponent<cro::Model>().setHidden(false);
+                m_cloudEnts[idx].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
 
                 for (auto e : m_textEnts)
                 {
@@ -156,6 +156,12 @@ bool VertexCloudState::handleEvent(const cro::Event& evt)
             break;
         case SDL_SCANCODE_4:
             showCloud(ShaderID::DynamicPerspective);
+            break;
+        case SDL_SCANCODE_5:
+            showCloud(ShaderID::TopDownGrid);
+            break;
+        case SDL_SCANCODE_6:
+            showCloud(ShaderID::TopDownWrap);
             break;
         }
     }
@@ -205,6 +211,7 @@ void VertexCloudState::addSystems()
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
+    m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
@@ -217,8 +224,8 @@ void VertexCloudState::loadAssets()
 
 void VertexCloudState::createScene()
 {
-    const std::array<float, 3> AreaStart = { -4.25f, -0.f, -4.f };
-    const std::array<float, 3> AreaEnd = { 4.25f, 4.f, 4.f };
+    const std::array<float, 3> AreaStart = { -3.25f, -0.f, -4.f };
+    const std::array<float, 3> AreaEnd = { 3.25f, 4.f, 2.f };
     const auto points = pd::PoissonDiskSampling(0.6f, AreaStart, AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
 
     std::size_t meshID = 0;
@@ -244,8 +251,7 @@ void VertexCloudState::createScene()
 
     std::vector<LargeVertex> verts;
     std::vector<std::uint16_t> indices;
-    const std::uint32_t stride = 1;
-    for (auto i = 0u; i < points.size(); i += stride)
+    for (auto i = 0u; i < points.size(); i++)
     {
         indices.push_back(static_cast<std::uint16_t>(verts.size()));
         verts.emplace_back(points[i][0], points[i][1], points[i][2]);
@@ -275,19 +281,6 @@ void VertexCloudState::createScene()
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();// .setPosition({ -2.5f, 0.f, 0.f, });
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<std::size_t>(0);
-    entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
-        {
-            static const auto Table = cro::Util::Wavetable::sine(0.25f, 0.1f);
-            auto& idx = e.getComponent<cro::Callback>().getUserData<std::size_t>();
-            const float r = Table[idx];
-            idx = (idx + 1) % Table.size();
-
-            e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, r);
-        };
-
     m_cloudEnts[ShaderID::Static] = entity;
 
     //falling 
@@ -301,9 +294,8 @@ void VertexCloudState::createScene()
     material = m_resources.materials.get(materialID);
 
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>();// .setPosition({ -0.75f, 0.f, 0.f, });
+    entity.addComponent<cro::Transform>().setScale(glm::vec3(0.f));
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    entity.getComponent<cro::Model>().setHidden(true);
     m_cloudEnts[ShaderID::Dynamic] = entity;
 
 
@@ -318,9 +310,8 @@ void VertexCloudState::createScene()
     material = m_resources.materials.get(materialID);
 
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>();// .setPosition({ 0.75f, 0.f, 0.f, });
+    entity.addComponent<cro::Transform>().setScale(glm::vec3(0.f));
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    entity.getComponent<cro::Model>().setHidden(true);
     m_cloudEnts[ShaderID::DynamicEased] = entity;
 
 
@@ -335,13 +326,81 @@ void VertexCloudState::createScene()
     material = m_resources.materials.get(materialID);
 
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>();// .setPosition({ 2.5f, 0.f, 0.f, });
+    entity.addComponent<cro::Transform>().setScale(glm::vec3(0.f));
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    entity.getComponent<cro::Model>().setHidden(true);
     m_cloudEnts[ShaderID::DynamicPerspective] = entity;
 
 
 
+
+
+    //creates a wireframe box around the volume
+    verts =
+    {
+        LargeVertex(glm::vec3(AreaStart[0], AreaEnd[1], AreaStart[2]), cro::Colour::Red),
+        LargeVertex(glm::vec3(AreaStart[0], AreaStart[1], AreaStart[2]), cro::Colour::Red),
+        LargeVertex(glm::vec3(AreaEnd[0], AreaStart[1], AreaStart[2]), cro::Colour::Red),
+        LargeVertex(glm::vec3(AreaEnd[0], AreaEnd[1], AreaStart[2]), cro::Colour::Red),
+
+        LargeVertex(glm::vec3(AreaStart[0], AreaEnd[1], AreaEnd[2]), cro::Colour::Red),
+        LargeVertex(glm::vec3(AreaStart[0], AreaStart[1], AreaEnd[2]), cro::Colour::Red),
+        LargeVertex(glm::vec3(AreaEnd[0], AreaStart[1], AreaEnd[2]), cro::Colour::Red),
+        LargeVertex(glm::vec3(AreaEnd[0], AreaEnd[1], AreaEnd[2]), cro::Colour::Red),
+    };
+
+    indices =
+    {
+        0,1, 1,2, 2,3, 3,0,
+
+        4,5, 5,6, 6,7, 7,4,
+
+        0,4 ,1,5, 2,6, 3,7
+    };
+
+    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(vertexFlags, 1, GL_LINES, GL_UNSIGNED_SHORT));
+
+    meshData = &m_resources.meshes.getMesh(meshID);
+    meshData->attributes[cro::Mesh::Attribute::Colour].glType = GL_UNSIGNED_BYTE;
+    meshData->attributes[cro::Mesh::Attribute::Colour].glNormalised = GL_TRUE;
+    meshData->attributes[cro::Mesh::Attribute::UV0].glType = GL_HALF_FLOAT;
+    meshData->vertexSize = cro::MeshBuilder::getVertexSize(meshData->attributes);
+
+    meshData->vertexCount = indices.size();
+    cro::DynamicMeshBuilder::setVertexData(*meshData, cro::DataArray(verts.data(), verts.size()));
+
+    submesh = &meshData->indexData[0];
+    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+    cro::DynamicMeshBuilder::setIndexData(*meshData, { {indices.data(), indices.size()} });
+
+    meshData->boundingBox[0] = { AreaStart[0], AreaStart[1], AreaStart[2] };
+    meshData->boundingBox[1] = { AreaEnd[0], AreaEnd[1], AreaEnd[2] };
+    meshData->boundingSphere.centre = meshData->boundingBox[0] + ((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
+    meshData->boundingSphere.radius = glm::length((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
+
+    m_resources.shaders.loadFromString(ShaderID::Count,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), Fragment, "#define VERTEX_COLOUR\n");
+
+
+    shader = &m_resources.shaders.get(ShaderID::Count);
+    materialID = m_resources.materials.add(*shader);
+    material = m_resources.materials.get(materialID);
+
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [this](cro::Entity e, float)
+        {
+            //QaD hack to hide the wirefram in 2D view
+            const float scale = 1.f - 
+                (m_cloudEnts[ShaderID::TopDownGrid].getComponent<cro::Transform>().getScale().x +
+                    m_cloudEnts[ShaderID::TopDownWrap].getComponent<cro::Transform>().getScale().x);
+            e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+        };
+
+
+    //camera callback
     auto resize = [](cro::Camera& cam)
     {
         glm::vec2 size(cro::App::getWindow().getSize());
@@ -353,13 +412,13 @@ void VertexCloudState::createScene()
     cam.resizeCallback = resize;
     resize(cam);
 
-    m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.8f, 4.f });
+    m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 1.8f, 4.f });
 }
 
 void VertexCloudState::createUI()
 {
     const auto fontID = 10;
-    m_resources.fonts.load(fontID, "assets/fonts/VeraMono.ttf");
+    m_resources.fonts.load(fontID, "assets/fonts/Michroma-Regular_Artist.ttf");
 
     const auto& font = m_resources.fonts.get(fontID);
 
@@ -372,14 +431,207 @@ void VertexCloudState::createUI()
             entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Text>(font).setString(text);
+            entity.getComponent<cro::Text>().setFillColour(cro::Colour::Black);
+            entity.getComponent<cro::Text>().setCharacterSize(24);
             return entity;
         };
-    m_textEnts[ShaderID::Static] = createText("Rotation added to visualise depth");
+    m_textEnts[ShaderID::Static] = createText("Volume filled with points");
     m_textEnts[ShaderID::Static].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
 
     m_textEnts[ShaderID::Dynamic] = createText("Movement with time");
     m_textEnts[ShaderID::DynamicEased] = createText("Movement with time and easing");
     m_textEnts[ShaderID::DynamicPerspective] = createText("Added perspective with point size");
+
+
+
+    //displays the grid / wrapping methods
+    m_textEnts[ShaderID::TopDownGrid] = createText("Top-down view 3x3 chunks");
+    m_textEnts[ShaderID::TopDownWrap] = createText("Top-down view Single chunk");
+
+
+
+    const auto rotationCallback = 
+        [](cro::Entity e, float)
+        {
+            static const auto Table = cro::Util::Wavetable::sine(0.25f);
+
+            auto& idx = e.getComponent<cro::Callback>().getUserData<std::size_t>();
+            const auto x = Table[idx];
+            const auto y = Table[(idx + (Table.size() / 4)) % Table.size()];
+            idx = (idx + 1) % Table.size();
+
+            const auto basePos = glm::vec2(cro::App::getWindow().getSize()) / 2.f;
+            e.getComponent<cro::Transform>().setPosition((glm::vec2(x, y) * 100.f) + basePos);
+        };
+
+    //grid method
+    m_cloudEnts[ShaderID::TopDownGrid] = m_uiScene.createEntity();
+    m_cloudEnts[ShaderID::TopDownGrid].addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 320.f, 240.f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINES);
+    entity.getComponent<cro::Drawable2D>().setVertexData({
+        cro::Vertex2D(glm::vec2(0.f, 15.f), cro::Colour::Yellow),
+        cro::Vertex2D(glm::vec2(0.f, -15.f), cro::Colour::Yellow),
+        cro::Vertex2D(glm::vec2(-15.f, 0.f), cro::Colour::Yellow),
+        cro::Vertex2D(glm::vec2(15.f, 0.f), cro::Colour::Yellow),
+        });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<std::size_t>(0);
+    entity.getComponent<cro::Callback>().function = rotationCallback;
+    
+    auto camEnt = entity;
+    m_cloudEnts[ShaderID::TopDownGrid].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, -12.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Camera");
+    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Black);
+    entity.getComponent<cro::Text>().setCharacterSize(12);
+    camEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    const glm::vec2 basePos = camEnt.getComponent<cro::Transform>().getPosition();
+
+    static constexpr float ChunkSize = 60.f;
+    static constexpr float ChunkHalfSize = ChunkSize / 2.f;
+    static constexpr float Stride = ChunkSize * 2.f;
+    for (auto y = 0; y < 3; ++y)
+    {
+        for (auto x = 0; x < 3; ++x)
+        {
+            auto pos = basePos + glm::vec2((x * ChunkSize), (y * ChunkSize)) - glm::vec2(ChunkHalfSize);
+
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(pos);
+            entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+            entity.getComponent<cro::Drawable2D>().setVertexData({
+                cro::Vertex2D(glm::vec2(-ChunkHalfSize), cro::Colour::Red),
+                cro::Vertex2D(glm::vec2(ChunkHalfSize, -ChunkHalfSize), cro::Colour::Red),
+                cro::Vertex2D(glm::vec2(ChunkHalfSize), cro::Colour::Red),
+                cro::Vertex2D(glm::vec2(-ChunkHalfSize, ChunkHalfSize), cro::Colour::Red),
+                cro::Vertex2D(glm::vec2(-ChunkHalfSize), cro::Colour::Red)
+                });
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [camEnt, x, y](cro::Entity e, float)
+                {
+                    const auto camPos = camEnt.getComponent<cro::Transform>().getPosition();
+                    const float posX = (std::floor(camPos.x / ChunkSize) * ChunkSize);
+                    const float posY = (std::floor(camPos.y / ChunkSize) * ChunkSize);
+
+                    //hah this would have actually been better to do the first time around
+                    //but ah well... we're trying to emulate what happened for the sake of narration.
+                    const glm::vec2 pos = { posX + (x * ChunkSize), posY + (y * ChunkSize) };
+                    e.getComponent<cro::Transform>().setPosition(pos - glm::vec2(ChunkHalfSize));
+                };
+
+            m_cloudEnts[ShaderID::TopDownGrid].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        }
+    }
+
+
+
+
+    //wrapping method
+    m_cloudEnts[ShaderID::TopDownWrap] = m_uiScene.createEntity();
+    m_cloudEnts[ShaderID::TopDownWrap].addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 320.f, 240.f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINES);
+    entity.getComponent<cro::Drawable2D>().setVertexData({
+        cro::Vertex2D(glm::vec2(0.f, 15.f), cro::Colour::Yellow),
+        cro::Vertex2D(glm::vec2(0.f, -15.f), cro::Colour::Yellow),
+        cro::Vertex2D(glm::vec2(-15.f, 0.f), cro::Colour::Yellow),
+        cro::Vertex2D(glm::vec2(15.f, 0.f), cro::Colour::Yellow),
+
+        cro::Vertex2D(glm::vec2(-100.f), cro::Colour::Red),
+        cro::Vertex2D(glm::vec2(-100.f, 100.f), cro::Colour::Red),
+
+        cro::Vertex2D(glm::vec2(-100.f), cro::Colour::Red),
+        cro::Vertex2D(glm::vec2(100.f, -100.f), cro::Colour::Red),
+
+        cro::Vertex2D(glm::vec2(100.f), cro::Colour::Red),
+        cro::Vertex2D(glm::vec2(100.f, -100.f), cro::Colour::Red),
+
+        cro::Vertex2D(glm::vec2(100.f), cro::Colour::Red),
+        cro::Vertex2D(glm::vec2(-100.f, 100.f), cro::Colour::Red),
+        });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<std::size_t>(0);
+    entity.getComponent<cro::Callback>().function = rotationCallback;
+
+    auto vertEnt = entity;
+    m_cloudEnts[ShaderID::TopDownWrap].getComponent<cro::Transform>().addChild(vertEnt.getComponent<cro::Transform>());
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, -12.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Camera");
+    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Black);
+    entity.getComponent<cro::Text>().setCharacterSize(12);
+    vertEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    const std::string vertShader =
+        R"(
+uniform mat4 u_worldMatrix;
+uniform mat4 u_viewProjectionMatrix;
+
+ATTRIBUTE vec2 a_position;
+ATTRIBUTE MED vec2 a_texCoord0;
+ATTRIBUTE LOW vec4 a_colour;
+
+VARYING_OUT LOW vec4 v_colour;
+
+const vec2 MinBounds = vec2(-100.0);
+const vec2 MaxBounds = vec2(100.0);
+
+void main()
+{
+    vec3 txPos = u_worldMatrix[3].xyz;
+
+    vec2 position = a_position;
+    position -= txPos.xy;
+
+    vec2 bounds = MaxBounds - MinBounds;
+    position += floor(-(position + MinBounds) / bounds) * bounds;
+
+    gl_Position = u_viewProjectionMatrix * u_worldMatrix * vec4(position, 0.0, 1.0);
+    v_colour = a_colour;
+    gl_PointSize = 5.0;
+}
+)";
+
+    m_resources.shaders.loadFromString(ShaderID::TopDownWrap, vertShader, cro::RenderSystem2D::getDefaultFragmentShader());
+    auto& shader = m_resources.shaders.get(ShaderID::TopDownWrap);
+
+
+    static constexpr std::array<float, 2U> MaxBounds = { 100.f, 100.f };
+    static constexpr std::array<float, 2U> MinBounds = { -100.f, -100.f };
+    const auto points = pd::PoissonDiskSampling(20.f, MinBounds, MaxBounds);
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_POINTS);
+    entity.getComponent<cro::Drawable2D>().setShader(&shader);
+
+    std::vector<cro::Vertex2D> verts;
+    for (auto i = 0u; i < points.size(); ++i)
+    {
+        const auto pos = glm::vec2(points[i][0], points[i][1]);
+        verts.emplace_back(pos, cro::Colour::Cyan);
+    }
+    entity.getComponent<cro::Drawable2D>().setVertexData(verts);
+    vertEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+
+
 
 
     auto resize = [](cro::Camera& cam)

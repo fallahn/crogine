@@ -34,6 +34,8 @@ private:
             Static, Dynamic,
             DynamicEased, DynamicPerspective,
 
+            TopDownGrid, TopDownWrap,
+
             Count
         };
     };
