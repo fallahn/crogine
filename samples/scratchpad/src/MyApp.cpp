@@ -63,6 +63,7 @@ source distribution.
 
 #include "gk/GKGameState.hpp"
 #include "pinballgame/PinballGameState.hpp"
+#include "vertexcloud/VertexCloudState.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
@@ -233,12 +234,14 @@ bool MyApp::initialise()
 
     m_stateStack.registerState<GKGameState>(States::ScratchPad::GKGame);
     m_stateStack.registerState<PinballGameState>(States::ScratchPad::PinballGame);
+    m_stateStack.registerState<VertexCloudState>(States::ScratchPad::VertexCloud);
 
 #ifdef CRO_DEBUG_
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
     //m_stateStack.pushState(States::ScratchPad::TrackOverlay);
     //m_stateStack.pushState(States::ScratchPad::BatCat);
-    m_stateStack.pushState(States::ScratchPad::Surreal);
+    //m_stateStack.pushState(States::ScratchPad::Surreal);
+    m_stateStack.pushState(States::ScratchPad::VertexCloud);
     //m_stateStack.pushState(States::ScratchPad::PinballGame);
     //m_stateStack.pushState(States::ScratchPad::SSAO);
 #else

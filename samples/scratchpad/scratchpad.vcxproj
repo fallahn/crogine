@@ -356,6 +356,7 @@
     <ClCompile Include="src\trackoverlay\TrackOverlayState.cpp" />
     <ClCompile Include="src\vats\VatFile.cpp" />
     <ClCompile Include="src\vats\VatsState.cpp" />
+    <ClCompile Include="src\vertexcloud\VertexCloudState.cpp" />
     <ClCompile Include="src\voxels\MarchingCubes.cpp" />
     <ClCompile Include="src\voxels\SurfaceNet.cpp" />
     <ClCompile Include="src\voxels\VoxelFpsCameraSystem.cpp" />
@@ -441,6 +442,7 @@
     <ClInclude Include="src\trackoverlay\TrackOverlayState.hpp" />
     <ClInclude Include="src\vats\VatFile.hpp" />
     <ClInclude Include="src\vats\VatsState.hpp" />
+    <ClInclude Include="src\vertexcloud\VertexCloudState.hpp" />
     <ClInclude Include="src\voxels\Consts.hpp" />
     <ClInclude Include="src\voxels\FpsCameraSystem.hpp" />
     <ClInclude Include="src\voxels\IsoSurface.hpp" />

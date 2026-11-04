@@ -196,6 +196,12 @@
     <Filter Include="Header Files\surreal">
       <UniqueIdentifier>{b6241161-2283-4deb-81ab-b06488c75864}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\vertex weather">
+      <UniqueIdentifier>{0f152c6c-78ad-496c-b99e-dacfdbf6101b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\vertex weather">
+      <UniqueIdentifier>{45479277-0305-4f14-bfab-2d155efc4457}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -392,6 +398,9 @@
     </ClCompile>
     <ClCompile Include="src\surreal\SurrealState.cpp">
       <Filter>Source Files\surreal</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vertexcloud\VertexCloudState.cpp">
+      <Filter>Source Files\vertex weather</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -640,6 +649,9 @@
     </ClInclude>
     <ClInclude Include="src\surreal\SurrealState.hpp">
       <Filter>Header Files\surreal</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vertexcloud\VertexCloudState.hpp">
+      <Filter>Header Files\vertex weather</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1583,7 +1583,7 @@ bool MenuState::createStub(const std::string& name) const
 
     if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
