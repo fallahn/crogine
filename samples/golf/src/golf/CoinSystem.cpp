@@ -143,11 +143,16 @@ void CoinSystem::process(float dt)
                     }
                     else if (testCollision(bucketBottom, bottomCentre))
                     {
-                        std::uint16_t score = 1;
-                        if (m_bucketEnt.getComponent<cro::Callback>().getUserData<CanData>().state == CanData::Move)
+                        std::int16_t score = 1;
+                        const auto& canData = m_bucketEnt.getComponent<cro::Callback>().getUserData<CanData>();
+                        if (canData.state == CanData::Move)
                         {
                             //bonus point for moving target
                             score++;
+                            if (glm::length2(canData.velocity) > 3000.f)
+                            {
+                                score++; //moving fast bonus
+                            }
                         }
                         const std::uint32_t data = (std::uint16_t(coin.clientID) << 16) | score;
                         m_sharedData.host.broadcastPacket(PacketID::CoinBucketed, data, net::NetFlag::Reliable);
@@ -175,9 +180,11 @@ void CoinSystem::process(float dt)
             if (tx.getPosition().y < -22.f) //kludgy value representing the banner height
             {
                 const auto id = static_cast<std::uint32_t>(entity.getIndex());
-                getScene()->destroyEntity(entity);
-
+                const std::uint32_t data = (std::uint16_t(coin.clientID) << 16) | std::numeric_limits<std::uint16_t>::max(); //actually -1 for missing
+                m_sharedData.host.broadcastPacket(PacketID::CoinBucketed, data, net::NetFlag::Reliable);
                 m_sharedData.host.broadcastPacket(PacketID::CoinRemove, id, net::NetFlag::Reliable);
+                
+                getScene()->destroyEntity(entity);
             }
         }
     }

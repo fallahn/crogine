@@ -207,7 +207,7 @@ void MenuState::updateActor(const CanInfo& info)
 void MenuState::canScore(std::uint32_t data)
 {
     const std::uint16_t clientID = ((data & 0xffff0000) >> 16);
-    const std::uint16_t score = data & 0xffff;
+    const std::int16_t score = data & 0xffff;
 
     for (auto& p : m_displayOrder)
     {
@@ -233,7 +233,8 @@ void MenuState::canScore(std::uint32_t data)
                 auto entity = m_uiScene.createEntity();
                 entity.addComponent<cro::Transform>().setPosition(pos);
                 entity.addComponent<cro::Drawable2D>();
-                entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info)).setString("+" + std::to_string(score));
+                const auto scoreString = score > 0 ? "+" + std::to_string(score) : std::to_string(score);
+                entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info)).setString(scoreString);
                 entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
                 entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
                 entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
@@ -263,8 +264,11 @@ void MenuState::canScore(std::uint32_t data)
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
 
-    m_backgroundScene.getDirector<MenuSoundDirector>()->playSound(
-        cro::Util::Random::value(MenuSoundDirector::AudioID::Land01, MenuSoundDirector::AudioID::Land01 + 2), 0.5f);
+    if (score > 0)
+    {
+        m_backgroundScene.getDirector<MenuSoundDirector>()->playSound(
+            cro::Util::Random::value(MenuSoundDirector::AudioID::Land01, MenuSoundDirector::AudioID::Land01 + 2), 0.5f);
+    }
 }
 
 void MenuState::createCanControl(cro::Entity can)
