@@ -163,6 +163,9 @@ bool VertexCloudState::handleEvent(const cro::Event& evt)
         case SDL_SCANCODE_6:
             showCloud(ShaderID::TopDownWrap);
             break;
+        case SDL_SCANCODE_W:
+            cro::App::getWindow().setSize({ 640, 360 });
+            break;
         }
     }
 
