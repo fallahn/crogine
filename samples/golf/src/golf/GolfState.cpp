@@ -5103,7 +5103,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         applyMaterialData(*m_ballModels.begin()->second, material);
     };
 
-    const auto matID = m_sharedData.nightTime ? (ball->rollAnimation ? MaterialID::TeeNight : MaterialID::BallNight) : MaterialID::Ball;
+    const auto matID = m_sharedData.nightTime ? /*(ball->rollAnimation ? MaterialID::TeeNight : MaterialID::BallNight)*/MaterialID::BallNight : MaterialID::Ball;
     const auto matIDSkinned = m_sharedData.nightTime ? MaterialID::BallNightSkinned : MaterialID::BallSkinned;
 
     material = m_resources.materials.get(m_materialIDs[matID]);

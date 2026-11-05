@@ -163,6 +163,9 @@ bool VertexCloudState::handleEvent(const cro::Event& evt)
         case SDL_SCANCODE_6:
             showCloud(ShaderID::TopDownWrap);
             break;
+        case SDL_SCANCODE_7:
+            showCloud(ShaderID::LineWrap);
+            break;
         case SDL_SCANCODE_W:
             cro::App::getWindow().setSize({ 640, 360 });
             break;
@@ -202,6 +205,8 @@ bool VertexCloudState::simulate(float dt)
 void VertexCloudState::render()
 {
     glEnable(GL_PROGRAM_POINT_SIZE);
+    glLineWidth(3.f);
+    glEnable(GL_LINE_SMOOTH);
     m_gameScene.render();
     m_uiScene.render();
 }
@@ -398,7 +403,8 @@ void VertexCloudState::createScene()
             //QaD hack to hide the wirefram in 2D view
             const float scale = 1.f - 
                 (m_cloudEnts[ShaderID::TopDownGrid].getComponent<cro::Transform>().getScale().x +
-                    m_cloudEnts[ShaderID::TopDownWrap].getComponent<cro::Transform>().getScale().x);
+                    m_cloudEnts[ShaderID::TopDownWrap].getComponent<cro::Transform>().getScale().x +
+                    m_cloudEnts[ShaderID::LineWrap].getComponent<cro::Transform>().getScale().x);
             e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
         };
 
@@ -450,6 +456,7 @@ void VertexCloudState::createUI()
     //displays the grid / wrapping methods
     m_textEnts[ShaderID::TopDownGrid] = createText("Top-down view 3x3 chunks");
     m_textEnts[ShaderID::TopDownWrap] = createText("Top-down view Single chunk");
+    m_textEnts[ShaderID::LineWrap] = createText(" ");
 
 
 
@@ -579,7 +586,7 @@ void VertexCloudState::createUI()
     entity.getComponent<cro::Text>().setCharacterSize(12);
     vertEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    const std::string vertShader =
+    std::string vertShader =
         R"(
 uniform mat4 u_worldMatrix;
 uniform mat4 u_viewProjectionMatrix;
@@ -610,7 +617,7 @@ void main()
 )";
 
     m_resources.shaders.loadFromString(ShaderID::TopDownWrap, vertShader, cro::RenderSystem2D::getDefaultFragmentShader());
-    auto& shader = m_resources.shaders.get(ShaderID::TopDownWrap);
+    auto* shader = &m_resources.shaders.get(ShaderID::TopDownWrap);
 
 
     static constexpr std::array<float, 2U> MaxBounds = { 100.f, 100.f };
@@ -620,7 +627,7 @@ void main()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_POINTS);
-    entity.getComponent<cro::Drawable2D>().setShader(&shader);
+    entity.getComponent<cro::Drawable2D>().setShader(shader);
 
     std::vector<cro::Vertex2D> verts;
     for (auto i = 0u; i < points.size(); ++i)
@@ -634,8 +641,51 @@ void main()
 
 
 
+    //line wrapping
+    vertShader =
+        R"(
+uniform mat4 u_worldMatrix;
+uniform mat4 u_viewProjectionMatrix;
 
+uniform float u_time;
 
+ATTRIBUTE vec2 a_position;
+ATTRIBUTE MED vec2 a_texCoord0;
+ATTRIBUTE LOW vec4 a_colour;
+
+VARYING_OUT LOW vec4 v_colour;
+
+const float WrapDist = 200.0;
+
+void main()
+{
+    vec3 txPos = u_worldMatrix[3].xyz;
+
+    vec2 position = a_position;
+    position.y = mod(position.y - (u_time * 140.0), WrapDist);
+
+    gl_Position = u_viewProjectionMatrix * u_worldMatrix * vec4(position, 0.0, 1.0);
+    v_colour = a_colour;
+}
+)";
+    m_resources.shaders.loadFromString(ShaderID::LineWrap, vertShader, cro::RenderSystem2D::getDefaultFragmentShader());
+    shader = &m_resources.shaders.get(ShaderID::LineWrap);
+    m_timeUniforms[ShaderID::LineWrap].shader = shader->getGLHandle();
+    m_timeUniforms[ShaderID::LineWrap].uniform = shader->getUniformID("u_time");
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 320.f, 240.f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINES);
+    entity.getComponent<cro::Drawable2D>().setShader(shader);
+    entity.getComponent<cro::Drawable2D>().setVertexData({
+        cro::Vertex2D(glm::vec2(5.f, 55.f), cro::Colour::Yellow),
+        cro::Vertex2D(glm::vec2(15.f, -35.f), cro::Colour::Red),
+
+        cro::Vertex2D(glm::vec2(-15.f, 15.f), cro::Colour::Yellow),
+        cro::Vertex2D(glm::vec2(-5.f, -75.f), cro::Colour::Red),
+        });
+    m_cloudEnts[ShaderID::LineWrap] = entity;
 
     auto resize = [](cro::Camera& cam)
     {

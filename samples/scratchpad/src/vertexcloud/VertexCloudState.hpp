@@ -35,6 +35,7 @@ private:
             DynamicEased, DynamicPerspective,
 
             TopDownGrid, TopDownWrap,
+            LineWrap,
 
             Count
         };
