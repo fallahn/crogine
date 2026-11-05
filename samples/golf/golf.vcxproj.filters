@@ -756,6 +756,9 @@
     <ClCompile Include="src\editor\EditorApp.cpp">
       <Filter>Source Files\editor</Filter>
     </ClCompile>
+    <ClCompile Include="src\editor\BushStateWindows.cpp">
+      <Filter>Source Files\editor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -1564,6 +1567,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\AvatarInfo.hpp">
       <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\editor\BushStateConsts.hpp">
+      <Filter>Header Files\editor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

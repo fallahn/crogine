@@ -36,9 +36,10 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
-#include <crogine/graphics/UniformBuffer.hpp>
-#include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/Palette.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/UniformBuffer.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
 #include <array>
@@ -75,6 +76,9 @@ private:
     cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
     cro::UniformBuffer<float> m_scaleBuffer;
 
+    std::filesystem::path m_lastTreeset = "untitled.tst";
+    std::filesystem::path m_lastSkybox = "untitled.sbf";
+
     struct ModelID final
     {
         enum
@@ -95,6 +99,48 @@ private:
     };
     std::vector<MaterialSlot> m_materials;
 
+    struct TreesetData final
+    {
+        float leafSize = 0.25f; //metres
+        float randomAmount = 0.2f;
+        float colourRotation = 0.25f;
+        float scale = 1.f;
+        glm::vec3 colour = glm::vec3(1.f);
+
+        std::filesystem::path modelPath;
+        std::filesystem::path texturePath;
+
+    }m_treeset;
+
+    struct ShaderUniforms final
+    {
+        std::uint32_t shaderID = 0;
+        std::int32_t size = -1;
+        std::int32_t randomness = -1;
+        std::int32_t colour = -1;
+        std::int32_t targetHeight = -1;
+        std::int32_t colourRotation = -1;
+    }m_shaderUniform;
+
+
+    //----TODO move these to a proper init list
+    std::int32_t m_bushMaterial = -1;
+    std::int32_t m_branchMaterial = -1;
+
+    float m_rotation = 0.f;
+    cro::Texture* m_leafTexture = nullptr;
+
+    WindData m_windData;
+    float m_windRotation = 0.f;
+
+    cro::Palette m_palette;
+    glm::vec2 m_rootRotation = glm::vec2(0.f);
+    float m_billboardScaleMultiplier = 0.46f;
+
+    cro::Colour m_skyMid = cro::Colour::White;
+    cro::Colour m_skyTop = cro::Colour::CornflowerBlue;
+
+    //------------------------------------------
 
     cro::RenderTexture m_billboardTexture;
     cro::Entity m_billboardCamera;
@@ -111,7 +157,21 @@ private:
     //assigned to camera resize callback
     void updateView(cro::Camera&);
 
+    void registerWindows();
     void drawUI();
+
+    struct UIWindow final
+    {
+        bool visible = false;
+        std::function<void(bool*)> draw;
+    };
+    std::vector<UIWindow> m_windows;
+
+    void drawMenuBar(bool*);
+    void drawProperties(bool*);
+    void drawBillboard(bool*);
+    void drawThumbnail(bool*);
+    void drawSkyboxEditor(bool*);
 
     void loadModel(const std::filesystem::path&);
     void loadPreset(const std::filesystem::path&);

@@ -28,13 +28,13 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "BushState.hpp"
+#include "BushStateConsts.hpp"
 #include "GrassProcessing.hpp"
 #include "../golf/GameConsts.hpp"
 #include "../golf/SharedStateData.hpp"
 
 #include <crogine/gui/Gui.hpp>
 #include <crogine/core/ConfigFile.hpp>
-#include <crogine/graphics/Palette.hpp>
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -65,63 +65,6 @@ namespace
             Branch
         };
     };
-
-    //TODO tidy all these up
-    std::int32_t bushMaterial = -1;
-    std::int32_t branchMaterial = -1;
-
-    struct TreesetData final
-    {
-        float leafSize = 0.25f; //metres
-        float randomAmount = 0.2f;
-        float colourRotation = 0.25f;
-        float scale = 1.f;
-        glm::vec3 colour = glm::vec3(1.f);
-
-        std::string modelPath;
-        std::string texturePath;
-
-    }treeset;
-    std::string lastTreeset = "untitled.tst";
-    std::string lastSkybox = "untitled.sbf";
-
-    struct ShaderUniforms final
-    {
-        std::uint32_t shaderID = 0;
-        std::int32_t size = -1;
-        std::int32_t randomness = -1;
-        std::int32_t colour = -1;
-        std::int32_t targetHeight = -1;
-        std::int32_t colourRotation = -1;
-    }shaderUniform;
-
-    float rotation = 0.f;
-    cro::Texture* leafTexture = nullptr;
-
-    WindData windData;
-    float windRotation = 0.f;
-
-    cro::Palette palette;
-
-    glm::vec2 rootRotation = glm::vec2(0.f);
-
-    //we'll assume 64px per metre
-    constexpr float PixelsPerMetre = 64.f;
-    const glm::uvec2 BillboardTargetSize(640, 448);
-    float billboardScaleMultiplier = 0.46f;
-
-
-    constexpr float MinModelScale = 0.1f;
-
-    std::uint64_t RenderFlagsBillboard = 1;
-    std::uint64_t RenderFlagsThumbnail = 2;
-
-    cro::Colour skyMid = cro::Colour::White;
-    cro::Colour skyTop = cro::Colour::CornflowerBlue;
-
-    //MapSize * 0.375
-    constexpr glm::uvec2 ThumbnailSize(120u, 75u);
-    //constexpr glm::uvec2 ThumbnailSize(202u, 120u);
 }
 
 BushState::BushState(cro::StateStack& stack, cro::State::Context context, const SharedStateData& sd)
@@ -140,12 +83,10 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context, const 
         createScene();
     });
 
-    registerWindow([&]() 
-        {
-            drawUI();
-        });
+    registerWindow(std::bind(&BushState::drawUI, this));
+    registerWindows();
 
-    registerCommand("process_grass", 
+    /*registerCommand("process_grass", 
         [](const std::string& param)
         {
             const std::string path = "assets/golf/models/" + param;
@@ -168,9 +109,9 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context, const 
                     });
                 t.detach();
             }
-        });
+        });*/
 
-    palette.loadFromFile("assets/workshop/colordome-32.ase");
+    m_palette.loadFromFile("assets/workshop/colordome-32.ase");
 
     if (cro::Console::isVisible())
     {
@@ -228,15 +169,15 @@ bool BushState::handleEvent(const cro::Event& evt)
             if (cro::Keyboard::isKeyPressed(SDLK_LSHIFT))
             {
                 //rotate root
-                rootRotation.y += static_cast<float>(evt.motion.xrel) / 80.f;
+                m_rootRotation.y += static_cast<float>(evt.motion.xrel) / 80.f;
                 //rootRotation.x += static_cast<float>(evt.motion.yrel) / 80.f;
 
-                glm::mat4 rotation = glm::rotate(glm::mat4(1.f), rootRotation.y, cro::Transform::Y_AXIS);
-                auto q = glm::quat_cast(glm::rotate(rotation, rootRotation.x, cro::Transform::X_AXIS));
+                glm::mat4 rotation = glm::rotate(glm::mat4(1.f), m_rootRotation.y, cro::Transform::Y_AXIS);
+                auto q = glm::quat_cast(glm::rotate(rotation, m_rootRotation.x, cro::Transform::X_AXIS));
 
                 m_root.getComponent<cro::Transform>().setRotation(q);
 
-                rotation = glm::rotate(glm::mat4(1.f), -rootRotation.y, cro::Transform::Y_AXIS);
+                rotation = glm::rotate(glm::mat4(1.f), -m_rootRotation.y, cro::Transform::Y_AXIS);
                 m_skyScene.getActiveCamera().getComponent<cro::Transform>().setRotation(glm::quat_cast(rotation));
             }
             else
@@ -298,8 +239,8 @@ bool BushState::simulate(float dt)
     m_gameScene.getActiveCamera().getComponent<cro::Transform>().move(movement);
 
 
-    windData.elapsedTime += dt;
-    m_windBuffer.setData(windData);
+    m_windData.elapsedTime += dt;
+    m_windBuffer.setData(m_windData);
 
     m_gameScene.simulate(dt);
     m_skyScene.simulate(dt);
@@ -316,24 +257,20 @@ void BushState::preRender()
 
     glEnable(GL_PROGRAM_POINT_SIZE);
 
-    glUseProgram(shaderUniform.shaderID);
-    glUniform1f(shaderUniform.size, billboardScaleMultiplier * treeset.leafSize);
+    glUseProgram(m_shaderUniform.shaderID);
+    glUniform1f(m_shaderUniform.size, m_billboardScaleMultiplier * m_treeset.leafSize);
     auto oldCam = m_gameScene.setActiveCamera(m_billboardCamera);
     m_billboardTexture.clear(cro::Colour::Transparent);
     m_gameScene.render();
     m_billboardTexture.display();
 
-    glUseProgram(shaderUniform.shaderID);
-    glUniform1f(shaderUniform.size, treeset.leafSize);
+    glUseProgram(m_shaderUniform.shaderID);
+    glUniform1f(m_shaderUniform.size, m_treeset.leafSize);
     m_gameScene.setActiveCamera(oldCam);
 }
 
 void BushState::render()
 {
-    m_windBuffer.bind();
-    m_resolutionBuffer.bind();
-    m_scaleBuffer.bind();
-
     //renders a background over any other states which
     //might exist behind this one.
     m_backgroundQuad.draw();
@@ -380,7 +317,7 @@ void BushState::loadAssets()
 
     m_resources.shaders.loadFromString(BushShaderID::Bush, BushVertex, BushFragment, "#define INSTANCING\n#define HQ\n");
     auto* shader = &m_resources.shaders.get(BushShaderID::Bush);
-    bushMaterial = m_resources.materials.add(*shader);
+    m_bushMaterial = m_resources.materials.add(*shader);
 
     m_windBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -389,28 +326,28 @@ void BushState::loadAssets()
 
     auto& texture = m_resources.textures.get("assets/golf/treesets/leaf06.png");
     texture.setSmooth(false);
-    leafTexture = &texture;
-    treeset.texturePath = "leaf06.png";
+    m_leafTexture = &texture;
+    m_treeset.texturePath = "leaf06.png";
 
     auto& noiseTex = m_resources.textures.get("assets/golf/images/wind.png");
     noiseTex.setRepeated(true);
     noiseTex.setSmooth(true);
 
-    auto& material = m_resources.materials.get(bushMaterial);
+    auto& material = m_resources.materials.get(m_bushMaterial);
     material.setProperty("u_diffuseMap", texture);
     material.setProperty("u_noiseTexture", noiseTex);
 
-    shaderUniform.shaderID = shader->getGLHandle();
-    shaderUniform.randomness = shader->getUniformID("u_randAmount");
-    shaderUniform.size = shader->getUniformID("u_leafSize");
-    shaderUniform.colour = shader->getUniformID("u_colour");
-    shaderUniform.targetHeight = shader->getUniformID("u_targetHeight");
-    shaderUniform.colourRotation = shader->getUniformID("u_rotation");
+    m_shaderUniform.shaderID = shader->getGLHandle();
+    m_shaderUniform.randomness = shader->getUniformID("u_randAmount");
+    m_shaderUniform.size = shader->getUniformID("u_leafSize");
+    m_shaderUniform.colour = shader->getUniformID("u_colour");
+    m_shaderUniform.targetHeight = shader->getUniformID("u_targetHeight");
+    m_shaderUniform.colourRotation = shader->getUniformID("u_rotation");
 
     m_resources.shaders.loadFromString(BushShaderID::Branch, BranchVertex, BranchFragment, "#define INSTANCING\n#define ALPHA_CLIP\n");
     shader = &m_resources.shaders.get(BushShaderID::Branch);
-    branchMaterial = m_resources.materials.add(*shader);
-    m_resources.materials.get(branchMaterial).setProperty("u_noiseTexture", noiseTex);
+    m_branchMaterial = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_branchMaterial).setProperty("u_noiseTexture", noiseTex);
 
     m_windBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -452,7 +389,7 @@ void BushState::loadAssets()
     m_thumbnailTexture.create(ThumbnailSize.x, ThumbnailSize.y);
 
     m_skyScene.enableSkybox();
-    m_skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);
+    m_skyScene.setSkyboxColours(SkyBottom, m_skyMid, m_skyTop);
 }
 
 void BushState::createScene()
@@ -554,8 +491,8 @@ void BushState::updateView(cro::Camera& cam3D)
 
     //set the correct renderable height in the shader
     auto targetHeight = static_cast<float>(cro::App::getWindow().getSize().y) * size.y;
-    glUseProgram(shaderUniform.shaderID);
-    glUniform1f(shaderUniform.targetHeight, targetHeight);
+    glUseProgram(m_shaderUniform.shaderID);
+    glUniform1f(m_shaderUniform.targetHeight, targetHeight);
 
     ResolutionData rd;
     rd.resolution = cro::App::getWindow().getSize();
@@ -571,317 +508,35 @@ void BushState::updateView(cro::Camera& cam3D)
     skyCam.setPerspective(cam3D.getFOV(), cam3D.getAspectRatio(), 0.5f, 14.f);
 }
 
+void BushState::registerWindows()
+{
+    //TODO we need to track these indices so we can use the menu bar etc to toggle visiblity
+    auto& menuBar = m_windows.emplace_back();
+    menuBar.visible = true;
+    menuBar.draw = std::bind(&BushState::drawMenuBar, this, std::placeholders::_1);
+
+    auto& properties = m_windows.emplace_back();
+    properties.visible = true;
+    properties.draw = std::bind(&BushState::drawProperties, this, std::placeholders::_1);
+
+    auto& billboard = m_windows.emplace_back();
+    billboard.draw = std::bind(&BushState::drawBillboard, this, std::placeholders::_1);
+
+    auto& thumbnail = m_windows.emplace_back();
+    thumbnail.draw = std::bind(&BushState::drawThumbnail, this, std::placeholders::_1);
+
+    auto& skybox = m_windows.emplace_back();
+    skybox.draw = std::bind(&BushState::drawSkyboxEditor, this, std::placeholders::_1);
+}
+
 void BushState::drawUI()
 {
-    if (ImGui::BeginMainMenuBar())
+    for (auto& window : m_windows)
     {
-        if (ImGui::BeginMenu("File"))
+        if (window.visible)
         {
-            if (ImGui::MenuItem("Load Model"))
-            {
-                const auto path = cro::FileSystem::openFileDialogue("", "cmt");
-                if (!path.empty())
-                {
-                    loadModel(path);
-                }
-            }
-            if (ImGui::MenuItem("Open Preset"))
-            {
-                auto path = cro::FileSystem::openFileDialogue("", "tst");
-                if (!path.empty())
-                {
-                    loadPreset(path);
-                }
-            }
-            if (ImGui::MenuItem("Save Preset"))
-            {
-                auto path = cro::FileSystem::saveFileDialogue(lastTreeset, "tst");
-                if (!path.empty())
-                {
-                    savePreset(path);
-                }
-            }
-            ImGui::Separator();
-            if (ImGui::MenuItem("Quit"))
-            {
-                if (getStateCount() == 1)
-                {
-                    cro::App::quit();
-                }
-                else
-                {
-                    requestStackPop();
-                    Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
-                }
-            }
-
-            ImGui::EndMenu();
+            window.draw(&window.visible);
         }
-
-        if (ImGui::BeginMenu("View"))
-        {
-            ImGui::MenuItem("Skybox Editor", nullptr, &m_editSkybox);
-
-            ImGui::EndMenu();
-        }
-
-        if (ImGui::BeginMenu("Edit"))
-        {
-            if (ImGui::MenuItem("Create Thumbs")
-                && cro::FileSystem::showMessageBox("Are You Sure?", "This may take some time, and window may\nbecome unresponsive. Please be\npatient.", cro::FileSystem::ButtonType::YesNo))
-            {
-                createThumbnails();
-            }
-
-            ImGui::EndMenu();
-        }
-
-        ImGui::EndMainMenuBar();
-    }
-
-    if (ImGui::Begin("Properties"))
-    {
-        if (ImGui::SliderFloat("Leaf Size", &treeset.leafSize, 0.01f, 1.f))
-        {
-            glUseProgram(shaderUniform.shaderID);
-            glUniform1f(shaderUniform.size, treeset.leafSize);
-        }
-
-        if (ImGui::SliderFloat("Randomness", &treeset.randomAmount, 0.f, 1.f))
-        {
-            glUseProgram(shaderUniform.shaderID);
-            glUniform1f(shaderUniform.randomness, treeset.randomAmount);
-        }
-
-        if (ImGui::SliderFloat("Scale", &treeset.scale, MinModelScale, 3.f))
-        {
-            treeset.scale = std::max(MinModelScale, treeset.scale);
-            for (auto e : m_models)
-            {
-                if (e.isValid())
-                {
-                    e.getComponent<cro::Transform>().setScale(glm::vec3(treeset.scale));
-                }
-            }
-        }
-
-        if(ImGui::SliderFloat("Colour Rotation", &treeset.colourRotation, 0.f, 1.f))
-        { 
-            glUseProgram(shaderUniform.shaderID);
-            glUniform1f(shaderUniform.colourRotation, treeset.colourRotation);
-        }
-
-        if (ImGui::ColorEdit3("Colour", &treeset.colour[0]))
-        {
-            glUseProgram(shaderUniform.shaderID);
-            glUniform3f(shaderUniform.colour, treeset.colour.r, treeset.colour.g, treeset.colour.b);
-        }
-
-        if (ImGui::Button("Load Palette"))
-        {
-            auto path = cro::FileSystem::openFileDialogue("", "ase");
-            if (!path.empty())
-            {
-                palette.loadFromFile(path);
-            }
-        }
-        auto i = 0;
-        for (const auto& swatch : palette.getSwatches())
-        {
-            for (const auto& colour : swatch.colours)
-            {
-                ImVec4 c(colour.colour.getVec4());
-                std::string label = colour.name.toAnsiString() + "##" + std::to_string(i);
-                if (ImGui::ColorButton(label.c_str(), c))
-                {
-                    treeset.colour = { c.x, c.y, c.z };
-                    glUseProgram(shaderUniform.shaderID);
-                    glUniform3f(shaderUniform.colour, c.x, c.y, c.z);
-                }
-
-                if ((i++ % 12) != 11)
-                {
-                    ImGui::SameLine();
-                }
-            }
-        }
-        ImGui::NewLine();
-        ImGui::Separator();
-        ImGui::SliderFloat("Wind Strength", &windData.direction[1], 0.1f, 1.f);
-        if (ImGui::SliderFloat("Wind Direction", &windRotation, 0.f, cro::Util::Const::PI))
-        {
-            auto dir = glm::rotate(glm::quat(0.f, 0.f, 0.f, 1.f), windRotation, cro::Transform::Y_AXIS) * glm::vec3(-1.f, 0.f, 0.f);
-            windData.direction[0] = dir.x;
-            windData.direction[2] = dir.z;
-        }
-
-        if (ImGui::Button("Load Texture"))
-        {
-            auto path = cro::FileSystem::openFileDialogue("", "png");
-            if (!path.empty())
-            {
-                leafTexture->loadFromFile(path);
-                treeset.texturePath = U8PATH_CAST(cro::FileSystem::getFileName(path));
-            }
-        }
-        ImGui::SameLine();
-        ImGui::Image(*leafTexture, { 32.f, 32.f }, { 0.f, 0.f }, { 1.f, 1.f });
-
-
-        ImGui::NewLine();
-        if (m_models[0].isValid())
-        {
-            if (ImGui::SliderFloat("Rotation", &rotation, 0.f, cro::Util::Const::TAU))
-            {
-                for (auto model : m_models)
-                {
-                    model.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
-                }
-            }
-
-            static bool showInstanced = false;
-            if (ImGui::Checkbox("Instanced", &showInstanced))
-            {
-                m_models[1].getComponent<cro::Model>().setHidden(showInstanced);
-                m_models[2].getComponent<cro::Model>().setHidden(!showInstanced);
-            }
-
-            for (i = 0u; i < m_materials.size(); ++i)
-            {
-                auto label = "Material##" + std::to_string(i);
-                if (ImGui::InputInt(label.c_str(), &m_materials[i].activeMaterial))
-                {
-                    m_materials[i].activeMaterial = std::min(1, std::max(0, m_materials[i].activeMaterial));
-
-                    for (auto j = 1u; j < m_models.size(); ++j)
-                    {
-                        m_models[j].getComponent<cro::Model>().setMaterial(i, m_materials[i].materials[m_materials[i].activeMaterial]);
-                        m_models[j].getComponent<cro::Model>().getMeshData().indexData[i].primitiveType =
-                            m_materials[i].activeMaterial ? GL_POINTS : GL_TRIANGLES;
-                    }
-                }
-            }
-        }
-
-    }
-    ImGui::End();
-
-    if (ImGui::Begin("Billboard"))
-    {
-        glm::vec2 size(BillboardTargetSize);
-        ImGui::Image(m_billboardTexture.getTexture(), {size.x, size.y}, {0.f, 1.f}, {1.f, 0.f});
-
-        ImGui::SliderFloat("Leaf Scale", &billboardScaleMultiplier, 0.1f, 1.f);
-
-        if (ImGui::Button("Reset Rotation"))
-        {
-            rootRotation = glm::vec2(0.f);
-            m_root.getComponent<cro::Transform>().setRotation(glm::mat4(1.f));
-        }
-
-        ImGui::SameLine();
-
-        if (ImGui::Button("Save Image"))
-        {
-            auto path = cro::FileSystem::saveFileDialogue("", "png");
-            if (!path.empty())
-            {
-                m_billboardTexture.saveToFile(path);
-            }
-        }
-    }
-    ImGui::End();
-
-    if (ImGui::Begin("Thumbnail"))
-    {
-        ImGui::Image(m_thumbnailTexture.getTexture(), { static_cast<float>(ThumbnailSize.x), static_cast<float>(ThumbnailSize.y) }, { 0.f, 1.f }, { 1.f, 0.f });
-    }
-    ImGui::End();
-
-    if (m_editSkybox)
-    {
-        if (ImGui::Begin("Skybox"))
-        {
-            if (ImGui::Button("Load Skybox"))
-            {
-                loadSkyboxFile();
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Save Skybox"))
-            {
-                saveSkyboxFile();
-            }
-
-            //hacky but should be ok if there are not too many models in
-            //the skybox scene.
-            std::vector<cro::Entity> items;
-            for (auto e : m_skyScene.getSystem<cro::ModelRenderer>()->getEntities())
-            {
-                if (!e.getLabel().empty())
-                {
-                    items.push_back(e);
-                }
-            }
-            int k = 0;
-            for (auto item : items)
-            {
-                ImGui::Text("%s", item.getLabel().c_str());
-                ImGui::SameLine();
-                std::string label = "Remove##" + std::to_string(k++);
-                if (ImGui::Button(label.c_str()))
-                {
-                    m_skyScene.destroyEntity(item);
-                }
-            }
-            if (ImGui::Button("Add Model"))
-            {
-                addSkyboxModel();
-            }
-            ImGui::NewLine();
-
-            auto i = 0;
-            ImGui::Text("Sky Top");
-            for (const auto& swatch : palette.getSwatches())
-            {
-                for (const auto& colour : swatch.colours)
-                {
-                    ImVec4 c(colour.colour.getVec4());
-                    std::string label = colour.name.toAnsiString() + "##" + std::to_string(i);
-                    if (ImGui::ColorButton(label.c_str(), c))
-                    {
-                        skyTop = cro::Colour(c.x, c.y, c.z);
-                        m_skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);
-                    }
-
-                    if ((i++ % 12) != 11)
-                    {
-                        ImGui::SameLine();
-                    }
-                }
-            }
-            ImGui::Separator();
-            i = 120;
-            ImGui::Text("Sky Bottom");
-            for (const auto& swatch : palette.getSwatches())
-            {
-                for (const auto& colour : swatch.colours)
-                {
-                    ImVec4 c(colour.colour.getVec4());
-                    std::string label = colour.name.toAnsiString() + "##" + std::to_string(i);
-                    if (ImGui::ColorButton(label.c_str(), c))
-                    {
-                        skyMid = cro::Colour(c.x, c.y, c.z);
-                        m_skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);
-                    }
-
-                    if ((i++ % 12) != 11)
-                    {
-                        ImGui::SameLine();
-                    }
-                }
-            }
-        }
-        ImGui::End();
     }
 }
 
@@ -892,7 +547,7 @@ void BushState::loadModel(const std::filesystem::path& path)
         m_gameScene.destroyEntity(m_models[0]);
         m_gameScene.destroyEntity(m_models[1]);
         m_gameScene.destroyEntity(m_models[2]);
-        rotation = 0.f;
+        m_rotation = 0.f;
         m_materials.clear();
     }
 
@@ -920,7 +575,7 @@ void BushState::loadModel(const std::filesystem::path& path)
         for (auto i = 1u; i < m_models.size(); ++i)
         {
             entity = m_gameScene.createEntity();
-            entity.addComponent<cro::Transform>().setScale(glm::vec3(treeset.scale));
+            entity.addComponent<cro::Transform>().setScale(glm::vec3(m_treeset.scale));
             md.createModel(entity);
             entity.getComponent<cro::Model>().setRenderFlags(~RenderFlagsThumbnail);
 
@@ -933,7 +588,7 @@ void BushState::loadModel(const std::filesystem::path& path)
             //set branch as default
             for (auto j = 0u; j < meshData->submeshCount; ++j)
             {
-                auto mat = m_resources.materials.get(branchMaterial);
+                auto mat = m_resources.materials.get(m_branchMaterial);
                 mat.doubleSided = true;
                 if (md.getMaterial(j)->properties.count("u_diffuseMap"))
                 {
@@ -943,7 +598,7 @@ void BushState::loadModel(const std::filesystem::path& path)
                 entity.getComponent<cro::Model>().setMaterial(j, mat);
 
                 m_materials[j].materials[0] = mat;
-                m_materials[j].materials[1] = m_resources.materials.get(bushMaterial);
+                m_materials[j].materials[1] = m_resources.materials.get(m_bushMaterial);
                 m_materials[j].materials[1].doubleSided = true;
             }
 
@@ -954,26 +609,26 @@ void BushState::loadModel(const std::filesystem::path& path)
         m_models[2].getComponent<cro::Model>().setInstanceTransforms(m_instanceTransforms);
         m_models[2].getComponent<cro::Model>().setHidden(true);
 
-        treeset.modelPath = U8PATH_CAST(cro::FileSystem::getFileName(path));
+        m_treeset.modelPath = cro::FileSystem::getFileName(path);
 
         m_billboardCamera.getComponent<cro::Transform>().setPosition({ radius, 0.f, 9.f });
     }
     else
     {
         cro::FileSystem::showMessageBox("Error", "Failed opening model");
-        treeset = {};
+        m_treeset = {};
     }
 }
 
 void BushState::loadPreset(const std::filesystem::path& path)
 {
     const auto workingDir = cro::FileSystem::getFilePath(path);
-    treeset.scale = 1.f;
+    m_treeset.scale = 1.f;
 
     cro::ConfigFile cfg;
     if (cfg.loadFromFile(path))
     {
-        treeset = {};
+        m_treeset = {};
 
         std::vector<std::uint32_t> branchIndices;
         std::vector<std::uint32_t> leafIndices;
@@ -984,31 +639,31 @@ void BushState::loadPreset(const std::filesystem::path& path)
             const auto& name = p.getName();
             if (name == "model")
             {
-                treeset.modelPath = p.getValue<std::string>();
+                m_treeset.modelPath = p.getValue<std::string>();
             }
             else if (name == "texture")
             {
-                treeset.texturePath = p.getValue<std::string>();
+                m_treeset.texturePath = p.getValue<std::string>();
             }
             else if (name == "colour")
             {
-                treeset.colour = p.getValue<glm::vec3>();
+                m_treeset.colour = p.getValue<glm::vec3>();
                 for (auto i = 0; i < 3; ++i)
                 {
-                    treeset.colour[i] = std::min(1.f, std::max(0.f, treeset.colour[i]));
+                    m_treeset.colour[i] = std::min(1.f, std::max(0.f, m_treeset.colour[i]));
                 }
             }
             else if (name == "colour_rotation")
             {
-                treeset.colourRotation = std::clamp(p.getValue<float>(), 0.f, 1.f);
+                m_treeset.colourRotation = std::clamp(p.getValue<float>(), 0.f, 1.f);
             }
             else if (name == "randomness")
             {
-                treeset.randomAmount = std::max(0.02f, std::min(1.f, p.getValue<float>()));
+                m_treeset.randomAmount = std::max(0.02f, std::min(1.f, p.getValue<float>()));
             }
             else if (name == "leaf_size")
             {
-                treeset.leafSize = std::max(0.01f, std::min(1.f, p.getValue<float>()));
+                m_treeset.leafSize = std::max(0.01f, std::min(1.f, p.getValue<float>()));
             }
             else if (name == "branch_index")
             {
@@ -1020,12 +675,12 @@ void BushState::loadPreset(const std::filesystem::path& path)
             }
             else if (name == "scale")
             {
-                treeset.scale = std::max(MinModelScale, p.getValue<float>());
+                m_treeset.scale = std::max(MinModelScale, p.getValue<float>());
             }
         }
 
-        loadModel(workingDir / treeset.modelPath);
-        leafTexture->loadFromFile(workingDir / treeset.texturePath);
+        loadModel(workingDir / m_treeset.modelPath);
+        m_leafTexture->loadFromFile(workingDir / m_treeset.texturePath);
 
         //look at material slots and apply correct material to submesh
         for (auto b : branchIndices)
@@ -1056,26 +711,26 @@ void BushState::loadPreset(const std::filesystem::path& path)
         }
 
 
-        glUseProgram(shaderUniform.shaderID);
-        glUniform1f(shaderUniform.randomness, treeset.randomAmount);
-        glUniform1f(shaderUniform.size, treeset.leafSize);
-        glUniform3f(shaderUniform.colour, treeset.colour.r, treeset.colour.g, treeset.colour.b);
-        glUniform1f(shaderUniform.colourRotation, treeset.colourRotation);
+        glUseProgram(m_shaderUniform.shaderID);
+        glUniform1f(m_shaderUniform.randomness, m_treeset.randomAmount);
+        glUniform1f(m_shaderUniform.size, m_treeset.leafSize);
+        glUniform3f(m_shaderUniform.colour, m_treeset.colour.r, m_treeset.colour.g, m_treeset.colour.b);
+        glUniform1f(m_shaderUniform.colourRotation, m_treeset.colourRotation);
 
-        lastTreeset = U8PATH_CAST(path);
+        m_lastTreeset = path;
     }
 }
 
 void BushState::savePreset(const std::filesystem::path& path)
 {
-    cro::ConfigFile cfg("treeset");
-    cfg.addProperty("model").setValue(treeset.modelPath);
-    cfg.addProperty("texture").setValue(treeset.texturePath);
-    cfg.addProperty("colour").setValue(treeset.colour);
-    cfg.addProperty("colour_rotation").setValue(treeset.colourRotation);
-    cfg.addProperty("randomness").setValue(treeset.randomAmount);
-    cfg.addProperty("leaf_size").setValue(treeset.leafSize);
-    cfg.addProperty("scale").setValue(treeset.scale);
+    cro::ConfigFile cfg("m_treeset");
+    cfg.addProperty("model").setValue(U8PATH_CAST(m_treeset.modelPath));
+    cfg.addProperty("texture").setValue(U8PATH_CAST(m_treeset.texturePath));
+    cfg.addProperty("colour").setValue(m_treeset.colour);
+    cfg.addProperty("colour_rotation").setValue(m_treeset.colourRotation);
+    cfg.addProperty("randomness").setValue(m_treeset.randomAmount);
+    cfg.addProperty("leaf_size").setValue(m_treeset.leafSize);
+    cfg.addProperty("scale").setValue(m_treeset.scale);
 
     for (auto i = 0u; i < m_materials.size(); ++i)
     {
@@ -1092,7 +747,7 @@ void BushState::savePreset(const std::filesystem::path& path)
 
     if (cfg.save(path))
     {
-        lastTreeset = U8PATH_CAST(path);
+        m_lastTreeset = path;
     }
 }
 
@@ -1110,25 +765,25 @@ void BushState::loadSkyboxFile()
         SkyboxMaterials t;//not actually used
         loadSkybox(path, m_skyScene, m_resources, t);
         const auto& colours = m_skyScene.getSkyboxColours();
-        skyMid = colours.middle;
-        skyTop = colours.top;
+        m_skyMid = colours.middle;
+        m_skyTop = colours.top;
 
-        lastSkybox = U8PATH_CAST(cro::FileSystem::getFileName(path));
+        m_lastSkybox = cro::FileSystem::getFileName(path);
     }
 }
 
 void BushState::saveSkyboxFile()
 {
-    const auto path = cro::FileSystem::saveFileDialogue("assets/golf/skyboxes/" + lastSkybox, "sbf");
+    const auto path = cro::FileSystem::saveFileDialogue("assets/golf/skyboxes" / m_lastSkybox, "sbf");
     if (!path.empty())
     {
         cro::ConfigFile cfg;
-        cfg.addProperty("sky_top").setValue(skyTop);
-        cfg.addProperty("sky_bottom").setValue(skyMid);
+        cfg.addProperty("sky_top").setValue(m_skyTop);
+        cfg.addProperty("sky_bottom").setValue(m_skyMid);
 
         //TODO add path to cloud sprite sheet
 
-        std::string modelPath = "assets/golf/models/skybox/";
+        std::filesystem::path modelPath = "assets/golf/models/skybox/";
         auto ents = m_skyScene.getSystem<cro::ModelRenderer>()->getEntities();
         for (auto e : ents)
         {
@@ -1140,7 +795,7 @@ void BushState::saveSkyboxFile()
                 glm::vec3 scale = e.getComponent<cro::Transform>().getScale();
 
                 auto* prop = cfg.addObject("prop");
-                prop->addProperty("model").setValue(modelPath + e.getLabel());
+                prop->addProperty("model").setValue(U8PATH_CAST((modelPath / e.getLabel())));
                 prop->addProperty("position").setValue(pos);
                 prop->addProperty("rotation").setValue(rotation);
                 prop->addProperty("scale").setValue(scale);

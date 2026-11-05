@@ -687,6 +687,7 @@
   <ItemGroup>
     <ClCompile Include="src\DefaultAchievements.cpp" />
     <ClCompile Include="src\editor\BushState.cpp" />
+    <ClCompile Include="src\editor\BushStateWindows.cpp" />
     <ClCompile Include="src\editor\EditorApp.cpp" />
     <ClCompile Include="src\editor\GrassProcessing.cpp" />
     <ClCompile Include="src\golf\BallAnimationSystem.cpp" />
@@ -897,6 +898,7 @@
     <ClInclude Include="src\Colordome-32.hpp" />
     <ClInclude Include="src\DefaultAchievements.hpp" />
     <ClInclude Include="src\editor\BushState.hpp" />
+    <ClInclude Include="src\editor\BushStateConsts.hpp" />
     <ClInclude Include="src\editor\EditorApp.hpp" />
     <ClInclude Include="src\editor\GrassProcessing.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
