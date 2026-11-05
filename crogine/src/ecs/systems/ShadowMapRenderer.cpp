@@ -204,28 +204,20 @@ void ShadowMapRenderer::setNumCascades(std::int32_t count)
 
 void ShadowMapRenderer::process(float)
 {
+#ifdef CRO_DEBUG_
+    if (m_wantsRender)
+    {
+        //this probably means the preRender() function has not been implmented somewhere!!
+        assert(true);
+    }
+#endif
+
     //render here to ensure this only happens once per update
     //remember we might be rendering the Scene in multiple passes
     //which would call render() multiple times unnecessarily.
     if ((intervalCounter % m_interval) == 0)
     {
         m_wantsRender = true;
-        //render();
-
-        ////for each camera mark its resource as now being free
-        ////to use in the next call to updateDrawList()
-        //for (auto cam : m_activeCameras)
-        //{
-        //    const auto& dmap = cam.getComponent<cro::Camera>().shadowMapBuffer;
-        //    if (dmap.m_resourceIndex != -1)
-        //    {
-        //        //this *should* go back to zero as we iterate all cameras
-        //        //if it doesn't it's a more obvious bug than just forcing it to 0...
-        //        m_bufferResources[dmap.m_resourceIndex].useCount--;
-        //    }
-        //}
-        //
-        //m_activeCameras.clear();
     }
 
     //check buffer resource for updated refs and remove any now at zero
@@ -579,9 +571,7 @@ void ShadowMapRenderer::preRender()
                 m_bufferResources[dmap.m_resourceIndex].useCount--;
             }
         }
-
         m_activeCameras.clear();
-
         m_wantsRender = false;
     }
 }

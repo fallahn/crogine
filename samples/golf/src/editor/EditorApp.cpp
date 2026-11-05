@@ -27,12 +27,18 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "EditorApp.hpp"
 #include "BushState.hpp"
-#include "../StateIDs.hpp"
+#include "EditorApp.hpp"
 #include "../icon.hpp"
+#include "../ImTheme.hpp"
+#include "../StateIDs.hpp"
 
 #include <crogine/core/Clock.hpp>
+
+namespace
+{
+#include "../golf/shaders/ShaderIncludes.inl"
+}
 
 EditorApp::EditorApp()
     : m_stateStack({*this, getWindow()})
@@ -72,6 +78,11 @@ void EditorApp::simulate(float dt)
     m_stateStack.simulate(dt);
 }
 
+void EditorApp::preRender()
+{
+    m_stateStack.preRender();
+}
+
 void EditorApp::render()
 {
     m_stateStack.render();
@@ -82,6 +93,7 @@ bool EditorApp::initialise()
     getWindow().setTitle("Super Video Golf - Editor");
     getWindow().setIcon(icon);
 
+    //check mount directories
     cro::ConfigFile mntCfg;
     if (mntCfg.loadFromFile("assets/mount.cfg"))
     {
@@ -112,6 +124,8 @@ bool EditorApp::initialise()
             }
         }
     }
+
+    applyImGuiStyle(m_sharedData);
 
     m_stateStack.pushState(StateID::Bush);
 

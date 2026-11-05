@@ -330,12 +330,17 @@ void BushState::preRender()
 
 void BushState::render()
 {
-    glEnable(GL_PROGRAM_POINT_SIZE);
+    m_windBuffer.bind();
+    m_resolutionBuffer.bind();
+    m_scaleBuffer.bind();
 
+    //renders a background over any other states which
+    //might exist behind this one.
     m_backgroundQuad.draw();
 
     m_skyScene.render();
     glClear(GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_PROGRAM_POINT_SIZE);
     m_gameScene.render();
 }
 
@@ -370,6 +375,8 @@ void BushState::loadAssets()
     }
     static const std::string MapSizeString = "const vec2 MapSize = vec2(" + std::to_string(MapSize.x) + ".0, " + std::to_string(MapSize.y) + ".0); ";
     m_resources.shaders.addInclude("MAP_SIZE", MapSizeString.c_str());
+
+
 
     m_resources.shaders.loadFromString(BushShaderID::Bush, BushVertex, BushFragment, "#define INSTANCING\n#define HQ\n");
     auto* shader = &m_resources.shaders.get(BushShaderID::Bush);
@@ -510,7 +517,6 @@ void BushState::createScene()
     camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
     camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.5f, 6.f });
 
-
     auto sun = m_gameScene.getSunlight();
     sun.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 35.f * cro::Util::Const::degToRad);
     sun.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -35.f * cro::Util::Const::degToRad);
@@ -557,7 +563,7 @@ void BushState::updateView(cro::Camera& cam3D)
     m_resolutionBuffer.setData(rd);
 
     //resize the background quad
-    m_backgroundQuad.setScale(cro::App::getWindow().getSize() / glm::uvec2(m_backgroundQuad.getSize()));
+    //m_backgroundQuad.setScale(cro::App::getWindow().getSize() / glm::uvec2(m_backgroundQuad.getSize()));
 
     //and update skybox cam
     auto& skyCam = m_skyScene.getActiveCamera().getComponent<cro::Camera>();
@@ -749,11 +755,9 @@ void BushState::drawUI()
 
                     for (auto j = 1u; j < m_models.size(); ++j)
                     {
-                        auto primitiveType = m_sharedData.treeQuality == SharedStateData::TreeQuality::High ? GL_POINTS : GL_TRIANGLES;
-
                         m_models[j].getComponent<cro::Model>().setMaterial(i, m_materials[i].materials[m_materials[i].activeMaterial]);
                         m_models[j].getComponent<cro::Model>().getMeshData().indexData[i].primitiveType =
-                            m_materials[i].activeMaterial ? primitiveType : GL_TRIANGLES;
+                            m_materials[i].activeMaterial ? GL_POINTS : GL_TRIANGLES;
                     }
                 }
             }
@@ -1045,11 +1049,9 @@ void BushState::loadPreset(const std::filesystem::path& path)
         {
             for (auto i = 0u; i < m_materials.size(); ++i)
             {
-                auto primitiveType = m_sharedData.treeQuality == SharedStateData::TreeQuality::High ? GL_POINTS : GL_TRIANGLES;
-
                 m_models[j].getComponent<cro::Model>().setMaterial(i, m_materials[i].materials[m_materials[i].activeMaterial]);
                 m_models[j].getComponent<cro::Model>().getMeshData().indexData[i].primitiveType =
-                    m_materials[i].activeMaterial ? primitiveType : GL_TRIANGLES;
+                    m_materials[i].activeMaterial ? GL_POINTS : GL_TRIANGLES;
             }
         }
 

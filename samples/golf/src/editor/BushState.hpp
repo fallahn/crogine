@@ -66,7 +66,7 @@ public:
 
 private:
     const SharedStateData& m_sharedData;
-    cro::SimpleQuad m_backgroundQuad;
+    cro::SimpleQuad m_backgroundQuad; //this renders a shaded background in case this state is rendered on top of another
     cro::Scene m_gameScene;
     cro::Scene m_skyScene;
 

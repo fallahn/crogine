@@ -859,7 +859,7 @@ bool GolfGame::initialise()
 
 #ifdef CRO_DEBUG_
 #ifndef USE_GNS
-    m_achievements->clearAchievement(AchievementStrings[AchievementID::IntoOrbit]);
+    //m_achievements->clearAchievement(AchievementStrings[AchievementID::IntoOrbit]);
 #endif // !USE_GNS
 #endif
 
@@ -1186,6 +1186,12 @@ bool GolfGame::initialise()
         {
             cro::Console::print(WebSock::getStatus());
         });
+
+    //registerCommand("tree_ed", 
+    //[&](const std::string&)
+    //{
+    //    m_stateStack.pushState(StateID::Bush);
+    //});
 
     //registerCommand("scrub", 
     //    [&](const std::string&)
