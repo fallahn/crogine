@@ -735,6 +735,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
         m_sharedData.minimapData.targetPos *= m_inputParser.getEstimatedDistance();
         m_sharedData.minimapData.targetPos += m_currentPlayer.position;
 
+        updateMinimapString(); //updates the string with current measurement units
+
         auto* msg = postMessage<MenuSoundEvent>(MessageID::MenuSoundMessage);
         msg->type = MenuSoundEvent::Activate;
 
@@ -2559,6 +2561,8 @@ void GolfState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<cro::Message::StateEvent>();
         if (data.action == cro::Message::StateEvent::Popped)
         {
+            m_minimapRadius.getComponent<cro::Model>().setHidden(true);
+
             if (data.id == StateID::Pause
                 || data.id == StateID::Tutorial)
             {
@@ -2826,6 +2830,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 Club::setFixedPuttingDistance(m_sharedData.fixedPuttingRange);
 
                 updateFlagTexture(true);
+                updateMinimapString();
             }
 
             //check if we have any deferred tutorial states pending
@@ -2834,6 +2839,14 @@ void GolfState::handleMessage(const cro::Message& msg)
             {
                 requestStackPush(m_deferredGameState);
                 m_deferredGameState = -1;
+            }
+        }
+        else if (data.action == cro::Message::StateEvent::Pushed)
+        {
+            if (data.id == StateID::MapOverview)
+            {
+                m_minimapRadius.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+                m_minimapRadius.getComponent<cro::Model>().setHidden(false);
             }
         }
     }
@@ -3702,8 +3715,8 @@ void GolfState::preRender()
     }
 
     //TODO is this really an optimisation?
-    if (m_minimapZoom.activeAnimation.isValid()
-        || m_sharedData.scoreType == ScoreType::MultiTarget)
+    /*if (m_minimapZoom.activeAnimation.isValid()
+        || m_sharedData.scoreType == ScoreType::MultiTarget)*/
     {
         m_minimapZoom.sceneTexture.clear(cro::Colour::Transparent);
         m_mapScene.render();
@@ -7646,16 +7659,8 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     {
         m_sharedData.minimapData.holeNumber += 9;
     }
+    updateMinimapString();
 
-
-    m_sharedData.minimapData.courseName = m_courseTitle;
-    m_sharedData.minimapData.courseName += "\n";
-#ifdef USE_GNS
-    m_sharedData.minimapData.courseName += Social::getLeader(m_sharedData.mapDirectory, m_sharedData.holeCount);
-#endif
-    std::int32_t offset = m_sharedData.reverseCourse ? 0 : 2;
-    m_sharedData.minimapData.courseName += "\nHole: " + std::to_string(m_sharedData.minimapData.holeNumber + offset); //this isn't updated until the map texture is 
-    m_sharedData.minimapData.courseName += "\nPar: " + std::to_string(m_holeData[m_currentHole].par);
     m_gameScene.getDirector<GolfSoundDirector>()->setCrowdPositions(m_holeData[m_currentHole].crowdPositions[m_sharedData.crowdDensity]);
 
     //if set to show hole number and texture is successfully loaded
@@ -7709,6 +7714,41 @@ std::uint32_t GolfState::holeNumberFromIndex() const
     }
 
     return holeNumber;
+}
+
+void GolfState::updateMinimapString()
+{
+    m_sharedData.minimapData.courseName = m_courseTitle;
+    m_sharedData.minimapData.courseName += "\n";
+#ifdef USE_GNS
+    m_sharedData.minimapData.courseName += Social::getLeader(m_sharedData.mapDirectory, m_sharedData.holeCount);
+#endif
+    //const std::int32_t offset = m_sharedData.reverseCourse ? 0 : 1;
+    auto holeNumber = m_sharedData.minimapData.holeNumber;
+    if (m_sharedData.reverseCourse)
+    {
+        holeNumber = static_cast<std::int32_t>(m_holeData.size()) - holeNumber;
+    }
+    else
+    {
+        holeNumber++;
+    }
+
+    if (m_sharedData.holeCount == 2)
+    {
+        holeNumber += 9; //hmm this assumed we're not playing a custom course
+    }
+
+    m_sharedData.minimapData.courseName += "\nHole: " + std::to_string(/*m_sharedData.minimapData.holeNumber + offset*/holeNumber); //this isn't updated until the map texture is 
+    m_sharedData.minimapData.courseName += "\nPar: " + std::to_string(m_holeData[m_currentHole].par);
+    if (m_sharedData.imperialMeasurements)
+    {
+        m_sharedData.minimapData.courseName += " Dist: " + std::to_string(static_cast<int>(m_holeData[m_currentHole].distanceToPin * ToYards)) + "yds";
+    }
+    else
+    {
+        m_sharedData.minimapData.courseName += " Dist: " + std::to_string(static_cast<int>(m_holeData[m_currentHole].distanceToPin)) + "m";
+    }
 }
 
 void GolfState::requestNextPlayer(const ActivePlayer& player)

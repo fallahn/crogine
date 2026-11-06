@@ -2000,20 +2000,18 @@ void GolfState::loadMap()
     initAudio(theme.treesets.size() > 2, cloudRing.isValid());
 
 
+    //distance indicator model for minimap / map overview
+    if (md.loadFromFile("assets/golf/models/map_radius.cmt"))
+    {
+        auto entity = m_mapScene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(glm::vec3(0.f));
+        md.createModel(entity);
 
-    //m_gameScene.setCubemap("assets/golf/images/skybox/overcast/cubemap.ccm");
-    /*registerWindow([this]()
-        {
-            ImGui::Begin("Skybox");
-            static float amt = 0.f;
-            if (ImGui::SliderFloat("Clouds", &amt, 0.f, 1.f))
-            {
-                amt = std::clamp(amt, 0.f, 1.f);
-                m_gameScene.setCloudmapAmount(amt);
-            }
+        entity.getComponent<cro::Model>().getMaterialData(cro::Mesh::IndexData::Pass::Final, 0).enableDepthTest = false;
+        entity.getComponent<cro::Model>().setHidden(true);
 
-            ImGui::End();
-        });*/
+        m_minimapRadius = entity;
+    }
 }
 
 void GolfState::loadMaterials()

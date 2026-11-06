@@ -159,6 +159,8 @@ struct SharedStateData final
         std::int32_t heatUniform = -1;
         std::int32_t zoomUniform = -1;
 
+        std::array<glm::vec3, 4u> measurePoints = {}; //world points of measure radius for map overview
+
         bool active = false;
     }minimapData;
 

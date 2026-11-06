@@ -142,13 +142,6 @@ void MenuState::LobbyMenu::handleEvent(const cro::Event& evt)
     {
         setActiveInput(true, 0);
 
-        if (evt.key.key == SDLK_BACKSPACE
-            || evt.key.key == SDLK_ESCAPE)
-        {
-            LogI << "Implement me!" << std::endl;
-            //TODO close menu
-        }
-
         if (evt.key.scancode == m_sharedData.inputBinding.scancodes[InputBinding::NextClub])
         {
             m_uiLayout.nextTab();

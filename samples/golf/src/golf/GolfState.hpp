@@ -491,6 +491,7 @@ private:
 
     void setCurrentHole(std::uint16_t, bool forceTransition = false); //(number << 8) | par
     std::uint32_t holeNumberFromIndex() const;
+    void updateMinimapString();
     void requestNextPlayer(const ActivePlayer&);
     void setCurrentPlayer(const ActivePlayer&);
     void predictBall(float);
@@ -829,6 +830,7 @@ private:
     cro::Entity m_mapRoot;
     std::vector<cro::Entity> m_minimapModels;
     cro::Entity m_minimapTrail;
+    cro::Entity m_minimapRadius;
 
     MinimapZoom m_minimapZoom;
 

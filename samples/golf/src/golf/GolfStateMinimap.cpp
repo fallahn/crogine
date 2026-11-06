@@ -99,6 +99,19 @@ void GolfState::updateMinimapModel()
     m_minimapModels[m_currentHole].getComponent<cro::Model>().setHidden(false);
     m_minimapTrail.getComponent<cro::Drawable2D>().getVertexData().clear();
 
+    //set the measure model to pin position if not putting from tee
+    m_minimapRadius.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
+    m_minimapRadius.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+    m_minimapRadius.getComponent<cro::Model>().setHidden(m_holeData[m_currentHole].puttFromTee);
+
+    //store the world space points for measure markers which are then
+    //converted to UI space by the map overview state
+    const auto dir = -glm::normalize(m_holeData[m_currentHole].pin - m_holeData[m_currentHole].target);
+    m_sharedData.minimapData.measurePoints[0] = m_holeData[m_currentHole].pin + (dir * 10.f);
+    m_sharedData.minimapData.measurePoints[1] = m_holeData[m_currentHole].pin + (dir * 100.f);
+    m_sharedData.minimapData.measurePoints[2] = m_holeData[m_currentHole].pin + (dir * 150.f);
+    m_sharedData.minimapData.measurePoints[3] = m_holeData[m_currentHole].pin + (dir * 200.f);
+
 
     //this triggers a map refresh so don't set it until
     //we know the texture is up to date.

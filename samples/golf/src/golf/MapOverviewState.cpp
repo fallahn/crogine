@@ -588,12 +588,11 @@ void MapOverviewState::buildScene()
                 //menu was opened - then recentre the map if it's a new hole.
                 if (m_previousMap != m_sharedData.minimapData.holeNumber)
                 {
-                    m_mapTitleText.getComponent<cro::Text>().setString(m_sharedData.minimapData.courseName);
-
                     recentreMap();
                     updateNormals();
                     m_previousMap = m_sharedData.minimapData.holeNumber;
                 }
+                m_mapTitleText.getComponent<cro::Text>().setString(m_sharedData.minimapData.courseName);
 
 
                 if (currTime == 1)
@@ -804,36 +803,54 @@ void MapOverviewState::buildScene()
 
 
 
-    //marks the tee position;
     const auto& teeFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.3f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(teeFont).setString("T");
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&, calcAlpha](cro::Entity e, float)
+
+    const auto createTextItem = 
+        [this, &teeFont, &calcAlpha](const std::string& str, glm::vec3* pos)
         {
-            if (m_mapCamera.isValid())
-            {
-                e.getComponent<cro::Transform>().setPosition(m_mapCamera.getComponent<cro::Camera>().coordsToPixel(m_sharedData.minimapData.teePos, m_mapBuffer.getSize()));
-                e.getComponent<cro::Transform>().setScale(glm::vec2(std::round(m_zoomScale * m_viewScale.y)));
+            auto entity = m_scene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.3f });
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Text>(teeFont).setString(str);
+            entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+            entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+            entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+            entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [this, calcAlpha, pos](cro::Entity e, float)
+                {
+                    if (m_mapCamera.isValid())
+                    {
+                        e.getComponent<cro::Transform>().setPosition(m_mapCamera.getComponent<cro::Camera>().coordsToPixel(*pos, m_mapBuffer.getSize()));
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(std::max(getViewScale(), std::round((m_zoomScale * m_viewScale.y) / 2.f))));
 
-                const float alpha = calcAlpha(e.getComponent<cro::Transform>().getPosition());
-                auto fill = TextNormalColour;
-                fill.setAlpha(alpha);
+                        /*const float alpha = calcAlpha(e.getComponent<cro::Transform>().getPosition());
+                        auto fill = TextNormalColour;
+                        fill.setAlpha(alpha);
 
-                auto shadow = LeaderboardTextDark;
-                shadow.setAlpha(alpha);
-                e.getComponent<cro::Text>().setFillColour(fill);
-                e.getComponent<cro::Text>().setShadowColour(shadow);
-            }
+                        auto shadow = LeaderboardTextDark;
+                        shadow.setAlpha(alpha);
+                        e.getComponent<cro::Text>().setFillColour(fill);
+                        e.getComponent<cro::Text>().setShadowColour(shadow);*/
+                    }
+                };
+            return entity;
         };
+
+    //marks the tee position;
+    createTextItem("T", &m_sharedData.minimapData.teePos);
+    entity = createTextItem("10m\n11yd", &m_sharedData.minimapData.measurePoints[0]);
+    //entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::OrangeDirt]);
+    entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Orange], 3);
+    entity = createTextItem("100m\n109yd", &m_sharedData.minimapData.measurePoints[1]);
+    entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Orange], 4);
+    entity = createTextItem("150m\n164yd", &m_sharedData.minimapData.measurePoints[2]);
+    entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Orange], 4);
+    entity = createTextItem("200m\n219yd", &m_sharedData.minimapData.measurePoints[3]);
+    entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Orange], 4);
+
 
     //marks the pin position
     entity = m_scene.createEntity();
