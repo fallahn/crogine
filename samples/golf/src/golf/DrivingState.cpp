@@ -204,6 +204,8 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_profileData       (sp),
     m_inputParser       (sd, nullptr),
     m_musicStream       (2,48000),
+    m_muteMusic         (false),
+    m_restorePostProcess(false),
     m_gameScene         (context.appInstance.getMessageBus(), 512),
     m_skyScene          (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus(), 512),
@@ -214,8 +216,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_targetIndex       (0),
     m_strokeCountIndex  (0),
     m_currentCamera     (CameraID::Player),
-    m_saturationUniform (-1),
-    m_restorePostProcess(false)
+    m_saturationUniform (-1)
 {
     BannerIndex = (BannerIndex + 1) % BannerStrings.size();
 
@@ -449,9 +450,9 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         case SDLK_SPACE:
             closeMessage();
             break;
-        //case SDLK_F7:
-        //    triggerGC(glm::vec3(0.f));
-        //    break;
+        /*case SDLK_F7:
+            triggerGC(glm::vec3(0.f));
+            break;*/
 #ifdef CRO_DEBUG_
         case SDLK_F7:
             floatingMessage("buns");
@@ -1050,6 +1051,8 @@ void DrivingState::handleMessage(const cro::Message& msg)
 
                     m_restorePostProcess = false;
                 }
+
+                m_muteMusic = false;
             }
         }
     }
@@ -1685,14 +1688,18 @@ void DrivingState::initAudio()
             entity.getComponent<cro::AudioEmitter>().setVolume(0.6f);
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
-                [&, gameMusic](cro::Entity e, float dt)
+                [this, gameMusic](cro::Entity e, float dt)
                 {
                     //set the mixer channel to inverse valaue of main music channel
                     //while the incidental music is playing
                     if (gameMusic.isValid())
                     {
                         //fade out if the menu music is playing, ie in a transition
-                        const float target = gameMusic.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing ? 1.f - std::ceil(cro::AudioMixer::getVolume(MixerChannel::Music)) : 1.f;
+                        //or if the 'special state' is pushed on top
+                        const float target = gameMusic.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing ? 1.f - std::ceil(cro::AudioMixer::getVolume(MixerChannel::Music)) 
+                            : m_muteMusic ? 0.f : 1.f;
+                        
+                        
                         float vol = cro::AudioMixer::getPrefadeVolume(MixerChannel::UserMusic);
                         if (target < vol)
                         {
@@ -3932,6 +3939,8 @@ void DrivingState::forceRestart()
 
 void DrivingState::triggerGC(glm::vec3 position)
 {
+    m_muteMusic = true;
+
     auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
     msg->terrain = CollisionEvent::Billboard;
     msg->position = position;
@@ -3962,14 +3971,16 @@ void DrivingState::triggerGC(glm::vec3 position)
     }
 #endif
 
-    auto basePos = m_courseEntity.getComponent<cro::Transform>().getPosition();
+    const auto basePos = m_courseEntity.getComponent<cro::Transform>().getPosition();
     m_courseEntity.getComponent<cro::Drawable2D>().setShader(&m_saturationShader);
+
+    const auto baseScale = m_courseEntity.getComponent<cro::Transform>().getScale().x;
 
     cro::Entity entity = m_uiScene.createEntity();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
-        [&, basePos](cro::Entity e, float dt)
+        [this, basePos, baseScale](cro::Entity e, float dt)
     {
         auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
         currTime = std::min(1.f, currTime + (dt * 0.25f));
@@ -3982,7 +3993,7 @@ void DrivingState::triggerGC(glm::vec3 position)
         const float amplitude = cro::Util::Easing::easeInSine(currTime);
         const glm::vec3 offset = (glm::vec3(offsetX, offsetY, 0.f) * amplitude) / m_viewScale.x;
 
-        const float scale = (0.1f * amplitude) + 1.f;
+        const float scale = (0.1f * amplitude) + baseScale;
 
         glCheck(glUseProgram(m_saturationShader.getGLHandle()));
         glCheck(glUniform1f(m_saturationUniform, amplitude));
@@ -3991,7 +4002,7 @@ void DrivingState::triggerGC(glm::vec3 position)
         m_courseEntity.getComponent<cro::Transform>().setPosition(basePos + offset);
 
         cro::AudioMixer::setPrefadeVolume(1.f - amplitude, MixerChannel::Environment);
-        cro::AudioMixer::setPrefadeVolume(1.f - amplitude, MixerChannel::UserMusic);
+        cro::AudioMixer::setPrefadeVolume(1.f - amplitude, MixerChannel::UserMusic); //hmm this doesn't work, presumably because the music's own callback overrides it
         cro::AudioMixer::setPrefadeVolume(1.f - amplitude, MixerChannel::Music);
         cro::AudioMixer::setPrefadeVolume(1.f - amplitude, MixerChannel::Voice);
 
@@ -4004,12 +4015,12 @@ void DrivingState::triggerGC(glm::vec3 position)
             f.addComponent<cro::Callback>().active = true;
             f.getComponent<cro::Callback>().setUserData<std::int32_t>(60);
             f.getComponent<cro::Callback>().function =
-                [&, basePos](cro::Entity g, float)
+                [this, basePos, baseScale](cro::Entity g, float)
             {
                 auto& counter = g.getComponent<cro::Callback>().getUserData<std::int32_t>();
                 if (counter-- == 0)
                 {
-                    m_courseEntity.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                    m_courseEntity.getComponent<cro::Transform>().setScale(glm::vec2(baseScale));
                     m_courseEntity.getComponent<cro::Transform>().setPosition(basePos);
                     
                     g.getComponent<cro::Callback>().active = false;

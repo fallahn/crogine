@@ -98,6 +98,8 @@ private:
     const inv::Loadout* m_loadout;
 
     cro::DynamicAudioStream m_musicStream;
+    bool m_muteMusic;
+    bool m_restorePostProcess;
 
     cro::Scene m_gameScene;
     cro::Scene m_skyScene;
@@ -274,8 +276,6 @@ private:
     void saveScores();
 
     cro::Clock m_statClock;
-
-    bool m_restorePostProcess;
 
 #ifdef CRO_DEBUG_
     cro::Texture m_debugHeightmap;
