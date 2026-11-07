@@ -957,6 +957,7 @@ void OptionsStateV2::buildScene()
     m_uiLayout.detailsPane.root.getComponent<cro::UIElement>().relativePosition = { 0.f, 0.f }; //this is set set when updating the active tab, might be right or left aligned
     rootNode.getComponent<cro::Transform>().addChild(m_uiLayout.detailsPane.root.getComponent<cro::Transform>());
 
+
     //text
     m_uiLayout.detailsPane.text = m_scene.createEntity();
     m_uiLayout.detailsPane.text.addComponent<cro::Transform>();
@@ -997,6 +998,27 @@ void OptionsStateV2::buildScene()
     m_uiLayout.detailsPane.root.getComponent<cro::Transform>().addChild(m_uiLayout.detailsPane.background.getComponent<cro::Transform>());
 
     
+    //displays index of current selected item
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 20.f, 20.f, 0.6f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [this](cro::Entity e, float)
+        {
+            const auto str = std::to_string(m_uiLayout.menuLayout.itemIndex + 1) + "/" + std::to_string(m_uiLayout.menuLayout.items[m_uiLayout.tabBar.activeIndex].size());
+            e.getComponent<cro::Text>().setString(str);
+
+            const auto size = m_uiLayout.detailsPane.background.getComponent<cro::Drawable2D>().getLocalBounds();
+            const float x = std::round(-(size.width / 2.f) + 8.f);
+            const float y = std::round((size.height / 2.f) - 8.f);
+            e.getComponent<cro::Transform>().setPosition({ x, y });
+        };
+    m_uiLayout.detailsPane.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
     //displays a scroll icon so we can see how far down the items list we are
     //TODO this is identical to the Profile state so we can share this code
     struct ScrollData final

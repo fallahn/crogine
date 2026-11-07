@@ -477,6 +477,7 @@ void MenuState::LobbyMenu::simulate(float dt)
                 //at the options window
                 unready();
                 m_menuState.requestStackPush(StateID::Options);
+                playSound(MenuSoundEvent::Switch);
                 break;
             case ButtonFlags::Action:
                 if (m_timeoutCallback)
