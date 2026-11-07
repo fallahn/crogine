@@ -831,6 +831,7 @@ private:
     std::vector<cro::Entity> m_minimapModels;
     cro::Entity m_minimapTrail;
     cro::Entity m_minimapRadius;
+    cro::Entity m_minimapRadiusSmall;
 
     MinimapZoom m_minimapZoom;
 

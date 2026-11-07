@@ -788,8 +788,9 @@ void MapOverviewState::buildScene()
         {
             if (m_mapCamera.isValid())
             {
+                const float visibleScale = m_sharedData.showMinimap ? 1.f : 0.f;
                 e.getComponent<cro::Transform>().setPosition(m_mapCamera.getComponent<cro::Camera>().coordsToPixel(m_sharedData.minimapData.targetPos, m_mapBuffer.getSize()));
-                e.getComponent<cro::Transform>().setScale(glm::vec2(m_zoomScale * m_viewScale.y));
+                e.getComponent<cro::Transform>().setScale(glm::vec2(m_zoomScale * m_viewScale.y * visibleScale));
 
                 //hmm this doesn't work because we have special case alpha value...
                 /*const auto alpha = calcAlpha(e.getComponent<cro::Transform>().getPosition());
@@ -806,13 +807,13 @@ void MapOverviewState::buildScene()
     const auto& teeFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
 
     const auto createTextItem = 
-        [this, &teeFont, &calcAlpha](const std::string& str, glm::vec3* pos)
+        [this, &teeFont, &calcAlpha](const std::string& str, glm::vec3* pos, cro::Colour fillColour = CD32::Colours[CD32::Orange])
         {
             auto entity = m_scene.createEntity();
             entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.3f });
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Text>(teeFont).setString(str);
-            entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            entity.getComponent<cro::Text>().setFillColour(fillColour);
             entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
             entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
             entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
@@ -823,33 +824,103 @@ void MapOverviewState::buildScene()
                 {
                     if (m_mapCamera.isValid())
                     {
+                        const auto& [_, currTime] = m_rootNode.getComponent<cro::Callback>().getUserData<RootCallbackData>();
                         e.getComponent<cro::Transform>().setPosition(m_mapCamera.getComponent<cro::Camera>().coordsToPixel(*pos, m_mapBuffer.getSize()));
-                        e.getComponent<cro::Transform>().setScale(glm::vec2(std::max(getViewScale(), std::round((m_zoomScale * m_viewScale.y) / 2.f))));
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(std::max(getViewScale(), std::round((m_zoomScale * m_viewScale.y) / 2.f))) * currTime);
 
-                        /*const float alpha = calcAlpha(e.getComponent<cro::Transform>().getPosition());
-                        auto fill = TextNormalColour;
+                        const float alpha = calcAlpha(e.getComponent<cro::Transform>().getPosition()) * currTime; //fade with background zoom
+                        auto fill = e.getComponent<cro::Text>().getFillColour(); // TextNormalColour;
                         fill.setAlpha(alpha);
 
                         auto shadow = LeaderboardTextDark;
                         shadow.setAlpha(alpha);
                         e.getComponent<cro::Text>().setFillColour(fill);
-                        e.getComponent<cro::Text>().setShadowColour(shadow);*/
+                        e.getComponent<cro::Text>().setShadowColour(shadow);
                     }
                 };
             return entity;
         };
 
     //marks the tee position;
-    createTextItem("T", &m_sharedData.minimapData.teePos);
-    entity = createTextItem("10m\n11yd", &m_sharedData.minimapData.measurePoints[0]);
-    //entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::OrangeDirt]);
-    entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Orange], 3);
-    entity = createTextItem("100m\n109yd", &m_sharedData.minimapData.measurePoints[1]);
-    entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Orange], 4);
-    entity = createTextItem("150m\n164yd", &m_sharedData.minimapData.measurePoints[2]);
-    entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Orange], 4);
-    entity = createTextItem("200m\n219yd", &m_sharedData.minimapData.measurePoints[3]);
-    entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Orange], 4);
+    createTextItem("T", &m_sharedData.minimapData.teePos, TextNormalColour);
+
+    auto entity1m = createTextItem("10m", &m_sharedData.minimapData.measurePoints[0]);
+    auto entity1i = createTextItem("11yd", &m_sharedData.minimapData.measurePoints[0]);
+
+    auto entity2m = createTextItem("50m", &m_sharedData.minimapData.measurePoints[1]);
+    auto entity2i = createTextItem("55yd", &m_sharedData.minimapData.measurePoints[1]);
+
+    auto entity3m = createTextItem("100m", &m_sharedData.minimapData.measurePoints[2]);
+    auto entity3i = createTextItem("109yd", &m_sharedData.minimapData.measurePoints[2]);
+
+    auto entity4m = createTextItem("150m", &m_sharedData.minimapData.measurePoints[3]);
+    auto entity4i = createTextItem("164yd", &m_sharedData.minimapData.measurePoints[3]);
+
+    auto entity5m = createTextItem("200m", &m_sharedData.minimapData.measurePoints[4]);
+    auto entity5i = createTextItem("219yd", &m_sharedData.minimapData.measurePoints[4]);
+
+
+    //we're in a bit of a mess now - this entity updates the visibility of the above
+    //texts based on the measurement type and hole par...
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = //urrrrgghhhhhh
+        [this, entity1m, entity1i, entity2m, entity2i, entity3m, entity3i, entity4m, entity4i, entity5m, entity5i](cro::Entity, float) mutable
+        {
+            if (m_sharedData.imperialMeasurements)
+            {
+                entity1m.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                entity2m.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                entity3m.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                entity4m.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                entity5m.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+
+                entity1i.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                entity2i.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                entity3i.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                entity4i.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                entity5i.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            }
+            else
+            {
+                entity1i.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                entity2i.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                entity3i.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                entity4i.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                entity5i.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+
+                entity1m.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                entity2m.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                entity3m.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                entity4m.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                entity5m.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            }
+
+            if (m_sharedData.minimapData.pinDistance < 200.f)
+            {
+                entity5m.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                entity5i.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            }
+
+            if (m_sharedData.minimapData.pinDistance < 150.f)
+            {
+                entity4m.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                entity4i.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            }
+
+            if (m_sharedData.minimapData.pinDistance < 100.f)
+            {
+                entity3m.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                entity3i.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            }
+
+            if (m_sharedData.minimapData.par != 3)
+            {
+                entity2m.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back); 
+                entity2i.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back); 
+            }
+        };
+
 
 
     //marks the pin position

@@ -1872,7 +1872,7 @@ void OptionsStateV2::createSettingsItems()
     //minimal UI
     item = &m_uiLayout.menuLayout.items[TabID::Settings].emplace_back();
     item->title = "Minimal UI";
-    item->description = "Increases difficulty by removing most of the UI elements";
+    item->description = "Increases difficulty by removing most of the UI elements. Hint: The hole overview in the Pause menu is a useful companion";
     item->activated = [&](Menu::Item& i)
         {
             m_sharedData.showMinimap = i.selectedIndex == 0;

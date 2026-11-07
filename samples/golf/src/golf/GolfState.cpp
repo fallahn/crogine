@@ -2562,6 +2562,7 @@ void GolfState::handleMessage(const cro::Message& msg)
         if (data.action == cro::Message::StateEvent::Popped)
         {
             m_minimapRadius.getComponent<cro::Model>().setHidden(true);
+            m_minimapRadiusSmall.getComponent<cro::Model>().setHidden(true);
 
             if (data.id == StateID::Pause
                 || data.id == StateID::Tutorial)
@@ -2845,8 +2846,16 @@ void GolfState::handleMessage(const cro::Message& msg)
         {
             if (data.id == StateID::MapOverview)
             {
-                m_minimapRadius.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
-                m_minimapRadius.getComponent<cro::Model>().setHidden(false);
+                if (m_holeData[m_currentHole].par == 3)
+                {
+                    m_minimapRadiusSmall.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+                    m_minimapRadiusSmall.getComponent<cro::Model>().setHidden(false);
+                }
+                else
+                {
+                    m_minimapRadius.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+                    m_minimapRadius.getComponent<cro::Model>().setHidden(false);
+                }
             }
         }
     }

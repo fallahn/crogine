@@ -2007,10 +2007,20 @@ void GolfState::loadMap()
         entity.addComponent<cro::Transform>().setScale(glm::vec3(0.f));
         md.createModel(entity);
 
-        entity.getComponent<cro::Model>().getMaterialData(cro::Mesh::IndexData::Pass::Final, 0).enableDepthTest = false;
         entity.getComponent<cro::Model>().setHidden(true);
 
         m_minimapRadius = entity;
+    }
+
+    if (md.loadFromFile("assets/golf/models/map_radius_small.cmt"))
+    {
+        auto entity = m_mapScene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(glm::vec3(0.f));
+        md.createModel(entity);
+
+        entity.getComponent<cro::Model>().setHidden(true);
+
+        m_minimapRadiusSmall = entity;
     }
 }
 
