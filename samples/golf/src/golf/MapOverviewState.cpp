@@ -741,7 +741,7 @@ void MapOverviewState::buildScene()
             static constexpr float fadeDistance = 40.f;
             const auto vp = m_mapCamera.getComponent<cro::Camera>().viewport;
             const auto widthX = std::round(static_cast<float>(m_mapBuffer.getSize().x) * vp.width);
-            const auto leftX = m_mapBuffer.getSize().x - widthX;
+            const auto leftX = (m_mapBuffer.getSize().x - widthX) / 2.f;
             const auto rightX = leftX + widthX;
 
             const float fadeLeft = smoothstep(leftX, leftX + (fadeDistance * m_viewScale.x), pos.x);
@@ -764,20 +764,58 @@ void MapOverviewState::buildScene()
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_FAN);
     entity.getComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::Alpha);
 
+    const std::string VertShader =
+R"(
+uniform mat4 u_worldMatrix;
+uniform mat4 u_viewProjectionMatrix;
+
+ATTRIBUTE vec2 a_position;
+ATTRIBUTE vec2 a_texCoord0;
+ATTRIBUTE vec4 a_colour;
+
+VARYING_OUT vec4 v_colour;
+VARYING_OUT float v_length;
+
+void main()
+{
+    gl_Position = u_viewProjectionMatrix * u_worldMatrix * vec4(a_position, 0.0, 1.0);
+    v_colour = a_colour;
+    v_length = length(a_position);
+}
+)";
+
+    const std::string FragShader = 
+R"(
+VARYING_IN vec4 v_colour;
+VARYING_IN float v_length;
+OUTPUT
+
+void main()
+{
+    float amt = sin(v_length / 2.0) + 1.0 * 0.5;
+
+    FRAG_OUT = v_colour * (0.5 + (step(0.5, amt) * 0.5));
+})";
+
+    const auto shaderID = 4353;
+    m_sharedData.sharedResources->shaders.loadFromString(shaderID, VertShader, FragShader);
+    auto* shader = &m_sharedData.sharedResources->shaders.get(shaderID);
+
+    entity.getComponent<cro::Drawable2D>().setShader(shader);
+
     std::vector<cro::Vertex2D> verts;
     auto colour = TextGoldColour;
-    colour.setAlpha(0.5f);
-    verts.emplace_back(glm::vec2(0.f), colour);
-    colour.setAlpha(0.1f);
-    static constexpr float Radius = 60.f;
+    colour.setAlpha(0.35f);
+    verts.emplace_back(glm::vec2(0.f), glm::vec2(0.f), colour);
+    colour.setAlpha(0.05f);
+    static constexpr float Radius = 30.f;
     static constexpr float PointCount = 32.f;
     static constexpr float ArcSize = cro::Util::Const::TAU / PointCount;
 
-    //for (auto i = PointCount; i >= 0; i--)
     for (auto i = 0.f; i < PointCount + 1; i++)
     {
         auto p = glm::vec2(glm::cos(i * ArcSize), glm::sin(i * ArcSize)) * Radius;
-        verts.emplace_back(p, colour);
+        verts.emplace_back(p, glm::vec2(1.f), colour);
     }
     verts.push_back(verts.front());
 
@@ -896,6 +934,7 @@ void MapOverviewState::buildScene()
                 entity5m.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
             }
 
+            //TODO this fails in edge cases where the tee is closer than the target eg hole 11 Balunfell Bay
             if (m_sharedData.minimapData.pinDistance < 200.f)
             {
                 entity5m.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
