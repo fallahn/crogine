@@ -836,6 +836,16 @@ void GolfState::toggleFreeCam(bool skipAnim)
     m_photoMode = !m_photoMode;
     if (m_photoMode)
     {
+        auto oldCam = m_defaultCam; //in case we need to restore and quit
+        m_defaultCam = m_gameScene.setActiveCamera(m_freeCam);
+        assert(m_defaultCam != m_freeCam); //we've tried toggling twice while in the same transition!
+        if (m_defaultCam == m_freeCam)
+        {
+            //we tried to switch again too soon
+            m_defaultCam = oldCam;
+            return;
+        }
+
         if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID)
         {
             m_ballTrails[m_serverGroup]->showPrevious(m_showTrailHistory, m_currentPlayer.player);
@@ -845,12 +855,10 @@ void GolfState::toggleFreeCam(bool skipAnim)
             m_ballTrails[m_serverGroup]->showPrevious(m_showTrailHistory, ConstVal::NullValue);
         }
 
-        m_defaultCam = m_gameScene.setActiveCamera(m_freeCam);
         m_defaultCam.getComponent<cro::Camera>().active = false;
         m_defaultCam.getComponent<TargetInfo>().waterPlane = {};
-        assert(m_defaultCam != m_freeCam); //we've tried toggling twice while in the same transition!
         m_gameScene.setActiveListener(m_freeCam);
-        auto label = m_defaultCam.getLabel();
+        //const auto& label = m_defaultCam.getLabel();
 
         const auto pos = m_defaultCam.getComponent<cro::Transform>().getWorldPosition();
         const auto rot = m_defaultCam.getComponent<cro::Transform>().getWorldRotation();
