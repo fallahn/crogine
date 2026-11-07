@@ -122,7 +122,11 @@ void GolfState::updateMinimapModel()
     //we know the texture is up to date.
     m_sharedData.minimapData.holeNumber = m_currentHole;
     m_sharedData.minimapData.par = m_holeData[m_currentHole].par;
-    m_sharedData.minimapData.pinDistance = glm::length(m_holeData[m_currentHole].pin - m_holeData[m_currentHole].tee);
+    
+    //the tee might be closer to the pin on a u-bend...
+    const auto teeDist = glm::length(m_holeData[m_currentHole].pin - m_holeData[m_currentHole].tee);
+    const auto targDist = glm::length(m_holeData[m_currentHole].pin - m_holeData[m_currentHole].target);
+    m_sharedData.minimapData.pinDistance = teeDist > targDist ? teeDist : targDist;
 
     retargetMinimap(/*true*/!m_holeData[m_currentHole].puttFromTee);
 

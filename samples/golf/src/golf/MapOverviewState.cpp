@@ -207,6 +207,8 @@ MapOverviewState::MapOverviewState(cro::StateStack& ss, cro::State::Context ctx,
     m_sharedData        (sd),
     m_previousMap       (-1),
     m_viewScale         (2.f),
+    m_targetShader      (0),
+    m_targetUniform     (-1),
     m_heatTarget        (0.f),
     m_heatAmount        (0.f),
     m_zoomScale         (1.f),
@@ -511,6 +513,16 @@ bool MapOverviewState::simulate(float dt)
         glUniform1f(m_sharedData.minimapData.heatUniform, m_heatAmount);
     }
 
+    //no point doing this if the landing target is hidden
+    if (m_sharedData.showMinimap)
+    {
+        static float accum = 0.f;
+        accum += dt;
+
+        glUseProgram(m_targetShader);
+        glUniform1f(m_targetUniform, accum);
+    }
+
     m_scene.simulate(dt);
     return true;
 }
@@ -786,13 +798,15 @@ void main()
 
     const std::string FragShader = 
 R"(
+uniform float u_time;
+
 VARYING_IN vec4 v_colour;
 VARYING_IN float v_length;
 OUTPUT
 
 void main()
 {
-    float amt = sin(v_length / 2.0) + 1.0 * 0.5;
+    float amt = sin((v_length / 2.0) + u_time) + 1.0 * 0.5;
 
     FRAG_OUT = v_colour * (0.5 + (step(0.5, amt) * 0.5));
 })";
@@ -800,6 +814,8 @@ void main()
     const auto shaderID = 4353;
     m_sharedData.sharedResources->shaders.loadFromString(shaderID, VertShader, FragShader);
     auto* shader = &m_sharedData.sharedResources->shaders.get(shaderID);
+    m_targetShader = shader->getGLHandle();
+    m_targetUniform = shader->getUniformID("u_time");
 
     entity.getComponent<cro::Drawable2D>().setShader(shader);
 

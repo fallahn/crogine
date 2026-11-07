@@ -94,6 +94,9 @@ private:
     cro::Entity m_controlIcon;
     cro::Entity m_controlText;
 
+    std::uint32_t m_targetShader;
+    std::int32_t m_targetUniform;
+
     float m_heatTarget;
     float m_heatAmount;
 
