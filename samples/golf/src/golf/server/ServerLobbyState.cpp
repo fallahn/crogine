@@ -465,6 +465,8 @@ void LobbyState::broadcastRules()
                     spawnInfo.lie = ConstVal::NullValue; //use this to ignore packets in game mode
                     m_sharedData.host.broadcastPacket(PacketID::ActorSpawn, spawnInfo, net::NetFlag::Reliable);
 
+                    m_gameScene.getSystem<CoinSystem>()->broadcastScores();
+
                     ent.getComponent<cro::Callback>().active = false;
                     m_gameScene.destroyEntity(ent);
                 }

@@ -211,9 +211,18 @@ void MenuState::canScore(std::uint32_t data)
 
     for (auto& p : m_displayOrder)
     {
-        if (p.client == clientID)
+        if (p.client == (clientID & 0xff))
         {
-            p.coinScore += score;
+            if ((clientID & 0xff00) == 0)
+            {
+                p.coinScore += score;
+            }
+            else
+            {
+                //this is an override value
+                //eg sync from the server
+                p.coinScore = score;
+            }
         }
     }
     m_lobbyMenu.clientStatusChanged();

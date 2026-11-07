@@ -46,7 +46,7 @@ namespace
     constexpr cro::FloatRect BucketBottom = { 7.f, 0.f, 26.f, 10.f };
     constexpr cro::FloatRect CoinRect = {-2.f, -2.f, 4.f, 4.f};
 
-    constexpr float Dampening = 0.05f;
+    constexpr float CoinDampening = 0.05f;
 
     glm::vec3 getManifold(const cro::FloatRect& overlap, const glm::vec2 collisionNormal)
     {
@@ -74,6 +74,8 @@ CoinSystem::CoinSystem(cro::MessageBus& mb, sv::SharedData& sd)
 {
     requireComponent<cro::Transform>();
     requireComponent<Coin>();
+
+    std::fill(m_scores.begin(), m_scores.end(), 0);
 }
 
 //public
@@ -126,7 +128,7 @@ void CoinSystem::process(float dt)
                                 tx.setPosition(pos + (glm::vec2(manifold) * (manifold.z * 1.5f)));
                                 coin.velocity = glm::reflect(coin.velocity, glm::vec2(manifold));
 
-                                coin.velocity *= Dampening;
+                                coin.velocity *= CoinDampening;
                                 return true;
                             }
                             return false;
@@ -155,7 +157,9 @@ void CoinSystem::process(float dt)
                             }
                         }
                         const std::uint32_t data = (std::uint16_t(coin.clientID) << 16) | score;
-                        m_sharedData.host.broadcastPacket(PacketID::CoinBucketed, data, net::NetFlag::Reliable);
+                        m_sharedData.host.broadcastPacket(PacketID::CoinScored, data, net::NetFlag::Reliable);
+
+                        m_scores[coin.clientID] += score;
 
                         const auto id = static_cast<std::uint32_t>(entity.getIndex());
                         getScene()->destroyEntity(entity);
@@ -181,9 +185,11 @@ void CoinSystem::process(float dt)
             {
                 const auto id = static_cast<std::uint32_t>(entity.getIndex());
                 const std::uint32_t data = (std::uint16_t(coin.clientID) << 16) | std::numeric_limits<std::uint16_t>::max(); //actually -1 for missing
-                m_sharedData.host.broadcastPacket(PacketID::CoinBucketed, data, net::NetFlag::Reliable);
+                m_sharedData.host.broadcastPacket(PacketID::CoinScored, data, net::NetFlag::Reliable);
                 m_sharedData.host.broadcastPacket(PacketID::CoinRemove, id, net::NetFlag::Reliable);
                 
+                m_scores[coin.clientID]--;
+
                 getScene()->destroyEntity(entity);
             }
         }
@@ -200,6 +206,19 @@ bool CoinSystem::canSpawn(std::uint64_t client)
     }
 
     return m_coinCount.at(client) < MaxCoins;
+}
+
+void CoinSystem::broadcastScores() const
+{
+    if (m_bucketEnt.isValid())
+    {
+        for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+        {
+            std::uint16_t client = 0xff00 | std::uint16_t(i);
+            std::uint32_t data = (client << 16) | std::uint16_t(m_scores[i]);
+            m_sharedData.host.broadcastPacket(PacketID::CoinScored, data, net::NetFlag::Reliable);
+        }
+    }
 }
 
 //private

@@ -2322,6 +2322,8 @@ void MenuState::LobbyMenu::updatePlayersTab(bool resized)
     cro::String nameString;
     cro::String scoreString;
     std::int32_t row = 0;
+    static constexpr std::uint32_t CoinIcon(0x1FA99);
+
     for (const auto [score, cID, pID] : displayMembers)
     {
         const auto& c = m_sharedData.connectionData[cID];
@@ -2334,7 +2336,9 @@ void MenuState::LobbyMenu::updatePlayersTab(bool resized)
         }
 
         nameString += c.playerData[pID].name.substr(0, ConstVal::MaxStringChars - charOffset) + "\n";
-        scoreString += std::to_string(score) + "\n";
+        scoreString += std::to_string(score);
+        scoreString += CoinIcon;
+        scoreString += "\n";
 
         const glm::vec3 iconPos(2.f, (Top - (row * RowSpacing)) - 10.f, 0.1f);
         row++;
@@ -2370,7 +2374,7 @@ void MenuState::LobbyMenu::updatePlayersTab(bool resized)
     if (m_menuState.m_canActive)
     {
         entity = m_menuState.m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ Width - 16.f, Top - 3.f, 0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ Width - 8.f, Top - 3.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::UI)).setString(scoreString);
         entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);

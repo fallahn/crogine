@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "GameConsts.hpp"
+
 #include <crogine/ecs/System.hpp>
 
 #include <unordered_map>
@@ -81,10 +83,15 @@ public:
 
     bool canSpawn(std::uint64_t);
 
+    void broadcastScores() const;
+
 private:
     sv::SharedData& m_sharedData;
     cro::Entity m_bucketEnt;
 
+    std::array<std::int32_t, ConstVal::MaxClients> m_scores = {};
+
+    //TODO this can be mapped to client index and made an array
     std::unordered_map<std::uint64_t, std::int32_t> m_coinCount;
     void onEntityAdded(cro::Entity) override;
     void onEntityRemoved(cro::Entity) override;

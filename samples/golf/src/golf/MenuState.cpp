@@ -4079,7 +4079,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             WebSock::broadcastPacket(evt.packet.getDataRaw());
         }
             break;
-        case PacketID::CoinBucketed:
+        case PacketID::CoinScored:
             canScore(evt.packet.as<std::uint32_t>());
             break;
         case PacketID::CoinRemove:
