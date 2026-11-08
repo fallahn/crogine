@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -76,6 +76,11 @@ State::Context State::getContext() const
 std::size_t State::getStateCount() const
 {
     return m_stack.getStackSize();
+}
+
+std::int32_t State::getTopmostState() const
+{
+    return m_stack.getTopmostState();
 }
 
 void State::cacheState(StateID id)

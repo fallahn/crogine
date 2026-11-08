@@ -160,6 +160,11 @@ namespace cro
         std::size_t getStateCount() const;
 
         /*!
+        \brief Returns the ID of the topmost state on the stack
+        */
+        std::int32_t getTopmostState() const;
+
+        /*!
         \brief Shortcut for posting a message on the active message bus
         \see MessageBus::post()
         */

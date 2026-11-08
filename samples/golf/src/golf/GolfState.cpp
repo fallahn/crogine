@@ -687,7 +687,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
     }
 
 
-    const auto scrollScores = [&](std::int32_t step)
+    const auto scrollScores = [this](std::int32_t step)
     {
         if (m_holeData.size() > 9)
         {
@@ -702,7 +702,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
     };
 
-    const auto hideMouse = [&]()
+    const auto hideMouse = [this]()
     {
         if (getStateCount() == 1)
         {
@@ -710,7 +710,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
     };
 
-    const auto closeMessage = [&]()
+    const auto closeMessage = [this]()
     {
         cro::Command cmd;
         cmd.targetFlags = CommandID::UI::MessageBoard;
@@ -726,16 +726,29 @@ bool GolfState::handleEvent(const cro::Event& evt)
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
-    const auto showPauseMenu = [&]()
+    const auto updateMinimapData =
+        [this]()
+        {
+            if (m_inputParser.getActive())
+            {
+                m_sharedData.minimapData.targetPos =
+                    glm::rotate(cro::Transform::QUAT_IDENTITY, m_inputParser.getYaw() + (cro::Util::Const::PI / 2.f), cro::Transform::Y_AXIS) * cro::Transform::Z_AXIS;
+
+                m_sharedData.minimapData.targetPos *= m_inputParser.getEstimatedDistance();
+                m_sharedData.minimapData.targetPos += m_currentPlayer.position;
+            }
+            else
+            {
+                m_sharedData.minimapData.targetPos = glm::vec3(100000.f);
+            }
+            
+            updateMinimapString(); //updates the string with current measurement units
+        };
+
+    const auto showPauseMenu = [this, &updateMinimapData]()
     {
         //set this so the overview map can preview the landing area
-        m_sharedData.minimapData.targetPos = 
-            glm::rotate(cro::Transform::QUAT_IDENTITY, m_inputParser.getYaw() + (cro::Util::Const::PI / 2.f), cro::Transform::Y_AXIS)* cro::Transform::Z_AXIS;
-
-        m_sharedData.minimapData.targetPos *= m_inputParser.getEstimatedDistance();
-        m_sharedData.minimapData.targetPos += m_currentPlayer.position;
-
-        updateMinimapString(); //updates the string with current measurement units
+            updateMinimapData();
 
         auto* msg = postMessage<MenuSoundEvent>(MessageID::MenuSoundMessage);
         msg->type = MenuSoundEvent::Activate;
@@ -743,7 +756,16 @@ bool GolfState::handleEvent(const cro::Event& evt)
         requestStackPush(StateID::Pause);
     };
 
-    const auto toggleMiniZoom = [&]()
+    const auto showMapOverview = [this, &updateMinimapData]()
+        {
+            if (!m_holeData[m_currentHole].puttFromTee)
+            {
+                updateMinimapData();
+                requestStackPush(StateID::MapOverview);
+            }
+        };
+
+    const auto toggleMiniZoom = [this, &emoteHandled]()
         {
             if (!m_photoMode && !emoteHandled
                 && !m_inputParser.isSwingputActive())
@@ -758,7 +780,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             }
         };
 
-    const auto setFreecamLayout = [&]()
+    const auto setFreecamLayout = [this, &evt]()
         {
             switch (evt.type)
             {
@@ -790,7 +812,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             }
         };
 
-    const auto toggleFreecamMenu = [&]()
+    const auto toggleFreecamMenu = [this]()
         {
             if (m_photoMode)
             {
@@ -897,11 +919,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             m_textChat.toggleWindow(false, true, false);
             break;
         case SDLK_F6:
-        {
-            //hack to see if this fixes the black screen in simultaneous play
-            auto& cam = m_cameras[CameraID::Player].getComponent<cro::Camera>();
-            cam.resizeCallback(cam);
-        }
+            showMapOverview();
             break;
         case SDLK_F7:
             m_terrainBuilder.setSlopeVisible(!m_terrainBuilder.getSlopeVisible());
@@ -909,7 +927,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_F8:
             if (evt.key.mod & SDL_KMOD_SHIFT)
             {
-                m_textChat.toggleWindow(false, true);
+                //m_textChat.toggleWindow(false, true);
+                cro::Console::print("Press F4 to open the chat window");
             }
             break;
         case SDLK_F9:
@@ -1138,6 +1157,20 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_SPACE:
             toggleQuitReady();
             break;
+        case SDLK_F1:
+        case SDLK_F2:
+        case SDLK_F3:
+        case SDLK_F4:
+        case SDLK_F5:
+        case SDLK_F6:
+        case SDLK_F7:
+        case SDLK_F8:
+        case SDLK_F9:
+        case SDLK_F10:
+        case SDLK_F11:
+        case SDLK_F12:
+            //USED BY KEY DOWN EVENT!
+            break;
         }
 
         switch (evt.key.scancode)
@@ -1176,7 +1209,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case cro::GameController::ButtonTrackpad:
-            m_textChat.toggleWindow(false, true, false);
+            //m_textChat.toggleWindow(false, true, false);
+            showMapOverview();
             break;
         case cro::GameController::ButtonBack:
             if (!m_textChat.isVisible()

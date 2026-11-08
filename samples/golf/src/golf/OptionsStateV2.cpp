@@ -2531,8 +2531,18 @@ void OptionsStateV2::createKeyboardItems()
     item->displayType = Menu::Item::TextOnly;
 
     item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
+    item->title = "Show Map";
+    item->description = "Key: F6";
+    item->displayType = Menu::Item::TextOnly;
+
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
     item->title = "Toggle Putting Grid";
     item->description = "Key: F7";
+    item->displayType = Menu::Item::TextOnly;
+
+    item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();
+    item->title = "Toggle Ball Trail in Freecam";
+    item->description = "Key: F10";
     item->displayType = Menu::Item::TextOnly;
 
     item = &m_uiLayout.menuLayout.items[TabID::Keyboard].emplace_back();

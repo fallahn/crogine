@@ -108,6 +108,28 @@ void GolfState::updateMinimapModel()
     m_minimapRadiusSmall.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
     m_minimapRadiusSmall.getComponent<cro::Model>().setHidden(m_holeData[m_currentHole].puttFromTee);
 
+    //fudge in case the map happens to be open when changing holes
+    if (getTopmostState() == StateID::MapOverview)
+    {
+        if (m_holeData[m_currentHole].puttFromTee)
+        {
+            requestStackPop();
+        }
+        else
+        {
+            if (m_holeData[m_currentHole].par == 3)
+            {
+                m_minimapRadiusSmall.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+                m_minimapRadiusSmall.getComponent<cro::Model>().setHidden(false);
+            }
+            else
+            {
+                m_minimapRadius.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+                m_minimapRadius.getComponent<cro::Model>().setHidden(false);
+            }
+        }
+    }
+
     //store the world space points for measure markers which are then
     //converted to UI space by the map overview state
     const auto dir = -glm::normalize(m_holeData[m_currentHole].pin - m_holeData[m_currentHole].target);
@@ -123,6 +145,9 @@ void GolfState::updateMinimapModel()
     m_sharedData.minimapData.holeNumber = m_currentHole;
     m_sharedData.minimapData.par = m_holeData[m_currentHole].par;
     
+    m_sharedData.minimapData.targetPos = glm::vec3(100000.f);
+    updateMinimapString();
+
     //the tee might be closer to the pin on a u-bend...
     const auto teeDist = glm::length(m_holeData[m_currentHole].pin - m_holeData[m_currentHole].tee);
     const auto targDist = glm::length(m_holeData[m_currentHole].pin - m_holeData[m_currentHole].target);

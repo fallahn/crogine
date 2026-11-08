@@ -288,7 +288,7 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_BACKSPACE:
         case SDLK_ESCAPE:
-        case SDLK_6: //WHY
+        case SDLK_F6:
             quitState();
             return false;
         }
@@ -432,6 +432,17 @@ void MapOverviewState::handleMessage(const cro::Message& msg)
 
 bool MapOverviewState::simulate(float dt)
 {
+    //allowing this map to be open at any time means
+    //we need to check if there's a hole transition and
+    //update the view
+    if (m_previousMap != m_sharedData.minimapData.holeNumber)
+    {
+        recentreMap();
+        updateNormals();
+        m_previousMap = m_sharedData.minimapData.holeNumber;
+        m_mapTitleText.getComponent<cro::Text>().setString(m_sharedData.minimapData.courseName);
+    }
+
     glm::vec2 movement(0.f);
     if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Left]))
     {
@@ -842,16 +853,9 @@ void main()
         {
             if (m_mapCamera.isValid())
             {
-                const float visibleScale = m_sharedData.showMinimap ? 1.f : 0.f;
                 e.getComponent<cro::Transform>().setPosition(m_mapCamera.getComponent<cro::Camera>().coordsToPixel(m_sharedData.minimapData.targetPos, m_mapBuffer.getSize()));
-                e.getComponent<cro::Transform>().setScale(glm::vec2(m_zoomScale * m_viewScale.y * visibleScale));
-
-                //hmm this doesn't work because we have special case alpha value...
-                /*const auto alpha = calcAlpha(e.getComponent<cro::Transform>().getPosition());
-                for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
-                {
-                    v.colour.setAlpha(alpha);
-                }*/
+                const float visibleScale = m_sharedData.showMinimap ? 1.f : 0.f;
+                e.getComponent<cro::Transform>().setScale(glm::vec2(m_zoomScale * m_viewScale.y * visibleScale * calcAlpha(e.getComponent<cro::Transform>().getPosition())));
             }
         };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
