@@ -729,7 +729,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
     const auto updateMinimapData =
         [this]()
         {
-            if (m_inputParser.getActive())
+            if (m_inputParser.getActive()
+                && m_currentPlayer.terrain != TerrainID::Green)
             {
                 m_sharedData.minimapData.targetPos =
                     glm::rotate(cro::Transform::QUAT_IDENTITY, m_inputParser.getYaw() + (cro::Util::Const::PI / 2.f), cro::Transform::Y_AXIS) * cro::Transform::Z_AXIS;

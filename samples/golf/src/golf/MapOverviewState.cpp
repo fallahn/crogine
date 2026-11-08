@@ -418,13 +418,17 @@ void MapOverviewState::handleMessage(const cro::Message& msg)
     if (msg.id == MessageID::SceneMessage)
     {
         const auto& data = msg.getData<SceneEvent>();
-        if (data.type == SceneEvent::TransitionStart)
+        /*if (data.type == SceneEvent::TransitionStart)
         {
             requestStackPop();
         }
-        else if (data.type == SceneEvent::MinimapUpdated)
+        else */if (data.type == SceneEvent::MinimapUpdated)
         {
             recentreMap();
+            updateNormals();
+            m_mapTitleText.getComponent<cro::Text>().setString(m_sharedData.minimapData.courseName);
+
+            m_previousMap = m_sharedData.minimapData.holeNumber;
         }
     }
     m_scene.forwardMessage(msg);
@@ -432,17 +436,6 @@ void MapOverviewState::handleMessage(const cro::Message& msg)
 
 bool MapOverviewState::simulate(float dt)
 {
-    //allowing this map to be open at any time means
-    //we need to check if there's a hole transition and
-    //update the view
-    if (m_previousMap != m_sharedData.minimapData.holeNumber)
-    {
-        recentreMap();
-        updateNormals();
-        m_previousMap = m_sharedData.minimapData.holeNumber;
-        m_mapTitleText.getComponent<cro::Text>().setString(m_sharedData.minimapData.courseName);
-    }
-
     glm::vec2 movement(0.f);
     if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.scancodes[InputBinding::Left]))
     {

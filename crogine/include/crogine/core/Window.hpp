@@ -251,6 +251,8 @@ namespace cro
         games such as first or third person shooters where
         mouse movements are used to move the camera. Locks the
         mouse cursor position to the bounds of the window.
+        If clamping the mouse cursor to the window is not desired
+        then prefer setCursorVisible()
         */
         void setMouseCaptured(bool);
 
