@@ -67,6 +67,6 @@ namespace sv
         cro::Clock m_serverTime;
         void buildScene();
         void spawnCan();
-        void spawnCoin(float, std::uint64_t peerID, std::uint8_t clientID);
+        void spawnCoin(float, std::uint8_t clientID);
     };
 }

@@ -76,6 +76,7 @@ CoinSystem::CoinSystem(cro::MessageBus& mb, sv::SharedData& sd)
     requireComponent<Coin>();
 
     std::fill(m_scores.begin(), m_scores.end(), 0);
+    std::fill(m_coinCount.begin(), m_coinCount.end(), 0);
 }
 
 //public
@@ -196,16 +197,11 @@ void CoinSystem::process(float dt)
     }
 }
 
-bool CoinSystem::canSpawn(std::uint64_t client)
+bool CoinSystem::canSpawn(std::uint8_t client)
 {
+    assert(client < ConstVal::MaxClients);
     static constexpr std::int32_t MaxCoins = 5;
-
-    if (m_coinCount.count(client) == 0)
-    {
-        return true;
-    }
-
-    return m_coinCount.at(client) < MaxCoins;
+    return m_coinCount[client] < MaxCoins;
 }
 
 void CoinSystem::broadcastScores() const
@@ -224,19 +220,10 @@ void CoinSystem::broadcastScores() const
 //private
 void CoinSystem::onEntityAdded(cro::Entity e)
 {
-    auto client = e.getComponent<Coin>().owner;
-    if (m_coinCount.count(client) == 0)
-    {
-        m_coinCount.insert(std::make_pair(client, 1));
-    }
-    else
-    {
-        m_coinCount.at(client)++;
-    }
+    m_coinCount[e.getComponent<Coin>().clientID]++;
 }
 
 void CoinSystem::onEntityRemoved(cro::Entity e)
 {
-    //this should NEVER be missing from the counter...
-    m_coinCount.at(e.getComponent<Coin>().owner)--;
+    m_coinCount[e.getComponent<Coin>().clientID]--;
 }

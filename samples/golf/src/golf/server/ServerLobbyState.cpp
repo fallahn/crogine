@@ -166,7 +166,7 @@ void LobbyState::netEvent(const net::NetEvent& evt)
             {
                 clientID = static_cast<std::uint8_t>(std::distance(m_sharedData.clients.cbegin(), result));
             }
-            spawnCoin(evt.packet.as<float>(), evt.peer.getID(), clientID);
+            spawnCoin(evt.packet.as<float>(), clientID);
         }
             break;
         case PacketID::ServerCommand:

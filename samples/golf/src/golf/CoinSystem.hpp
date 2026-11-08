@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025
+Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -42,7 +42,6 @@ struct Coin final
     static constexpr glm::vec2 Gravity = glm::vec2(0.f, -9.5f * PixelsPerMetre);
     
     glm::vec2 velocity = InitialVelocity;
-    std::uint64_t owner = 0; //TODO this is probably unneccessary and can be replaced with the regular ID
     std::uint8_t clientID = 0;
     bool collisionStart = false;
     bool hadCollisionLastFrame = false;
@@ -81,7 +80,7 @@ public:
 
     cro::Entity getBucketEnt() const { return m_bucketEnt; }
 
-    bool canSpawn(std::uint64_t);
+    bool canSpawn(std::uint8_t);
 
     void broadcastScores() const;
 
@@ -90,9 +89,7 @@ private:
     cro::Entity m_bucketEnt;
 
     std::array<std::int32_t, ConstVal::MaxClients> m_scores = {};
-
-    //TODO this can be mapped to client index and made an array
-    std::unordered_map<std::uint64_t, std::int32_t> m_coinCount;
+    std::array<std::int32_t, ConstVal::MaxClients> m_coinCount = {}; //limits the number of active coins
     void onEntityAdded(cro::Entity) override;
     void onEntityRemoved(cro::Entity) override;
 };

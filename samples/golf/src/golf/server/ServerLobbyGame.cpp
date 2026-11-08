@@ -208,15 +208,14 @@ void LobbyState::spawnCan()
     m_sharedData.host.broadcastPacket(PacketID::ActorSpawn, spawnInfo, net::NetFlag::Reliable);
 }
 
-void LobbyState::spawnCoin(float power, std::uint64_t peer, std::uint8_t clientID)
+void LobbyState::spawnCoin(float power, std::uint8_t clientID)
 {
     if (m_gameStarted
-        && m_gameScene.getSystem<CoinSystem>()->canSpawn(peer))
+        && m_gameScene.getSystem<CoinSystem>()->canSpawn(clientID))
     {
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<Coin>().velocity = glm::normalize(Coin::InitialVelocity) * power;
-        entity.getComponent<Coin>().owner = peer;
         entity.getComponent<Coin>().clientID = clientID;
 
         //send actor spawn packet
