@@ -1534,6 +1534,51 @@ void MenuState::LobbyMenu::createPlayerTab()
         item->labels = { "No", "Yes" };
         item->selectedIndex = m_menuState.m_matchMaking.getFriendsOnly() ? 1 : 0;
 #endif
+        //randomise button - TODO this currently doesn't refresh the lobby menu
+        //item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
+        //item->title = "Randomise";
+        //item->description = "Randomise the game settings";
+        //item->activated = [this](Menu::Item& i)
+        //    {
+        //        //course
+        //        {
+        //            auto idx = m_sharedData.courseIndex - m_menuState.m_courseIndices[m_menuState.m_currentRange].start;
+        //            idx = (idx + cro::Util::Random::value(0, 10)) % m_menuState.m_courseIndices[m_menuState.m_currentRange].count;
+
+        //            m_sharedData.courseIndex = m_menuState.m_courseIndices[m_menuState.m_currentRange].start + idx;
+        //            m_sharedData.mapDirectory = m_menuState.m_sharedCourseData.courseData[m_sharedData.courseIndex].directory;
+
+        //            //this actually sends the packet to the server
+        //            m_menuState.nextCourse();
+        //        }
+
+        //        //hole count
+        //        {
+        //            m_sharedData.holeCount = (m_sharedData.holeCount + cro::Util::Random::value(0, 10)) % 3;
+        //            m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        //        }
+
+        //        //weather
+        //        {
+        //            const std::uint8_t weatherType = cro::Util::Random::value(0, 4);
+        //            m_sharedData.clientConnection.netClient.sendPacket(PacketID::WeatherType, weatherType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        //        }
+
+        //        //night time
+        //        {
+        //            m_sharedData.nightTime = static_cast<std::uint8_t>(cro::Util::Random::value(0, 1));
+        //            m_sharedData.clientConnection.netClient.sendPacket(PacketID::NightTime, m_sharedData.nightTime,
+        //                net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        //        }
+
+        //        //rules - must check player count
+        //        {
+        //            m_sharedData.scoreType = (m_sharedData.scoreType + cro::Util::Random::value(0,10)) % ScoreType::Count;
+        //            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        //        }
+        //    };
+        //item->labels = { "???" };
+        //item->selectedIndex = 0;
 
         //teams mode
         item = &m_uiLayout.menuLayout.items[TabID::Players].emplace_back();
