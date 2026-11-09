@@ -183,7 +183,19 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "tag",
     "party_planner",
     "what_a_banger",
-    "pesky_kids"
+    "pesky_kids",
+
+    "course13_complete",
+    "course14_complete",
+    "course15_complete",
+    "course16_complete",
+
+    "course_13_par",
+    "course_14_par",
+    "course_15_par",
+    "course_16_par",
+
+    "tossing_copper"
 };
 
 //appears on the notification
@@ -325,7 +337,16 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Tag!",
     "Party Planner",
     "What A Banger!",
-    "Pesky Kids"
+    "Pesky Kids",
+    "Complete Course 13",
+    "Complete Course 14",
+    "Complete Course 15",
+    "Complete Course 16",
+    "Master Course 13",
+    "Master Course 14",
+    "Master Course 15",
+    "Master Course 16",
+    "Tossing Copper"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -468,6 +489,15 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Create a Custom Tournament", false),
     std::make_pair("Get a Beef Stick from a tee shot", false),
     std::make_pair("Ruin the groundskeeper's tomatoes", true),
+    std::make_pair("Play a full 18 holes on Barrett Crater", false),
+    std::make_pair("Play a full 18 holes on Putt-stop in Paradise", false),
+    std::make_pair("Play a full 18 holes on Craig Galed", false),
+    std::make_pair("Play a full 18 holes on Balunfell Bay", false),
+    std::make_pair("Complete Barrett Crater with par or under", false),
+    std::make_pair("Complete Putt-stop in Paradise with par or under", false),
+    std::make_pair("Complete Craig Galed with par or under", false),
+    std::make_pair("Complete Balunfell Bay with par or under", false),
+    std::make_pair("Spend a penny while waiting in the lobby", true),
 };
 
 //assuming trophies load correctly they are:
@@ -648,6 +678,16 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     /*135*/TrophyID::BronzeCup,
     /*136*/TrophyID::GoldFigure,
     /*137*/TrophyID::Platinum,
+    TrophyID::BronzeCup,
+    TrophyID::BronzeCup,
+    TrophyID::BronzeCup,
+    TrophyID::BronzeCup,
+
+    TrophyID::GoldCup,
+    TrophyID::GoldCup,
+    TrophyID::GoldCup,
+    TrophyID::GoldCup,
+    /*146*/TrophyID::BronzeFigure,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)

@@ -677,6 +677,15 @@ void MapOverviewState::buildScene()
 
     recentreMap();
 
+    /*const auto& bgTexture = m_sharedData.sharedResources->textures.get("assets/golf/images/ui/birdie_book.png");
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.3f });
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bgTexture.getSize()) / 2.f);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(bgTexture);
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());*/
+
+
     //menu background
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/overview_controls.spt", m_sharedData.sharedResources->textures);

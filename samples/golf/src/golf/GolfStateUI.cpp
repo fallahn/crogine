@@ -114,13 +114,13 @@ namespace
         std::make_pair("course_10", AchievementID::Master10),
         std::make_pair("course_11", AchievementID::Master11),
         std::make_pair("course_12", AchievementID::Master12),
-#ifdef USE_GNS
+//#ifdef USE_GNS
         //DLC
         std::make_pair("course_13", AchievementID::Master13),
         std::make_pair("course_14", AchievementID::Master14),
         std::make_pair("course_15", AchievementID::Master15),
         std::make_pair("course_16", AchievementID::Master16),
-#endif
+//#endif
     };
 
     const std::unordered_map<std::string, std::int32_t> CourseIDs =

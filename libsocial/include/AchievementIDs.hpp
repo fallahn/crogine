@@ -199,6 +199,18 @@ namespace AchievementID
         WhatABanger,
         PeskyKids,
 
+        Complete13,
+        Complete14,
+        Complete15,
+        Complete16,
+
+        Master13,
+        Master14,
+        Master15,
+        Master16,
+
+        TossingCopper,
+
         Count
     };
     static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");

@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "MenuState.hpp"
+#include "AchievementStrings.hpp"
 #include "InterpolationSystem.hpp"
 #include "Networking.hpp"
 #include "CommandIDs.hpp"
@@ -277,6 +278,8 @@ void MenuState::canScore(std::uint32_t data)
     {
         m_backgroundScene.getDirector<MenuSoundDirector>()->playSound(
             cro::Util::Random::value(MenuSoundDirector::AudioID::Land01, MenuSoundDirector::AudioID::Land01 + 2), 0.5f);
+
+        Achievements::awardAchievement(AchievementStrings[AchievementID::TossingCopper]);
     }
 }
 
