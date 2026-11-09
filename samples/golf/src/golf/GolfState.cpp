@@ -742,7 +742,13 @@ bool GolfState::handleEvent(const cro::Event& evt)
             {
                 m_sharedData.minimapData.targetPos = glm::vec3(100000.f);
             }
-            
+
+            //ugh this only works in tutorial, conversely
+            //this value is always wrong elsewhere
+            if (m_sharedData.gameMode == GameMode::Tutorial)
+            {
+                m_sharedData.minimapData.holeNumber = holeNumberFromIndex();
+            }
             updateMinimapString(); //updates the string with current measurement units
         };
 
