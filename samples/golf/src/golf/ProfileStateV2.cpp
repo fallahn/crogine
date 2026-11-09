@@ -683,6 +683,20 @@ bool ProfileStateV2::simulate(float dt)
                     Social::setPlayerName(m_activeProfile.playerData.name);
                 }
 
+                if (m_activeProfile.playerData.isDefault)
+                {
+                    //remove any existing default flag
+                    if (auto res = std::find_if(m_profileData.playerProfiles.begin(), m_profileData.playerProfiles.end(),
+                        [](const SharedProfileData::LocalProfile& p)
+                        {
+                            return p.playerData.isDefault;
+                        }); res != m_profileData.playerProfiles.end())
+                    {
+                        res->playerData.isDefault = false;
+                        res->playerData.saveProfile();
+                    }
+                }
+
                 //copy av data back to proper data and write files     
                 m_activeProfile.loadout.write(m_activeProfile.playerData.profileID);
                 m_profileData.playerProfiles[m_profileData.activeProfileIndex] = m_activeProfile;
@@ -2818,9 +2832,17 @@ void ProfileStateV2::createDetailItems()
     item->labels.push_back(m_activeProfile.playerData.name);
     item->description = "Choose a profile name";
 
-    //TODO description
-    //hmmm is this something we really want to bother editing?
-
+    //set profile as default
+    item = &m_uiLayout.menuLayout.items[TabID::Details].emplace_back();
+    item->title = "Default Profile";
+    item->activated =
+        [this](Menu::Item& i)
+        {
+            m_activeProfile.playerData.isDefault = i.selectedIndex ? true : false;
+        };
+    item->labels = { "No", "Yes" };
+    item->description = "Set this as the default player profile";
+    item->selectedIndex = m_activeProfile.playerData.isDefault ? 1 : 0;
 
     //load the current mugshot image if available
     if (!m_activeProfile.playerData.mugshot.empty())

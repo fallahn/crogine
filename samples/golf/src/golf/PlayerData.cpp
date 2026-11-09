@@ -98,6 +98,7 @@ bool PlayerData::saveProfile() const
     cfg.addProperty("flags6").setValue(avatarFlags[6]);
     cfg.addProperty("cpu").setValue(isCPU);
     cfg.addProperty("custom_name").setValue(isCustomName);
+    cfg.addProperty("default").setValue(isDefault);
 
     cfg.addProperty("offset_0").setValue(headwearOffsets[0]);
     cfg.addProperty("rotation_0").setValue(headwearOffsets[1]);
@@ -260,6 +261,10 @@ bool PlayerData::loadProfile(const std::filesystem::path& path, const std::strin
             {
                 isCustomName = prop.getValue<bool>();
             }
+            else if (n == "default")
+            {
+                isDefault = prop.getValue<bool>();
+            }
 
             else if (n == "offset_0")
             {
@@ -292,6 +297,7 @@ bool PlayerData::loadProfile(const std::filesystem::path& path, const std::strin
             {
                 headwearOffsets[5] = prop.getValue<glm::vec3>();
             }
+
         }
         if (hatID == hairID)
         {

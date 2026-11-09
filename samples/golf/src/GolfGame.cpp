@@ -2509,6 +2509,25 @@ void GolfGame::loadAvatars()
         pf.playerData.saveProfile();
         pf.loadout.write(pf.playerData.profileID);
     }
+
+    //if there's a default profile select it
+    if (!m_profileData.playerProfiles[0].playerData.isDefault
+        && m_profileData.playerProfiles.size() > 1)
+    {
+        if (const auto res = std::find_if(m_profileData.playerProfiles.cbegin(), m_profileData.playerProfiles.cend(),
+            [](const SharedProfileData::LocalProfile& p)
+            {
+                return p.playerData.isDefault;
+            }); res != m_profileData.playerProfiles.cend())
+        {
+            const auto idx = std::distance(m_profileData.playerProfiles.cbegin(), res);
+            if (idx != 0)
+            {
+                std::swap(m_profileData.playerProfiles[idx], m_profileData.playerProfiles.front());
+            }
+        }
+    }
+
     m_sharedData.localConnectionData.playerData[0] = m_profileData.playerProfiles[0].playerData;
 }
 

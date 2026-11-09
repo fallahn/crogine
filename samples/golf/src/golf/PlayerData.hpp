@@ -123,6 +123,7 @@ struct PlayerData final
 
     bool retired = false;
     bool isSteamID = false;
+    bool isDefault = false;
     mutable bool isCustomName = false; //if not true and is a steam profile use the current steam name
 
     PlayerData()

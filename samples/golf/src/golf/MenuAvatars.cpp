@@ -127,7 +127,9 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     else
     {
         //see if we have a social name and put to the font of the profile list
-        if (!socialName.empty())
+        //assuming we didn't find a default profile when we first loaded
+        if (!socialName.empty()
+            && !m_profileData.playerProfiles[0].playerData.isDefault)
         {
             auto res = std::find_if(m_profileData.playerProfiles.begin(), m_profileData.playerProfiles.end(),
                 [&socialName](const SharedProfileData::LocalProfile& pd)
