@@ -88,7 +88,15 @@ namespace
     }
 )";
 
+    struct SwipeEvent final
+    {
+        Uint64 duration = 0; //nanoseconds
+        float distanceX = 0.f;
+        float distanceY = 0.f; //note that Y goes DOWN
+        SDL_JoystickID which = 0;
+    };
 
+    std::array<SwipeEvent, 4u> swipeEvents = {};
 }
 
 VertexCloudState::VertexCloudState(cro::StateStack& stack, cro::State::Context context)
@@ -170,6 +178,54 @@ bool VertexCloudState::handleEvent(const cro::Event& evt)
             cro::App::getWindow().setSize({ 640, 360 });
             break;
         }
+    }
+
+
+    //NOTE testing indicated neither DS4 or DS5 trackpads identify
+    //the finger index, they always return -1
+    //NOTE testing also indicates that the pressure value is always
+    //1 on both of the above devices
+    switch (evt.type)
+    {
+    default: break;
+    case SDL_EVENT_GAMEPAD_TOUCHPAD_DOWN:
+    {
+        const auto type = SDL_GetGamepadTypeForID(evt.gtouchpad.which);
+        if (type == SDL_GAMEPAD_TYPE_PS4 || type == SDL_GAMEPAD_TYPE_PS5)
+        {
+            const auto idx = cro::GameController::controllerID(evt.gtouchpad.which);
+            swipeEvents[idx].distanceX = evt.gtouchpad.x;
+            swipeEvents[idx].distanceY = evt.gtouchpad.y;
+            swipeEvents[idx].duration = evt.gtouchpad.timestamp;
+        }
+    }
+        break;
+    case SDL_EVENT_GAMEPAD_TOUCHPAD_MOTION:
+        //LogI << evt.gtouchpad.pressure << std::endl;
+        break;
+    case SDL_EVENT_GAMEPAD_TOUCHPAD_UP:
+    {
+        const auto type = SDL_GetGamepadTypeForID(evt.gtouchpad.which);
+        if (type == SDL_GAMEPAD_TYPE_PS4 || type == SDL_GAMEPAD_TYPE_PS5)
+        {
+            SwipeEvent swipe;
+
+            const auto idx = cro::GameController::controllerID(evt.gtouchpad.which);
+            swipe.distanceX = evt.gtouchpad.x - swipeEvents[idx].distanceX;
+            swipe.distanceY = evt.gtouchpad.y - swipeEvents[idx].distanceY;
+            swipe.duration = evt.gtouchpad.timestamp - swipeEvents[idx].duration;
+
+            //TODO at startup we need to use SDL_RegisterEvent() to get an event ID we can
+            //use with custom events, then push SDL_UserEvent with that type. We need to
+            //keep the result around long enough for the event to be used as it only
+            //contains pointers to our data.
+
+            LogI << "X: " << swipe.distanceX << std::endl;
+            LogI << "Y: " << swipe.distanceY << std::endl;
+            LogI << "Duration: " << swipe.duration << std::endl;
+        }
+    }
+        break;
     }
 
     m_gameScene.forwardEvent(evt);

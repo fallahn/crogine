@@ -669,7 +669,7 @@ void MapOverviewState::buildScene()
     //map entity
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Drawable2D>();// .setBlendMode(cro::Material::BlendMode::Multiply);
     entity.addComponent<cro::Sprite>(m_mapBuffer.getTexture());
     entity.getComponent<cro::Drawable2D>().setShader(&m_ditherShader);
     rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
@@ -677,13 +677,13 @@ void MapOverviewState::buildScene()
 
     recentreMap();
 
-    /*const auto& bgTexture = m_sharedData.sharedResources->textures.get("assets/golf/images/ui/birdie_book.png");
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.3f });
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bgTexture.getSize()) / 2.f);
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>(bgTexture);
-    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());*/
+    //const auto& bgTexture = m_sharedData.sharedResources->textures.get("assets/golf/images/ui/birdie_book.png");
+    //entity = m_scene.createEntity();
+    //entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.3f });
+    //entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bgTexture.getSize()) / 2.f);
+    //entity.addComponent<cro::Drawable2D>();
+    //entity.addComponent<cro::Sprite>(bgTexture);
+    //rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //menu background
