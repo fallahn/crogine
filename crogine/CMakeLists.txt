@@ -176,7 +176,9 @@ if (APPLE OR BUILD_KTX)
 
   set(ASTCENC_ISA_AVX2 OFF CACHE BOOL "Use AVX2 extensions" FORCE)
   set(ASTCENC_ISA_NONE ON CACHE BOOL "Use No extensions" FORCE)
-  set(BASISU_SUPPORT_SSE OFF CACHE "Enable SIMD extensions" BOOL)
+  #this is set only because the CI changed for linux and started
+  #failing. This can be enabled on regular builds if needed
+  set(BASISU_SUPPORT_SSE OFF CACHE BOOL "Enable SIMD extensions" FORCE)
   FetchContent_Declare(
           fetch_ktx
           GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software

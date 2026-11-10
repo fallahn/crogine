@@ -30,8 +30,9 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
+#include <crogine/core/Message.hpp>
+#include <crogine/detail/glm/vec2.hpp>
 #include <crogine/graphics/Colour.hpp>
-#include <crogine/detail/Types.hpp>
 
 #include <SDL3/SDL_gamepad.h>
 #include <SDL3/SDL_haptic.h>
@@ -40,6 +41,17 @@ source distribution.
 
 namespace cro
 {
+
+
+    //returned by conversion function for parsing Touchpad events
+    struct SwipeData final
+    {
+        glm::vec2 direction = glm::vec2(0.f); //! < normalised direction of the swipe
+        float length = 0.f; //! < length of the swipe in normalised coords, Y-downwards
+        float duration = 0.f; //! < duration of the swip in seconds
+    };
+
+
     /*!
     \brief Utility function for creating SDL_HapticEffect initialised to safe values
     \see SDL_HapticEffect
@@ -131,6 +143,12 @@ namespace cro
             DSModeWeaponSimple   = 0x02,
             DSModeVibrateSimple  = 0x06
         };
+
+        /*!
+        \brief Converts a Touchpad event with type Swipe into a velocity vector
+        \param evt A Message::TouchpadEvent with type Swipe
+        */
+        static SwipeData parseSwipeEvent(const Message::TouchpadEvent& evt);
 
         /*!
         \brief Used to supply effect parameters to DualSense trigger effects

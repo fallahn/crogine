@@ -66,6 +66,7 @@ namespace cro
             SkeletalAnimationMessage,
             SpriteAnimationMessage,
             OSKMessage,
+            TouchpadMessage,
             Count
         };
 
@@ -195,6 +196,24 @@ namespace cro
                 Navigated
             }type = KeyEntered;
             SDL_Scancode scancode = SDL_SCANCODE_UNKNOWN;
+        };
+
+        /*!
+        \brief Generated when handling events from connected PS4 and PS5 controllers
+        Currently only supports swipe events, but this may be expanded so checking the
+        type property is recommended.
+        */
+        struct TouchpadEvent final
+        {
+            std::uint64_t duration = 0; //! < duration between touch start and touch end in nanoseconds
+            float distanceX = 0.f; //! < Normalised 0 - 1 left to right
+            float distanceY = 0.f; //! < Normalised 0 - 1 top to bottom
+            SDL_JoystickID which = 0; //! < Jostick ID which raised this. Use with cro::GameController::controllerID()
+
+            enum
+            {
+                Swipe //! < Raised after touchpad finger-up event
+            }type = Swipe;
         };
 
         ID id = -1;

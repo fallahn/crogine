@@ -843,6 +843,8 @@ void App::handleEvents()
             saveSettings();
         };
 
+    static std::array<Message::TouchpadEvent, GameController::MaxControllers> swipeEvents = {};
+
     Event evt;
     while (m_window.pollEvent(evt))
     {
@@ -1079,6 +1081,42 @@ void App::handleEvents()
 #endif
         }
             break;
+        case SDL_EVENT_GAMEPAD_TOUCHPAD_DOWN:
+        {
+            const auto type = SDL_GetGamepadTypeForID(evt.gtouchpad.which);
+            if (type == SDL_GAMEPAD_TYPE_PS4 || type == SDL_GAMEPAD_TYPE_PS5)
+            {
+                const auto idx = cro::GameController::controllerID(evt.gtouchpad.which);
+                swipeEvents[idx].distanceX = evt.gtouchpad.x;
+                swipeEvents[idx].distanceY = evt.gtouchpad.y;
+                swipeEvents[idx].duration = evt.gtouchpad.timestamp;
+                swipeEvents[idx].which = evt.gtouchpad.which;
+            }
+        }
+        break;
+        case SDL_EVENT_GAMEPAD_TOUCHPAD_UP:
+        {
+            const auto type = SDL_GetGamepadTypeForID(evt.gtouchpad.which);
+            if (type == SDL_GAMEPAD_TYPE_PS4 || type == SDL_GAMEPAD_TYPE_PS5)
+            {
+                const auto idx = cro::GameController::controllerID(evt.gtouchpad.which);
+                
+                //not that if controllers were rearraged or disconnected
+                //this might be raised from a different joystick ID
+                if (swipeEvents[idx].which == evt.gtouchpad.which)
+                {
+                    //we send this out over the message bus as it is checked immediately
+                    //after events are polled and guarantees this happens the same frame
+                    //as this event.
+                    auto* swipe = postMessage<Message::TouchpadEvent>(Message::TouchpadMessage);
+                    swipe->distanceX = evt.gtouchpad.x - swipeEvents[idx].distanceX;
+                    swipe->distanceY = evt.gtouchpad.y - swipeEvents[idx].distanceY;
+                    swipe->duration = evt.gtouchpad.timestamp - swipeEvents[idx].duration;
+                    swipe->which = evt.gtouchpad.which;
+                }
+            }
+        }
+        break;
         }
     }
 }

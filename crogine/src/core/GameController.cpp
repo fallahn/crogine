@@ -41,6 +41,22 @@ std::int32_t GameController::m_lastControllerIndex = 0;
 
 #define VALID_INDEX(x) (x > -1 && x < static_cast<std::int32_t>(App::m_instance->m_sortedGamepads.size()))
 
+SwipeData GameController::parseSwipeEvent(const Message::TouchpadEvent& evt)
+{
+    //TODO this should probably account for the fact
+    //that PS touchpads are NOT square
+
+    assert(evt.type == Message::TouchpadEvent::Swipe);
+    SwipeData ret;
+    ret.direction = { evt.distanceX, evt.distanceY };
+    ret.length = glm::length(ret.direction);
+    ret.direction /= ret.length;
+
+    const auto millis = evt.duration * 1000000;
+    ret.duration = cro::milliseconds(millis).asSeconds();
+    return ret;
+}
+
 SDL_JoystickID GameController::deviceID(std::int32_t controllerID)
 {
     CRO_ASSERT(App::m_instance, "No app running");
