@@ -83,6 +83,8 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context, const 
         createScene();
     });
 
+    std::fill(m_windowIndices.begin(), m_windowIndices.end(), 0);
+
     registerWindow(std::bind(&BushState::drawUI, this));
     registerWindows();
 
@@ -510,23 +512,29 @@ void BushState::updateView(cro::Camera& cam3D)
 
 void BushState::registerWindows()
 {
-    //TODO we need to track these indices so we can use the menu bar etc to toggle visiblity
     auto& menuBar = m_windows.emplace_back();
     menuBar.visible = true;
     menuBar.draw = std::bind(&BushState::drawMenuBar, this, std::placeholders::_1);
 
+    //we need to track these indices so we can use the menu bar etc to toggle visiblity
+    m_windowIndices[WindowIndex::Properties] = static_cast<std::int32_t>(m_windows.size());
     auto& properties = m_windows.emplace_back();
     properties.visible = true;
     properties.draw = std::bind(&BushState::drawProperties, this, std::placeholders::_1);
 
+    m_windowIndices[WindowIndex::Billboard] = static_cast<std::int32_t>(m_windows.size());
     auto& billboard = m_windows.emplace_back();
     billboard.draw = std::bind(&BushState::drawBillboard, this, std::placeholders::_1);
 
+    m_windowIndices[WindowIndex::Thumbnails] = static_cast<std::int32_t>(m_windows.size());
     auto& thumbnail = m_windows.emplace_back();
     thumbnail.draw = std::bind(&BushState::drawThumbnail, this, std::placeholders::_1);
 
+    m_windowIndices[WindowIndex::Skybox] = static_cast<std::int32_t>(m_windows.size());
     auto& skybox = m_windows.emplace_back();
     skybox.draw = std::bind(&BushState::drawSkyboxEditor, this, std::placeholders::_1);
+
+    loadWindowStates();
 }
 
 void BushState::drawUI()

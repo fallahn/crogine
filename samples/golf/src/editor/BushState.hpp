@@ -142,6 +142,18 @@ private:
 
     //------------------------------------------
 
+    struct WindowIndex final
+    {
+        enum
+        {
+            MenuBar,
+            Properties, Billboard,
+            Skybox, Thumbnails,
+            Count
+        };
+    };
+    std::array<std::int32_t, WindowIndex::Count> m_windowIndices = {};
+
     cro::RenderTexture m_billboardTexture;
     cro::Entity m_billboardCamera;
 
@@ -172,6 +184,9 @@ private:
     void drawBillboard(bool*);
     void drawThumbnail(bool*);
     void drawSkyboxEditor(bool*);
+
+    void loadWindowStates();
+    void saveWindowStates();
 
     void loadModel(const std::filesystem::path&);
     void loadPreset(const std::filesystem::path&);

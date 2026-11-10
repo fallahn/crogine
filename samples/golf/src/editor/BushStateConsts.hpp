@@ -33,7 +33,7 @@ source distribution.
 
 //we'll assume 64px per metre
 static constexpr float PixelsPerMetre = 64.f;
-static constexpr glm::uvec2 BillboardTargetSize(640, 448);
+static constexpr glm::uvec2 BillboardTargetSize(380, 448);
 
 static constexpr float MinModelScale = 0.1f;
 

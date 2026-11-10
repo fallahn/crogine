@@ -34,6 +34,12 @@ source distribution.
 
 #include <crogine/detail/OpenGL.hpp>
 
+namespace
+{
+    constexpr float MenuBarHeight = 18.f; //TODO this is probably useful in a consts file
+    const std::filesystem::path ConfigFile = "bush_window_states.cfg";
+}
+
 void BushState::drawMenuBar(bool*)
 {
     if (ImGui::BeginMainMenuBar())
@@ -81,14 +87,23 @@ void BushState::drawMenuBar(bool*)
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("View"))
+        if (ImGui::BeginMenu("Tools"))
+        {
+            if (ImGui::MenuItem("Create Billboard", nullptr, &m_windows[m_windowIndices[WindowIndex::Billboard]].visible))
+            {
+                saveWindowStates();
+            }
+            ImGui::EndMenu();
+        }
+
+        /*if (ImGui::BeginMenu("View"))
         {
             ImGui::MenuItem("Skybox Editor", nullptr, &m_editSkybox);
 
             ImGui::EndMenu();
-        }
+        }*/
 
-        if (ImGui::BeginMenu("Edit"))
+        /*if (ImGui::BeginMenu("Edit"))
         {
             if (ImGui::MenuItem("Create Thumbs")
                 && cro::FileSystem::showMessageBox("Are You Sure?", "This may take some time, and window may\nbecome unresponsive. Please be\npatient.", cro::FileSystem::ButtonType::YesNo))
@@ -97,16 +112,24 @@ void BushState::drawMenuBar(bool*)
             }
 
             ImGui::EndMenu();
-        }
+        }*/
 
         ImGui::EndMainMenuBar();
     }
 }
 
-void BushState::drawProperties(bool* visible)
+void BushState::drawProperties(bool*)
 {
-    if (ImGui::Begin("Properties", visible))
+    const glm::vec2 WindowSize = cro::App::getWindow().getSize();
+    static constexpr float PanelWidth = 344.f;
+    const float PanelHeight = WindowSize.y - MenuBarHeight;
+
+    ImGui::SetNextWindowSize({ PanelWidth, PanelHeight });
+    ImGui::SetNextWindowPos({ 0.f, MenuBarHeight });
+    if (ImGui::Begin("Properties", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration))
     {
+        ImGui::BeginChild("##properties");
+        ImGui::Text("Properties");
         if (ImGui::SliderFloat("Leaf Size", &m_treeset.leafSize, 0.01f, 1.f))
         {
             glUseProgram(m_shaderUniform.shaderID);
@@ -228,6 +251,7 @@ void BushState::drawProperties(bool* visible)
                 }
             }
         }
+        ImGui::EndChild();
 
     }
     ImGui::End();
@@ -235,8 +259,20 @@ void BushState::drawProperties(bool* visible)
 
 void BushState::drawBillboard(bool* visible)
 {
-    if (ImGui::Begin("Billboard", visible))
+    const glm::vec2 WindowSize = cro::App::getWindow().getSize();
+    static constexpr float PanelWidth = 396.f;
+    const float PanelHeight = WindowSize.y - MenuBarHeight;
+
+    ImGui::SetNextWindowSize({ PanelWidth, PanelHeight });
+    ImGui::SetNextWindowPos({ std::floor(WindowSize.x - PanelWidth), MenuBarHeight});
+    if (ImGui::Begin("Create Billboard", visible, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
     {
+        //check if window was closed
+        if (!m_windows[m_windowIndices[WindowIndex::Billboard]].visible)
+        {
+            saveWindowStates();
+        }
+
         glm::vec2 size(BillboardTargetSize);
         ImGui::Image(m_billboardTexture.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
 
@@ -361,4 +397,31 @@ void BushState::drawSkyboxEditor(bool* visible)
         }
         ImGui::End();
     }
+}
+
+void BushState::loadWindowStates()
+{
+    //this must happen after registerWindows() has been called!!
+    cro::ConfigFile cfg;
+    if (cfg.loadFromFile(cro::App::getPreferencePath() / ConfigFile))
+    {
+        const auto& props = cfg.getProperties();
+        for (const auto& prop : props)
+        {
+            const auto& name = prop.getName();
+            if (name == "billboard_state")
+            {
+                m_windows[m_windowIndices[WindowIndex::Billboard]].visible = prop.getValue<bool>();
+            }
+        }
+    }
+}
+
+void BushState::saveWindowStates()
+{
+    cro::ConfigFile cfg;
+    cfg.addProperty("billboard_state").setValue(m_windows[m_windowIndices[WindowIndex::Billboard]].visible);
+
+
+    cfg.save(cro::App::getPreferencePath() / ConfigFile);
 }
