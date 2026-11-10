@@ -86,7 +86,10 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context, const 
     m_billboardScaleMultiplier  (0.46f),
     m_skyMid                    (cro::Colour::White),
     m_skyTop                    (cro::Colour::CornflowerBlue),
-    m_editSkybox                (false)
+    m_openDialogueState         (OpenDialogueState::None),
+    m_openFileBrowser           (ImGuiFileBrowserFlags_CloseOnEsc),
+    m_saveDialogueState         (SaveDialogueState::None),
+    m_saveFileBrowser           (ImGuiFileBrowserFlags_CloseOnEsc | ImGuiFileBrowserFlags_CreateNewDir | ImGuiFileBrowserFlags_ConfirmOnEnter | ImGuiFileBrowserFlags_EnterNewFilename)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -98,31 +101,6 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context, const 
 
     registerWindow(std::bind(&BushState::drawUI, this));
     registerWindows();
-
-    /*registerCommand("process_grass", 
-        [](const std::string& param)
-        {
-            const std::string path = "assets/golf/models/" + param;
-            if (!cro::FileSystem::directoryExists(path))
-            {
-                cro::Console::print(param + ": path doesn't exist");
-            }
-            else
-            {
-                std::thread t([path]()
-                    {
-                        GrassProcessor processor;
-                        processor.begin(path);
-
-                        while (!processor.process())
-                        {
-                            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                        }
-                        LogI << "Process complete!" << std::endl;
-                    });
-                t.detach();
-            }
-        });*/
 
     m_palette.loadFromFile("assets/workshop/colordome-32.ase");
 

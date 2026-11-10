@@ -41,6 +41,7 @@ source distribution.
 #include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
 #include <crogine/gui/GuiClient.hpp>
+#include <crogine/gui/detail/imfilebrowser.h>
 
 #include <array>
 #include <filesystem>
@@ -158,8 +159,6 @@ private:
     cro::RenderTexture m_thumbnailTexture;
     cro::Entity m_thumbnailCamera;
 
-    bool m_editSkybox; //TODO remove this
-
     void addSystems();
     void loadAssets();
     void createScene();
@@ -177,11 +176,39 @@ private:
     };
     std::vector<UIWindow> m_windows;
 
+    struct OpenDialogueState final
+    {
+        enum
+        {
+            Model, Treeset,
+
+            None
+        };
+    };
+    std::int32_t m_openDialogueState;
+    ImGui::FileBrowser m_openFileBrowser;
+    std::array<std::filesystem::path, OpenDialogueState::None> m_openFilePaths = {};
+
+    struct SaveDialogueState final
+    {
+        enum
+        {
+            Treeset, Billboard,
+
+            None
+        };
+    };
+    std::int32_t m_saveDialogueState;
+    ImGui::FileBrowser m_saveFileBrowser;
+    std::array<std::filesystem::path, SaveDialogueState::None> m_saveFilePaths = {};
+
     void drawMenuBar(bool*);
     void drawProperties(bool*);
     void drawBillboard(bool*);
     void drawThumbnail(bool*);
     void drawSkyboxEditor(bool*);
+
+    void handleFileDialogues();
 
     void loadWindowStates();
     void saveWindowStates();

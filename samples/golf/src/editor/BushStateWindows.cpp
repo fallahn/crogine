@@ -48,27 +48,42 @@ void BushState::drawMenuBar(bool*)
         {
             if (ImGui::MenuItem("Load Model"))
             {
-                const auto path = cro::FileSystem::openFileDialogue("", "cmt");
-                if (!path.empty())
+                //track path of last opened model
+                if (!m_openFilePaths[OpenDialogueState::Model].empty())
                 {
-                    loadModel(path);
+                    m_openFileBrowser.SetPwd(m_openFilePaths[OpenDialogueState::Model]);
                 }
+                m_openFileBrowser.SetTypeFilters({".cmt"});
+                m_openFileBrowser.SetTitle("Load Model");
+
+                m_openFileBrowser.Open();
+                m_openDialogueState = OpenDialogueState::Model;
             }
             if (ImGui::MenuItem("Open Preset"))
             {
-                auto path = cro::FileSystem::openFileDialogue("", "tst");
-                if (!path.empty())
+                if (!m_openFilePaths[OpenDialogueState::Treeset].empty())
                 {
-                    loadPreset(path);
+                    m_openFileBrowser.SetPwd(m_openFilePaths[OpenDialogueState::Treeset]);
                 }
+                m_openFileBrowser.SetTypeFilters({ ".tst" });
+                m_openFileBrowser.SetTitle("Open Preset");
+
+                m_openFileBrowser.Open();
+                m_openDialogueState = OpenDialogueState::Treeset;
             }
             if (ImGui::MenuItem("Save Preset"))
             {
-                auto path = cro::FileSystem::saveFileDialogue(m_lastTreeset, "tst");
-                if (!path.empty())
+                if (!m_saveFilePaths[SaveDialogueState::Treeset].empty())
                 {
-                    savePreset(path);
+                    m_saveFileBrowser.SetPwd(m_saveFilePaths[SaveDialogueState::Treeset]);
                 }
+                m_saveFileBrowser.SetTypeFilters({ ".tst" });
+                m_saveFileBrowser.SetTitle("Save Treeset");
+                m_saveFileBrowser.SetInputName(m_lastTreeset.string());
+
+
+                m_saveFileBrowser.Open();
+                m_saveDialogueState = SaveDialogueState::Treeset;
             }
             ImGui::Separator();
             if (ImGui::MenuItem("Quit"))
@@ -96,26 +111,11 @@ void BushState::drawMenuBar(bool*)
             ImGui::EndMenu();
         }
 
-        /*if (ImGui::BeginMenu("View"))
-        {
-            ImGui::MenuItem("Skybox Editor", nullptr, &m_editSkybox);
-
-            ImGui::EndMenu();
-        }*/
-
-        /*if (ImGui::BeginMenu("Edit"))
-        {
-            if (ImGui::MenuItem("Create Thumbs")
-                && cro::FileSystem::showMessageBox("Are You Sure?", "This may take some time, and window may\nbecome unresponsive. Please be\npatient.", cro::FileSystem::ButtonType::YesNo))
-            {
-                createThumbnails();
-            }
-
-            ImGui::EndMenu();
-        }*/
-
         ImGui::EndMainMenuBar();
     }
+
+    //do this here as we assume menu bar is always updated
+    handleFileDialogues();
 }
 
 void BushState::drawProperties(bool*)
@@ -288,11 +288,16 @@ void BushState::drawBillboard(bool* visible)
 
         if (ImGui::Button("Save Image"))
         {
-            auto path = cro::FileSystem::saveFileDialogue("", "png");
-            if (!path.empty())
+            if (!m_saveFilePaths[SaveDialogueState::Billboard].empty())
             {
-                m_billboardTexture.saveToFile(path);
+                m_saveFileBrowser.SetPwd(m_saveFilePaths[SaveDialogueState::Billboard]);
             }
+            m_saveFileBrowser.SetTypeFilters({ ".png" });
+            m_saveFileBrowser.SetTitle("Save Billboard");
+            m_saveFileBrowser.SetInputName("untitled.png");
+
+            m_saveFileBrowser.Open();
+            m_saveDialogueState = SaveDialogueState::Billboard;
         }
     }
     ImGui::End();
@@ -309,93 +314,148 @@ void BushState::drawThumbnail(bool* visible)
 
 void BushState::drawSkyboxEditor(bool* visible)
 {
-    if (m_editSkybox)
+    if (ImGui::Begin("Skybox", visible))
     {
-        if (ImGui::Begin("Skybox"))
+        ImGui::PushStyleColor(ImGuiCol_Text, { 1.f, 0.f, 0.f, 1.f });
+        ImGui::Text("Move this to elsewhere in the editor");
+        ImGui::PopStyleColor();
+        if (ImGui::Button("Load Skybox"))
         {
-            ImGui::PushStyleColor(ImGuiCol_Text, { 1.f, 0.f, 0.f, 1.f });
-            ImGui::Text("Move this to elsewhere in the editor");
-            ImGui::PopStyleColor();
-            if (ImGui::Button("Load Skybox"))
+            loadSkyboxFile();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Save Skybox"))
+        {
+            saveSkyboxFile();
+        }
+
+        //hacky but should be ok if there are not too many models in
+        //the skybox scene.
+        std::vector<cro::Entity> items;
+        for (auto e : m_skyScene.getSystem<cro::ModelRenderer>()->getEntities())
+        {
+            if (!e.getLabel().empty())
             {
-                loadSkyboxFile();
+                items.push_back(e);
             }
+        }
+        int k = 0;
+        for (auto item : items)
+        {
+            ImGui::Text("%s", item.getLabel().c_str());
             ImGui::SameLine();
-            if (ImGui::Button("Save Skybox"))
+            std::string label = "Remove##" + std::to_string(k++);
+            if (ImGui::Button(label.c_str()))
             {
-                saveSkyboxFile();
+                m_skyScene.destroyEntity(item);
             }
+        }
+        if (ImGui::Button("Add Model"))
+        {
+            addSkyboxModel();
+        }
+        ImGui::NewLine();
 
-            //hacky but should be ok if there are not too many models in
-            //the skybox scene.
-            std::vector<cro::Entity> items;
-            for (auto e : m_skyScene.getSystem<cro::ModelRenderer>()->getEntities())
+        auto i = 0;
+        ImGui::Text("Sky Top");
+        for (const auto& swatch : m_palette.getSwatches())
+        {
+            for (const auto& colour : swatch.colours)
             {
-                if (!e.getLabel().empty())
+                ImVec4 c(colour.colour.getVec4());
+                std::string label = colour.name.toAnsiString() + "##" + std::to_string(i);
+                if (ImGui::ColorButton(label.c_str(), c))
                 {
-                    items.push_back(e);
+                    m_skyTop = cro::Colour(c.x, c.y, c.z);
+                    m_skyScene.setSkyboxColours(SkyBottom, m_skyMid, m_skyTop);
                 }
-            }
-            int k = 0;
-            for (auto item : items)
-            {
-                ImGui::Text("%s", item.getLabel().c_str());
-                ImGui::SameLine();
-                std::string label = "Remove##" + std::to_string(k++);
-                if (ImGui::Button(label.c_str()))
-                {
-                    m_skyScene.destroyEntity(item);
-                }
-            }
-            if (ImGui::Button("Add Model"))
-            {
-                addSkyboxModel();
-            }
-            ImGui::NewLine();
 
-            auto i = 0;
-            ImGui::Text("Sky Top");
-            for (const auto& swatch : m_palette.getSwatches())
-            {
-                for (const auto& colour : swatch.colours)
+                if ((i++ % 12) != 11)
                 {
-                    ImVec4 c(colour.colour.getVec4());
-                    std::string label = colour.name.toAnsiString() + "##" + std::to_string(i);
-                    if (ImGui::ColorButton(label.c_str(), c))
-                    {
-                        m_skyTop = cro::Colour(c.x, c.y, c.z);
-                        m_skyScene.setSkyboxColours(SkyBottom, m_skyMid, m_skyTop);
-                    }
-
-                    if ((i++ % 12) != 11)
-                    {
-                        ImGui::SameLine();
-                    }
-                }
-            }
-            ImGui::Separator();
-            i = 120;
-            ImGui::Text("Sky Bottom");
-            for (const auto& swatch : m_palette.getSwatches())
-            {
-                for (const auto& colour : swatch.colours)
-                {
-                    ImVec4 c(colour.colour.getVec4());
-                    std::string label = colour.name.toAnsiString() + "##" + std::to_string(i);
-                    if (ImGui::ColorButton(label.c_str(), c))
-                    {
-                        m_skyMid = cro::Colour(c.x, c.y, c.z);
-                        m_skyScene.setSkyboxColours(SkyBottom, m_skyMid, m_skyTop);
-                    }
-
-                    if ((i++ % 12) != 11)
-                    {
-                        ImGui::SameLine();
-                    }
+                    ImGui::SameLine();
                 }
             }
         }
-        ImGui::End();
+        ImGui::Separator();
+        i = 120;
+        ImGui::Text("Sky Bottom");
+        for (const auto& swatch : m_palette.getSwatches())
+        {
+            for (const auto& colour : swatch.colours)
+            {
+                ImVec4 c(colour.colour.getVec4());
+                std::string label = colour.name.toAnsiString() + "##" + std::to_string(i);
+                if (ImGui::ColorButton(label.c_str(), c))
+                {
+                    m_skyMid = cro::Colour(c.x, c.y, c.z);
+                    m_skyScene.setSkyboxColours(SkyBottom, m_skyMid, m_skyTop);
+                }
+
+                if ((i++ % 12) != 11)
+                {
+                    ImGui::SameLine();
+                }
+            }
+        }
+    }
+    ImGui::End();
+}
+
+void BushState::handleFileDialogues()
+{
+    //updates the drawlist - has to be called first else IsOpened() is always false
+    m_openFileBrowser.Display();
+
+    if (m_openFileBrowser.IsOpened())
+    {
+        if (m_openFileBrowser.HasSelected())
+        {
+            const auto path = m_openFileBrowser.GetSelected();
+
+            switch (m_openDialogueState)
+            {
+            default: break;
+            case OpenDialogueState::Model:
+                loadModel(path);
+                break;
+            case OpenDialogueState::Treeset:
+                loadPreset(path);
+                break;
+            }
+            m_openFilePaths[m_openDialogueState] = m_openFileBrowser.GetPwd();
+            saveWindowStates();
+
+            m_openDialogueState = OpenDialogueState::None;
+            m_openFileBrowser.ClearSelected();
+        }
+    }
+
+
+    m_saveFileBrowser.Display();
+
+    if (m_saveFileBrowser.IsOpened())
+    {
+        if (m_saveFileBrowser.HasSelected())
+        {
+            const auto path = m_saveFileBrowser.GetSelected();
+
+            switch (m_saveDialogueState)
+            {
+            default: break;
+            case SaveDialogueState::Treeset:
+                savePreset(path);
+                break;
+            case SaveDialogueState::Billboard:
+                m_billboardTexture.saveToFile(path);
+                break;
+            }
+
+            m_saveFilePaths[m_saveDialogueState] = m_saveFileBrowser.GetPwd();
+            saveWindowStates();
+
+            m_saveDialogueState = SaveDialogueState::None;
+            m_saveFileBrowser.ClearSelected();
+        }
     }
 }
 
@@ -413,6 +473,22 @@ void BushState::loadWindowStates()
             {
                 m_windows[m_windowIndices[WindowIndex::Billboard]].visible = prop.getValue<bool>();
             }
+            else if (name == "open_model")
+            {
+                m_openFilePaths[OpenDialogueState::Model] = prop.getValue<std::string>();
+            }
+            else if (name == "open_treeset")
+            {
+                m_openFilePaths[OpenDialogueState::Treeset] = prop.getValue<std::string>();
+            }
+            else if (name == "save_treeset")
+            {
+                m_saveFilePaths[SaveDialogueState::Treeset] = prop.getValue<std::string>();
+            }
+            else if (name == "save_billboard")
+            {
+                m_saveFilePaths[SaveDialogueState::Billboard] = prop.getValue<std::string>();
+            }
         }
     }
 }
@@ -422,6 +498,25 @@ void BushState::saveWindowStates()
     cro::ConfigFile cfg;
     cfg.addProperty("billboard_state").setValue(m_windows[m_windowIndices[WindowIndex::Billboard]].visible);
 
+    if (!m_openFilePaths[OpenDialogueState::Model].empty())
+    {
+        cfg.addProperty("open_model").setValue(U8PATH_CAST(m_openFilePaths[OpenDialogueState::Model]));
+    }
+
+    if (!m_openFilePaths[OpenDialogueState::Treeset].empty())
+    {
+        cfg.addProperty("open_treeset").setValue(U8PATH_CAST(m_openFilePaths[OpenDialogueState::Treeset]));
+    }
+
+    if (!m_saveFilePaths[SaveDialogueState::Treeset].empty())
+    {
+        cfg.addProperty("save_treeset").setValue(U8PATH_CAST(m_saveFilePaths[SaveDialogueState::Treeset]));
+    }
+
+    if (!m_saveFilePaths[SaveDialogueState::Billboard].empty())
+    {
+        cfg.addProperty("save_billboard").setValue(U8PATH_CAST(m_saveFilePaths[SaveDialogueState::Billboard]));
+    }
 
     cfg.save(cro::App::getPreferencePath() / ConfigFile);
 }

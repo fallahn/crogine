@@ -64,7 +64,7 @@ namespace ImGui
     \code
     //configure properties
     m_fileBrowser.SetTitle("My Browser");
-    m_fileBrowser.SetTypeFileters({".png"});
+    m_fileBrowser.SetTypeFilters({".png"});
 
     registerWindow([]()
     {
@@ -79,7 +79,7 @@ namespace ImGui
 
             if(m_fileBrowser.HasSelected())
             {
-                const auto path = m_fileBrowser.GetSelected().string(); //note actually returns std::filesystem::path - may be more useful
+                const auto path = m_fileBrowser.GetSelected();
                 m_fileBrowser.ClearSelected();
 
                 //do stuff with file path
