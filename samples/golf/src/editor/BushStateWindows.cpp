@@ -220,6 +220,7 @@ void BushState::drawProperties(bool*)
         ImGui::NewLine();
         if (m_models[0].isValid())
         {
+            ImGui::Text("Preview");
             if (ImGui::SliderFloat("Rotation", &m_rotation, 0.f, cro::Util::Const::TAU))
             {
                 for (auto model : m_models)
@@ -235,6 +236,8 @@ void BushState::drawProperties(bool*)
                 m_models[2].getComponent<cro::Model>().setHidden(!showInstanced);
             }
 
+            ImGui::NewLine();
+            ImGui::Text("Materials");
             for (i = 0u; i < m_materials.size(); ++i)
             {
                 auto label = "Material##" + std::to_string(i);
@@ -249,6 +252,25 @@ void BushState::drawProperties(bool*)
                             m_materials[i].activeMaterial ? GL_POINTS : GL_TRIANGLES;
                     }
                 }
+            }
+
+            ImGui::NewLine();
+            ImGui::Text("Collision");
+            if (ImGui::Button("Add##col"))
+            {
+                //TODO show add modal / add select the default collision object
+            }
+            if (!m_collisionObjects.empty())
+            {
+                ImGui::SameLine();
+                if (ImGui::Button("Remove##col"))
+                {
+                    //TODO remove selected
+                }
+
+                //TODO draw listbox
+
+                //TODO draw properties of selected collision object
             }
         }
         ImGui::EndChild();

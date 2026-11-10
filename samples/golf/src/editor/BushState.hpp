@@ -78,7 +78,8 @@ private:
     cro::UniformBuffer<float> m_scaleBuffer;
 
     std::filesystem::path m_lastTreeset;
-    std::filesystem::path m_lastSkybox;
+
+    //----model preview-----
 
     struct ModelID final
     {
@@ -123,7 +124,6 @@ private:
         std::int32_t colourRotation = -1;
     }m_shaderUniform;
 
-
     std::int32_t m_bushMaterial;
     std::int32_t m_branchMaterial;
 
@@ -140,6 +140,22 @@ private:
     cro::Colour m_skyMid;
     cro::Colour m_skyTop;
 
+    //----collision data----
+
+    struct CollisionObject final
+    {
+        enum
+        {
+            Sphere, Cyclinder
+        }type = Sphere;
+        float radius = 0.f;
+        float halfLength = 0.f;
+        cro::Entity preview;
+    };
+    std::vector<CollisionObject> m_collisionObjects;
+    std::size_t m_selectedCollisionObject;
+
+    //-----windowing----
 
     struct WindowIndex final
     {

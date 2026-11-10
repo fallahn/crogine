@@ -76,7 +76,6 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context, const 
     m_resolutionBuffer          ("ScaledResolution"),
     m_scaleBuffer               ("PixelScale"),
     m_lastTreeset               ("untitled.tst"),
-    m_lastSkybox                ("untitled.sbf"),
     m_bushMaterial              (-1),
     m_branchMaterial            (-1),
     m_rotation                  (0.f),
@@ -86,6 +85,7 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context, const 
     m_billboardScaleMultiplier  (0.46f),
     m_skyMid                    (cro::Colour::White),
     m_skyTop                    (cro::Colour::CornflowerBlue),
+    m_selectedCollisionObject   (0),
     m_openDialogueState         (OpenDialogueState::None),
     m_openFileBrowser           (ImGuiFileBrowserFlags_CloseOnEsc),
     m_saveDialogueState         (SaveDialogueState::None),
@@ -546,6 +546,12 @@ void BushState::loadModel(const std::filesystem::path& path)
         m_gameScene.destroyEntity(m_models[2]);
         m_rotation = 0.f;
         m_materials.clear();
+
+        for (auto& o : m_collisionObjects)
+        {
+            m_gameScene.destroyEntity(o.preview);
+        }
+        m_collisionObjects.clear();
     }
 
 
@@ -630,6 +636,8 @@ void BushState::loadPreset(const std::filesystem::path& path)
         std::vector<std::uint32_t> branchIndices;
         std::vector<std::uint32_t> leafIndices;
 
+        std::vector<CollisionObject> collisionObjects;
+
         const auto& props = cfg.getProperties();
         for (const auto& p : props)
         {
@@ -676,8 +684,21 @@ void BushState::loadPreset(const std::filesystem::path& path)
             }
         }
 
+        //NOTE this clears collision objects so they need to be loaded afterwards!
         loadModel(workingDir / m_treeset.modelPath);
         m_leafTexture->loadFromFile(workingDir / m_treeset.texturePath);
+
+        LogI << FILE_LINE << " parse collision objects here" << std::endl;
+
+        if (!collisionObjects.empty())
+        {
+            collisionObjects.swap(m_collisionObjects);
+        }
+
+        for (auto& o : m_collisionObjects)
+        {
+            LogI << FILE_LINE << " create collision preview here" << std::endl;
+        }
 
         //look at material slots and apply correct material to submesh
         for (auto b : branchIndices)
@@ -741,6 +762,7 @@ void BushState::savePreset(const std::filesystem::path& path)
         }
     }
 
+    LogI << FILE_LINE << " export collision objects here" << std::endl;
 
     if (cfg.save(path))
     {
@@ -764,14 +786,12 @@ void BushState::loadSkyboxFile()
         const auto& colours = m_skyScene.getSkyboxColours();
         m_skyMid = colours.middle;
         m_skyTop = colours.top;
-
-        m_lastSkybox = cro::FileSystem::getFileName(path);
     }
 }
 
 void BushState::saveSkyboxFile()
 {
-    const auto path = cro::FileSystem::saveFileDialogue("assets/golf/skyboxes" / m_lastSkybox, "sbf");
+    const auto path = cro::FileSystem::saveFileDialogue("assets/golf/skyboxes" /*/ m_lastSkybox*/, "sbf");
     if (!path.empty())
     {
         cro::ConfigFile cfg;
