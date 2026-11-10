@@ -48,7 +48,7 @@ namespace cro
     {
         glm::vec2 direction = glm::vec2(0.f); //! < normalised direction of the swipe
         float length = 0.f; //! < length of the swipe in normalised coords, Y-downwards
-        float duration = 0.f; //! < duration of the swip in seconds
+        float duration = 0.f; //! < duration of the swipe in seconds
     };
 
 

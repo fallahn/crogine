@@ -52,7 +52,7 @@ SwipeData GameController::parseSwipeEvent(const Message::TouchpadEvent& evt)
     ret.length = glm::length(ret.direction);
     ret.direction /= ret.length;
 
-    const auto millis = evt.duration * 1000000;
+    const auto millis = evt.duration / 1000000;
     ret.duration = cro::milliseconds(millis).asSeconds();
     return ret;
 }

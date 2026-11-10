@@ -213,6 +213,19 @@ static inline void createKeystroke(std::int32_t key, bool down)
     SDL_PushEvent(&evt);
 };
 
+static inline bool swipeUp(const cro::Message::TouchpadEvent& data)
+{
+    if (data.type == cro::Message::TouchpadEvent::Swipe)
+    {
+        const auto swipe = cro::GameController::parseSwipeEvent(data);
+
+        return (glm::dot(glm::vec2(0.f, -1.f), swipe.direction) > 0.98f
+            && swipe.duration < 0.31f
+            && swipe.length > 0.4f);
+    }
+    return false;
+}
+
 static inline std::uint32_t getShadowResolution(const SharedStateData& sd)
 {
     /*

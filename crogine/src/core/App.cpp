@@ -907,6 +907,11 @@ void App::handleEvents()
             [[fallthrough]];
         case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
             GameController::m_lastControllerIndex = GameController::controllerID(evt.gbutton.which);
+            if (evt.gbutton.button == SDL_GAMEPAD_BUTTON_TOUCHPAD)
+            {
+                //reset any swipes else they get trigger when letting go of this button
+                swipeEvents[GameController::controllerID(evt.gbutton.which)].which = -1;
+            }
             break;
         case SDL_EVENT_GAMEPAD_AXIS_MOTION:
             if (std::abs(evt.gaxis.value) > GameController::RightThumbDeadZone)

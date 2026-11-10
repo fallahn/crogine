@@ -1985,6 +1985,22 @@ void MenuState::handleMessage(const cro::Message& msg)
         }
     }
 
+    else if (msg.id == cro::Message::TouchpadMessage)
+    {
+        const auto& data = msg.getData<cro::Message::TouchpadEvent>();
+        if (swipeUp(data))
+        {
+#ifdef NEW_LOBBY
+            if (m_currentMenu == MenuID::LobbyV2)
+#else
+            if (m_currentMenu == MenuID::Lobby)
+#endif
+            {
+                m_textChat.toggleWindow(false, false, false);
+            }
+        }
+    }
+
     else if (msg.id == cro::Message::WindowMessage)
     {
         const auto& data = msg.getData<cro::Message::WindowEvent>();
