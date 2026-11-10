@@ -68,14 +68,25 @@ namespace
 }
 
 BushState::BushState(cro::StateStack& stack, cro::State::Context context, const SharedStateData& sd)
-    : cro::State        (stack, context),
-    m_sharedData        (sd),
-    m_gameScene         (context.appInstance.getMessageBus()),
-    m_skyScene          (context.appInstance.getMessageBus()),
-    m_windBuffer        ("WindValues"),
-    m_resolutionBuffer  ("ScaledResolution"),
-    m_scaleBuffer       ("PixelScale"),
-    m_editSkybox        (false)
+    : cro::State                (stack, context),
+    m_sharedData                (sd),
+    m_gameScene                 (context.appInstance.getMessageBus()),
+    m_skyScene                  (context.appInstance.getMessageBus()),
+    m_windBuffer                ("WindValues"),
+    m_resolutionBuffer          ("ScaledResolution"),
+    m_scaleBuffer               ("PixelScale"),
+    m_lastTreeset               ("untitled.tst"),
+    m_lastSkybox                ("untitled.sbf"),
+    m_bushMaterial              (-1),
+    m_branchMaterial            (-1),
+    m_rotation                  (0.f),
+    m_leafTexture               (nullptr),
+    m_windRotation              (0.f),
+    m_rootRotation              (0.f),
+    m_billboardScaleMultiplier  (0.46f),
+    m_skyMid                    (cro::Colour::White),
+    m_skyTop                    (cro::Colour::CornflowerBlue),
+    m_editSkybox                (false)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();

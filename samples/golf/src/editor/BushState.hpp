@@ -76,8 +76,8 @@ private:
     cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
     cro::UniformBuffer<float> m_scaleBuffer;
 
-    std::filesystem::path m_lastTreeset = "untitled.tst";
-    std::filesystem::path m_lastSkybox = "untitled.sbf";
+    std::filesystem::path m_lastTreeset;
+    std::filesystem::path m_lastSkybox;
 
     struct ModelID final
     {
@@ -89,7 +89,7 @@ private:
         };
     };
     cro::Entity m_root;
-    std::array<cro::Entity, ModelID::Count> m_models;
+    std::array<cro::Entity, ModelID::Count> m_models = {};
     std::vector<glm::mat4> m_instanceTransforms;
 
     struct MaterialSlot final
@@ -123,24 +123,22 @@ private:
     }m_shaderUniform;
 
 
-    //----TODO move these to a proper init list
-    std::int32_t m_bushMaterial = -1;
-    std::int32_t m_branchMaterial = -1;
+    std::int32_t m_bushMaterial;
+    std::int32_t m_branchMaterial;
 
     float m_rotation = 0.f;
-    cro::Texture* m_leafTexture = nullptr;
+    cro::Texture* m_leafTexture;
 
     WindData m_windData;
-    float m_windRotation = 0.f;
+    float m_windRotation;
 
     cro::Palette m_palette;
-    glm::vec2 m_rootRotation = glm::vec2(0.f);
-    float m_billboardScaleMultiplier = 0.46f;
+    glm::vec2 m_rootRotation;
+    float m_billboardScaleMultiplier;
 
-    cro::Colour m_skyMid = cro::Colour::White;
-    cro::Colour m_skyTop = cro::Colour::CornflowerBlue;
+    cro::Colour m_skyMid;
+    cro::Colour m_skyTop;
 
-    //------------------------------------------
 
     struct WindowIndex final
     {
@@ -148,7 +146,7 @@ private:
         {
             MenuBar,
             Properties, Billboard,
-            Skybox, Thumbnails,
+            Skybox, Thumbnails, //TODO move these to other parts of editor
             Count
         };
     };
@@ -160,7 +158,7 @@ private:
     cro::RenderTexture m_thumbnailTexture;
     cro::Entity m_thumbnailCamera;
 
-    bool m_editSkybox;
+    bool m_editSkybox; //TODO remove this
 
     void addSystems();
     void loadAssets();
