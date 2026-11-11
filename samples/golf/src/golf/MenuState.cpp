@@ -4477,6 +4477,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 #ifdef NEW_LOBBY
                         m_lobbyMenu.m_courseDetails.title = data->title;
                         m_lobbyMenu.m_courseDetails.desc = data->description;
+                        m_lobbyMenu.m_courseDetails.courseNumber = data->courseNumber;
                         m_lobbyMenu.m_courseDetails.holeCount = data->holeCount[m_sharedData.holeCount];
                         m_lobbyDirty = true;
 #endif

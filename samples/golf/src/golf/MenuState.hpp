@@ -528,6 +528,7 @@ private:
             cro::String title;
             cro::String desc;
             cro::String holeCount;
+            std::int32_t courseNumber = 1; //literal number, not index
         }m_courseDetails;
         //hmm do we want a func to set this or rely on the menu state to do it properly?
 

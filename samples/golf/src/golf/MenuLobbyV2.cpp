@@ -2510,7 +2510,8 @@ void MenuState::LobbyMenu::updateCourseTab(bool resized)
     m_detailTextures[TabID::Course].clear(CD32::Colours[CD32::GreyDark]);
     
     //render course title
-    m_uiText.setString(m_courseDetails.title);
+    const cro::String title = "Course " + std::to_string(m_courseDetails.courseNumber) + ": ";
+    m_uiText.setString(title + m_courseDetails.title);
     m_uiText.setPosition({ texSize.x / 2.f, texSize.y - 12.f });
     m_uiText.draw();
 

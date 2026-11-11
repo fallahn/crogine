@@ -350,7 +350,7 @@ ProfileTexture::ProfileTexture(const AvatarInfo& info)
 
         for (auto i = 0u; i < length; i += stride)
         {
-            auto alpha = pixels[i + (stride - 1)];
+            const auto alpha = pixels[i + (stride - 1)];
 
             switch (pixels[i])
             {
@@ -399,15 +399,18 @@ void ProfileTexture::setColour(pc::ColourKey::Index idx, std::int8_t cIdx)
 
     const auto imgWidth = m_imageBuffer->getSize().x;
     //cache the colour and only update if it changed.
-    if ( m_colours[idx] != pc::Palette[cIdx])
+    if (m_colours[idx] != pc::Palette[cIdx])
     {
-        for (auto i : m_keyIndices[idx])
+        if (m_allowColourSwap)
         {
-            //set the colour in the image at this index
-            auto x = i % imgWidth;
-            auto y = i / imgWidth;
+            for (const auto i : m_keyIndices[idx])
+            {
+                //set the colour in the image at this index
+                const auto x = i % imgWidth;
+                const auto y = i / imgWidth;
 
-            m_imageBuffer->setPixel(x, y, pc::Palette[cIdx]);
+                m_imageBuffer->setPixel(x, y, pc::Palette[cIdx]);
+            }
         }
         m_colours[idx] = pc::Palette[cIdx];
     }
@@ -420,11 +423,6 @@ const cro::Colour& ProfileTexture::getColour(pc::ColourKey::Index idx) const
 
 void ProfileTexture::apply(cro::Texture* dst)
 {
-    if (!m_allowColourSwap)
-    {
-        return;
-    }
-
     if (dst)
     {
         dst->loadFromImage(*m_imageBuffer);
