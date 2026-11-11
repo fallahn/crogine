@@ -381,6 +381,13 @@ void BushState::loadAssets()
 
     m_skyScene.enableSkybox();
     m_skyScene.setSkyboxColours(SkyBottom, m_skyMid, m_skyTop);
+
+
+    m_collisionDefs[CollisionObject::Sphere] = std::make_unique<cro::ModelDefinition>(m_resources);
+    m_collisionDefs[CollisionObject::Sphere]->loadFromFile("assets/models/debug_sphere_wireframe.cmt");
+
+    m_collisionDefs[CollisionObject::Cylinder] = std::make_unique<cro::ModelDefinition>(m_resources);
+    m_collisionDefs[CollisionObject::Cylinder]->loadFromFile("assets/models/debug_cylinder_wireframe.cmt");
 }
 
 void BushState::createScene()

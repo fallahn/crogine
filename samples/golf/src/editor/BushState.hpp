@@ -140,22 +140,8 @@ private:
     cro::Colour m_skyMid;
     cro::Colour m_skyTop;
 
-    //----collision data----
 
-    struct CollisionObject final
-    {
-        enum
-        {
-            Sphere, Cyclinder
-        }type = Sphere;
-        float radius = 0.f;
-        float halfLength = 0.f;
-        cro::Entity preview;
-    };
-    std::vector<CollisionObject> m_collisionObjects;
-    std::size_t m_selectedCollisionObject;
-
-    //-----windowing----
+    //----scene rendering-----
 
     struct WindowIndex final
     {
@@ -182,8 +168,42 @@ private:
     //assigned to camera resize callback
     void updateView(cro::Camera&);
 
+
+    //----collision data----
+
+
+    //internal note - bullet defines cylinder via a vec 3 (radius, halfHeight, radius)
+    struct CollisionObject final
+    {
+        enum
+        {
+            Sphere, Cylinder,
+
+            TypeCount
+        };
+        std::uint32_t type = Sphere;
+        /*float radius = 1.f; //TODO - do we ned these as they are inferred from the preview transform
+        float halfLength = 1.f;*/
+        cro::Entity preview;
+    };
+    std::vector<CollisionObject> m_collisionObjects;
+    std::size_t m_selectedCollisionObject;
+
+    std::array<std::unique_ptr<cro::ModelDefinition>, CollisionObject::TypeCount> m_collisionDefs = {};
+
+
+    //-----windowing----
     void registerWindows();
     void drawUI();
+
+    void loadModel(const std::filesystem::path&);
+    void loadPreset(const std::filesystem::path&);
+    void savePreset(const std::filesystem::path&);
+    void loadSkyboxFile();
+    void saveSkyboxFile();
+    void addSkyboxModel();
+
+    void createThumbnails();
 
     struct UIWindow final
     {
@@ -218,23 +238,20 @@ private:
     ImGui::FileBrowser m_saveFileBrowser;
     std::array<std::filesystem::path, SaveDialogueState::None> m_saveFilePaths = {};
 
+
+    //BushStateWndows.cpp
     void drawMenuBar(bool*);
     void drawProperties(bool*);
     void drawBillboard(bool*);
     void drawThumbnail(bool*);
     void drawSkyboxEditor(bool*);
 
+    void selectCollisionObject(std::size_t);
+
+    void showModelOpenDialogue();
+    void showPresetOpenDialogue();
     void handleFileDialogues();
 
     void loadWindowStates();
     void saveWindowStates();
-
-    void loadModel(const std::filesystem::path&);
-    void loadPreset(const std::filesystem::path&);
-    void savePreset(const std::filesystem::path&);
-    void loadSkyboxFile();
-    void saveSkyboxFile();
-    void addSkyboxModel();
-
-    void createThumbnails();
 };

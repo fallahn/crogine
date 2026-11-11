@@ -30,6 +30,10 @@ source distribution.
 #pragma once
 
 #include <crogine/detail/glm/vec2.hpp>
+#include <crogine/graphics/Colour.hpp>
+
+static constexpr std::size_t MaxCollisionObjects = 10;
+static constexpr cro::Colour CollisionHighlightColour = cro::Colour(1.f, 0.5f, 0.f, 1.f);
 
 //we'll assume 64px per metre
 static constexpr float PixelsPerMetre = 64.f;

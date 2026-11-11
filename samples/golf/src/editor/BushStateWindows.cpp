@@ -48,28 +48,11 @@ void BushState::drawMenuBar(bool*)
         {
             if (ImGui::MenuItem("Load Model"))
             {
-                //track path of last opened model
-                if (!m_openFilePaths[OpenDialogueState::Model].empty())
-                {
-                    m_openFileBrowser.SetPwd(m_openFilePaths[OpenDialogueState::Model]);
-                }
-                m_openFileBrowser.SetTypeFilters({".cmt"});
-                m_openFileBrowser.SetTitle("Load Model");
-
-                m_openFileBrowser.Open();
-                m_openDialogueState = OpenDialogueState::Model;
+                showModelOpenDialogue();
             }
             if (ImGui::MenuItem("Open Preset"))
             {
-                if (!m_openFilePaths[OpenDialogueState::Treeset].empty())
-                {
-                    m_openFileBrowser.SetPwd(m_openFilePaths[OpenDialogueState::Treeset]);
-                }
-                m_openFileBrowser.SetTypeFilters({ ".tst" });
-                m_openFileBrowser.SetTitle("Open Preset");
-
-                m_openFileBrowser.Open();
-                m_openDialogueState = OpenDialogueState::Treeset;
+                showPresetOpenDialogue();
             }
             if (ImGui::MenuItem("Save Preset"))
             {
@@ -121,7 +104,7 @@ void BushState::drawMenuBar(bool*)
 void BushState::drawProperties(bool*)
 {
     const glm::vec2 WindowSize = cro::App::getWindow().getSize();
-    static constexpr float PanelWidth = 344.f;
+    static constexpr float PanelWidth = 364.f;
     const float PanelHeight = WindowSize.y - MenuBarHeight;
 
     ImGui::SetNextWindowSize({ PanelWidth, PanelHeight });
@@ -129,115 +112,90 @@ void BushState::drawProperties(bool*)
     if (ImGui::Begin("Properties", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration))
     {
         ImGui::BeginChild("##properties");
-        ImGui::Text("Properties");
-        if (ImGui::SliderFloat("Leaf Size", &m_treeset.leafSize, 0.01f, 1.f))
-        {
-            glUseProgram(m_shaderUniform.shaderID);
-            glUniform1f(m_shaderUniform.size, m_treeset.leafSize);
-        }
-
-        if (ImGui::SliderFloat("Randomness", &m_treeset.randomAmount, 0.f, 1.f))
-        {
-            glUseProgram(m_shaderUniform.shaderID);
-            glUniform1f(m_shaderUniform.randomness, m_treeset.randomAmount);
-        }
-
-        if (ImGui::SliderFloat("Scale", &m_treeset.scale, MinModelScale, 3.f))
-        {
-            m_treeset.scale = std::max(MinModelScale, m_treeset.scale);
-            for (auto e : m_models)
-            {
-                if (e.isValid())
-                {
-                    e.getComponent<cro::Transform>().setScale(glm::vec3(m_treeset.scale));
-                }
-            }
-        }
-
-        if (ImGui::SliderFloat("Colour Rotation", &m_treeset.colourRotation, 0.f, 1.f))
-        {
-            glUseProgram(m_shaderUniform.shaderID);
-            glUniform1f(m_shaderUniform.colourRotation, m_treeset.colourRotation);
-        }
-
-        if (ImGui::ColorEdit3("Colour", &m_treeset.colour[0]))
-        {
-            glUseProgram(m_shaderUniform.shaderID);
-            glUniform3f(m_shaderUniform.colour, m_treeset.colour.r, m_treeset.colour.g, m_treeset.colour.b);
-        }
-
-        if (ImGui::Button("Load Palette"))
-        {
-            auto path = cro::FileSystem::openFileDialogue("", "ase");
-            if (!path.empty())
-            {
-                m_palette.loadFromFile(path);
-            }
-        }
-        auto i = 0;
-        for (const auto& swatch : m_palette.getSwatches())
-        {
-            for (const auto& colour : swatch.colours)
-            {
-                ImVec4 c(colour.colour.getVec4());
-                std::string label = colour.name.toAnsiString() + "##" + std::to_string(i);
-                if (ImGui::ColorButton(label.c_str(), c))
-                {
-                    m_treeset.colour = { c.x, c.y, c.z };
-                    glUseProgram(m_shaderUniform.shaderID);
-                    glUniform3f(m_shaderUniform.colour, c.x, c.y, c.z);
-                }
-
-                if ((i++ % 12) != 11)
-                {
-                    ImGui::SameLine();
-                }
-            }
-        }
-        ImGui::NewLine();
-        ImGui::Separator();
-        ImGui::SliderFloat("Wind Strength", &m_windData.direction[1], 0.1f, 1.f);
-        if (ImGui::SliderFloat("Wind Direction", &m_windRotation, 0.f, cro::Util::Const::PI))
-        {
-            auto dir = glm::rotate(glm::quat(0.f, 0.f, 0.f, 1.f), m_windRotation, cro::Transform::Y_AXIS) * glm::vec3(-1.f, 0.f, 0.f);
-            m_windData.direction[0] = dir.x;
-            m_windData.direction[2] = dir.z;
-        }
-
-        if (ImGui::Button("Load Texture"))
-        {
-            auto path = cro::FileSystem::openFileDialogue("", "png");
-            if (!path.empty())
-            {
-                m_leafTexture->loadFromFile(path);
-                m_treeset.texturePath = U8PATH_CAST(cro::FileSystem::getFileName(path));
-            }
-        }
-        ImGui::SameLine();
-        ImGui::Image(*m_leafTexture, { 32.f, 32.f }, { 0.f, 0.f }, { 1.f, 1.f });
-
-
-        ImGui::NewLine();
         if (m_models[0].isValid())
         {
-            ImGui::Text("Preview");
-            if (ImGui::SliderFloat("Rotation", &m_rotation, 0.f, cro::Util::Const::TAU))
+            ImGui::Text("Properties");
+            if (ImGui::SliderFloat("Leaf Size", &m_treeset.leafSize, 0.01f, 1.f))
             {
-                for (auto model : m_models)
+                glUseProgram(m_shaderUniform.shaderID);
+                glUniform1f(m_shaderUniform.size, m_treeset.leafSize);
+            }
+
+            if (ImGui::SliderFloat("Randomness", &m_treeset.randomAmount, 0.f, 1.f))
+            {
+                glUseProgram(m_shaderUniform.shaderID);
+                glUniform1f(m_shaderUniform.randomness, m_treeset.randomAmount);
+            }
+
+            if (ImGui::SliderFloat("Scale", &m_treeset.scale, MinModelScale, 3.f))
+            {
+                m_treeset.scale = std::max(MinModelScale, m_treeset.scale);
+                for (auto e : m_models)
                 {
-                    model.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_rotation);
+                    if (e.isValid())
+                    {
+                        e.getComponent<cro::Transform>().setScale(glm::vec3(m_treeset.scale));
+                    }
                 }
             }
 
-            static bool showInstanced = false;
-            if (ImGui::Checkbox("Instanced", &showInstanced))
+            if (ImGui::SliderFloat("Colour Rotation", &m_treeset.colourRotation, 0.f, 1.f))
             {
-                m_models[1].getComponent<cro::Model>().setHidden(showInstanced);
-                m_models[2].getComponent<cro::Model>().setHidden(!showInstanced);
+                glUseProgram(m_shaderUniform.shaderID);
+                glUniform1f(m_shaderUniform.colourRotation, m_treeset.colourRotation);
+            }
+
+            if (ImGui::ColorEdit3("Colour", &m_treeset.colour[0]))
+            {
+                glUseProgram(m_shaderUniform.shaderID);
+                glUniform3f(m_shaderUniform.colour, m_treeset.colour.r, m_treeset.colour.g, m_treeset.colour.b);
             }
 
             ImGui::NewLine();
-            ImGui::Text("Materials");
+            if (ImGui::Button("Load Palette"))
+            {
+                auto path = cro::FileSystem::openFileDialogue("", "ase");
+                if (!path.empty())
+                {
+                    m_palette.loadFromFile(path);
+                }
+            }
+            auto i = 0;
+            for (const auto& swatch : m_palette.getSwatches())
+            {
+                for (const auto& colour : swatch.colours)
+                {
+                    ImVec4 c(colour.colour.getVec4());
+                    std::string label = colour.name.toAnsiString() + "##" + std::to_string(i);
+                    if (ImGui::ColorButton(label.c_str(), c))
+                    {
+                        m_treeset.colour = { c.x, c.y, c.z };
+                        glUseProgram(m_shaderUniform.shaderID);
+                        glUniform3f(m_shaderUniform.colour, c.x, c.y, c.z);
+                    }
+
+                    if ((i++ % 12) != 11)
+                    {
+                        ImGui::SameLine();
+                    }
+                }
+            }
+            ImGui::NewLine();
+            ImGui::NewLine();
+            if (ImGui::Button("Load Texture"))
+            {
+                auto path = cro::FileSystem::openFileDialogue("", "png");
+                if (!path.empty())
+                {
+                    m_leafTexture->loadFromFile(path);
+                    m_treeset.texturePath = U8PATH_CAST(cro::FileSystem::getFileName(path));
+                }
+            }
+            ImGui::SameLine();
+            ImGui::Image(*m_leafTexture, { 32.f, 32.f }, { 0.f, 0.f }, { 1.f, 1.f });
+
+            ImGui::NewLine();
+            ImGui::SeparatorText("Materials");
             for (i = 0u; i < m_materials.size(); ++i)
             {
                 auto label = "Material##" + std::to_string(i);
@@ -254,23 +212,190 @@ void BushState::drawProperties(bool*)
                 }
             }
 
+
+
             ImGui::NewLine();
-            ImGui::Text("Collision");
+            ImGui::SeparatorText("Preview");
+            ImGui::SliderFloat("Wind Strength", &m_windData.direction[1], 0.1f, 1.f);
+            if (ImGui::SliderFloat("Wind Direction", &m_windRotation, 0.f, cro::Util::Const::PI))
+            {
+                auto dir = glm::rotate(glm::quat(0.f, 0.f, 0.f, 1.f), m_windRotation, cro::Transform::Y_AXIS) * glm::vec3(-1.f, 0.f, 0.f);
+                m_windData.direction[0] = dir.x;
+                m_windData.direction[2] = dir.z;
+            }
+
+            if (ImGui::SliderFloat("Rotation", &m_rotation, 0.f, cro::Util::Const::TAU))
+            {
+                for (auto model : m_models)
+                {
+                    model.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_rotation);
+                }
+            }
+
+            static bool showInstanced = false;
+            if (ImGui::Checkbox("Instanced", &showInstanced))
+            {
+                m_models[1].getComponent<cro::Model>().setHidden(showInstanced);
+                m_models[2].getComponent<cro::Model>().setHidden(!showInstanced);
+            }
+            if (showInstanced)
+            {
+                ImGui::PushStyleColor(ImGuiCol_Text, { 1.f, 0.f, 0.f, 1.f });
+                ImGui::TextWrapped("%s", "Collision object preview is not available in instanced view.");
+                ImGui::PopStyleColor();
+            }
+
+
+            ImGui::NewLine();
+            ImGui::SeparatorText("Collision");
             if (ImGui::Button("Add##col"))
             {
-                //TODO show add modal / add select the default collision object
+                if (m_collisionObjects.size() < MaxCollisionObjects)
+                {
+                    m_selectedCollisionObject = m_collisionObjects.size();
+                    auto& obj = m_collisionObjects.emplace_back();
+                    obj.preview = m_gameScene.createEntity();
+                    obj.preview.addComponent<cro::Transform>();
+                    m_collisionDefs[CollisionObject::Sphere]->createModel(obj.preview);
+                    m_models[1].getComponent<cro::Transform>().addChild(obj.preview.getComponent<cro::Transform>());
+
+                    obj.preview.addComponent<cro::Callback>().active = true;
+                    obj.preview.getComponent<cro::Callback>().function =
+                        [this](cro::Entity e, float)
+                        {
+                            e.getComponent<cro::Model>().setHidden(m_models[1].getComponent<cro::Model>().isHidden());
+                        };
+
+                    selectCollisionObject(m_selectedCollisionObject);
+                }
+                else
+                {
+                    //TODO show modal saying we reached max objects
+                }
             }
             if (!m_collisionObjects.empty())
             {
                 ImGui::SameLine();
                 if (ImGui::Button("Remove##col"))
                 {
-                    //TODO remove selected
+                    //remove selected
+                    m_gameScene.destroyEntity(m_collisionObjects[m_selectedCollisionObject].preview);
+                    m_collisionObjects.erase(m_collisionObjects.begin() + m_selectedCollisionObject);
+
+                    m_selectedCollisionObject = m_collisionObjects.empty() ? 0 : std::min(m_selectedCollisionObject, m_collisionObjects.size() - 1);
+                    selectCollisionObject(m_selectedCollisionObject);
                 }
 
-                //TODO draw listbox
+                //we have to check this again because we may have removed all the objects with the above button
+                if (!m_collisionObjects.empty())
+                {
+                    //draw listbox
+                    static const std::array<std::string, CollisionObject::TypeCount> Labels =
+                    {
+                        "Sphere", "Cylinder"
+                    };
+                    ImGui::BeginListBox("Objects");
+                    for (auto i = 0u; i < m_collisionObjects.size(); ++i)
+                    {
+                        const std::string label = Labels[m_collisionObjects[i].type] + "##" + std::to_string(i);
+                        if (ImGui::Selectable(label.c_str(), i == m_selectedCollisionObject))
+                        {
+                            selectCollisionObject(i);
+                        }
+                    }
+                    ImGui::EndListBox();
 
-                //TODO draw properties of selected collision object
+                    //draw properties of selected collision object
+                    if (ImGui::BeginCombo("##type", Labels[m_collisionObjects[m_selectedCollisionObject].type].c_str()))
+                    {
+                        for (auto i = 0u; i < Labels.size(); ++i)
+                        {
+                            if (ImGui::Selectable(Labels[i].c_str(), i == m_collisionObjects[m_selectedCollisionObject].type))
+                            {
+                                m_collisionObjects[m_selectedCollisionObject].type = i;
+
+                                auto ent = m_collisionObjects[m_selectedCollisionObject].preview;
+                                auto tx = ent.getComponent<cro::Transform>().getLocalTransform();
+
+                                m_gameScene.destroyEntity(ent);
+                                
+                                ent = m_gameScene.createEntity();
+                                ent.addComponent<cro::Transform>().setLocalTransform(tx);
+                                m_collisionDefs[i]->createModel(ent);
+                                ent.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", CollisionHighlightColour);
+                                m_models[1].getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+                                m_collisionObjects[m_selectedCollisionObject].preview = ent;
+
+                                //TODO ideally we want to keep a separate radius property for cylinders somewhere
+                                auto scale = ent.getComponent<cro::Transform>().getScale();
+                                scale.y = scale.x;
+                                ent.getComponent<cro::Transform>().setScale(scale);
+
+                                //make sureto update the selection highlight
+                                selectCollisionObject(m_selectedCollisionObject);
+                            }
+                        }
+                        ImGui::EndCombo();
+                    }
+
+                    static constexpr float MaxPos = 6.f;
+                    auto& tx = m_collisionObjects[m_selectedCollisionObject].preview.getComponent<cro::Transform>();
+
+                    auto pos = tx.getPosition();
+                    ImGui::Text("Position");
+                    if (ImGui::SliderFloat3("##Position", &pos[0], -MaxPos, MaxPos))
+                    {
+                        pos.x = std::clamp(pos.x, -MaxPos, MaxPos);
+                        pos.y = std::clamp(pos.y, -MaxPos, MaxPos);
+                        pos.z = std::clamp(pos.z, -MaxPos, MaxPos);
+                        tx.setPosition(pos);
+                    }
+                    ImGui::NewLine();
+
+                    //scale X sets the radius, Y the half height
+                    static constexpr float MaxRadius = 3.f;
+                    static constexpr float MaxHeight = 3.5f;
+                    auto scale = tx.getScale();
+                    if (m_collisionObjects[m_selectedCollisionObject].type == CollisionObject::Sphere)
+                    {
+                        ImGui::Text("Radius");
+                        if (ImGui::SliderFloat("##Radius", &scale[0], 0.1f, MaxRadius))
+                        {
+                            scale.x = std::clamp(scale.x, 0.1f, MaxRadius);
+                            scale.z = scale.y = scale.x;
+                            tx.setScale(scale);
+                        }
+                    }
+                    else
+                    {
+                        ImGui::Text("Radius");
+                        if (ImGui::SliderFloat("##Radius", &scale[0], 0.1f, MaxRadius))
+                        {
+                            scale.x = std::clamp(scale.x, 0.1f, MaxRadius);
+                            scale.z = scale.x;
+                            tx.setScale(scale);
+                        }
+                        ImGui::NewLine();
+                        ImGui::Text("Height");
+                        if (ImGui::SliderFloat("##Height", &scale[1], 0.1f, MaxHeight))
+                        {
+                            scale.y = std::clamp(scale.y, 0.1f, MaxHeight);
+                            tx.setScale(scale);
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (ImGui::Button("Load Model"))
+            {
+                showModelOpenDialogue();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Open Preset"))
+            {
+                showPresetOpenDialogue();
             }
         }
         ImGui::EndChild();
@@ -421,6 +546,48 @@ void BushState::drawSkyboxEditor(bool* visible)
         }
     }
     ImGui::End();
+}
+
+void BushState::selectCollisionObject(std::size_t idx)
+{
+    idx = std::min(idx, m_collisionObjects.size() - 1);
+    m_selectedCollisionObject = idx;
+
+    if (!m_collisionObjects.empty())
+    {
+        for (auto& o : m_collisionObjects)
+        {
+            o.preview.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::White);
+        }
+        m_collisionObjects[idx].preview.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", CollisionHighlightColour);
+    }
+}
+
+void BushState::showModelOpenDialogue()
+{
+    //track path of last opened model
+    if (!m_openFilePaths[OpenDialogueState::Model].empty())
+    {
+        m_openFileBrowser.SetPwd(m_openFilePaths[OpenDialogueState::Model]);
+    }
+    m_openFileBrowser.SetTypeFilters({ ".cmt" });
+    m_openFileBrowser.SetTitle("Load Model");
+
+    m_openFileBrowser.Open();
+    m_openDialogueState = OpenDialogueState::Model;
+}
+
+void BushState::showPresetOpenDialogue()
+{
+    if (!m_openFilePaths[OpenDialogueState::Treeset].empty())
+    {
+        m_openFileBrowser.SetPwd(m_openFilePaths[OpenDialogueState::Treeset]);
+    }
+    m_openFileBrowser.SetTypeFilters({ ".tst" });
+    m_openFileBrowser.SetTitle("Open Preset");
+
+    m_openFileBrowser.Open();
+    m_openDialogueState = OpenDialogueState::Treeset;
 }
 
 void BushState::handleFileDialogues()
