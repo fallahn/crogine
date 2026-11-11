@@ -831,6 +831,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
     WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Main Menu" }));
     Social::setGroup(0); //hmm should we only do this if we're not connected?
+    m_textChat.setBackgroundAlpha(0.7f);
 
     //registerWindow([&]()
     //    {
@@ -1569,7 +1570,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 break;
             case cro::GameController::ButtonTrackpad:
                 //just shows chat history
-                m_textChat.toggleWindow(false, false, false);
+                //m_textChat.toggleWindow(false, false, false);
+                m_textChat.printToScreen(cro::String("Swipe Up To Chat") + std::uint32_t(0x2B06), CD32::Colours[CD32::BlueLight]);
+                playMessageSound();
                 break;
             case cro::GameController::ButtonRightStick:
                 if (cro::GameController::controllerID(evt.gbutton.which) == 0)

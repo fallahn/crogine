@@ -240,6 +240,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     m_drawWindow            (false),
     m_animDir               (0),
     m_animationProgress     (0.f),
+    m_bgAlpha               (0.45f),
     m_screenChatIndex       (0),
     m_screenChatActiveCount (0),
     m_showShortcuts         (false)
@@ -662,8 +663,8 @@ void TextChat::printToScreen(cro::String outStr, cro::Colour chatColour, std::ui
     bounds.width = std::round(bounds.width + (5.f * viewScale));
     bounds.height = std::floor(bounds.height + (4.f * viewScale));
 
-    static constexpr float BgAlpha = 0.45f;
-    const cro::Colour c(0.f, 0.f, 0.f, BgAlpha);
+    //static constexpr float BgAlpha = 0.45f;
+    const cro::Colour c(0.f, 0.f, 0.f, m_bgAlpha);
 
     auto bgEnt = m_scene.createEntity();
     bgEnt.addComponent<cro::Transform>().setPosition({ -2.f * viewScale, -2.f * viewScale, -0.15f });
@@ -694,7 +695,7 @@ void TextChat::printToScreen(cro::String outStr, cro::Colour chatColour, std::ui
         c.setAlpha(alpha);
         e.getComponent<cro::Text>().setShadowColour(c);
 
-        c = cro::Colour(0.f, 0.f, 0.f, BgAlpha * alpha);
+        c = cro::Colour(0.f, 0.f, 0.f, m_bgAlpha * alpha);
         auto& verts = bgEnt.getComponent<cro::Drawable2D>().getVertexData();
         for (auto& v : verts)
         {

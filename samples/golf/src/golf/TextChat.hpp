@@ -72,6 +72,8 @@ public:
 
     void initLog();
 
+    void setBackgroundAlpha(float a) { m_bgAlpha = std::clamp(a, 0.f, 1.f); }
+
 private:
 
     std::ofstream m_logFile;
@@ -84,6 +86,8 @@ private:
     bool m_drawWindow;
     std::int32_t m_animDir; //1 in 0 out
     float m_animationProgress;
+
+    float m_bgAlpha;
 
     struct BufferLine final
     {
