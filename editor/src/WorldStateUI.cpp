@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2025
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -470,7 +470,7 @@ void WorldState::drawInfo()
 void WorldState::drawGizmo()
 {
     ImGuiIO& io = ImGui::GetIO();
-    ImGuizmo::SetRect(io.DisplaySize.x * uiConst::InspectorWidth, 0, io.DisplaySize.x - (uiConst::InspectorWidth * io.DisplaySize.x),
+    ImGuizmo::SetRect(io.DisplaySize.x * uiConst::InspectorWidth, 0.f, io.DisplaySize.x - (uiConst::InspectorWidth * io.DisplaySize.x),
         io.DisplaySize.y - (uiConst::BrowserHeight * io.DisplaySize.y));
 
     auto [pos, size] = WindowLayouts[WindowID::ViewGizmo];

@@ -247,6 +247,9 @@ private:
     void drawSkyboxEditor(bool*);
 
     void selectCollisionObject(std::size_t);
+    void drawCollisionManipulator();
+    void drawViewMainpulator();
+
 
     void showModelOpenDialogue();
     void showPresetOpenDialogue();

@@ -542,6 +542,13 @@ void BushState::drawUI()
             window.draw(&window.visible);
         }
     }
+
+
+    ImGuiIO& io = ImGui::GetIO();
+    ImGuizmo::SetRect(0.f, 0.f, io.DisplaySize.x, io.DisplaySize.y);
+
+    drawCollisionManipulator();
+    drawViewMainpulator();
 }
 
 void BushState::loadModel(const std::filesystem::path& path)

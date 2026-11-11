@@ -30,6 +30,7 @@ source distribution.
 #include "BushState.hpp"
 #include "BushStateConsts.hpp"
 
+#include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
@@ -562,6 +563,29 @@ void BushState::selectCollisionObject(std::size_t idx)
         }
         m_collisionObjects[idx].preview.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", CollisionHighlightColour);
     }
+}
+
+void BushState::drawCollisionManipulator()
+{
+    if (!m_collisionObjects.empty())
+    {
+        //TODO select the operation mode
+        //TODO clamp translation and scale (see consts in window drawing)
+        //TODO gizmo doesn't account for the fact that the objects are parented to the tree model...
+        auto selectedEnt = m_collisionObjects[m_selectedCollisionObject].preview;
+
+        const auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+        auto tx = selectedEnt.getComponent<cro::Transform>().getLocalTransform();
+        ImGuizmo::Manipulate(&cam.getActivePass().viewMatrix[0][0], &cam.getProjectionMatrix()[0][0], ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::WORLD, &tx[0][0]);
+        selectedEnt.getComponent<cro::Transform>().setLocalTransform(tx);
+    }
+}
+
+void BushState::drawViewMainpulator()
+{
+    //auto tx = glm::inverse(m_entities[EntityID::ArcBall].getComponent<cro::Transform>().getLocalTransform());
+    //ImGuizmo::ViewManipulate(&tx[0][0], 10.f, ImVec2(pos.x, pos.y), ImVec2(size.x, size.y), 0/*x10101010*/);
+    //m_entities[EntityID::ArcBall].getComponent<cro::Transform>().setRotation(glm::inverse(tx));
 }
 
 void BushState::showModelOpenDialogue()
