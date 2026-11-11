@@ -86,6 +86,7 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context, const 
     m_skyMid                    (cro::Colour::White),
     m_skyTop                    (cro::Colour::CornflowerBlue),
     m_selectedCollisionObject   (0),
+    m_gizmoMode                 (ImGuizmo::OPERATION::TRANSLATE),
     m_openDialogueState         (OpenDialogueState::None),
     m_openFileBrowser           (ImGuiFileBrowserFlags_CloseOnEsc),
     m_saveDialogueState         (SaveDialogueState::None),
@@ -146,6 +147,20 @@ bool BushState::handleEvent(const cro::Event& evt)
                 }
             };
         }
+            break;
+        }
+
+        switch (evt.key.scancode)
+        {
+        default: break;
+        case SDL_SCANCODE_G:
+            m_gizmoMode = ImGuizmo::OPERATION::TRANSLATE;
+            break;
+        case SDL_SCANCODE_S:
+            m_gizmoMode = ImGuizmo::OPERATION::SCALE;
+            break;
+        case SDL_SCANCODE_R:
+            m_gizmoMode = ImGuizmo::OPERATION::ROTATE;
             break;
         }
     }

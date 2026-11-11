@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -246,6 +246,12 @@ namespace cro
         This is the local transform multiplied by all parenting transforms
         */
         glm::mat4 getWorldTransform() const;
+
+        /*!
+        \brief Returns the world transform of the parent hierarchy, if there is one.
+        If this Transform has no parent then this returns an identity matrix
+        */
+        glm::mat4 getParentTransform() const;
 
         /*!
         \brief Returns the forward vector of this transform

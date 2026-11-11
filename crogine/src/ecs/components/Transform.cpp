@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -497,6 +497,16 @@ glm::mat4 Transform::getWorldTransform() const
         return m_parent->getWorldTransform() * getLocalTransform();
     }
     return getLocalTransform();
+}
+
+glm::mat4 Transform::getParentTransform() const
+{
+    if (m_parent)
+    {
+        return m_parent->getWorldTransform();
+    }
+
+    return glm::mat4(1.f);
 }
 
 glm::vec3 Transform::getForwardVector() const

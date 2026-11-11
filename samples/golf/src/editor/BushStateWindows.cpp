@@ -569,15 +569,13 @@ void BushState::drawCollisionManipulator()
 {
     if (!m_collisionObjects.empty())
     {
-        //TODO select the operation mode
         //TODO clamp translation and scale (see consts in window drawing)
-        //TODO gizmo doesn't account for the fact that the objects are parented to the tree model...
         auto selectedEnt = m_collisionObjects[m_selectedCollisionObject].preview;
 
         const auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
-        auto tx = selectedEnt.getComponent<cro::Transform>().getLocalTransform();
-        ImGuizmo::Manipulate(&cam.getActivePass().viewMatrix[0][0], &cam.getProjectionMatrix()[0][0], ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::WORLD, &tx[0][0]);
-        selectedEnt.getComponent<cro::Transform>().setLocalTransform(tx);
+        auto tx = selectedEnt.getComponent<cro::Transform>().getWorldTransform();
+        ImGuizmo::Manipulate(&cam.getActivePass().viewMatrix[0][0], &cam.getProjectionMatrix()[0][0], m_gizmoMode, ImGuizmo::MODE::LOCAL, &tx[0][0]);
+        selectedEnt.getComponent<cro::Transform>().setLocalTransform(cro::Util::Matrix::getRelativeTransform(selectedEnt.getComponent<cro::Transform>().getParentTransform(), tx));
     }
 }
 

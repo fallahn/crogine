@@ -190,7 +190,7 @@ private:
     std::size_t m_selectedCollisionObject;
 
     std::array<std::unique_ptr<cro::ModelDefinition>, CollisionObject::TypeCount> m_collisionDefs = {};
-
+    ImGuizmo::OPERATION m_gizmoMode;
 
     //-----windowing----
     void registerWindows();

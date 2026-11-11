@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -102,6 +102,16 @@ namespace cro
                 auto c = projMat[2][2];
                 auto d = projMat[3][2];
                 return { (d / (c - 1.f)), (d / (c + 1.f)) };
+            }
+
+            /*!
+            \brief Returns a matrix containing the relative transform of one matrix to another.
+            EG a matrix representing a translation of 10,10,10 relative to 3,2,6 will return a
+            matrix with a translation of 7,8,4
+            */
+            static inline glm::mat4 getRelativeTransform(const glm::mat4& relativeTo, const glm::mat4& matrix)
+            {
+                return glm::inverse(relativeTo) * matrix;
             }
         }
     }
