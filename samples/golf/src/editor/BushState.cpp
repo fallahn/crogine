@@ -643,7 +643,6 @@ void BushState::loadPreset(const std::filesystem::path& path)
         std::vector<std::uint32_t> branchIndices;
         std::vector<std::uint32_t> leafIndices;
 
-        std::vector<CollisionObject> collisionObjects;
 
         const auto& props = cfg.getProperties();
         for (const auto& p : props)
@@ -695,16 +694,79 @@ void BushState::loadPreset(const std::filesystem::path& path)
         loadModel(workingDir / m_treeset.modelPath);
         m_leafTexture->loadFromFile(workingDir / m_treeset.texturePath);
 
-        LogI << FILE_LINE << " parse collision objects here" << std::endl;
-
-        if (!collisionObjects.empty())
+        if (m_models[1].isValid())
         {
-            collisionObjects.swap(m_collisionObjects);
-        }
+            std::vector<CollisionObject> collisionObjects;
+            const auto& objs = cfg.getObjects();
+            for (const auto& obj : objs)
+            {
+                if (obj.getName() == "collision")
+                {
+                    auto& collisionObj = collisionObjects.emplace_back();
+                    collisionObj.preview = m_gameScene.createEntity();
+                    auto& tx = collisionObj.preview.addComponent<cro::Transform>();
 
-        for (auto& o : m_collisionObjects)
-        {
-            LogI << FILE_LINE << " create collision preview here" << std::endl;
+                    const auto& colProps = obj.getProperties();
+                    for (const auto& p : colProps)
+                    {
+                        const auto& name = p.getName();
+                        if (name == "type")
+                        {
+                            collisionObj.type = std::clamp(p.getValue<std::int32_t>(), 0, CollisionObject::TypeCount - 1);
+                        }
+                        else if (name == "position")
+                        {
+                            tx.setPosition(p.getValue<glm::vec3>());
+                        }
+                        else if (name == "radius")
+                        {
+                            auto scale = tx.getScale();
+                            scale.x = scale.z = p.getValue<float>();
+                            tx.setScale(scale);
+                        }
+                        else if (name == "height")
+                        {
+                            auto scale = tx.getScale();
+                            scale.y = p.getValue<float>();
+                            tx.setScale(scale);
+                        }
+                        else if (name == "rotation")
+                        {
+                            const auto r = p.getValue<glm::vec4>();
+                            glm::quat q = glm::quat();
+
+                            //to this day I still can't say for sure whether
+                            //the W component is first or last, so we'll assign
+                            //component wise just to be sure.
+                            q.x = r.x;
+                            q.y = r.y;
+                            q.z = r.z;
+                            q.w = r.w;
+
+                            tx.setRotation(q);
+                        }
+                    }
+
+                    if (collisionObj.type == CollisionObject::Sphere)
+                    {
+                        auto scale = tx.getScale();
+                        scale.y = scale.x;
+                        tx.setScale(scale);
+                    }
+                }
+            }
+
+            if (!collisionObjects.empty())
+            {
+                collisionObjects.swap(m_collisionObjects);
+            }
+
+            for (auto& o : m_collisionObjects)
+            {
+                m_collisionDefs[o.type]->createModel(o.preview);
+                m_models[1].getComponent<cro::Transform>().addChild(o.preview.getComponent<cro::Transform>());
+            }
+            selectCollisionObject(0);
         }
 
         //look at material slots and apply correct material to submesh
@@ -742,7 +804,7 @@ void BushState::loadPreset(const std::filesystem::path& path)
         glUniform3f(m_shaderUniform.colour, m_treeset.colour.r, m_treeset.colour.g, m_treeset.colour.b);
         glUniform1f(m_shaderUniform.colourRotation, m_treeset.colourRotation);
 
-        m_lastTreeset = path;
+        m_lastTreeset = path.filename();
     }
 }
 
@@ -769,7 +831,17 @@ void BushState::savePreset(const std::filesystem::path& path)
         }
     }
 
-    LogI << FILE_LINE << " export collision objects here" << std::endl;
+    for (const auto& obj : m_collisionObjects)
+    {
+        const auto& tx = obj.preview.getComponent<cro::Transform>();
+
+        auto* co = cfg.addObject("collision");
+        co->addProperty("type").setValue(obj.type);
+        co->addProperty("position").setValue(tx.getPosition());
+        co->addProperty("radius").setValue(tx.getScale().x);
+        co->addProperty("height").setValue(tx.getScale().y);
+        co->addProperty("rotation").setValue(glm::vec4(tx.getRotation().x, tx.getRotation().y, tx.getRotation().z, tx.getRotation().w));
+    }
 
     if (cfg.save(path))
     {

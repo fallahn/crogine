@@ -62,6 +62,7 @@ void BushState::drawMenuBar(bool*)
                 }
                 m_saveFileBrowser.SetTypeFilters({ ".tst" });
                 m_saveFileBrowser.SetTitle("Save Treeset");
+                //TODO find out why this doesn't work
                 m_saveFileBrowser.SetInputName(m_lastTreeset.string());
 
 
@@ -609,6 +610,7 @@ void BushState::handleFileDialogues()
                 break;
             case OpenDialogueState::Treeset:
                 loadPreset(path);
+                m_saveFilePaths[SaveDialogueState::Treeset] = m_openFileBrowser.GetPwd();
                 break;
             }
             m_openFilePaths[m_openDialogueState] = m_openFileBrowser.GetPwd();
@@ -627,6 +629,15 @@ void BushState::handleFileDialogues()
         if (m_saveFileBrowser.HasSelected())
         {
             const auto path = m_saveFileBrowser.GetSelected();
+            m_saveFileBrowser.ClearSelected();
+
+            //TODO this needs to be a modal
+            if (cro::FileSystem::fileExists(path)
+                && !cro::FileSystem::showMessageBox("Confirm", "File Exists, Overwrite?", cro::FileSystem::YesNo))
+            {
+                m_saveDialogueState = SaveDialogueState::None;
+                return;
+            }
 
             switch (m_saveDialogueState)
             {
@@ -641,9 +652,7 @@ void BushState::handleFileDialogues()
 
             m_saveFilePaths[m_saveDialogueState] = m_saveFileBrowser.GetPwd();
             saveWindowStates();
-
             m_saveDialogueState = SaveDialogueState::None;
-            m_saveFileBrowser.ClearSelected();
         }
     }
 }
