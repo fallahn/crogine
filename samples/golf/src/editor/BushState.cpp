@@ -82,6 +82,7 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context, const 
     m_selectedCollisionObject   (0),
     m_gizmoMode                 (ImGuizmo::OPERATION::TRANSLATE),
     m_openDialogueState         (OpenDialogueState::None),
+    m_pendingDialogueState      (OpenDialogueState::None),
     m_openFileBrowser           (ImGuiFileBrowserFlags_CloseOnEsc),
     m_saveDialogueState         (SaveDialogueState::None),
     m_saveFileBrowser           (ImGuiFileBrowserFlags_CloseOnEsc | ImGuiFileBrowserFlags_CreateNewDir | ImGuiFileBrowserFlags_ConfirmOnEnter | ImGuiFileBrowserFlags_EnterNewFilename)
@@ -112,6 +113,17 @@ bool BushState::handleEvent(const cro::Event& evt)
 {
     if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
     {
+        //This would be great for recording an undo operation
+        //but it doesn't work :(
+        /*if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
+        {
+            if (evt.button.button == SDL_BUTTON_LEFT)
+            {
+                if (ImGuizmo::IsUsing()) LogI << "Buns" << std::endl;
+
+                LogI << "Flaps" << std::endl;
+            }
+        }*/
         return true;
     }
 

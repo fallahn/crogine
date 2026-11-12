@@ -236,6 +236,7 @@ private:
         };
     };
     std::int32_t m_openDialogueState;
+    std::int32_t m_pendingDialogueState; //set by save dialogue if it wants to open afterwards
     ImGui::FileBrowser m_openFileBrowser;
     std::array<std::filesystem::path, OpenDialogueState::None> m_openFilePaths = {};
 
@@ -268,6 +269,7 @@ private:
 
     void showModelOpenDialogue();
     void showPresetOpenDialogue();
+    void showPresetSaveDialogue(std::int32_t dialogueToOpen = OpenDialogueState::None);
     void handleFileDialogues();
 
     void loadWindowStates();

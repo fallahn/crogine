@@ -55,26 +55,33 @@ void BushState::drawMenuBar(bool*)
         {
             if (ImGui::MenuItem("Load Model"))
             {
-                showModelOpenDialogue();
+                if (m_models[1].isValid()
+                    && cro::FileSystem::showMessageBox("Save Settings", "Do you want to save the current treeset first?", cro::FileSystem::YesNo))
+                {
+                    //shows save option first
+                    showPresetSaveDialogue(OpenDialogueState::Model);
+                }
+                else
+                {
+                    showModelOpenDialogue();
+                }
             }
             if (ImGui::MenuItem("Open Preset"))
             {
-                showPresetOpenDialogue();
+                if (m_models[1].isValid()
+                    && cro::FileSystem::showMessageBox("Save Settings", "Do you want to save the current treeset first?", cro::FileSystem::YesNo))
+                {
+                    //shows save option first
+                    showPresetSaveDialogue(OpenDialogueState::Treeset);
+                }
+                else
+                {
+                    showPresetOpenDialogue();
+                }
             }
             if (ImGui::MenuItem("Save Preset"))
             {
-                if (!m_saveFilePaths[SaveDialogueState::Treeset].empty())
-                {
-                    m_saveFileBrowser.SetPwd(m_saveFilePaths[SaveDialogueState::Treeset]);
-                }
-                m_saveFileBrowser.SetTypeFilters({ ".tst" });
-                m_saveFileBrowser.SetTitle("Save Treeset");
-                //TODO find out why this doesn't work
-                m_saveFileBrowser.SetInputName(m_lastTreeset.string());
-
-
-                m_saveFileBrowser.Open();
-                m_saveDialogueState = SaveDialogueState::Treeset;
+                showPresetSaveDialogue();
             }
             ImGui::Separator();
             if (ImGui::MenuItem("Quit"))
@@ -257,6 +264,9 @@ void BushState::drawProperties(bool*)
         }
         else
         {
+            //this should never show if we have a model
+            //loaded so there's no reason to as if we want
+            //to save the current preset first.
             if (ImGui::Button("Load Model"))
             {
                 showModelOpenDialogue();
@@ -684,6 +694,23 @@ void BushState::showPresetOpenDialogue()
     m_openDialogueState = OpenDialogueState::Treeset;
 }
 
+void BushState::showPresetSaveDialogue(std::int32_t dialogueToOpen)
+{
+    if (!m_saveFilePaths[SaveDialogueState::Treeset].empty())
+    {
+        m_saveFileBrowser.SetPwd(m_saveFilePaths[SaveDialogueState::Treeset]);
+    }
+    m_saveFileBrowser.SetTypeFilters({ ".tst" });
+    m_saveFileBrowser.SetTitle("Save Treeset");
+    //TODO find out why this doesn't work
+    m_saveFileBrowser.SetInputName(m_lastTreeset.string());
+
+
+    m_saveFileBrowser.Open();
+    m_saveDialogueState = SaveDialogueState::Treeset;
+    m_pendingDialogueState = dialogueToOpen;
+}
+
 void BushState::handleFileDialogues()
 {
     //updates the drawlist - has to be called first else IsOpened() is always false
@@ -721,7 +748,11 @@ void BushState::handleFileDialogues()
     {
         if (m_saveFileBrowser.HasSelected())
         {
-            const auto path = m_saveFileBrowser.GetSelected();
+            auto path = m_saveFileBrowser.GetSelected();
+            if (!path.has_extension() || path.extension() != "tst")
+            {
+                path.replace_extension("tst");
+            }
             m_saveFileBrowser.ClearSelected();
 
             //TODO this needs to be a modal
@@ -746,6 +777,18 @@ void BushState::handleFileDialogues()
             m_saveFilePaths[m_saveDialogueState] = m_saveFileBrowser.GetPwd();
             saveWindowStates();
             m_saveDialogueState = SaveDialogueState::None;
+
+            switch (m_pendingDialogueState)
+            {
+            default: break;
+            case OpenDialogueState::Model:
+                showModelOpenDialogue();
+                break;
+            case OpenDialogueState::Treeset:
+                showPresetOpenDialogue();
+                break;
+            }
+            m_pendingDialogueState = OpenDialogueState::None;
         }
     }
 }
