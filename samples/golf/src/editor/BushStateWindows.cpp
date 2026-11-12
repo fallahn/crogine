@@ -39,6 +39,12 @@ namespace
 {
     constexpr float MenuBarHeight = 18.f; //TODO this is probably useful in a consts file
     const std::filesystem::path ConfigFile = "bush_window_states.cfg";
+
+    //TODO move to consts file
+    static constexpr float MinRadius = 0.1f;
+    static constexpr float MaxRadius = 3.f;
+    static constexpr float MaxHeight = 3.5f;
+    static constexpr float MaxPos = 6.f;
 }
 
 void BushState::drawMenuBar(bool*)
@@ -119,14 +125,14 @@ void BushState::drawProperties(bool*)
             ImGui::Text("Properties");
             if (ImGui::SliderFloat("Leaf Size", &m_treeset.leafSize, 0.01f, 1.f))
             {
-                glUseProgram(m_shaderUniform.shaderID);
-                glUniform1f(m_shaderUniform.size, m_treeset.leafSize);
+                glUseProgram(m_shaderUniforms[BushShaderID::Bush].shaderID);
+                glUniform1f(m_shaderUniforms[BushShaderID::Bush].size, m_treeset.leafSize);
             }
 
             if (ImGui::SliderFloat("Randomness", &m_treeset.randomAmount, 0.f, 1.f))
             {
-                glUseProgram(m_shaderUniform.shaderID);
-                glUniform1f(m_shaderUniform.randomness, m_treeset.randomAmount);
+                glUseProgram(m_shaderUniforms[BushShaderID::Bush].shaderID);
+                glUniform1f(m_shaderUniforms[BushShaderID::Bush].randomness, m_treeset.randomAmount);
             }
 
             if (ImGui::SliderFloat("Scale", &m_treeset.scale, MinModelScale, 3.f))
@@ -143,14 +149,14 @@ void BushState::drawProperties(bool*)
 
             if (ImGui::SliderFloat("Colour Rotation", &m_treeset.colourRotation, 0.f, 1.f))
             {
-                glUseProgram(m_shaderUniform.shaderID);
-                glUniform1f(m_shaderUniform.colourRotation, m_treeset.colourRotation);
+                glUseProgram(m_shaderUniforms[BushShaderID::Bush].shaderID);
+                glUniform1f(m_shaderUniforms[BushShaderID::Bush].colourRotation, m_treeset.colourRotation);
             }
 
             if (ImGui::ColorEdit3("Colour", &m_treeset.colour[0]))
             {
-                glUseProgram(m_shaderUniform.shaderID);
-                glUniform3f(m_shaderUniform.colour, m_treeset.colour.r, m_treeset.colour.g, m_treeset.colour.b);
+                glUseProgram(m_shaderUniforms[BushShaderID::Bush].shaderID);
+                glUniform3f(m_shaderUniforms[BushShaderID::Bush].colour, m_treeset.colour.r, m_treeset.colour.g, m_treeset.colour.b);
             }
 
             ImGui::NewLine();
@@ -172,8 +178,8 @@ void BushState::drawProperties(bool*)
                     if (ImGui::ColorButton(label.c_str(), c))
                     {
                         m_treeset.colour = { c.x, c.y, c.z };
-                        glUseProgram(m_shaderUniform.shaderID);
-                        glUniform3f(m_shaderUniform.colour, c.x, c.y, c.z);
+                        glUseProgram(m_shaderUniforms[BushShaderID::Bush].shaderID);
+                        glUniform3f(m_shaderUniforms[BushShaderID::Bush].colour, c.x, c.y, c.z);
                     }
 
                     if ((i++ % 12) != 11)
@@ -247,146 +253,7 @@ void BushState::drawProperties(bool*)
                 ImGui::PopStyleColor();
             }
 
-
-            ImGui::NewLine();
-            ImGui::SeparatorText("Collision");
-            if (ImGui::Button("Add##col"))
-            {
-                if (m_collisionObjects.size() < MaxCollisionObjects)
-                {
-                    m_selectedCollisionObject = m_collisionObjects.size();
-                    auto& obj = m_collisionObjects.emplace_back();
-                    obj.preview = m_gameScene.createEntity();
-                    obj.preview.addComponent<cro::Transform>();
-                    m_collisionDefs[CollisionObject::Sphere]->createModel(obj.preview);
-                    m_models[1].getComponent<cro::Transform>().addChild(obj.preview.getComponent<cro::Transform>());
-
-                    obj.preview.addComponent<cro::Callback>().active = true;
-                    obj.preview.getComponent<cro::Callback>().function =
-                        [this](cro::Entity e, float)
-                        {
-                            e.getComponent<cro::Model>().setHidden(m_models[1].getComponent<cro::Model>().isHidden());
-                        };
-
-                    selectCollisionObject(m_selectedCollisionObject);
-                }
-                else
-                {
-                    //TODO show modal saying we reached max objects
-                }
-            }
-            if (!m_collisionObjects.empty())
-            {
-                ImGui::SameLine();
-                if (ImGui::Button("Remove##col"))
-                {
-                    //remove selected
-                    m_gameScene.destroyEntity(m_collisionObjects[m_selectedCollisionObject].preview);
-                    m_collisionObjects.erase(m_collisionObjects.begin() + m_selectedCollisionObject);
-
-                    m_selectedCollisionObject = m_collisionObjects.empty() ? 0 : std::min(m_selectedCollisionObject, m_collisionObjects.size() - 1);
-                    selectCollisionObject(m_selectedCollisionObject);
-                }
-
-                //we have to check this again because we may have removed all the objects with the above button
-                if (!m_collisionObjects.empty())
-                {
-                    //draw listbox
-                    static const std::array<std::string, CollisionObject::TypeCount> Labels =
-                    {
-                        "Sphere", "Cylinder"
-                    };
-                    ImGui::BeginListBox("Objects");
-                    for (auto i = 0u; i < m_collisionObjects.size(); ++i)
-                    {
-                        const std::string label = Labels[m_collisionObjects[i].type] + "##" + std::to_string(i);
-                        if (ImGui::Selectable(label.c_str(), i == m_selectedCollisionObject))
-                        {
-                            selectCollisionObject(i);
-                        }
-                    }
-                    ImGui::EndListBox();
-
-                    //draw properties of selected collision object
-                    if (ImGui::BeginCombo("##type", Labels[m_collisionObjects[m_selectedCollisionObject].type].c_str()))
-                    {
-                        for (auto i = 0u; i < Labels.size(); ++i)
-                        {
-                            if (ImGui::Selectable(Labels[i].c_str(), i == m_collisionObjects[m_selectedCollisionObject].type))
-                            {
-                                m_collisionObjects[m_selectedCollisionObject].type = i;
-
-                                auto ent = m_collisionObjects[m_selectedCollisionObject].preview;
-                                auto tx = ent.getComponent<cro::Transform>().getLocalTransform();
-
-                                m_gameScene.destroyEntity(ent);
-                                
-                                ent = m_gameScene.createEntity();
-                                ent.addComponent<cro::Transform>().setLocalTransform(tx);
-                                m_collisionDefs[i]->createModel(ent);
-                                ent.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", CollisionHighlightColour);
-                                m_models[1].getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
-                                m_collisionObjects[m_selectedCollisionObject].preview = ent;
-
-                                //TODO ideally we want to keep a separate radius property for cylinders somewhere
-                                auto scale = ent.getComponent<cro::Transform>().getScale();
-                                scale.y = scale.x;
-                                ent.getComponent<cro::Transform>().setScale(scale);
-
-                                //make sureto update the selection highlight
-                                selectCollisionObject(m_selectedCollisionObject);
-                            }
-                        }
-                        ImGui::EndCombo();
-                    }
-
-                    static constexpr float MaxPos = 6.f;
-                    auto& tx = m_collisionObjects[m_selectedCollisionObject].preview.getComponent<cro::Transform>();
-
-                    auto pos = tx.getPosition();
-                    ImGui::Text("Position");
-                    if (ImGui::SliderFloat3("##Position", &pos[0], -MaxPos, MaxPos))
-                    {
-                        pos.x = std::clamp(pos.x, -MaxPos, MaxPos);
-                        pos.y = std::clamp(pos.y, -MaxPos, MaxPos);
-                        pos.z = std::clamp(pos.z, -MaxPos, MaxPos);
-                        tx.setPosition(pos);
-                    }
-                    ImGui::NewLine();
-
-                    //scale X sets the radius, Y the half height
-                    static constexpr float MaxRadius = 3.f;
-                    static constexpr float MaxHeight = 3.5f;
-                    auto scale = tx.getScale();
-                    if (m_collisionObjects[m_selectedCollisionObject].type == CollisionObject::Sphere)
-                    {
-                        ImGui::Text("Radius");
-                        if (ImGui::SliderFloat("##Radius", &scale[0], 0.1f, MaxRadius))
-                        {
-                            scale.x = std::clamp(scale.x, 0.1f, MaxRadius);
-                            scale.z = scale.y = scale.x;
-                            tx.setScale(scale);
-                        }
-                    }
-                    else
-                    {
-                        ImGui::Text("Radius");
-                        if (ImGui::SliderFloat("##Radius", &scale[0], 0.1f, MaxRadius))
-                        {
-                            scale.x = std::clamp(scale.x, 0.1f, MaxRadius);
-                            scale.z = scale.x;
-                            tx.setScale(scale);
-                        }
-                        ImGui::NewLine();
-                        ImGui::Text("Height");
-                        if (ImGui::SliderFloat("##Height", &scale[1], 0.1f, MaxHeight))
-                        {
-                            scale.y = std::clamp(scale.y, 0.1f, MaxHeight);
-                            tx.setScale(scale);
-                        }
-                    }
-                }
-            }
+            drawCollisionPanel();            
         }
         else
         {
@@ -404,6 +271,170 @@ void BushState::drawProperties(bool*)
 
     }
     ImGui::End();
+}
+
+void BushState::drawCollisionPanel()
+{
+    ImGui::NewLine();
+    ImGui::SeparatorText("Collision");
+    if (ImGui::Button("Add Object##col"))
+    {
+        if (m_collisionObjects.size() < MaxCollisionObjects)
+        {
+            m_selectedCollisionObject = m_collisionObjects.size();
+            auto& obj = m_collisionObjects.emplace_back();
+            obj.preview = m_gameScene.createEntity();
+            obj.preview.addComponent<cro::Transform>();
+            m_collisionDefs[CollisionObject::Sphere]->createModel(obj.preview);
+            m_models[1].getComponent<cro::Transform>().addChild(obj.preview.getComponent<cro::Transform>());
+
+            obj.preview.addComponent<cro::Callback>().active = true;
+            obj.preview.getComponent<cro::Callback>().function =
+                [this](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Model>().setHidden(m_models[1].getComponent<cro::Model>().isHidden());
+                };
+
+            selectCollisionObject(m_selectedCollisionObject);
+        }
+        else
+        {
+            //TODO show modal saying we reached max objects
+        }
+    }
+    if (!m_collisionObjects.empty())
+    {
+        ImGui::SameLine();
+        if (ImGui::Button("Remove Object##col"))
+        {
+            //remove selected
+            m_gameScene.destroyEntity(m_collisionObjects[m_selectedCollisionObject].preview);
+            m_collisionObjects.erase(m_collisionObjects.begin() + m_selectedCollisionObject);
+
+            m_selectedCollisionObject = m_collisionObjects.empty() ? 0 : std::min(m_selectedCollisionObject, m_collisionObjects.size() - 1);
+            selectCollisionObject(m_selectedCollisionObject);
+        }
+
+        //we have to check this again because we may have removed all the objects with the above button
+        if (!m_collisionObjects.empty())
+        {
+            ImGui::Text("G: Move, R: Rotate, S: Scale");
+
+            //draw listbox
+            static const std::array<std::string, CollisionObject::TypeCount> Labels =
+            {
+                "Sphere", "Cylinder"
+            };
+            ImGui::NewLine();
+            ImGui::Text("Collision Objects");
+            ImGui::BeginListBox("##Objects");
+            for (auto i = 0u; i < m_collisionObjects.size(); ++i)
+            {
+                const std::string label = Labels[m_collisionObjects[i].type] + "##" + std::to_string(i);
+                if (ImGui::Selectable(label.c_str(), i == m_selectedCollisionObject))
+                {
+                    selectCollisionObject(i);
+                }
+            }
+            ImGui::EndListBox();
+
+            //draw properties of selected collision object
+            ImGui::NewLine();
+            ImGui::Text("Shape");
+            if (ImGui::BeginCombo("##type", Labels[m_collisionObjects[m_selectedCollisionObject].type].c_str()))
+            {
+                for (auto i = 0u; i < Labels.size(); ++i)
+                {
+                    if (ImGui::Selectable(Labels[i].c_str(), i == m_collisionObjects[m_selectedCollisionObject].type))
+                    {
+                        m_collisionObjects[m_selectedCollisionObject].type = i;
+
+                        auto ent = m_collisionObjects[m_selectedCollisionObject].preview;
+                        auto tx = ent.getComponent<cro::Transform>().getLocalTransform();
+
+                        m_gameScene.destroyEntity(ent);
+
+                        ent = m_gameScene.createEntity();
+                        ent.addComponent<cro::Transform>().setLocalTransform(tx);
+                        m_collisionDefs[i]->createModel(ent);
+                        ent.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", CollisionHighlightColour);
+                        m_models[1].getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+                        m_collisionObjects[m_selectedCollisionObject].preview = ent;
+
+                        //TODO ideally we want to keep a separate radius property for cylinders somewhere
+                        auto scale = ent.getComponent<cro::Transform>().getScale();
+                        scale.y = scale.x;
+                        ent.getComponent<cro::Transform>().setScale(scale);
+
+                        //make sureto update the selection highlight
+                        selectCollisionObject(m_selectedCollisionObject);
+                    }
+                }
+                ImGui::EndCombo();
+            }
+
+            auto& tx = m_collisionObjects[m_selectedCollisionObject].preview.getComponent<cro::Transform>();
+
+            auto pos = tx.getPosition();
+            ImGui::NewLine();
+            ImGui::Text("Position");
+            if (ImGui::SliderFloat3("##Position", &pos[0], -MaxPos, MaxPos))
+            {
+                pos.x = std::clamp(pos.x, -MaxPos, MaxPos);
+                pos.y = std::clamp(pos.y, -MaxPos, MaxPos);
+                pos.z = std::clamp(pos.z, -MaxPos, MaxPos);
+                tx.setPosition(pos);
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Reset##pos"))
+            {
+                pos = glm::vec3(0.f);
+                tx.setPosition(pos);
+            }
+            ImGui::NewLine();
+
+            ImGui::Text("Rotation");
+            const auto rotation = tx.getRotation();
+            ImGui::Text("%3.2f,%3.2f,%3.2f,%3.2f", rotation.x, rotation.y, rotation.z, rotation.w);
+            ImGui::SameLine();
+            if (ImGui::Button("Reset##rot"))
+            {
+                tx.setRotation(cro::Transform::QUAT_IDENTITY);
+            }
+
+            ImGui::NewLine();
+
+            //scale X sets the radius, Y the half height
+            auto scale = tx.getScale();
+            if (m_collisionObjects[m_selectedCollisionObject].type == CollisionObject::Sphere)
+            {
+                ImGui::Text("Radius");
+                if (ImGui::SliderFloat("##Radius", &scale[0], MinRadius, MaxRadius))
+                {
+                    scale.x = std::clamp(scale.x, 0.1f, MaxRadius);
+                    scale.z = scale.y = scale.x;
+                    tx.setScale(scale);
+                }
+            }
+            else
+            {
+                ImGui::Text("Radius");
+                if (ImGui::SliderFloat("##Radius", &scale[0], MinRadius, MaxRadius))
+                {
+                    scale.x = std::clamp(scale.x, 0.1f, MaxRadius);
+                    scale.z = scale.x;
+                    tx.setScale(scale);
+                }
+                ImGui::NewLine();
+                ImGui::Text("Height");
+                if (ImGui::SliderFloat("##Height", &scale[1], MinRadius, MaxHeight))
+                {
+                    scale.y = std::clamp(scale.y, 0.1f, MaxHeight);
+                    tx.setScale(scale);
+                }
+            }
+        }
+    }
 }
 
 void BushState::drawBillboard(bool* visible)
@@ -569,13 +600,53 @@ void BushState::drawCollisionManipulator()
 {
     if (!m_collisionObjects.empty())
     {
-        //TODO clamp translation and scale (see consts in window drawing)
+        auto mode = m_gizmoMode;
+        //if we know we only adjust one axis we cam make sure
+        //the other 3 always match to maintain radius
+        if(mode == ImGuizmo::OPERATION::SCALE
+            && m_collisionObjects[m_selectedCollisionObject].type == CollisionObject::Sphere)
+        { 
+            mode = ImGuizmo::OPERATION::SCALE_Y;
+        }
+
         auto selectedEnt = m_collisionObjects[m_selectedCollisionObject].preview;
 
         const auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
         auto tx = selectedEnt.getComponent<cro::Transform>().getWorldTransform();
-        ImGuizmo::Manipulate(&cam.getActivePass().viewMatrix[0][0], &cam.getProjectionMatrix()[0][0], m_gizmoMode, ImGuizmo::MODE::LOCAL, &tx[0][0]);
+        ImGuizmo::Manipulate(&cam.getActivePass().viewMatrix[0][0], &cam.getProjectionMatrix()[0][0], mode, ImGuizmo::MODE::LOCAL, &tx[0][0]);
         selectedEnt.getComponent<cro::Transform>().setLocalTransform(cro::Util::Matrix::getRelativeTransform(selectedEnt.getComponent<cro::Transform>().getParentTransform(), tx));
+
+        //clamp translation and scale
+        auto& txComponent = selectedEnt.getComponent<cro::Transform>();
+        switch (m_gizmoMode)
+        {
+        default: break;
+        case ImGuizmo::OPERATION::SCALE:
+        {
+            auto scale = txComponent.getScale();
+            if (m_collisionObjects[m_selectedCollisionObject].type == CollisionObject::Sphere)
+            {
+                scale.x = scale.z = std::clamp(scale.y, MinRadius, MaxRadius);
+            }
+            else
+            {
+                scale.x = std::clamp(scale.x, MinRadius, MaxRadius);
+                scale.z = scale.x;
+                scale.y = std::clamp(scale.y, MinRadius, MaxHeight);
+            }
+            txComponent.setScale(scale);
+        }
+            break;
+        case ImGuizmo::OPERATION::TRANSLATE:
+        {
+            auto pos = txComponent.getPosition();
+            pos.x = std::clamp(pos.x, -MaxPos, MaxPos);
+            pos.y = std::clamp(pos.y, -MaxPos, MaxPos);
+            pos.z = std::clamp(pos.z, -MaxPos, MaxPos);
+            txComponent.setPosition(pos);
+        }
+            break;
+        }
     }
 }
 

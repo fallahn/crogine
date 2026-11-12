@@ -1991,7 +1991,7 @@ void MenuState::handleMessage(const cro::Message& msg)
     else if (msg.id == cro::Message::TouchpadMessage)
     {
         const auto& data = msg.getData<cro::Message::TouchpadEvent>();
-        if (swipeUp(data))
+        if (swipeUp(data) || swipeDown(data))
         {
 #ifdef NEW_LOBBY
             if (m_currentMenu == MenuID::LobbyV2)

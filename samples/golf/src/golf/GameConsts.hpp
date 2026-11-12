@@ -213,13 +213,18 @@ static inline void createKeystroke(std::int32_t key, bool down)
     SDL_PushEvent(&evt);
 };
 
-static inline bool swipeUp(const cro::Message::TouchpadEvent& data)
+#define swipeUp(x) swipe(x, glm::vec2(0.f, -1.f))
+#define swipeDown(x) swipe(x, glm::vec2(0.f, 1.f))
+
+//TODO we probably want to be able to send a list of directions
+//so that we only have to parse the event once and compare several times.
+static inline bool swipe(const cro::Message::TouchpadEvent& data, glm::vec2 dir)
 {
     if (data.type == cro::Message::TouchpadEvent::Swipe)
     {
         const auto swipe = cro::GameController::parseSwipeEvent(data);
 
-        return (glm::dot(glm::vec2(0.f, -1.f), swipe.direction) > 0.98f
+        return (glm::dot(dir, swipe.direction) > 0.98f
             && swipe.duration < 0.31f
             && swipe.length > 0.4f);
     }

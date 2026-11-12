@@ -1495,10 +1495,13 @@ void GolfState::handleMessage(const cro::Message& msg)
     {
     default: break;
     case cro::Message::TouchpadMessage:
-        if (swipeUp(msg.getData<cro::Message::TouchpadEvent>()))
+    {
+        const auto& data = msg.getData<cro::Message::TouchpadEvent>();
+        if (swipeUp(data) || swipeDown(data))
         {
             m_textChat.toggleWindow(false, true, false);
         }
+    }
         break;
     case MessageID::WebSocketMessage:
     {

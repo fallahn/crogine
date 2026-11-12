@@ -114,6 +114,18 @@ private:
 
     }m_treeset;
 
+    struct BushShaderID final
+    {
+        enum
+        {
+            Bush,
+            BushShadow,
+            Branch,
+
+            Count
+        };
+    };
+
     struct ShaderUniforms final
     {
         std::uint32_t shaderID = 0;
@@ -122,9 +134,11 @@ private:
         std::int32_t colour = -1;
         std::int32_t targetHeight = -1;
         std::int32_t colourRotation = -1;
-    }m_shaderUniform;
+    };
+    std::array<ShaderUniforms, BushShaderID::Count> m_shaderUniforms = {};
 
     std::int32_t m_bushMaterial;
+    std::int32_t m_bushShadowMaterial;
     std::int32_t m_branchMaterial;
 
     float m_rotation = 0.f;
@@ -242,6 +256,7 @@ private:
     //BushStateWndows.cpp
     void drawMenuBar(bool*);
     void drawProperties(bool*);
+    void drawCollisionPanel();
     void drawBillboard(bool*);
     void drawThumbnail(bool*);
     void drawSkyboxEditor(bool*);

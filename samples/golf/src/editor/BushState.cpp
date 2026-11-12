@@ -55,16 +55,9 @@ source distribution.
 namespace
 {
 #include "../golf/shaders/TreeShader.inl"
+#include "../golf/shaders/ShadowMapping.inl"
 #include "../golf/shaders/ShaderIncludes.inl"
 
-    struct BushShaderID final
-    {
-        enum
-        {
-            Bush,
-            Branch
-        };
-    };
 }
 
 BushState::BushState(cro::StateStack& stack, cro::State::Context context, const SharedStateData& sd)
@@ -77,6 +70,7 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context, const 
     m_scaleBuffer               ("PixelScale"),
     m_lastTreeset               ("untitled.tst"),
     m_bushMaterial              (-1),
+    m_bushShadowMaterial        (-1),
     m_branchMaterial            (-1),
     m_rotation                  (0.f),
     m_leafTexture               (nullptr),
@@ -211,38 +205,38 @@ void BushState::handleMessage(const cro::Message& msg)
 
 bool BushState::simulate(float dt)
 {
-    static constexpr float Speed = 4.f;
-    glm::vec3 movement(0.f);
-    if (cro::Keyboard::isKeyPressed(SDLK_W))
-    {
-        movement.z -= dt * Speed;
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_S))
-    {
-        movement.z += dt * Speed;
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_SPACE))
-    {
-        movement.y += dt * Speed;
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_LCTRL))
-    {
-        movement.y -= dt * Speed;
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_A))
-    {
-        movement.x -= dt * Speed;
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_D))
-    {
-        movement.x += dt * Speed;
-    }
+    //static constexpr float Speed = 4.f;
+    //glm::vec3 movement(0.f);
+    //if (cro::Keyboard::isKeyPressed(SDLK_W))
+    //{
+    //    movement.z -= dt * Speed;
+    //}
+    //if (cro::Keyboard::isKeyPressed(SDLK_S))
+    //{
+    //    movement.z += dt * Speed;
+    //}
+    //if (cro::Keyboard::isKeyPressed(SDLK_SPACE))
+    //{
+    //    movement.y += dt * Speed;
+    //}
+    //if (cro::Keyboard::isKeyPressed(SDLK_LCTRL))
+    //{
+    //    movement.y -= dt * Speed;
+    //}
+    //if (cro::Keyboard::isKeyPressed(SDLK_A))
+    //{
+    //    movement.x -= dt * Speed;
+    //}
+    //if (cro::Keyboard::isKeyPressed(SDLK_D))
+    //{
+    //    movement.x += dt * Speed;
+    //}
 
-    if (auto len2 = glm::length2(movement); len2 > 1)
-    {
-        movement /= std::sqrt(len2);
-    }
-    m_gameScene.getActiveCamera().getComponent<cro::Transform>().move(movement);
+    //if (auto len2 = glm::length2(movement); len2 > 1)
+    //{
+    //    movement /= std::sqrt(len2);
+    //}
+    //m_gameScene.getActiveCamera().getComponent<cro::Transform>().move(movement);
 
 
     m_windData.elapsedTime += dt;
@@ -263,15 +257,16 @@ void BushState::preRender()
 
     glEnable(GL_PROGRAM_POINT_SIZE);
 
-    glUseProgram(m_shaderUniform.shaderID);
-    glUniform1f(m_shaderUniform.size, m_billboardScaleMultiplier * m_treeset.leafSize);
+    glUseProgram(m_shaderUniforms[BushShaderID::Bush].shaderID);
+    glUniform1f(m_shaderUniforms[BushShaderID::Bush].size, m_billboardScaleMultiplier * m_treeset.leafSize);
     auto oldCam = m_gameScene.setActiveCamera(m_billboardCamera);
     m_billboardTexture.clear(cro::Colour::Transparent);
     m_gameScene.render();
     m_billboardTexture.display();
 
-    glUseProgram(m_shaderUniform.shaderID);
-    glUniform1f(m_shaderUniform.size, m_treeset.leafSize);
+    //we have to rebind this because drawing the scene binds other shaders :3
+    glUseProgram(m_shaderUniforms[BushShaderID::Bush].shaderID);
+    glUniform1f(m_shaderUniforms[BushShaderID::Bush].size, m_treeset.leafSize);
     m_gameScene.setActiveCamera(oldCam);
 }
 
@@ -343,12 +338,26 @@ void BushState::loadAssets()
     material.setProperty("u_diffuseMap", texture);
     material.setProperty("u_noiseTexture", noiseTex);
 
-    m_shaderUniform.shaderID = shader->getGLHandle();
-    m_shaderUniform.randomness = shader->getUniformID("u_randAmount");
-    m_shaderUniform.size = shader->getUniformID("u_leafSize");
-    m_shaderUniform.colour = shader->getUniformID("u_colour");
-    m_shaderUniform.targetHeight = shader->getUniformID("u_targetHeight");
-    m_shaderUniform.colourRotation = shader->getUniformID("u_rotation");
+    auto& shaderUniform = m_shaderUniforms[BushShaderID::Bush];
+    shaderUniform.shaderID = shader->getGLHandle();
+    shaderUniform.randomness = shader->getUniformID("u_randAmount");
+    shaderUniform.size = shader->getUniformID("u_leafSize");
+    shaderUniform.colour = shader->getUniformID("u_colour");
+    shaderUniform.targetHeight = shader->getUniformID("u_targetHeight");
+    shaderUniform.colourRotation = shader->getUniformID("u_rotation");
+
+
+    /*m_resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, ShadowFragment, "#define POINTS\n#define INSTANCING\n#define LEAF_SIZE\n#define ALPHA_CLIP\n#define FAR_DISTANCE 450.0\n");
+    shader = &m_resources.shaders.get(ShaderID::TreesetLeafShadow);
+    m_windBuffer.addShader(*shader);
+    m_bushShadowMaterial = m_resources.materials.add(*shader);
+
+    auto& shadowUniform = m_shaderUniforms[BushShaderID::BushShadow];
+    shadowUniform.shaderID = shader->getGLHandle();
+    shadowUniform.size = shader->getUniformID("u_leafSize");*/
+
+
+
 
     m_resources.shaders.loadFromString(BushShaderID::Branch, BranchVertex, BranchFragment, "#define INSTANCING\n#define ALPHA_CLIP\n");
     shader = &m_resources.shaders.get(BushShaderID::Branch);
@@ -504,8 +513,8 @@ void BushState::updateView(cro::Camera& cam3D)
 
     //set the correct renderable height in the shader
     auto targetHeight = static_cast<float>(cro::App::getWindow().getSize().y) * size.y;
-    glUseProgram(m_shaderUniform.shaderID);
-    glUniform1f(m_shaderUniform.targetHeight, targetHeight);
+    glUseProgram(m_shaderUniforms[BushShaderID::Bush].shaderID);
+    glUniform1f(m_shaderUniforms[BushShaderID::Bush].targetHeight, targetHeight);
 
     ResolutionData rd;
     rd.resolution = cro::App::getWindow().getSize();
@@ -820,11 +829,11 @@ void BushState::loadPreset(const std::filesystem::path& path)
         }
 
 
-        glUseProgram(m_shaderUniform.shaderID);
-        glUniform1f(m_shaderUniform.randomness, m_treeset.randomAmount);
-        glUniform1f(m_shaderUniform.size, m_treeset.leafSize);
-        glUniform3f(m_shaderUniform.colour, m_treeset.colour.r, m_treeset.colour.g, m_treeset.colour.b);
-        glUniform1f(m_shaderUniform.colourRotation, m_treeset.colourRotation);
+        glUseProgram(m_shaderUniforms[BushShaderID::Bush].shaderID);
+        glUniform1f(m_shaderUniforms[BushShaderID::Bush].randomness, m_treeset.randomAmount);
+        glUniform1f(m_shaderUniforms[BushShaderID::Bush].size, m_treeset.leafSize);
+        glUniform3f(m_shaderUniforms[BushShaderID::Bush].colour, m_treeset.colour.r, m_treeset.colour.g, m_treeset.colour.b);
+        glUniform1f(m_shaderUniforms[BushShaderID::Bush].colourRotation, m_treeset.colourRotation);
 
         m_lastTreeset = path.filename();
     }
