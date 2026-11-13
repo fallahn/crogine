@@ -32,6 +32,10 @@ source distribution.
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/graphics/Colour.hpp>
 
+static constexpr float MaxCameraOffset = 20.f;
+static constexpr float MinCameraOffset = 0.05f;
+static constexpr float DefaultCameraOffset = 6.f;
+
 static constexpr float PropertiesPanelWidth = 364.f;
 
 static constexpr std::size_t MaxCollisionObjects = 10;

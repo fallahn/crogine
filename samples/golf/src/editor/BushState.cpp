@@ -79,6 +79,7 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context, const 
     m_billboardScaleMultiplier  (0.46f),
     m_skyMid                    (cro::Colour::White),
     m_skyTop                    (cro::Colour::CornflowerBlue),
+    m_recentreActive            (false),
     m_selectedCollisionObject   (0),
     m_gizmoMode                 (ImGuizmo::OPERATION::TRANSLATE),
     m_openDialogueState         (OpenDialogueState::None),
@@ -176,14 +177,15 @@ bool BushState::handleEvent(const cro::Event& evt)
         const float amt = cro::Util::Maths::sgn(evt.wheel.y) * m_arcBall.offset * 0.5f;
         
         auto old = m_arcBall.offset;
-        m_arcBall.offset = std::clamp(m_arcBall.offset - amt, 0.05f, 20.f);
+        m_arcBall.offset = std::clamp(m_arcBall.offset - amt, MinCameraOffset, MaxCameraOffset);
         tx.move(tx.getForwardVector() * (old - m_arcBall.offset));
     }
     else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
         if (evt.motion.state & SDL_BUTTON_MMASK)
         {
-            if (cro::Keyboard::isKeyPressed(SDLK_LSHIFT))
+            if (cro::Keyboard::isKeyPressed(SDLK_LSHIFT)
+                || cro::Keyboard::isKeyPressed(SDLK_RSHIFT))
             {
                 //rotate root
                 glm::vec4 rotation = glm::vec4(0.f);
@@ -222,8 +224,28 @@ bool BushState::handleEvent(const cro::Event& evt)
                 const float targOffset = glm::length(tx.getPosition() - worldPoint);
                 if (std::abs(m_arcBall.offset - targOffset) < 10.f)
                 {
-                    m_arcBall.offset = std::clamp(targOffset, 0.05f, 20.f); //TODO consitify with zoom
+                    m_arcBall.offset = std::clamp(targOffset, MinCameraOffset, MaxCameraOffset);
                 }
+            }
+        }
+    }
+
+    else if (evt.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
+    {
+        if (evt.button.button == SDL_BUTTON_LEFT)
+        {
+            if ((cro::Keyboard::isKeyPressed(SDLK_LCTRL) || cro::Keyboard::isKeyPressed(SDLK_RCTRL)))
+            {
+                const auto target = m_gameScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords({ evt.button.x, evt.button.y });
+                if (glm::length2(target) < 4000.f)
+                {
+                    recentreCamera(target);
+                }
+            }
+            else
+            {
+                //TODO see if there's a collision object underneath the mouse cursor
+                //by casting a ray from the camera position to the picked position
             }
         }
     }
@@ -518,12 +540,6 @@ void BushState::createScene()
     sun.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 35.f * cro::Util::Const::degToRad);
     sun.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -35.f * cro::Util::Const::degToRad);
 
-    registerWindow([this]()
-        {
-            ImGui::Begin("Arc");
-            ImGui::Text("Offset: %3.2f", m_arcBall.offset);
-            ImGui::End();        
-        });
 
     //ortho cam for billboard view
     glm::vec2 camSize = glm::vec2(BillboardTargetSize) / PixelsPerMetre;
@@ -573,6 +589,39 @@ void BushState::updateView(cro::Camera& cam3D)
     skyCam.setPerspective(cam3D.getFOV(), cam3D.getAspectRatio(), 0.5f, 14.f);
 }
 
+void BushState::recentreCamera(glm::vec3 target)
+{
+    if (!m_recentreActive)
+    {
+        m_recentreActive = true;
+        auto& tx = m_gameScene.getActiveCamera().getComponent<cro::Transform>();
+        const auto startPos = tx.getPosition();
+        const auto endPos = target - (tx.getForwardVector() * DefaultCameraOffset);
+
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+        entity.getComponent<cro::Callback>().function =
+            [this, startPos, endPos](cro::Entity e, float dt)
+            {
+                auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
+                progress = std::min(1.f, progress + (dt * 10.f));
+
+                auto& tx = m_gameScene.getActiveCamera().getComponent<cro::Transform>();
+                tx.setPosition(glm::mix(startPos, endPos, progress));
+
+                if (progress == 1)
+                {
+                    m_arcBall.offset = DefaultCameraOffset;
+                    tx.setPosition(endPos);
+                    m_recentreActive = false;
+                    e.getComponent<cro::Callback>().active = false;
+                    m_gameScene.destroyEntity(e);
+                }
+            };
+    }
+}
+
 void BushState::registerWindows()
 {
     auto& menuBar = m_windows.emplace_back();
@@ -597,6 +646,10 @@ void BushState::registerWindows()
     auto& skybox = m_windows.emplace_back();
     skybox.draw = std::bind(&BushState::drawSkyboxEditor, this, std::placeholders::_1);
 
+    m_windowIndices[WindowIndex::Help] = static_cast<std::int32_t>(m_windows.size());
+    auto& help = m_windows.emplace_back();
+    help.draw = std::bind(&BushState::drawHelp, this, std::placeholders::_1);
+
     loadWindowStates();
 }
 
@@ -612,7 +665,7 @@ void BushState::drawUI()
 
 
     ImGuiIO& io = ImGui::GetIO();
-    ImGuizmo::SetRect(0.f, 0.f, io.DisplaySize.x, io.DisplaySize.y);
+    ImGuizmo::SetRect(PropertiesPanelWidth, 0.f, io.DisplaySize.x - PropertiesPanelWidth, io.DisplaySize.y);
 
     drawCollisionManipulator();
     //drawViewMainpulator();

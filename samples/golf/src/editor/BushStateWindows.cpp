@@ -116,6 +116,14 @@ void BushState::drawMenuBar(bool*)
             ImGui::EndMenu();
         }
 
+        if (ImGui::BeginMenu("Help"))
+        {
+            ImGui::MenuItem("Controls", nullptr, &m_windows[m_windowIndices[WindowIndex::Help]].visible);
+            ImGui::MenuItem("About");
+
+            ImGui::EndMenu();
+        }
+
         ImGui::EndMainMenuBar();
     }
 
@@ -597,6 +605,23 @@ void BushState::drawSkyboxEditor(bool* visible)
     ImGui::End();
 }
 
+void BushState::drawHelp(bool* visible)
+{
+    constexpr glm::vec2 WindowSize = { 300.f, 200.f };
+    const glm::vec2 WindowPos = (glm::vec2(cro::App::getWindow().getSize()) - WindowSize) / 2.f;
+
+    ImGui::SetNextWindowSize({ WindowSize.x, WindowSize.y });
+    ImGui::SetNextWindowPos({ WindowPos.x, WindowPos.y });
+    if (ImGui::Begin("Help", visible, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
+    {
+        ImGui::Text("Ctrl+Click: Retarget Camera");
+        ImGui::Text("Middle Mouse: Pan");
+        ImGui::Text("Shift+Middle Mouse: Rotate");
+        ImGui::Text("Mouse Wheel: Zoom");
+    }
+    ImGui::End();
+}
+
 void BushState::selectCollisionObject(std::size_t idx)
 {
     idx = std::min(idx, m_collisionObjects.size() - 1);
@@ -614,6 +639,8 @@ void BushState::selectCollisionObject(std::size_t idx)
 
 void BushState::drawCollisionManipulator()
 {
+    //DEAR FUTURE ME: if this isn't matching the current viewport make sure
+    //to update ImGuizmo::SetRect() in drawUI()
     if (!m_collisionObjects.empty())
     {
         auto mode = m_gizmoMode;
@@ -627,6 +654,7 @@ void BushState::drawCollisionManipulator()
 
         auto selectedEnt = m_collisionObjects[m_selectedCollisionObject].preview;
 
+        const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
         const auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
         auto tx = selectedEnt.getComponent<cro::Transform>().getWorldTransform();
         ImGuizmo::Manipulate(&cam.getActivePass().viewMatrix[0][0], &cam.getProjectionMatrix()[0][0], mode, ImGuizmo::MODE::LOCAL, &tx[0][0]);

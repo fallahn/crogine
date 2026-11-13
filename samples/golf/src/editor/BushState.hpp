@@ -95,7 +95,7 @@ private:
             Count
         };
     };
-    cro::Entity m_root; //TODO remove this
+    cro::Entity m_root; //TODO used when rotating billboards
     std::array<cro::Entity, ModelID::Count> m_models = {};
     std::vector<glm::mat4> m_instanceTransforms;
 
@@ -154,7 +154,7 @@ private:
     float m_windRotation;
 
     cro::Palette m_palette;
-    glm::vec2 m_rootRotation;
+    glm::vec2 m_rootRotation; //TODO this is used to rotate models when generating billboards
     float m_billboardScaleMultiplier;
 
     cro::Colour m_skyMid;
@@ -170,6 +170,7 @@ private:
             MenuBar,
             Properties, Billboard,
             Skybox, Thumbnails, //TODO move these to other parts of editor
+            Help,
             Count
         };
     };
@@ -187,7 +188,8 @@ private:
 
     //assigned to camera resize callback
     void updateView(cro::Camera&);
-
+    void recentreCamera(glm::vec3 target);
+    bool m_recentreActive;
 
     //----collision data----
 
@@ -268,6 +270,7 @@ private:
     void drawBillboard(bool*);
     void drawThumbnail(bool*);
     void drawSkyboxEditor(bool*);
+    void drawHelp(bool*);
 
     void selectCollisionObject(std::size_t);
     void drawCollisionManipulator();
