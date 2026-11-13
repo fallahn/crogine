@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -141,6 +141,87 @@ Planar Spatial::intersects(Plane plane, Box box)
     }
     return (dist > 0) ? Planar::Front : Planar::Back;
 }
+
+float Spatial::intersects(glm::vec3 rayStart, glm::vec3 rayEnd, Box aabb, const glm::mat4& worldMatrix)
+{
+    //intersection method from Real-Time Rendering and Essential Mathematics for Games
+    float tMin = 0.f;
+    float tMax = std::numeric_limits<float>::max();
+
+    //glm::vec3 obbPos(worldMatrix[3].x, worldMatrix[3].y, worldMatrix[3].z);
+    const glm::vec3 obbPos = worldMatrix[3];
+    const glm::vec3 obbDir = (obbPos - rayStart);
+    const glm::vec3 rayDir = glm::normalize(rayEnd - rayStart);
+
+    //test intersection with the 2 planes perpendicular to the given axis
+    const auto testAxis = [&tMax, &tMin, &obbDir, &rayDir](glm::vec3 axis, float minBound, float maxBound)
+        {
+            const float e = glm::dot(axis, obbDir);
+            const float f = glm::dot(axis, rayDir);
+
+            if (std::abs(f) > 0.001f)
+            {
+                float t1 = (e + minBound) / f; //intersection with the "left" plane
+                float t2 = (e + maxBound) / f; //intersection with the "right" plane
+                //t1 and t2 now contain distances betwen ray origin and ray-plane intersections
+
+                //we want t1 to represent the nearest intersection, 
+                //so if it's not the case, invert t1 and t2
+                if (t1 > t2)
+                {
+                    float w = t1;
+                    t1 = t2;
+                    t2 = w; // swap t1 and t2
+                }
+
+                //tMax is the nearest "far" intersection (amongst the X,Y and Z planes pairs)
+                if (t2 < tMax)
+                {
+                    tMax = t2;
+                }
+                //tMin is the farthest "near" intersection (amongst the X,Y and Z planes pairs)
+                if (t1 > tMin)
+                {
+                    tMin = t1;
+                }
+
+                //and here's the trick:
+                //if "far" is closer than "near", then there is NO intersection.
+                if (tMax < tMin)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                //rare case: the ray is almost parallel to the planes, so they don't have any intersection
+                if (-e + minBound > 0.f || -e + maxBound < 0.f)
+                {
+                    return false;
+                }
+            }
+            return true;
+        };
+
+    if (!testAxis(worldMatrix[0], aabb[0].x, aabb[1].x))
+    {
+        return -1.f;
+    }
+
+    if (!testAxis(worldMatrix[1], aabb[0].y, aabb[1].y))
+    {
+        return -1.f;
+    }
+
+    if (!testAxis(worldMatrix[2], aabb[0].z, aabb[1].z))
+    {
+        return -1.f;
+    }
+
+    return tMin;
+}
+
+
 
 Box Spatial::updateFrustum(std::array<Plane, 6u>& frustum, glm::mat4 viewProj)
 {

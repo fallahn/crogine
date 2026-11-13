@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -76,6 +76,18 @@ namespace cro
         normal), Planar::Intersects when intersecting or Planar::Back
         */
         Planar CRO_EXPORT_API intersects(Plane plane, Box box);
+
+        /*!
+        \brief Returns the distance to intersection with OBB if there is one, else -1
+        \param rayStart The point in world space where the ray is emitted
+        \param rayEnd The point in world space where the ray ends
+        \param aabb An AABB usually of the model to test against
+        \param worldMatrix The matrix of the model's transform used to put the AABB into
+        world space as an OBB
+        \returns Distance to intersection along the ray from rayStart, or -1 if ther eis no intersection
+        */
+        float CRO_EXPORT_API intersects(glm::vec3 rayStart, glm::vec3 rayEnd, Box aabb, const glm::mat4& worldMatrix);
+
 
         /*!
         \brief Updates the given frustum based on the given viewProjection matrix

@@ -95,7 +95,6 @@ private:
             Count
         };
     };
-    cro::Entity m_root; //TODO used when rotating billboards
     std::array<cro::Entity, ModelID::Count> m_models = {};
     std::vector<glm::mat4> m_instanceTransforms;
 
@@ -154,7 +153,6 @@ private:
     float m_windRotation;
 
     cro::Palette m_palette;
-    glm::vec2 m_rootRotation; //TODO this is used to rotate models when generating billboards
     float m_billboardScaleMultiplier;
 
     cro::Colour m_skyMid;
@@ -204,8 +202,6 @@ private:
             TypeCount
         };
         std::uint32_t type = Sphere;
-        /*float radius = 1.f; //TODO - do we ned these as they are inferred from the preview transform
-        float halfLength = 1.f;*/
         cro::Entity preview;
     };
     std::vector<CollisionObject> m_collisionObjects;

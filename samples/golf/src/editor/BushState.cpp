@@ -75,7 +75,6 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context, const 
     m_rotation                  (0.f),
     m_leafTexture               (nullptr),
     m_windRotation              (0.f),
-    m_rootRotation              (0.f),
     m_billboardScaleMultiplier  (0.46f),
     m_skyMid                    (cro::Colour::White),
     m_skyTop                    (cro::Colour::CornflowerBlue),
@@ -234,18 +233,25 @@ bool BushState::handleEvent(const cro::Event& evt)
     {
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
+            const auto target = m_gameScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords({ evt.button.x, evt.button.y });
             if ((cro::Keyboard::isKeyPressed(SDLK_LCTRL) || cro::Keyboard::isKeyPressed(SDLK_RCTRL)))
             {
-                const auto target = m_gameScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords({ evt.button.x, evt.button.y });
                 if (glm::length2(target) < 4000.f)
                 {
                     recentreCamera(target);
                 }
             }
-            else
+            else if (!m_collisionObjects.empty())
             {
-                //TODO see if there's a collision object underneath the mouse cursor
+                //see if there's a collision object underneath the mouse cursor
                 //by casting a ray from the camera position to the picked position
+                const glm::vec3 camPos = m_gameScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
+                for (const auto& o : m_collisionObjects)
+                {
+                    const auto& tx = o.preview.getComponent<cro::Transform>();
+                    const float dist = cro::Spatial::intersects(camPos, target, o.preview.getComponent<cro::Model>().getAABB(), tx.getWorldTransform());
+                    LogI << dist << std::endl;
+                }
             }
         }
     }
@@ -495,10 +501,6 @@ void BushState::createScene()
     };
 
 
-    m_root = m_gameScene.createEntity();
-    m_root.addComponent<cro::Transform>();
-
-
     //placeholder to help visialise player size
     cro::ModelDefinition md(m_resources);
     if (md.loadFromFile("assets/models/player_box.cmt"))
@@ -510,8 +512,6 @@ void BushState::createScene()
         float offset = entity.getComponent<cro::Model>().getMeshData().boundingBox[0].y;
         entity.getComponent<cro::Transform>().setOrigin({ 0.f, offset, 0.f });
         entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlagsBillboard | RenderFlagsThumbnail));
-
-        m_root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 
     if (md.loadFromFile("assets/models/ground_plane.cmt"))
@@ -520,8 +520,6 @@ void BushState::createScene()
         entity.addComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
         md.createModel(entity);
         entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlagsBillboard | RenderFlagsThumbnail));
-
-        m_root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 
 
@@ -702,7 +700,6 @@ void BushState::loadModel(const std::filesystem::path& path)
         float radius = m_models[0].getComponent<cro::Model>().getMeshData().boundingSphere.radius;
         radius *= 1.1f;
         entity.getComponent<cro::Transform>().setPosition({ -radius, 0.f, 0.f });
-        m_root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
         m_materials.resize(entity.getComponent<cro::Model>().getMeshData().submeshCount);
 
@@ -716,7 +713,6 @@ void BushState::loadModel(const std::filesystem::path& path)
             md.createModel(entity);
             entity.getComponent<cro::Model>().setRenderFlags(~RenderFlagsThumbnail);
 
-            m_root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             entity.getComponent<cro::Transform>().setPosition({ radius, 0.f, 0.f });
 
 
@@ -891,6 +887,7 @@ void BushState::loadPreset(const std::filesystem::path& path)
             for (auto& o : m_collisionObjects)
             {
                 m_collisionDefs[o.type]->createModel(o.preview);
+                o.preview.getComponent<cro::Model>().setRenderFlags(~RenderFlagsBillboard);
                 m_models[1].getComponent<cro::Transform>().addChild(o.preview.getComponent<cro::Transform>());
             }
             selectCollisionObject(0);

@@ -310,6 +310,7 @@ void BushState::drawCollisionPanel()
             obj.preview = m_gameScene.createEntity();
             obj.preview.addComponent<cro::Transform>();
             m_collisionDefs[CollisionObject::Sphere]->createModel(obj.preview);
+            obj.preview.getComponent<cro::Model>().setRenderFlags(~RenderFlagsBillboard);
             m_models[1].getComponent<cro::Transform>().addChild(obj.preview.getComponent<cro::Transform>());
 
             obj.preview.addComponent<cro::Callback>().active = true;
@@ -358,6 +359,7 @@ void BushState::drawCollisionPanel()
                 if (ImGui::Selectable(label.c_str(), i == m_selectedCollisionObject))
                 {
                     selectCollisionObject(i);
+                    recentreCamera(m_collisionObjects[i].preview.getComponent<cro::Transform>().getWorldPosition());
                 }
             }
             ImGui::EndListBox();
@@ -381,6 +383,7 @@ void BushState::drawCollisionPanel()
                         ent = m_gameScene.createEntity();
                         ent.addComponent<cro::Transform>().setLocalTransform(tx);
                         m_collisionDefs[i]->createModel(ent);
+                        ent.getComponent<cro::Model>().setRenderFlags(~RenderFlagsBillboard);
                         ent.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", CollisionHighlightColour);
                         m_models[1].getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
                         m_collisionObjects[m_selectedCollisionObject].preview = ent;
@@ -481,14 +484,6 @@ void BushState::drawBillboard(bool* visible)
         ImGui::Image(m_billboardTexture.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
 
         ImGui::SliderFloat("Leaf Scale", &m_billboardScaleMultiplier, 0.1f, 1.f);
-
-        if (ImGui::Button("Reset Rotation"))
-        {
-            m_rootRotation = glm::vec2(0.f);
-            m_root.getComponent<cro::Transform>().setRotation(glm::mat4(1.f));
-        }
-
-        ImGui::SameLine();
 
         if (ImGui::Button("Save Image"))
         {
@@ -618,6 +613,10 @@ void BushState::drawHelp(bool* visible)
         ImGui::Text("Middle Mouse: Pan");
         ImGui::Text("Shift+Middle Mouse: Rotate");
         ImGui::Text("Mouse Wheel: Zoom");
+        ImGui::NewLine();
+        ImGui::Text("G: Translate Collision Object");
+        ImGui::Text("R: Rotate Collision Object");
+        ImGui::Text("S: Scale Collision Object");
     }
     ImGui::End();
 }
