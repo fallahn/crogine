@@ -88,7 +88,14 @@ void BushState::drawMenuBar(bool*)
             {
                 if (getStateCount() == 1)
                 {
-                    cro::App::quit();
+                    if (!cro::FileSystem::showMessageBox("Save Settings", "Do you want to save the current treeset first?", cro::FileSystem::YesNo))
+                    {
+                        cro::App::quit();
+                    }
+                    else
+                    {
+                        showPresetSaveDialogue(OpenDialogueState::Quit);
+                    }
                 }
                 else
                 {
@@ -119,12 +126,11 @@ void BushState::drawMenuBar(bool*)
 void BushState::drawProperties(bool*)
 {
     const glm::vec2 WindowSize = cro::App::getWindow().getSize();
-    static constexpr float PanelWidth = 364.f;
     const float PanelHeight = WindowSize.y - MenuBarHeight;
 
-    ImGui::SetNextWindowSize({ PanelWidth, PanelHeight });
+    ImGui::SetNextWindowSize({ PropertiesPanelWidth, PanelHeight });
     ImGui::SetNextWindowPos({ 0.f, MenuBarHeight });
-    if (ImGui::Begin("Properties", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration))
+    if (ImGui::Begin("Properties", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBringToFrontOnFocus))
     {
         ImGui::BeginChild("##properties");
         if (m_models[0].isValid())
@@ -662,9 +668,11 @@ void BushState::drawCollisionManipulator()
 
 void BushState::drawViewMainpulator()
 {
-    //auto tx = glm::inverse(m_entities[EntityID::ArcBall].getComponent<cro::Transform>().getLocalTransform());
-    //ImGuizmo::ViewManipulate(&tx[0][0], 10.f, ImVec2(pos.x, pos.y), ImVec2(size.x, size.y), 0/*x10101010*/);
-    //m_entities[EntityID::ArcBall].getComponent<cro::Transform>().setRotation(glm::inverse(tx));
+    static constexpr float ManipSize = 96.f;
+
+    //auto tx = /*glm::inverse*/(m_arcBall.getComponent<cro::Transform>().getLocalTransform());
+    //ImGuizmo::ViewManipulate(&tx[0][0], 10.f, ImVec2(ImGui::GetIO().DisplaySize.x - ManipSize, 22.f), {ManipSize, ManipSize}, 0/*x10101010*/);
+    //m_arcBall.getComponent<cro::Transform>().setRotation(/*glm::inverse*/(tx));
 }
 
 void BushState::showModelOpenDialogue()
@@ -786,6 +794,9 @@ void BushState::handleFileDialogues()
                 break;
             case OpenDialogueState::Treeset:
                 showPresetOpenDialogue();
+                break;
+            case OpenDialogueState::Quit:
+                cro::App::quit();
                 break;
             }
             m_pendingDialogueState = OpenDialogueState::None;

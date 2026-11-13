@@ -32,6 +32,8 @@ source distribution.
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/graphics/Colour.hpp>
 
+static constexpr float PropertiesPanelWidth = 364.f;
+
 static constexpr std::size_t MaxCollisionObjects = 10;
 static constexpr cro::Colour CollisionHighlightColour = cro::Colour(1.f, 0.5f, 0.f, 1.f);
 

@@ -616,6 +616,7 @@ namespace cro
         the given screen coordinates.
         If this gives unusual results, particularly with orthographic projections,
         makes sure that the camera's viewport is set correctly.
+        Also note that this generally expects mouse coords which are Y down, not Y up
         */
         glm::vec3 pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize = cro::App::getWindow().getSize()) const;
 

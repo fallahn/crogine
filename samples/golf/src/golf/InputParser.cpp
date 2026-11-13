@@ -1726,8 +1726,8 @@ void InputParser::updateDroneCam(float dt)
         zoomSpeed = 0.15f + (0.85f * zoomSpeed);
 
         auto& tx = e.getComponent<cro::Transform>();
-        auto invRotation = glm::inverse(tx.getRotation());
-        auto up = invRotation * cro::Transform::Y_AXIS;
+        const auto invRotation = glm::inverse(tx.getRotation());
+        const auto up = invRotation * cro::Transform::Y_AXIS;
 
         tx.rotate(up, rotation.y * zoomSpeed * dt);
         tx.rotate(cro::Transform::X_AXIS, rotation.x * zoomSpeed * dt);

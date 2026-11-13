@@ -81,6 +81,11 @@ private:
 
     //----model preview-----
 
+    struct ArcBall final
+    {
+        float offset = 6.f; //along the camera forward axis
+    }m_arcBall;
+
     struct ModelID final
     {
         enum
@@ -90,7 +95,7 @@ private:
             Count
         };
     };
-    cro::Entity m_root;
+    cro::Entity m_root; //TODO remove this
     std::array<cro::Entity, ModelID::Count> m_models = {};
     std::vector<glm::mat4> m_instanceTransforms;
 
@@ -100,6 +105,7 @@ private:
         std::int32_t activeMaterial = 0;
     };
     std::vector<MaterialSlot> m_materials;
+
 
     struct TreesetData final
     {
@@ -232,6 +238,7 @@ private:
         {
             Model, Treeset,
 
+            Quit, //used as return value from save dialogue to quit rather than show open dialogue
             None
         };
     };

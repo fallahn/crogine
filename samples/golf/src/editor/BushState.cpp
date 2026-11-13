@@ -172,7 +172,12 @@ bool BushState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_EVENT_MOUSE_WHEEL)
     {
-        m_gameScene.getActiveCamera().getComponent<cro::Transform>().move({ 0.f, 0.f, -evt.wheel.y });
+        auto& tx = m_gameScene.getActiveCamera().getComponent<cro::Transform>();
+        const float amt = cro::Util::Maths::sgn(evt.wheel.y) * m_arcBall.offset * 0.5f;
+        
+        auto old = m_arcBall.offset;
+        m_arcBall.offset = std::clamp(m_arcBall.offset - amt, 0.05f, 20.f);
+        tx.move(tx.getForwardVector() * (old - m_arcBall.offset));
     }
     else if (evt.type == SDL_EVENT_MOUSE_MOTION)
     {
@@ -181,25 +186,44 @@ bool BushState::handleEvent(const cro::Event& evt)
             if (cro::Keyboard::isKeyPressed(SDLK_LSHIFT))
             {
                 //rotate root
-                m_rootRotation.y += static_cast<float>(evt.motion.xrel) / 80.f;
-                //rootRotation.x += static_cast<float>(evt.motion.yrel) / 80.f;
+                glm::vec4 rotation = glm::vec4(0.f);
+                rotation.y -= static_cast<float>(evt.motion.xrel) / 80.f;
+                rotation.x -= static_cast<float>(evt.motion.yrel) / 80.f;
 
-                glm::mat4 rotation = glm::rotate(glm::mat4(1.f), m_rootRotation.y, cro::Transform::Y_AXIS);
-                auto q = glm::quat_cast(glm::rotate(rotation, m_rootRotation.x, cro::Transform::X_AXIS));
+                auto& tx = m_gameScene.getActiveCamera().getComponent<cro::Transform>();
+                tx.move(tx.getForwardVector() * m_arcBall.offset);
 
-                m_root.getComponent<cro::Transform>().setRotation(q);
+                const auto invRotation = glm::inverse(tx.getRotation());
+                const auto up = invRotation * cro::Transform::Y_AXIS;
 
-                rotation = glm::rotate(glm::mat4(1.f), -m_rootRotation.y, cro::Transform::Y_AXIS);
-                m_skyScene.getActiveCamera().getComponent<cro::Transform>().setRotation(glm::quat_cast(rotation));
+                tx.rotate(up, rotation.y );
+                tx.rotate(cro::Transform::X_AXIS, rotation.x);
+
+                tx.move(-tx.getForwardVector() * m_arcBall.offset);
             }
             else
             {
-                //drag cam
-                auto position = m_gameScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
-                position.x -= static_cast<float>(evt.motion.xrel) / 50.f;
-                position.y += static_cast<float>(evt.motion.yrel) / 50.f;
+                //drag cam - TODO this needs to adjust its speed
+                //based on the camera distance to the arcball
+                glm::vec4 movement = glm::vec4(
+                    -static_cast<float>(evt.motion.xrel) / 50.f,
+                    static_cast<float>(evt.motion.yrel) / 50.f, 0.f, 0.f);
 
-                m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition(position);
+                auto& tx = m_gameScene.getActiveCamera().getComponent<cro::Transform>();
+                tx.move(tx.getForwardVector() * m_arcBall.offset);
+
+                movement = tx.getLocalTransform() * movement;
+                tx.move(glm::vec3(movement));
+
+                tx.move(-tx.getForwardVector() * m_arcBall.offset);
+
+                //adjust the offset based on what's under the view
+                const auto worldPoint = m_gameScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(glm::vec2(cro::App::getWindow().getSize() / 2u) + glm::vec2(PropertiesPanelWidth, 0.f));
+                const float targOffset = glm::length(tx.getPosition() - worldPoint);
+                if (std::abs(m_arcBall.offset - targOffset) < 10.f)
+                {
+                    m_arcBall.offset = std::clamp(targOffset, 0.05f, 20.f); //TODO consitify with zoom
+                }
             }
         }
     }
@@ -255,6 +279,7 @@ bool BushState::simulate(float dt)
     m_windBuffer.setData(m_windData);
 
     m_gameScene.simulate(dt);
+    m_skyScene.getActiveCamera().getComponent<cro::Transform>().setRotation(m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldRotation());
     m_skyScene.simulate(dt);
     return true;
 }
@@ -488,11 +513,17 @@ void BushState::createScene()
     camEnt.getComponent<cro::Camera>().setBlurPassCount(1);
     camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.5f, 6.f });
 
+
     auto sun = m_gameScene.getSunlight();
     sun.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 35.f * cro::Util::Const::degToRad);
     sun.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -35.f * cro::Util::Const::degToRad);
 
-
+    registerWindow([this]()
+        {
+            ImGui::Begin("Arc");
+            ImGui::Text("Offset: %3.2f", m_arcBall.offset);
+            ImGui::End();        
+        });
 
     //ortho cam for billboard view
     glm::vec2 camSize = glm::vec2(BillboardTargetSize) / PixelsPerMetre;
@@ -513,20 +544,20 @@ void BushState::createScene()
 
 void BushState::updateView(cro::Camera& cam3D)
 {
-    glm::vec2 size(cro::App::getWindow().getSize());
-    size.y = ((size.x / 16.f) * 9.f) / size.y;
-    size.x = 1.f;
+    const glm::vec2 size(cro::App::getWindow().getSize());
 
     //90 deg in x (glm expects fov in y)
     //set this far distance to be similar to the game so we get the same sort of depth buffer
-    cam3D.setPerspective(50.6f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 340.f); 
-    cam3D.viewport.bottom = (1.f - size.y) / 2.f;
-    cam3D.viewport.height = size.y;
+    cam3D.setPerspective(50.6f * cro::Util::Const::degToRad, (size.x - PropertiesPanelWidth) / size.y, 0.1f, 40.f); 
+    cam3D.viewport.left = PropertiesPanelWidth / size.x;
+    cam3D.viewport.bottom = 0.f;
+    cam3D.viewport.width = 1.f - cam3D.viewport.left;
+    cam3D.viewport.height = 1.f;
 
     //set the correct renderable height in the shader
-    auto targetHeight = static_cast<float>(cro::App::getWindow().getSize().y) * size.y;
+    //auto targetHeight = static_cast<float>(cro::App::getWindow().getSize().y) * size.y;
     glUseProgram(m_shaderUniforms[BushShaderID::Bush].shaderID);
-    glUniform1f(m_shaderUniforms[BushShaderID::Bush].targetHeight, targetHeight);
+    glUniform1f(m_shaderUniforms[BushShaderID::Bush].targetHeight, /*targetHeight*/size.y);
 
     ResolutionData rd;
     rd.resolution = cro::App::getWindow().getSize();
@@ -584,7 +615,7 @@ void BushState::drawUI()
     ImGuizmo::SetRect(0.f, 0.f, io.DisplaySize.x, io.DisplaySize.y);
 
     drawCollisionManipulator();
-    drawViewMainpulator();
+    //drawViewMainpulator();
 }
 
 void BushState::loadModel(const std::filesystem::path& path)
