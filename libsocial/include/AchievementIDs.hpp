@@ -210,6 +210,7 @@ namespace AchievementID
         Master16,
 
         TossingCopper,
+        BeefStick,
 
         Count
     };

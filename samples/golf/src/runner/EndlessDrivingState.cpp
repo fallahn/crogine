@@ -31,6 +31,9 @@ source distribution.
 #include "../golf/MenuConsts.hpp"
 #include "../golf/FloatingTextSystem.hpp"
 
+#include <Achievements.hpp>
+#include <AchievementStrings.hpp>
+
 #include "CarSystem.hpp"
 #include "EndlessDrivingState.hpp"
 #include "EndlessConsts.hpp"
@@ -69,9 +72,9 @@ source distribution.
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtx/euler_angles.hpp>
 
-#include <sstream>
-#include <iomanip>
 #include <future>
+#include <iomanip>
+#include <sstream>
 
 namespace
 {
@@ -1701,6 +1704,8 @@ void EndlessDrivingState::updatePlayer(float dt)
 
                             floatingText("FLAG STICK BONUS");
                             applyHapticEffect(HapticType::Lap);
+
+                            Achievements::awardAchievement(AchievementStrings[AchievementID::BeefStick]);
                         }
                         else
                         {

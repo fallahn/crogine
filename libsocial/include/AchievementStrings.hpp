@@ -195,7 +195,8 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "course_15_par",
     "course_16_par",
 
-    "tossing_copper"
+    "tossing_copper",
+    "beef_stick"
 };
 
 //appears on the notification
@@ -346,7 +347,8 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Master Course 14",
     "Master Course 15",
     "Master Course 16",
-    "Tossing Copper"
+    "Tossing Copper",
+    "Beef Stick"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -498,6 +500,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Complete Craig Galed with par or under", false),
     std::make_pair("Complete Balunfell Bay with par or under", false),
     std::make_pair("Spend a penny while waiting in the lobby", true),
+    std::make_pair("Get the Flagstick bonus in Cartrun", false),
 };
 
 //assuming trophies load correctly they are:
@@ -688,6 +691,7 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::GoldCup,
     TrophyID::GoldCup,
     /*146*/TrophyID::BronzeFigure,
+    TrophyID::SilverCup
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)
