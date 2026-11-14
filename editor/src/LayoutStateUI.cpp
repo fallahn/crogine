@@ -172,7 +172,7 @@ void LayoutState::drawMenuBar()
 
             if (ImGui::MenuItem("Set Background"))
             {
-                auto path = cro::FileSystem::openFileDialogue(m_sharedData.workingDirectory + "untitled.png", "png,jpg,bmp");
+                auto path = cro::FileSystem::openFileDialogue(m_sharedData.workingDirectory / "untitled.png", "png,jpg,bmp");
                 if (!path.empty())
                 {
                     if (m_backgroundTexture.loadFromFile(path))
@@ -266,7 +266,7 @@ void LayoutState::drawBrowser()
             {
                 if (cro::FileSystem::showMessageBox("Warning", "This will remove all sprites which\nshare a sprite sheet.\nAre you sure?", cro::FileSystem::YesNo))
                 {
-                    std::string sheet = m_spriteThumbs[m_selectedSprite].spriteSheet;
+                    const auto sheet = m_spriteThumbs[m_selectedSprite].spriteSheet;
                     m_spriteThumbs.erase(std::remove_if(m_spriteThumbs.begin(), m_spriteThumbs.end(), 
                         [&sheet](const SpriteThumb& t)
                         {
@@ -380,13 +380,13 @@ void LayoutState::drawBrowser()
             if (ImGui::Button("Add"))
             {
                 //load a font
-                const std::string path = U8PATH_CAST(cro::FileSystem::openFileDialogue(m_sharedData.workingDirectory + "/untitled.ttf", "ttf,otf", true));
+                const auto path = cro::FileSystem::openFileDialogue(m_sharedData.workingDirectory / "untitled.ttf", "ttf,otf", true);
                 if (!path.empty())
                 {
-                    const auto files = cro::Util::String::tokenize(path, '|');
-                    for (const auto& f : files)
+                    //const auto files = cro::Util::String::tokenize(path, '|');
+                    //for (const auto& f : files)
                     {
-                        loadFont(f);
+                        loadFont(path);
                     }
                 }
             }
@@ -545,16 +545,17 @@ void LayoutState::doDrop(TreeNode& node)
     }
 }
 
-void LayoutState::loadSpriteSheet(const std::string& path)
+void LayoutState::loadSpriteSheet(const std::filesystem::path& path)
 {
     cro::SpriteSheet spriteSheet;
-    if (spriteSheet.loadFromFile(path, m_resources.textures, m_sharedData.workingDirectory + "/"))
+    if (spriteSheet.loadFromFile(path, m_resources.textures, m_sharedData.workingDirectory))
     {
-        std::string relPath = path;
-        std::replace(relPath.begin(), relPath.end(), '\\', '/');
-        if (relPath.find(m_sharedData.workingDirectory) != std::string::npos)
+        auto relPath = path;
+        //std::replace(relPath.begin(), relPath.end(), '\\', '/');
+        //if (relPath.find(m_sharedData.workingDirectory) != std::string::npos)
+        if (const auto rel = std::filesystem::relative(path, m_sharedData.workingDirectory); !rel.empty())
         {
-            relPath = relPath.substr(m_sharedData.workingDirectory.size() + 1);
+            relPath = rel;// relPath.substr(m_sharedData.workingDirectory.size() + 1);
         }
 
         const auto& sprites = spriteSheet.getSprites();
@@ -568,7 +569,7 @@ void LayoutState::loadSpriteSheet(const std::string& path)
     }
 }
 
-void LayoutState::loadFont(const std::string& path)
+void LayoutState::loadFont(const std::filesystem::path& path)
 {
     if (m_resources.fonts.load(m_nextResourceID, path))
     {
@@ -605,14 +606,15 @@ void LayoutState::loadFont(const std::string& path)
         m_thumbScene.simulate(0.f);
 
 
-        name = U8PATH_CAST(cro::FileSystem::getFileName(path));
+        name = cro::FileSystem::getFileName(path);
 
-        if (!m_sharedData.workingDirectory.empty() &&
-            path.find(m_sharedData.workingDirectory) != std::string::npos)
+        //if (!m_sharedData.workingDirectory.empty() &&
+        //    path.find(m_sharedData.workingDirectory) != std::string::npos)
+        if (const auto rel = std::filesystem::relative(relPath, m_sharedData.workingDirectory); !rel.empty())
         {
-            relPath = path.substr(m_sharedData.workingDirectory.size() + 1);
+            relPath = rel;// path.substr(m_sharedData.workingDirectory.size() + 1);
         }
-        else if (cro::FileSystem::fileExists(m_sharedData.workingDirectory + path))
+        else if (cro::FileSystem::fileExists(m_sharedData.workingDirectory / path))
         {
             relPath = path;
         }
@@ -620,7 +622,7 @@ void LayoutState::loadFont(const std::string& path)
         {
             relPath = name;
         }
-        std::replace(relPath.begin(), relPath.end(), '\\', '/');
+        //std::replace(relPath.begin(), relPath.end(), '\\', '/');
 
         m_nextResourceID++;
     }

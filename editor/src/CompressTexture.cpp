@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2025
+Matt Marchant 2025 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -168,10 +168,11 @@ static inline void toolTip(const char* desc)
     }
 }
 
-static inline void browseDirectory(std::string& path, const std::string& id)
+static inline void browseDirectory(std::filesystem::path& path, const std::string& id)
 {
     ImGui::SetNextItemWidth(520.f);
-    ImGui::InputText(id.c_str(), &path, ImGuiInputTextFlags_ReadOnly);
+    //ImGui::InputText(id.c_str(), &path, ImGuiInputTextFlags_ReadOnly);
+    ImGui::Text("%s", U8PATH_CAST(path));
     ImGui::SameLine();
 
     const std::string label = "Browse" + id;
@@ -180,7 +181,7 @@ static inline void browseDirectory(std::string& path, const std::string& id)
         const auto newPath = cro::FileSystem::openFolderDialogue(path);
         if (!newPath.empty())
         {
-            path = U8PATH_CAST(newPath);
+            path = newPath;
         }
     }
 }

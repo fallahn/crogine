@@ -36,18 +36,18 @@ source distribution.
 
 #include <functional>
 
-std::uint32_t ModelState::addTextureToBrowser(const std::string& path)
+std::uint32_t ModelState::addTextureToBrowser(const std::filesystem::path& path)
 {
-    std::string fileName = U8PATH_CAST(cro::FileSystem::getFileName(path));
+    auto fileName = cro::FileSystem::getFileName(path);
 
     auto relPath = path;
-    std::replace(relPath.begin(), relPath.end(), '\\', '/');
+    //std::replace(relPath.begin(), relPath.end(), '\\', '/');
 
-    std::hash<std::string> hashAttack;
-    auto uid = hashAttack(path);
+    std::hash<std::u8string> hashAttack;
+    auto uid = hashAttack(path.u8string());
 
-    relPath = U8PATH_CAST(cro::FileSystem::getFilePath(relPath));
-    relPath = U8PATH_CAST(cro::FileSystem::getRelativePath(relPath, m_sharedData.workingDirectory));
+    relPath = cro::FileSystem::getFilePath(relPath);
+    relPath = cro::FileSystem::getRelativePath(relPath, m_sharedData.workingDirectory);
 
     //replace if exists
     std::uint32_t id = 0;
@@ -79,7 +79,7 @@ std::uint32_t ModelState::addTextureToBrowser(const std::string& path)
         tex.texture->setSmooth(true);
 
         m_selectedTexture = tex.texture->getGLHandle();
-        tex.name = fileName;
+        tex.name = U8PATH_CAST(fileName);
         tex.relPath = relPath;
         tex.uid = uid;
         m_materialTextures.insert(std::make_pair(tex.texture->getGLHandle(), std::move(tex)));
@@ -309,12 +309,12 @@ void ModelState::exportMaterial() const
         std::replace(defaultName.begin(), defaultName.end(), ' ', '_');
         defaultName = cro::Util::String::toLower(defaultName);
     }
-    auto path = cro::FileSystem::saveFileDialogue(m_sharedData.workingDirectory + "/" + defaultName, "mdf");
+    auto path = cro::FileSystem::saveFileDialogue(m_sharedData.workingDirectory / defaultName, "mdf");
     if (!path.empty())
     {
         if (cro::FileSystem::getFileExtension(path) != ".mdf")
         {
-            path += ".mdf";
+            path.replace_extension("mdf");
         }
 
         const auto& matDef = m_materialDefs[m_selectedMaterial];
@@ -353,7 +353,7 @@ void ModelState::exportMaterial() const
         auto getTextureName = [&](std::uint32_t id)
         {
             const auto& t = m_materialTextures.at(id);
-            return t.relPath + "/" + t.name;
+            return t.relPath / t.name;
         };
 
         if (matDef.textureIDs[MaterialDefinition::Diffuse] != 0)
@@ -419,7 +419,7 @@ void ModelState::exportMaterial() const
     }
 }
 
-void ModelState::importMaterial(const std::string& path)
+void ModelState::importMaterial(const std::filesystem::path& path)
 {
     cro::ConfigFile file;
     auto extension = cro::FileSystem::getFileExtension(path);
@@ -480,7 +480,7 @@ void ModelState::importMaterial(const std::string& path)
                 }
                 else if (name == "diffuse")
                 {
-                    def.textureIDs[MaterialDefinition::Diffuse] = addTextureToBrowser(m_sharedData.workingDirectory + "/" + prop.getValue<std::string>());
+                    def.textureIDs[MaterialDefinition::Diffuse] = addTextureToBrowser(m_sharedData.workingDirectory / prop.getValue<std::filesystem::path>());
                     if (def.textureIDs[MaterialDefinition::Diffuse] == 0)
                     {
                         cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
@@ -488,7 +488,7 @@ void ModelState::importMaterial(const std::string& path)
                 }
                 else if (name == "mask")
                 {
-                    def.textureIDs[MaterialDefinition::Mask] = addTextureToBrowser(m_sharedData.workingDirectory + "/" + prop.getValue<std::string>());
+                    def.textureIDs[MaterialDefinition::Mask] = addTextureToBrowser(m_sharedData.workingDirectory / prop.getValue<std::filesystem::path>());
                     if (def.textureIDs[MaterialDefinition::Mask] == 0)
                     {
                         cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
@@ -496,7 +496,7 @@ void ModelState::importMaterial(const std::string& path)
                 }
                 else if (name == "lightmap")
                 {
-                    def.textureIDs[MaterialDefinition::Lightmap] = addTextureToBrowser(m_sharedData.workingDirectory + "/" + prop.getValue<std::string>());
+                    def.textureIDs[MaterialDefinition::Lightmap] = addTextureToBrowser(m_sharedData.workingDirectory / prop.getValue<std::filesystem::path>());
                     if (def.textureIDs[MaterialDefinition::Lightmap] == 0)
                     {
                         cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
@@ -504,7 +504,7 @@ void ModelState::importMaterial(const std::string& path)
                 }
                 else if (name == "normal")
                 {
-                    def.textureIDs[MaterialDefinition::Normal] = addTextureToBrowser(m_sharedData.workingDirectory + "/" + prop.getValue<std::string>());
+                    def.textureIDs[MaterialDefinition::Normal] = addTextureToBrowser(m_sharedData.workingDirectory / prop.getValue<std::filesystem::path>());
                     if (def.textureIDs[MaterialDefinition::Normal] == 0)
                     {
                         cro::FileSystem::showMessageBox("Error", "Failed opening texture. Check the working directory is set (View->Options)");
@@ -631,7 +631,7 @@ void ModelState::readMaterialDefinition(MaterialDefinition& matDef, const cro::C
             || name == "normal"
             || name == "lightmap")
         {
-            auto path = m_sharedData.workingDirectory + "/" + prop.getValue<std::string>();
+            auto path = m_sharedData.workingDirectory / prop.getValue<std::filesystem::path>();
 
             //TODO use this to correct path for textures which are in the same dir as definition
             /*

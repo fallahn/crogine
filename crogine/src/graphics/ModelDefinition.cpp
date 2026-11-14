@@ -94,7 +94,7 @@ namespace
     };
 }
 
-ModelDefinition::ModelDefinition(ResourceCollection& rc, EnvironmentMap* envMap, const std::string& workingDir)
+ModelDefinition::ModelDefinition(ResourceCollection& rc, EnvironmentMap* envMap, const std::filesystem::path& workingDir)
     : m_resources       (rc),
     m_envMap            (envMap),
     m_workingDir        (workingDir),
@@ -106,14 +106,14 @@ ModelDefinition::ModelDefinition(ResourceCollection& rc, EnvironmentMap* envMap,
     m_instanced         (false),
     m_modelLoaded       (false)
 {
-    if (!workingDir.empty())
+    /*if (!workingDir.empty())
     {
         std::replace(m_workingDir.begin(), m_workingDir.end(), '\\', '/');
         if (m_workingDir.back() != '/')
         {
             m_workingDir += '/';
         }
-    }
+    }*/
     std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
     std::fill(m_shadowIDs.begin(), m_shadowIDs.end(), -1);
 }
@@ -1007,7 +1007,7 @@ bool ModelDefinition::createModel(Entity entity) const
                 }
             }
             entity.addComponent<ShadowCaster>().skinned = (m_skeleton);
-            entity.setLabel(m_fileName);
+            entity.setLabel(m_fileName.string());
         }
 
         if (m_billboard)

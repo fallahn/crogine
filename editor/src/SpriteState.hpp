@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -40,6 +40,7 @@ source distribution.
 #include <crogine/graphics/Palette.hpp>
 
 #include <array>
+#include <filesystem>
 #include <tuple>
 
 struct SharedStateData;
@@ -66,7 +67,7 @@ private:
 
     cro::TextureResource m_textures;
     cro::SpriteSheet m_spriteSheet;
-    std::string m_currentFilePath;
+    std::filesystem::path m_currentFilePath;
 
     struct EntityID final
     {
@@ -95,7 +96,7 @@ private:
     glm::vec2 getRelativePosition(glm::vec2);
     void setBoundsPosition(glm::vec2);
 
-    void openSprite(const std::string&);
+    void openSprite(const std::filesystem::path&);
     void save();
     void saveAs();
     void updateBoundsEntity();

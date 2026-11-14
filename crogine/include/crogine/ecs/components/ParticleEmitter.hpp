@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/detail/glm/vec3.hpp>
 
 #include <array>
+#include <filesystem>
 
 namespace cro
 {
@@ -70,7 +71,7 @@ namespace cro
     */
     struct CRO_EXPORT_API EmitterSettings final
     {
-        std::string texturePath;
+        std::filesystem::path texturePath;
         bool textureSmoothing = false;
 
         enum BlendMode

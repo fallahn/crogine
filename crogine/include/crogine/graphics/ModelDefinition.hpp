@@ -116,7 +116,7 @@ namespace cro
         \param workingDir Set this to have resources open at a file location
         relative to a directory other than the current working directory
         */
-        explicit ModelDefinition(ResourceCollection& resources, EnvironmentMap* envMap = nullptr, const std::string& workingDir = "");
+        explicit ModelDefinition(ResourceCollection& resources, EnvironmentMap* envMap = nullptr, const std::filesystem::path& workingDir = "");
 
         /*!
         \brief Requests the internal MeshBuilder to optimise the vertex layout on load.
@@ -220,13 +220,13 @@ namespace cro
         /*!
         \brief Returns the name of the model definition files the last loading attempt was made from
         */
-        const std::string& getSource() const { return m_fileName; }
+        const std::filesystem::path& getSource() const { return m_fileName; }
 
     private:
         ResourceCollection& m_resources;
         EnvironmentMap* m_envMap;
-        std::string m_workingDir;
-        std::string m_fileName;
+        std::filesystem::path m_workingDir;
+        std::filesystem::path m_fileName;
         bool m_optimiseOnLoad;
         bool m_createWireframe;
 

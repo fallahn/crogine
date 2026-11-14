@@ -90,7 +90,7 @@ void ParticleState::drawMenuBar()
 
             if (!m_particleSettings->texturePath.empty())
             {
-                auto texPath = m_sharedData.workingDirectory + "/" + m_particleSettings->texturePath;
+                auto texPath = m_sharedData.workingDirectory / m_particleSettings->texturePath;
                 if (cro::FileSystem::fileExists(texPath)
                     && m_texture.loadFromFile(texPath))
                 {
@@ -370,21 +370,22 @@ void ParticleState::drawInspector()
 
             if (ImGui::Button("Set Texture"))
             {
-                std::string path = U8PATH_CAST(cro::FileSystem::openFileDialogue(m_sharedData.workingDirectory, "png,jpg,bmp"));
+                auto path = cro::FileSystem::openFileDialogue(m_sharedData.workingDirectory, "png,jpg,bmp");
                 if (!path.empty()
                     && m_texture.loadFromFile(path))
                 {
                     m_texture.setSmooth(true);
                     m_texture.setRepeated(true);
 
-                    std::replace(path.begin(), path.end(), '\\', '/');
+                    //std::replace(path.begin(), path.end(), '\\', '/');
 
                     //try correcting with current working directory
                     if (!m_sharedData.workingDirectory.empty())
                     {
-                        if (path.find(m_sharedData.workingDirectory) != std::string::npos)
+                        //if (path.find(m_sharedData.workingDirectory) != std::string::npos)
+                        if (const auto rel = std::filesystem::relative(path, m_sharedData.workingDirectory); !rel.empty())
                         {
-                            path = path.substr(m_sharedData.workingDirectory.size());
+                            path = rel;// path.substr(m_sharedData.workingDirectory.size());
                         }
                     }
                     m_particleSettings->textureID = m_texture.getGLHandle();
@@ -568,19 +569,19 @@ void ParticleState::drawOptions()
             }
             else
             {
-                auto dir = m_sharedData.workingDirectory.substr(0, 30) + "...";
-                ImGui::Text("%s", dir.c_str());
+                //auto dir = m_sharedData.workingDirectory.substr(0, 30) + "...";
+                ImGui::Text("%s", U8PATH_CAST(m_sharedData.workingDirectory));
                 ImGui::SameLine();
-                uiConst::showToolTip(m_sharedData.workingDirectory.c_str());
+                uiConst::showToolTip(U8PATH_CAST(m_sharedData.workingDirectory));
             }
             ImGui::SameLine();
             if (ImGui::Button("Browse"))
             {
-                auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
+                const auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
                 if (!path.empty())
                 {
-                    m_sharedData.workingDirectory = U8PATH_CAST(path);
-                    std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
+                    m_sharedData.workingDirectory = path;
+                    //std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
                 }
             }
 
@@ -648,7 +649,7 @@ void ParticleState::drawRenderPreview()
 
                 if (ImGui::Button("Render"))
                 {
-                    auto path = cro::FileSystem::saveFileDialogue(m_sharedData.workingDirectory + "/untitled.png", "png");
+                    auto path = cro::FileSystem::saveFileDialogue(m_sharedData.workingDirectory / "untitled.png", "png");
                     if (!path.empty())
                     {
                         //std::replace(path.begin(), path.end(), '\\', '/');
@@ -715,10 +716,13 @@ void ParticleState::drawRenderPreview()
                         //check if we want to write a sprite sheet
                         if (spt)
                         {
-                            std::string relPath = U8PATH_CAST((outputPath / (std::string(U8PATH_CAST(outputName)) + ".png")));
-                            if (relPath.find(m_sharedData.workingDirectory) != std::string::npos)
+                            //std::string relPath = U8PATH_CAST((outputPath / (std::string(U8PATH_CAST(outputName)) + ".png")));
+                            auto relPath = outputPath / outputName;
+                            relPath.replace_extension("png");
+                            //if (relPath.find(m_sharedData.workingDirectory) != std::string::npos)
+                            if (const auto rel = std::filesystem::relative(relPath, m_sharedData.workingDirectory); !rel.empty())
                             {
-                                relPath = relPath.substr(m_sharedData.workingDirectory.size() + 1);
+                                relPath = rel;// relPath.substr(m_sharedData.workingDirectory.size() + 1);
                             }
 
                             cro::ConfigFile cfg("spritesheet", U8PATH_CAST(outputName));

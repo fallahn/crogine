@@ -62,27 +62,28 @@ namespace
 
 void ModelState::openModel()
 {
-    std::string path = U8PATH_CAST(cro::FileSystem::openFileDialogue(m_preferences.lastModelDirectory, "cmt"));
+    const auto path = cro::FileSystem::openFileDialogue(m_preferences.lastModelDirectory, "cmt");
     if (!path.empty()
         && cro::FileSystem::getFileExtension(path) == ".cmt")
     {
-        std::replace(path.begin(), path.end(), '\\', '/');
-        if (path.find(m_sharedData.workingDirectory) == std::string::npos)
+        //std::replace(path.begin(), path.end(), '\\', '/');
+        //if (path.find(m_sharedData.workingDirectory) == std::string::npos)
+        if (const auto rel = std::filesystem::relative(path, m_sharedData.workingDirectory); rel.empty())
         {
             cro::FileSystem::showMessageBox("Warning", "This model was not opened from the current working directory.");
         }
 
         openModelAtPath(path);
 
-        m_preferences.lastModelDirectory = U8PATH_CAST(cro::FileSystem::getFilePath(path));
+        m_preferences.lastModelDirectory = cro::FileSystem::getFilePath(path);
     }
     else
     {
-        cro::Logger::log(path + ": invalid file path", cro::Logger::Type::Error);
+        cro::Logger::log(path.string() + ": invalid file path", cro::Logger::Type::Error);
     }
 }
 
-void ModelState::openModelAtPath(const std::string& path)
+void ModelState::openModelAtPath(const std::filesystem::path& path)
 {
     if (m_entities[EntityID::ActiveModel].isValid())
     {
@@ -297,9 +298,9 @@ void ModelState::openModelAtPath(const std::string& path)
     }
 }
 
-void ModelState::saveModel(const std::string& path)
+void ModelState::saveModel(const std::filesystem::path& path)
 {
-    std::string meshPath;
+    std::filesystem::path meshPath;
     
     cro::ConfigFile newCfg("model", m_modelProperties.name);
     switch (m_modelProperties.type)
@@ -314,17 +315,17 @@ void ModelState::saveModel(const std::string& path)
             {
                 newCfg.addProperty(prop);
 
-                auto propValue = prop.getValue<std::string>();
-                std::replace(propValue.begin(), propValue.end(), '\\', '/');
+                auto propValue = prop.getValue<std::filesystem::path>();
+                //std::replace(propValue.begin(), propValue.end(), '\\', '/');
 
-                if (propValue.find('/') != std::string::npos)
+                if (/*propValue.find('/') != std::string::npos*/propValue.has_parent_path())
                 {
-                    meshPath = m_sharedData.workingDirectory + "/" + propValue;
+                    meshPath = m_sharedData.workingDirectory / propValue;
                 }
                 else
                 {
                     //relative path
-                    meshPath = U8PATH_CAST((cro::FileSystem::getFilePath(path) / propValue));
+                    meshPath = (cro::FileSystem::getFilePath(path) / propValue);
                 }
             }
         }
@@ -359,7 +360,7 @@ void ModelState::saveModel(const std::string& path)
     auto textureName = [&](std::uint32_t id)
     {
         const auto& t = m_materialTextures.at(id);
-        return t.relPath + t.name;
+        return t.relPath / t.name;
     };
 
     //add all the active materials
@@ -529,7 +530,7 @@ void ModelState::saveModel(const std::string& path)
     }
     else
     {
-        cro::FileSystem::showMessageBox("Error", "Failed writing model to " + path);
+        cro::FileSystem::showMessageBox("Error", "Failed writing model to " + (path.string()));
     }
 }
 
@@ -624,7 +625,7 @@ void ModelState::importModel()
         return retVal;
     };
 
-    std::string path = U8PATH_CAST(cro::FileSystem::openFileDialogue(m_preferences.lastImportDirectory + "/untitled", "obj,dae,fbx,glb,iqm"));
+    auto path = cro::FileSystem::openFileDialogue(m_preferences.lastImportDirectory / "untitled", "obj,dae,fbx,glb,iqm");
     if (!path.empty())
     {
         auto extension = cro::FileSystem::getFileExtension(path);
@@ -635,7 +636,7 @@ void ModelState::importModel()
 
             m_GLTFLoader = std::make_unique<tf::TinyGLTF>();
             m_GLTFScene = {};
-            m_browseGLTF = m_GLTFLoader->LoadBinaryFromFile(&m_GLTFScene, &error, &warning, path);
+            m_browseGLTF = m_GLTFLoader->LoadBinaryFromFile(&m_GLTFScene, &error, &warning, U8PATH_CAST(path));
 
             if (!warning.empty())
             {
@@ -649,7 +650,7 @@ void ModelState::importModel()
 
             if (m_browseGLTF)
             {
-                m_preferences.lastImportDirectory = U8PATH_CAST(cro::FileSystem::getFilePath(path));
+                m_preferences.lastImportDirectory = cro::FileSystem::getFilePath(path);
                 savePrefs();
             }
         }
@@ -660,7 +661,7 @@ void ModelState::importModel()
         else
         {
             ai::Importer importer;
-            auto* scene = importer.ReadFile(path,
+            auto* scene = importer.ReadFile(U8PATH_CAST(path),
                 aiProcess_CalcTangentSpace
 
                 //| aiProcess_PopulateArmatureData
@@ -791,7 +792,7 @@ void ModelState::importModel()
                 updateImportNode(header, importedVBO, importedIndexArrays, GL_TRIANGLES); //TODO this needs to read the import data
             }
 
-            m_preferences.lastImportDirectory = U8PATH_CAST(cro::FileSystem::getFilePath(path));
+            m_preferences.lastImportDirectory = cro::FileSystem::getFilePath(path);
             savePrefs();
         }
         updateGridMesh(m_entities[EntityID::GridMesh].getComponent<cro::Model>().getMeshData(), {}, {});
@@ -810,7 +811,7 @@ void ModelState::importModel()
     }
 }
 
-void ModelState::importIQM(const std::string& path)
+void ModelState::importIQM(const std::filesystem::path& path)
 {
     //(ab)use mesh loader to parse file
     cro::IqmBuilder builder(path);
@@ -1059,8 +1060,8 @@ void ModelState::exportModel(bool modelOnly, bool openOnSave)
         return;
     }
 
-    std::string path = U8PATH_CAST(cro::FileSystem::saveFileDialogue(m_preferences.lastExportDirectory + "/untitled", "cmb"));
-    std::replace(path.begin(), path.end(), '\\', '/');
+    auto path = cro::FileSystem::saveFileDialogue(m_preferences.lastExportDirectory / "untitled", "cmb");
+    //std::replace(path.begin(), path.end(), '\\', '/');
     if (!path.empty())
     {
         if (cro::FileSystem::getFileExtension(path) != ".cmb")
@@ -1077,20 +1078,21 @@ void ModelState::exportModel(bool modelOnly, bool openOnSave)
             modelName = modelName.substr(0, modelName.find_last_of('.'));
 
             //auto meshPath = path.substr(m_preferences.workingDirectory.length() + 1);
-            std::string meshPath;
-            if (!m_sharedData.workingDirectory.empty() && path.find(m_sharedData.workingDirectory) != std::string::npos)
+            std::filesystem::path meshPath;
+            if (!m_sharedData.workingDirectory.empty() /*&& path.find(m_sharedData.workingDirectory) != std::string::npos*/)
             {
-                meshPath = path.substr(m_sharedData.workingDirectory.length() + 1);
+                //meshPath = path.substr(m_sharedData.workingDirectory.length() + 1);
+                meshPath = std::filesystem::relative(path, m_sharedData.workingDirectory);
             }
             else
             {
-                meshPath = U8PATH_CAST(cro::FileSystem::getFileName(path));
+                meshPath = cro::FileSystem::getFileName(path);
             }
 
-            std::replace(meshPath.begin(), meshPath.end(), '\\', '/');
+            //std::replace(meshPath.begin(), meshPath.end(), '\\', '/');
 
             cro::ConfigFile cfg("model", modelName);
-            cfg.addProperty("mesh").setValue(meshPath);
+            cfg.addProperty("mesh").setValue(U8PATH_CAST(meshPath));
 
             //material placeholder for each sub mesh
             for (auto i = 0u; i < m_importedHeader.arrayCount; ++i)
@@ -1101,14 +1103,15 @@ void ModelState::exportModel(bool modelOnly, bool openOnSave)
                 material->addProperty("mask_colour").setValue(cro::Colour::Cyan);
             }
 
-            path.back() = 't';
+            //path.back() = 't';
+            path.replace_extension("cmt");
 
             if (!modelOnly)
             {
                 cfg.save(path);
             }
 
-            m_preferences.lastExportDirectory = U8PATH_CAST(cro::FileSystem::getFilePath(path));
+            m_preferences.lastExportDirectory = cro::FileSystem::getFilePath(path);
             savePrefs();
 
             if (openOnSave)

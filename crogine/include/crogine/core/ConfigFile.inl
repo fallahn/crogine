@@ -44,6 +44,12 @@ inline std::u8string ConfigProperty::getValue<std::u8string>() const
 }
 
 template<>
+inline std::filesystem::path ConfigProperty::getValue<std::filesystem::path>() const
+{
+    return getValue<std::u8string>();
+}
+
+template<>
 inline cro::String ConfigProperty::getValue<cro::String>() const
 {
 #ifdef OLD_PARSER

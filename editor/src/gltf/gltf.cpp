@@ -123,6 +123,9 @@ void ModelState::showGLTFBrowser()
                 {
                     importAnim = false;
                 }
+                ImGui::PushStyleColor(ImGuiCol_Text, { 1.f, 0.f ,0.f, 1.f });
+                ImGui::Text("UNCHECK this when importing from Blender > 3.2!!");
+                ImGui::PopStyleColor();
                 ImGui::Checkbox("Convert Vertex Colourspace", &convertVertexColourspace);
                 ImGui::SameLine();
                 uiConst::showToolTip("Converts incoming vertex colour data from sRGB to linear space.\nUseful if you have data rather than colour information stored in the vertex colour channel");

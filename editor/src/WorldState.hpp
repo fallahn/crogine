@@ -112,7 +112,7 @@ private:
     std::size_t m_selectedModel;
     cro::Entity m_previewEntity;
 
-    void openModel(const std::string&);
+    void openModel(const std::filesystem::path&);
 
-    bool imageToArray(const cro::Image&, const std::string& outpath) const;
+    bool imageToArray(const cro::Image&, const std::filesystem::path& outpath) const;
 };

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -279,10 +279,10 @@ bool SpriteSheet::hasAnimation(const std::string& name, const std::string& sprit
     return false;
 }
 
-void SpriteSheet::setTexture(const std::string& path, TextureResource& tr, const std::string& workingDir)
+void SpriteSheet::setTexture(const std::filesystem::path& path, TextureResource& tr, const std::filesystem::path& workingDir)
 {
     m_texturePath = path;
-    m_texture = &tr.get(workingDir + path);
+    m_texture = &tr.get(workingDir / path);
 
     for (auto& sprite : m_sprites)
     {

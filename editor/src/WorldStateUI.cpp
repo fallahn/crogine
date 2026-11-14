@@ -378,21 +378,22 @@ void WorldState::drawBrowser()
                 {
                     if (cro::FileSystem::showMessageBox("", "Working directory currently not set. Would you like to set one now?", cro::FileSystem::YesNo, cro::FileSystem::Question))
                     {
-                        auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
+                        const auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
                         if (!path.empty())
                         {
-                            m_sharedData.workingDirectory = U8PATH_CAST(path);
-                            std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
+                            m_sharedData.workingDirectory = path;
+                            //std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
                         }
                     }
                 }
 
                 //browse model files
-                std::string path = U8PATH_CAST(cro::FileSystem::openFileDialogue("", "cmt"));
+                const auto path = cro::FileSystem::openFileDialogue("", "cmt");
                 if (!path.empty())
                 {
-                    std::replace(path.begin(), path.end(), '\\', '/');
-                    if (path.find(m_sharedData.workingDirectory) == std::string::npos)
+                    //std::replace(path.begin(), path.end(), '\\', '/');
+                    //if (path.find(m_sharedData.workingDirectory) == std::string::npos)
+                    if (const auto rel = std::filesystem::relative(path, m_sharedData.workingDirectory); rel.empty())
                     {
                         cro::FileSystem::showMessageBox("Warning", "This model was not opened from the current working directory.");
                     }
@@ -528,10 +529,10 @@ void WorldState::drawOptions()
             }
             else
             {
-                auto dir = m_sharedData.workingDirectory.substr(0, 30) + "...";
-                ImGui::Text("%s", dir.c_str());
+                //auto dir = m_sharedData.workingDirectory.substr(0, 30) + "...";
+                ImGui::Text("%s", U8PATH_CAST(m_sharedData.workingDirectory));
                 ImGui::SameLine();
-                uiConst::showToolTip(m_sharedData.workingDirectory.c_str());
+                uiConst::showToolTip(U8PATH_CAST(m_sharedData.workingDirectory));
             }
             ImGui::SameLine();
             if (ImGui::Button("Browse"))
@@ -539,8 +540,8 @@ void WorldState::drawOptions()
                 const auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
                 if (!path.empty())
                 {
-                    m_sharedData.workingDirectory = U8PATH_CAST(path);
-                    std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
+                    m_sharedData.workingDirectory = path;
+                    //std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
                 }
             }
 
@@ -618,7 +619,7 @@ void WorldState::updateMouseInput(const cro::Event& evt)
     }
 }
 
-void WorldState::openModel(const std::string& path)
+void WorldState::openModel(const std::filesystem::path& path)
 {
     cro::ModelDefinition modelDef(m_resources, &m_environmentMap, m_sharedData.workingDirectory);
     if (modelDef.loadFromFile(path))
@@ -656,7 +657,7 @@ void WorldState::openModel(const std::string& path)
     }
 }
 
-bool WorldState::imageToArray(const cro::Image& img, const std::string& outpath) const
+bool WorldState::imageToArray(const cro::Image& img, const std::filesystem::path& outpath) const
 {
     auto type = img.getFormat();
     std::int32_t stride = 0;

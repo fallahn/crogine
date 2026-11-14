@@ -129,7 +129,7 @@ bool EmitterSettings::loadFromFile(const std::filesystem::path& path, cro::Textu
                         texture = &textures.get(texPath);
                     }
                     
-                    texturePath = U8PATH_CAST(texPath);
+                    texturePath = texPath;
                     textureID = texture->getGLHandle();
                     textureSize = texture->getSize();  
                     texture->setSmooth(textureSmoothing);
@@ -296,20 +296,20 @@ bool EmitterSettings::loadFromFile(const std::filesystem::path& path, cro::Textu
 
 bool EmitterSettings::saveToFile(const std::filesystem::path& path)
 {
-    std::string emitterName = U8PATH_CAST(FileSystem::getFileName(path));
-    emitterName = emitterName.substr(0, emitterName.size() - 4);
+    auto emitterName = FileSystem::getFileName(path);
+    emitterName.replace_extension("");// = emitterName.substr(0, emitterName.size() - 4);
 
-    ConfigFile cfg("particle_system", emitterName);
+    ConfigFile cfg("particle_system", emitterName.string());
 
-    auto texPath = texturePath;
-    std::replace(texPath.begin(), texPath.end(), '\\', '/');
-    if (!texPath.empty())
+    //auto texPath = texturePath;
+    //std::replace(texPath.begin(), texPath.end(), '\\', '/');
+    if (!texturePath.empty())
     {
-        if (texPath[0] == '/')
+        /*if (texPath[0] == '/')
         {
             texPath = texPath.substr(1);
-        }
-        cfg.addProperty("src").setValue(texPath);
+        }*/
+        cfg.addProperty("src").setValue(U8PATH_CAST(texturePath));
     }
     //hmm shame we don't have access to the texture here to read the property
     cfg.addProperty("texture_smoothing").setValue(textureSmoothing);

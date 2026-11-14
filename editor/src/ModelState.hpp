@@ -47,6 +47,7 @@ source distribution.
 
 #include "ModelViewerConsts.inl"
 
+#include <filesystem>
 #include <map>
 #include <memory>
 #include <optional>
@@ -99,9 +100,9 @@ private:
 
     struct Preferences final
     {
-        std::string lastImportDirectory;
-        std::string lastExportDirectory;
-        std::string lastModelDirectory;
+        std::filesystem::path lastImportDirectory;
+        std::filesystem::path lastExportDirectory;
+        std::filesystem::path lastModelDirectory;
     }m_preferences;
     bool m_showPreferences;
     bool m_showGroundPlane;
@@ -113,7 +114,7 @@ private:
     bool m_useFreecam;
 
     cro::ConfigFile m_currentModelConfig;
-    std::string m_currentFilePath;
+    std::filesystem::path m_currentFilePath;
 
     std::array<cro::Entity, EntityID::Count> m_entities = {};
 
@@ -149,8 +150,8 @@ private:
     }m_modelProperties;
 
     void openModel();
-    void openModelAtPath(const std::string&);
-    void saveModel(const std::string&);
+    void openModelAtPath(const std::filesystem::path&);
+    void saveModel(const std::filesystem::path&);
     void closeModel();
 
     CMFHeader m_importedHeader;
@@ -169,7 +170,7 @@ private:
     bool m_transformUpdated;
 
     void importModel();
-    void importIQM(const std::string&);
+    void importIQM(const std::filesystem::path&);
     void updateImportNode(CMFHeader, std::vector<float>& verts, std::vector<std::vector<std::uint32_t>>& indices, std::uint32_t primitiveType);
     void buildSkeleton();
     void exportModel(bool = false, bool = true);
@@ -207,12 +208,12 @@ private:
     {
         std::unique_ptr<cro::Texture> texture;
         std::string name;
-        std::string relPath; //inc trailing '/'
+        std::filesystem::path relPath; //inc trailing '/'
         std::size_t uid = 0;
     };
     std::map<std::uint32_t, MaterialTexture> m_materialTextures;
     std::uint32_t m_selectedTexture;
-    std::uint32_t addTextureToBrowser(const std::string&);
+    std::uint32_t addTextureToBrowser(const std::filesystem::path&);
     void addMaterialToBrowser(MaterialDefinition&&);
 
     cro::Texture m_blackTexture;
@@ -225,7 +226,7 @@ private:
 
     std::vector<std::int32_t> m_activeMaterials; //indices into the materials array of materials used on the currently open model. -1 means default material is applied
     void exportMaterial() const;
-    void importMaterial(const std::string&);
+    void importMaterial(const std::filesystem::path&);
     void readMaterialDefinition(MaterialDefinition&, const cro::ConfigObject&);
     //-------------------------------------//
 

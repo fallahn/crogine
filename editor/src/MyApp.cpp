@@ -146,23 +146,23 @@ void MyApp::loadPrefs()
             auto name = cro::Util::String::toLower(prop.getName());
             if (name == "working_dir")
             {
-                sharedData.workingDirectory = prop.getValue<std::string>();
-                std::replace(sharedData.workingDirectory.begin(), sharedData.workingDirectory.end(), '\\', '/');
+                sharedData.workingDirectory = prop.getValue<std::filesystem::path>();
+                //std::replace(sharedData.workingDirectory.begin(), sharedData.workingDirectory.end(), '\\', '/');
             }
             else if (name == "skybox")
             {
-                sharedData.skymapTexture = prop.getValue<std::string>();
-                std::replace(sharedData.skymapTexture.begin(), sharedData.skymapTexture.end(), '\\', '/');
+                sharedData.skymapTexture = prop.getValue<std::filesystem::path>();
+                //std::replace(sharedData.skymapTexture.begin(), sharedData.skymapTexture.end(), '\\', '/');
             }
             else if (name == "nvtt_path")
             {
-                sharedData.nvttPath = prop.getValue<std::string>();
-                std::replace(sharedData.nvttPath.begin(), sharedData.nvttPath.end(), '\\', '/');
+                sharedData.nvttPath = prop.getValue<std::filesystem::path>();
+                //std::replace(sharedData.nvttPath.begin(), sharedData.nvttPath.end(), '\\', '/');
             }
             else if (name == "compress_path")
             {
-                sharedData.compressionDirectory = prop.getValue<std::string>();
-                std::replace(sharedData.compressionDirectory.begin(), sharedData.compressionDirectory.end(), '\\', '/');
+                sharedData.compressionDirectory = prop.getValue<std::filesystem::path>();
+                //std::replace(sharedData.compressionDirectory.begin(), sharedData.compressionDirectory.end(), '\\', '/');
             }
             else if (name == "compress_mips")
             {

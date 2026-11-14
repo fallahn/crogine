@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -38,6 +38,8 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/gui/Gui.hpp>
+
+#include <filesystem>
 
 namespace cro
 {
@@ -103,14 +105,14 @@ private:
 
     struct SpriteThumb final
     {
-        std::string spriteSheet;
-        std::string spriteName;
+        std::filesystem::path spriteSheet;
+        std::filesystem::path spriteName;
         cro::Sprite sprite;
     };
 
     std::uint32_t m_selectedSprite;
     std::vector<SpriteThumb> m_spriteThumbs;
-    void loadSpriteSheet(const std::string&);
+    void loadSpriteSheet(const std::filesystem::path&);
 
     //TODO could we improve this by rendering all thumbs to a large
     //texture and only previewing part of it?
@@ -119,10 +121,10 @@ private:
     struct FontThumb final
     {
         cro::RenderTexture texture;
-        std::string relPath;
-        std::string name;
+        std::filesystem::path relPath;
+        std::filesystem::path name;
     };
     std::uint32_t m_selectedFont;
     std::unordered_map<std::uint32_t, FontThumb> m_fontThumbs;
-    void loadFont(const std::string&);
+    void loadFont(const std::filesystem::path&);
 };

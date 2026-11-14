@@ -104,7 +104,7 @@ namespace cro
         \param path Relative path to the texture to use
         \param textureResource Reference to an active texture resource
         */
-        void setTexture(const std::string& path, TextureResource& textureResource, const std::string& workingDirectory = "");
+        void setTexture(const std::filesystem::path& path, TextureResource& textureResource, const std::filesystem::path& workingDirectory = "");
 
         /*!
         \brief Adds the sprite with the given name, or returns false if it already exists

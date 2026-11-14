@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2025
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -47,9 +47,9 @@ namespace
     std::string newSpriteName;
 }
 
-void SpriteState::openSprite(const std::string& path)
+void SpriteState::openSprite(const std::filesystem::path& path)
 {
-    if (m_spriteSheet.loadFromFile(path, m_textures, m_sharedData.workingDirectory + "/"))
+    if (m_spriteSheet.loadFromFile(path, m_textures, m_sharedData.workingDirectory))
     {
         auto* texture = m_spriteSheet.getTexture();
         m_entities[EntityID::Root].getComponent<cro::Sprite>().setTexture(*texture);
@@ -95,7 +95,7 @@ void SpriteState::saveAs()
     if (!path.empty())
     {
         m_spriteSheet.saveToFile(path);
-        m_currentFilePath = U8PATH_CAST(path);
+        m_currentFilePath = path;
     }
 }
 
@@ -155,18 +155,20 @@ void SpriteState::drawMenuBar()
                     save();
                 }
 
-                std::string path = U8PATH_CAST(cro::FileSystem::openFileDialogue("", "png,jpg"));
+                const auto path = cro::FileSystem::openFileDialogue("", "png,jpg");
                 if (!path.empty())
                 {
-                    std::replace(path.begin(), path.end(), '\\', '/');
-                    if (auto pathPos = path.find(m_sharedData.workingDirectory); pathPos == std::string::npos)
+                    //std::replace(path.begin(), path.end(), '\\', '/');
+                    //if (auto pathPos = path.find(m_sharedData.workingDirectory); pathPos == std::string::npos)
+                    if (const auto rel = std::filesystem::relative(path, m_sharedData.workingDirectory); rel.empty())
                     {
                         cro::FileSystem::showMessageBox("Error", "Texture not opened from working directory");
                     }
                     else
                     {
                         m_spriteSheet = {};
-                        m_spriteSheet.setTexture(path.substr(m_sharedData.workingDirectory.length() + 1), m_textures, m_sharedData.workingDirectory + "/");
+                        //m_spriteSheet.setTexture(path.substr(m_sharedData.workingDirectory.length() + 1), m_textures, m_sharedData.workingDirectory);
+                        m_spriteSheet.setTexture(rel, m_textures, m_sharedData.workingDirectory);
 
                         auto* texture = m_spriteSheet.getTexture();
                         m_entities[EntityID::Root].getComponent<cro::Sprite>().setTexture(*texture);
@@ -175,11 +177,12 @@ void SpriteState::drawMenuBar()
             }
             if (ImGui::MenuItem("Open##sprite", nullptr, nullptr))
             {
-                std::string path = U8PATH_CAST(cro::FileSystem::openFileDialogue("", "spt"));
+                const auto path = cro::FileSystem::openFileDialogue("", "spt");
                 if (!path.empty())
                 {
-                    std::replace(path.begin(), path.end(), '\\', '/');
-                    if (path.find(m_sharedData.workingDirectory) == std::string::npos)
+                    //std::replace(path.begin(), path.end(), '\\', '/');
+                    //if (path.find(m_sharedData.workingDirectory) == std::string::npos)
+                    if (const auto rel = std::filesystem::relative(path, m_sharedData.workingDirectory); rel.empty())
                     {
                         cro::FileSystem::showMessageBox("Error", "Sprite Sheet not opened from working directory");
                     }
@@ -266,17 +269,19 @@ void SpriteState::drawInspector()
         ImGui::SameLine();
         if (ImGui::Button("Browse##texPath"))
         {
-            std::string path = U8PATH_CAST(cro::FileSystem::openFileDialogue("", "png,jpg"));
+            const auto path = cro::FileSystem::openFileDialogue("", "png,jpg");
             if (!path.empty())
             {
-                std::replace(path.begin(), path.end(), '\\', '/');
-                if (auto pathPos = path.find(m_sharedData.workingDirectory); pathPos == std::string::npos)
+                //std::replace(path.begin(), path.end(), '\\', '/');
+                //if (auto pathPos = path.find(m_sharedData.workingDirectory); pathPos == std::string::npos)
+                if (const auto rel = std::filesystem::relative(path, m_sharedData.workingDirectory); rel.empty())
                 {
                     cro::FileSystem::showMessageBox("Error", "Texture not opened from working directory");
                 }
                 else
                 {
-                    m_spriteSheet.setTexture(path.substr(m_sharedData.workingDirectory.length() + 1), m_textures, m_sharedData.workingDirectory + "/");
+                    //m_spriteSheet.setTexture(path.substr(m_sharedData.workingDirectory.length() + 1), m_textures, m_sharedData.workingDirectory + "/");
+                    m_spriteSheet.setTexture(rel, m_textures, m_sharedData.workingDirectory);
 
                     auto* texture = m_spriteSheet.getTexture();
                     m_entities[EntityID::Root].getComponent<cro::Sprite>().setTexture(*texture);
@@ -562,10 +567,10 @@ void SpriteState::drawPreferences()
             }
             else
             {
-                auto dir = m_sharedData.workingDirectory.substr(0, 30) + "...";
-                ImGui::Text("%s", dir.c_str());
+                //auto dir = m_sharedData.workingDirectory.substr(0, 30) + "...";
+                ImGui::Text("%s", U8PATH_CAST(m_sharedData.workingDirectory));
                 ImGui::SameLine();
-                uiConst::showTipMessage(m_sharedData.workingDirectory.c_str());
+                uiConst::showTipMessage(U8PATH_CAST(m_sharedData.workingDirectory));
             }
             ImGui::SameLine();
             if (ImGui::Button("Browse"))
@@ -573,8 +578,8 @@ void SpriteState::drawPreferences()
                 const auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
                 if (!path.empty())
                 {
-                    m_sharedData.workingDirectory = U8PATH_CAST(path);
-                    std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
+                    m_sharedData.workingDirectory = path;
+                    //std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
                 }
             }
 
