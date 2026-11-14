@@ -625,7 +625,7 @@ void ModelState::importModel()
         return retVal;
     };
 
-    auto path = cro::FileSystem::openFileDialogue(m_preferences.lastImportDirectory / "untitled", "obj,dae,fbx,glb,iqm");
+    auto path = cro::FileSystem::openFileDialogue(m_preferences.lastImportDirectory / "untitled.glb", "obj,dae,fbx,glb,iqm");
     if (!path.empty())
     {
         auto extension = cro::FileSystem::getFileExtension(path);

@@ -93,6 +93,7 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context, Shar
     m_showMaterialWindow    (false),
     m_showBakingWindow      (false),
     m_useFreecam            (false),
+    m_arcball               (DefaultCameraPosition, glm::vec3(0.f), cro::Transform::Y_AXIS),
     m_exportAnimation       (true),
     m_skeletonMeshID        (0),
     m_transformUpdated      (false),
@@ -154,10 +155,12 @@ bool ModelState::handleEvent(const cro::Event& evt)
         break;
     case SDL_EVENT_MOUSE_WHEEL:
         if(!m_useFreecam)
-    {
-        m_cameras[CameraID::Default].FOV = std::min(MaxFOV, std::max(MinFOV, m_cameras[CameraID::Default].FOV - (evt.wheel.y * 0.1f)));
-        m_viewportRatio = updateView(m_scene.getActiveCamera(), DefaultFarPlane, m_cameras[CameraID::Default].FOV);
-    }
+        {
+            //m_cameras[CameraID::Default].FOV = std::min(MaxFOV, std::max(MinFOV, m_cameras[CameraID::Default].FOV - (evt.wheel.y * 0.1f)));
+            //m_viewportRatio = updateView(m_scene.getActiveCamera(), DefaultFarPlane, m_cameras[CameraID::Default].FOV);
+            m_arcball.zoom(evt.wheel.y * 0.1f);
+            m_cameras[CameraID::Default].camera.getComponent<cro::Transform>().setLocalTransform(m_arcball.getInvTransform());
+        }
         break;
     }
 
@@ -382,7 +385,7 @@ void ModelState::createScene()
 
     //create the camera - using a custom camera prevents the scene updating the projection on window resize
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(DefaultCameraPosition);
+    entity.addComponent<cro::Transform>().setLocalTransform(m_arcball.getInvTransform());// .setPosition(DefaultCameraPosition);
     entity.addComponent<cro::Camera>().shadowMapBuffer.create(4096, 4096);
     entity.getComponent<cro::Camera>().setMaxShadowDistance(50.f);
     entity.getComponent<cro::Camera>().setShadowExpansion(30.f);
@@ -673,30 +676,59 @@ void ModelState::updateNormalVis()
 
 void ModelState::updateMouseInput(const cro::Event& evt)
 {
-    const float moveScale = 0.004f;
-    if (evt.motion.state & SDL_BUTTON_LMASK)
-    {
-        float pitchMove = static_cast<float>(evt.motion.yrel)* moveScale * m_viewportRatio;
-        float yawMove = static_cast<float>(evt.motion.xrel)* moveScale;
+    //const float moveScale = 0.004f;
+    //if (evt.motion.state & SDL_BUTTON_LMASK)
+    //{
+    //    float pitchMove = static_cast<float>(evt.motion.yrel)* moveScale * m_viewportRatio;
+    //    float yawMove = static_cast<float>(evt.motion.xrel)* moveScale;
 
-        auto& tx = m_entities[EntityID::ArcBall].getComponent<cro::Transform>();
-        tx.rotate(cro::Transform::X_AXIS, -pitchMove);
-        tx.rotate(cro::Transform::Y_AXIS, -yawMove);
-    }
-    else if (evt.motion.state & SDL_BUTTON_RMASK)
-    {
-        //do roll
-        float rollMove = static_cast<float>(-evt.motion.xrel)* moveScale;
+    //    auto& tx = m_entities[EntityID::ArcBall].getComponent<cro::Transform>();
+    //    tx.rotate(cro::Transform::X_AXIS, -pitchMove);
+    //    tx.rotate(cro::Transform::Y_AXIS, -yawMove);
+    //}
+    //else if (evt.motion.state & SDL_BUTTON_RMASK)
+    //{
+    //    //do roll
+    //    float rollMove = static_cast<float>(-evt.motion.xrel)* moveScale;
 
-        auto& tx = m_entities[EntityID::ArcBall].getComponent<cro::Transform>();
-        tx.rotate(cro::Transform::Z_AXIS, -rollMove);
-    }
-    else if (evt.motion.state & SDL_BUTTON_MMASK)
+    //    auto& tx = m_entities[EntityID::ArcBall].getComponent<cro::Transform>();
+    //    tx.rotate(cro::Transform::Z_AXIS, -rollMove);
+    //}
+    //else if (evt.motion.state & SDL_BUTTON_MMASK)
+    //{
+    //    auto& tx = m_entities[EntityID::ArcBall].getComponent<cro::Transform>();
+    //    tx.move(tx.getRightVector() * -static_cast<float>(evt.motion.xrel) / 160.f);
+    //    tx.move(tx.getUpVector() * static_cast<float>(evt.motion.yrel) / 160.f);
+    //}
+
+    const auto transformMouse = [](glm::vec2 in)
+        {
+            const glm::vec2 size = cro::App::getWindow().getSize();
+            return glm::vec2(in.x * 2.f / size.x - 1.f, 1.f - 2.f * in.y / size.y);
+        };
+
+    //HMM we could take advantage here of how SDL proves us the delta in the
+    //mouse event, instead of tracking it manually
+    const glm::vec2 current = transformMouse(glm::vec2(evt.motion.x, evt.motion.y));
+    static glm::vec2 prev = glm::vec2(0.f);
+    if (prev != glm::vec2(-2.f))
     {
-        auto& tx = m_entities[EntityID::ArcBall].getComponent<cro::Transform>();
-        tx.move(tx.getRightVector() * -static_cast<float>(evt.motion.xrel) / 160.f);
-        tx.move(tx.getUpVector() * static_cast<float>(evt.motion.yrel) / 160.f);
+        if (evt.motion.state & SDL_BUTTON_LMASK)
+        {
+            m_arcball.rotate(prev, current);
+            //TODO we're doubly inverting AND decomposing here, this can be optimised.
+            m_cameras[CameraID::Default].camera.getComponent<cro::Transform>().setLocalTransform(m_arcball.getInvTransform());
+        }
+        else if (evt.motion.state & SDL_BUTTON_RMASK)
+        {
+            const glm::vec2 dxy = current - prev;
+            const glm::vec4 dxy4 = glm::inverse(m_cameras[CameraID::Default].camera.getComponent<cro::Camera>().getProjectionMatrix()) * glm::vec4(dxy.x, dxy.y, 0, 1);
+
+            m_arcball.pan(glm::vec2(dxy4.x, dxy4.y));
+            m_cameras[CameraID::Default].camera.getComponent<cro::Transform>().setLocalTransform(m_arcball.getInvTransform());
+        }
     }
+    prev = current;
 }
 
 void ModelState::updateGridMesh(cro::Mesh::Data& meshData, std::optional<cro::Sphere> sphere, std::optional<cro::Box> boundingBox)

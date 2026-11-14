@@ -259,25 +259,6 @@ std::filesystem::path FileSystem::getCurrentDirectory()
 {
     std::error_code ec;
     return std::filesystem::current_path(ec);
-//#ifdef _WIN32
-//    TCHAR output[FILENAME_MAX];
-//    if (GetCurrentDirectory(FILENAME_MAX, output) == 0)
-//    {
-//        Logger::log("Failed to find the current working directory, error: " + std::to_string(GetLastError()), Logger::Type::Error);
-//        return{};
-//    }
-//    std::string retVal(output);
-//    std::replace(retVal.begin(), retVal.end(), '\\', '/');
-//    return retVal;
-//#else //this may not work on macOS
-//    char output[FILENAME_MAX];
-//    if (getcwd(output, FILENAME_MAX) == 0)
-//    {
-//        Logger::log("Failed to find the current working directory, error: " + std::to_string(errno), Logger::Type::Error);
-//        return{};
-//    }
-//    return{ output };
-//#endif //_WIN32
 }
 
 bool FileSystem::setCurrentDirectory(const std::filesystem::path& path)
@@ -286,13 +267,6 @@ bool FileSystem::setCurrentDirectory(const std::filesystem::path& path)
     std::filesystem::current_path(path, ec);
 
     return !ec;
-//#ifdef _WIN32
-//    auto windowsPath = path;
-//    std::replace(windowsPath.begin(), windowsPath.end(), '/', '\\');
-//    return _chdir(windowsPath.c_str()) == 0;
-//#else
-//    return chdir(path.c_str()) == 0;
-//#endif
 }
 
 void FileSystem::removeDirectory(const std::filesystem::path& path)
@@ -310,35 +284,6 @@ std::filesystem::path FileSystem::getRelativePath(const std::filesystem::path& p
 {
     std::error_code ec;
     return std::filesystem::relative(path, root, ec);
-    //auto currentPath = root;
-    //std::replace(std::begin(path), std::end(path), '\\', '/');
-    //std::replace(std::begin(currentPath), std::end(currentPath), '\\', '/');
-    //
-    //int i = -1;
-    //auto pos = std::string::npos;
-    //std::size_t length = 0;
-    //auto currentPos = std::string::npos;
-
-    //do
-    //{
-    //    pos = path.find(currentPath);
-    //    length = currentPath.size();
-
-    //    currentPos = currentPath.find_last_of('/');
-    //    if (currentPos != std::string::npos)
-    //    {
-    //        currentPath = currentPath.substr(0, currentPos);
-    //    }
-    //    i++;
-    //} while (pos == std::string::npos && currentPos != std::string::npos);
-
-    //std::string retVal;
-    //while (i-- > 0)
-    //{
-    //    retVal += "../";
-    //}
-    //retVal += path.substr(pos + length + 1); //extra 1 for trailing '/'
-    //return retVal;
 }
 
 std::filesystem::path FileSystem::openFileDialogue(const std::filesystem::path& defaultDir, const std::string& filter, bool selectMultiple)
@@ -393,7 +338,8 @@ std::filesystem::path FileSystem::openFileDialogue(const std::filesystem::path& 
     {
         filterArray.push_back(str.c_str());
     }    
-
+    //auto temp = defaultDir;
+    //temp.make_preferred();
     const auto path = tinyfd_openFileDialog("Open File", U8PATH_CAST(defaultDir), static_cast<std::int32_t>(filterArray.size()), filterArray.data(), nullptr, selectMultiple ? 1 : 0);
 
     return path ? path : std::filesystem::path();

@@ -35,6 +35,7 @@ source distribution.
 #include "MaterialDefinition.hpp"
 #include "MaskEditor.hpp"
 #include "EditorWindow.hpp"
+#include "ArcBallCamera.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -112,11 +113,13 @@ private:
 
     std::array<CameraSettings, CameraID::Count> m_cameras = {};
     bool m_useFreecam;
+    ArcballCamera m_arcball;
 
     cro::ConfigFile m_currentModelConfig;
     std::filesystem::path m_currentFilePath;
 
     std::array<cro::Entity, EntityID::Count> m_entities = {};
+
 
     void addSystems();
     void loadAssets();
