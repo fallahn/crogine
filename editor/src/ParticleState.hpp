@@ -163,6 +163,6 @@ private:
     void updateLayout(std::int32_t, std::int32_t);
     void updateMouseInput(const cro::Event&);
 
-    void openModel(const std::string&);
+    void openModel(const std::filesystem::path&);
     void confirmSave();
 };

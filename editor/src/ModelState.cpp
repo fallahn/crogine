@@ -626,9 +626,9 @@ void ModelState::savePrefs()
     prefsOut.addProperty("show_material").setValue(m_showMaterialWindow);
     prefsOut.addProperty("sky_colour").setValue(getContext().appInstance.getClearColour());
 
-    prefsOut.addProperty("import_dir").setValue(U8PATH_CAST(m_preferences.lastImportDirectory));
-    prefsOut.addProperty("export_dir").setValue(U8PATH_CAST(m_preferences.lastExportDirectory));
-    prefsOut.addProperty("model_dir").setValue(U8PATH_CAST(m_preferences.lastModelDirectory));
+    prefsOut.addProperty("import_dir").setValue(m_preferences.lastImportDirectory);
+    prefsOut.addProperty("export_dir").setValue(m_preferences.lastExportDirectory);
+    prefsOut.addProperty("model_dir").setValue(m_preferences.lastModelDirectory);
 
     if (prefsOut.save(cro::App::getPreferencePath() / "model_viewer.cfg"))
     {

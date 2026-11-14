@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -52,7 +52,7 @@ glm::ivec2 mapping(std::int32_t r, std::int32_t g, std::int32_t b)
 	return { idx / 64, idx % 64 };
 }
 
-bool pt::processPalette(const cro::Image& image, const std::string& outPath)
+bool pt::processPalette(const cro::Image& image, const std::filesystem::path& outPath)
 {
 	if (image.getSize().x == 0 || image.getSize().y == 0)
 	{

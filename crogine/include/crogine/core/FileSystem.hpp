@@ -150,11 +150,11 @@ namespace cro
         /*!
         \brief Show a native file dialogue to open a file
         Note that this function blocks the thread on which it was called
-        until it return. For asyncronous file dialogues use openFileDialogueAsync()
+        until it returns. For asyncronous file dialogues use openFileDialogueAsync()
         \param defaultDir Default path *and file* to open (optional)
         \param filter File extension filter in the format "png,jpg,bmp"
         \param selectMultiple If true then allows selecting multiple files
-        \returns the path selected by the user which is empty if cancelled
+        \returns the path selected by the user which is empty if cancelled or concatenated with | if multiple files were selected
         */
         static std::filesystem::path openFileDialogue(const std::filesystem::path& defaultDir = "", const std::string& filter = "", bool selectMultiple = false);
 

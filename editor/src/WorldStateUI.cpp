@@ -65,7 +65,7 @@ namespace
         std::make_pair(glm::vec2(), glm::vec2())
     };
 
-    void outputIcon(const cro::Image& img, const std::string& outPath)
+    void outputIcon(const cro::Image& img, const std::filesystem::path& outPath)
     {
         CRO_ASSERT(img.getFormat() == cro::ImageFormat::RGBA, "");
         std::stringstream ss;
@@ -209,7 +209,7 @@ void WorldState::drawMenuBar()
                             path = cro::FileSystem::saveFileDialogue("", "hpp");
                             if (!path.empty())
                             {
-                                outputIcon(img, U8PATH_CAST(path));
+                                outputIcon(img, path);
                             }
                         }
                         else
@@ -232,7 +232,7 @@ void WorldState::drawMenuBar()
                     {
                         auto outpath = cro::FileSystem::saveFileDialogue("", "hpp");
                         if (!outpath.empty() &&
-                            imageToArray(img, U8PATH_CAST(outpath)))
+                            imageToArray(img, outpath))
                         {
                             cro::FileSystem::showMessageBox("Success", "Header File Written Successfully");
                         }
@@ -252,7 +252,7 @@ void WorldState::drawMenuBar()
                     {
                         auto outpath = cro::FileSystem::saveFileDialogue("", "png");
                         if (!outpath.empty() &&
-                            pt::processPalette(img, U8PATH_CAST(outpath)))
+                            pt::processPalette(img, outpath))
                         {
                             cro::FileSystem::showMessageBox("Success", "Palette File Written Successfully");
                         }

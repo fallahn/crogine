@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -30,18 +30,18 @@ source distribution.
 #pragma once
 
 #include <list>
-#include <string>
+#include <filesystem>
 
 class FileHistory final
 {
 public:
     FileHistory();
 
-    void add(const std::string&);
+    void add(const std::filesystem::path&);
 
-    const std::list<std::string>& getHistory() const;
+    const std::list<std::filesystem::path>& getHistory() const;
 
 private:
-    std::list<std::string> m_history;
+    std::list<std::filesystem::path> m_history;
     static constexpr std::size_t MaxItems = 8;
 };

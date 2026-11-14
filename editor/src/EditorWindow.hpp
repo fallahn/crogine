@@ -1,5 +1,5 @@
 /*********************************************************************
-(c) Matt Marchant 2021
+(c) Matt Marchant 2021 - 2026
 http://trederia.blogspot.com
 
 Zlib license.
@@ -29,8 +29,9 @@ source distribution.
 
 #include "TextEditor.h"
 
-#include <string>
 #include <bitset>
+#include <filesystem>
+#include <string>
 
 class EditorWindow final
 {
@@ -45,10 +46,10 @@ public:
 
 private:
     TextEditor m_editor;
-    std::string m_currentFile;
+    std::filesystem::path m_currentFile;
 
     void open();
-    void save(const std::string&);
+    void save(const std::filesystem::path&);
     void saveAs();
     void close();
 

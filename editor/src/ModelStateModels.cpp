@@ -1092,7 +1092,7 @@ void ModelState::exportModel(bool modelOnly, bool openOnSave)
             //std::replace(meshPath.begin(), meshPath.end(), '\\', '/');
 
             cro::ConfigFile cfg("model", modelName);
-            cfg.addProperty("mesh").setValue(U8PATH_CAST(meshPath));
+            cfg.addProperty("mesh").setValue(meshPath);
 
             //material placeholder for each sub mesh
             for (auto i = 0u; i < m_importedHeader.arrayCount; ++i)

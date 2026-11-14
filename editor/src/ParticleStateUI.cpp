@@ -48,7 +48,7 @@ source distribution.
 
 namespace
 {
-    std::string lastSavePath;
+    std::filesystem::path lastSavePath;
 }
 
 void ParticleState::initUI()
@@ -83,7 +83,7 @@ void ParticleState::drawMenuBar()
         //if (m_particleSettings->loadFromFile(path, m_resources.textures))
         (m_particleSettings->loadFromFile(path, m_resources.textures));
         {
-            lastSavePath = U8PATH_CAST(path);
+            lastSavePath = path;
 
             m_selectedBlendMode = m_particleSettings->blendmode;
             m_particleSettings->textureID = 0;
@@ -110,7 +110,7 @@ void ParticleState::drawMenuBar()
                 }
             }
 
-            m_history.add(U8PATH_CAST(path));
+            m_history.add(path);
         }
     };
 
@@ -156,7 +156,7 @@ void ParticleState::drawMenuBar()
                     if (!path.empty())
                     {
                         m_particleSettings->saveToFile(path);
-                        lastSavePath = U8PATH_CAST(path);
+                        lastSavePath = path;
                     }
                 }
             }
@@ -167,7 +167,7 @@ void ParticleState::drawMenuBar()
                 if (!path.empty())
                 {
                     m_particleSettings->saveToFile(path);
-                    lastSavePath = U8PATH_CAST(path);
+                    lastSavePath = path;
                     m_history.add(lastSavePath);
                 }
             }
@@ -176,7 +176,7 @@ void ParticleState::drawMenuBar()
             if (!items.empty() &&
                 ImGui::BeginMenu("Recent"))
             {
-                std::string toOpen;
+                std::filesystem::path toOpen;
                 for (const auto& item : items)
                 {
                     auto fileName = cro::FileSystem::getFileName(item);
@@ -184,7 +184,7 @@ void ParticleState::drawMenuBar()
                     {
                         toOpen = item;
                     }
-                    uiConst::showTipMessage(item);
+                    uiConst::showTipMessage(U8PATH_CAST(item));
                 }
 
                 //open this afterwards because trying
@@ -237,7 +237,7 @@ void ParticleState::drawMenuBar()
                 const auto path = cro::FileSystem::openFileDialogue("", "cmt");
                 if (!path.empty())
                 {
-                    openModel(U8PATH_CAST(path));
+                    openModel(path);
                 }
             }
 
@@ -755,7 +755,9 @@ void ParticleState::drawRenderPreview()
                             animObj->addProperty("loop").setValue(false);
                             animObj->addProperty("framerate").setValue(m_renderFrameRate);
 
-                            cfg.save(outputPath / (std::string(U8PATH_CAST(outputName)) + ".spt"));
+                            auto output = outputPath / outputName;
+                            output.replace_extension("spt");
+                            cfg.save(output);
                         }
 
                         cro::FileSystem::showMessageBox("Done", "Output " + std::to_string(frameCount) + " frames");
@@ -825,7 +827,7 @@ void ParticleState::updateMouseInput(const cro::Event& evt)
     }
 }
 
-void ParticleState::openModel(const std::string& path)
+void ParticleState::openModel(const std::filesystem::path& path)
 {
     cro::ModelDefinition modelDef(m_resources, &m_environmentMap, m_sharedData.workingDirectory);
     if (modelDef.loadFromFile(path))
@@ -858,7 +860,7 @@ void ParticleState::confirmSave()
             if (!path.empty())
             {
                 m_particleSettings->saveToFile(path);
-                lastSavePath = U8PATH_CAST(path);
+                lastSavePath = path;
             }
         }
     }

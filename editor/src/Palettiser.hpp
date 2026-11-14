@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2026
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -36,9 +36,9 @@ https://github.com/KevinVDVelden/BunchOfTests/blob/master/palettebuilder.py
 */
 
 #include <crogine/graphics/Image.hpp>
-#include <string>
+#include <filesystem>
 
 namespace pt
 {
-	bool processPalette(const cro::Image& i, const std::string& outpath);
+	bool processPalette(const cro::Image& i, const std::filesystem::path& outpath);
 }

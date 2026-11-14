@@ -258,7 +258,7 @@ void LayoutState::drawBrowser()
                 auto path = cro::FileSystem::openFileDialogue("", "spt");
                 if (!path.empty())
                 {
-                    loadSpriteSheet(U8PATH_CAST(path));
+                    loadSpriteSheet(path);
                 }
             }
             ImGui::SameLine();

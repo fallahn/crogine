@@ -62,7 +62,7 @@ void EditorWindow::update()
 
                     //TODO remove this when the confirmation box works
                     m_editor.SetText("");
-                    m_currentFile = {};
+                    m_currentFile.clear();
                 }
                 //if anyone knows why this doesn't work (even though it's copied from the demo)
                 //please halp...
@@ -75,7 +75,7 @@ void EditorWindow::update()
                     {
                         ImGui::CloseCurrentPopup();
                         m_editor.SetText("");
-                        m_currentFile = {};
+                        m_currentFile.clear();
                     }
                     ImGui::SetItemDefaultFocus();
                     ImGui::SameLine();
@@ -215,12 +215,12 @@ void EditorWindow::open()
             std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
             m_editor.SetText(str);
 
-            m_currentFile = U8PATH_CAST(result);
+            m_currentFile = result;
         }
     }
 }
 
-void EditorWindow::save(const std::string& path)
+void EditorWindow::save(const std::filesystem::path& path)
 {
     auto textToSave = m_editor.GetText();
     std::ofstream file(path);
@@ -236,7 +236,7 @@ void EditorWindow::saveAs()
     const auto result = cro::FileSystem::saveFileDialogue();
     if (!result.empty())
     {
-        save(U8PATH_CAST(result));
+        save(result);
     }
 }
 

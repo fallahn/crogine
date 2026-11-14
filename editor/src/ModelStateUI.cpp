@@ -493,7 +493,7 @@ void ModelState::buildUI()
                         {
                             if (m_environmentMap.loadFromFile(path))
                             {
-                                m_sharedData.skymapTexture = U8PATH_CAST(path);
+                                m_sharedData.skymapTexture = path;
                             }
                         }
                     }

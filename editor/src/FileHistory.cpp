@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -38,10 +38,10 @@ FileHistory::FileHistory()
 }
 
 //public
-void FileHistory::add(const std::string& item)
+void FileHistory::add(const std::filesystem::path& item)
 {
     m_history.erase(std::remove_if(m_history.begin(), m_history.end(),
-        [&item](const std::string str)
+        [&item](const std::filesystem::path str)
         {
             return str == item;
         }), m_history.end());
@@ -54,7 +54,7 @@ void FileHistory::add(const std::string& item)
     }
 }
 
-const std::list<std::string>& FileHistory::getHistory() const
+const std::list<std::filesystem::path>& FileHistory::getHistory() const
 {
     return m_history;
 }
