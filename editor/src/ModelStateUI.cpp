@@ -480,6 +480,21 @@ void ModelState::showSaveFileDialogue(std::int32_t state)
         m_saveFileBrowser.SetTypeFilters({ ".mdf" });
         m_saveFileBrowser.SetTitle("Export Material");
         break;
+    case SaveDialogueState::AttachmentPoints:
+        m_saveFileBrowser.SetPwd(m_preferences.lastAttachmentDirectory.empty() ? std::filesystem::current_path() : m_preferences.lastAttachmentDirectory);
+        m_saveFileBrowser.SetTypeFilters({ ".atc" });
+        m_saveFileBrowser.SetTitle("Export Attachments");
+        break;
+    case SaveDialogueState::NotificationEvents:
+        m_saveFileBrowser.SetPwd(m_preferences.lastNotificationDirectory.empty() ? std::filesystem::current_path() : m_preferences.lastNotificationDirectory);
+        m_saveFileBrowser.SetTypeFilters({ ".ntf" });
+        m_saveFileBrowser.SetTitle("Export Notifications");
+        break;
+    case SaveDialogueState::ImageCombiner:
+        m_saveFileBrowser.SetPwd(m_preferences.lastImageDirectory.empty() ? std::filesystem::current_path() : m_preferences.lastImageDirectory);
+        m_saveFileBrowser.SetTypeFilters({ ".png" });
+        m_saveFileBrowser.SetTitle("Save Image");
+        break;
     }
 
     m_saveFileBrowser.Open();
@@ -492,42 +507,64 @@ void ModelState::handleSaveFileDialogue()
     {
         auto path = m_saveFileBrowser.GetSelected();
 
-        switch (m_saveDialogueState)
+        if (m_saveDialogueCallbacks[m_saveDialogueState])
         {
-        default: break;
-        case SaveDialogueState::Export:
-            m_preferences.lastExportDirectory = m_saveFileBrowser.GetPwd();
-            path.replace_extension("cmb");
-            exportModel(path);
-            break;
-        case SaveDialogueState::Material:
-            m_preferences.lastMaterialDirectory = m_saveFileBrowser.GetPwd();
-            path.replace_extension("mdf");
-            
-            if (cro::FileSystem::fileExists(path))
+            switch (m_saveDialogueState)
             {
-                if (!cro::FileSystem::showMessageBox("Confirm", "File Exists... Overwrite?", cro::FileSystem::YesNo))
-                {
-                    break;
-                }
+            default: break;
+            case SaveDialogueState::AttachmentPoints:
+                path.replace_extension("atc");
+                m_preferences.lastAttachmentDirectory = m_saveFileBrowser.GetPwd();
+                break;
+            case SaveDialogueState::ImageCombiner:
+                path.replace_extension("png");
+                m_preferences.lastImageDirectory = m_saveFileBrowser.GetPwd();
+                break;
+            case SaveDialogueState::NotificationEvents:
+                path.replace_extension("ntf");
+                m_preferences.lastNotificationDirectory = m_saveFileBrowser.GetPwd();
+                break;
             }
-            exportMaterial(path);
-            break;
-        case SaveDialogueState::Save:
-            m_preferences.lastModelDirectory = m_saveFileBrowser.GetPwd();
-            path.replace_extension("cmt");
-
-            if (cro::FileSystem::fileExists(path))
-            {
-                if (!cro::FileSystem::showMessageBox("Confirm", "File Exists... Overwrite?", cro::FileSystem::YesNo))
-                {
-                    break;
-                }
-            }
-            saveModel(path);
-            break;
+            m_saveDialogueCallbacks[m_saveDialogueState](path);
         }
+        else
+        {
+            switch (m_saveDialogueState)
+            {
+            default: break;
+            case SaveDialogueState::Export:
+                m_preferences.lastExportDirectory = m_saveFileBrowser.GetPwd();
+                path.replace_extension("cmb");
+                exportModel(path);
+                break;
+            case SaveDialogueState::Material:
+                m_preferences.lastMaterialDirectory = m_saveFileBrowser.GetPwd();
+                path.replace_extension("mdf");
 
+                if (cro::FileSystem::fileExists(path))
+                {
+                    if (!cro::FileSystem::showMessageBox("Confirm", "File Exists... Overwrite?", cro::FileSystem::YesNo))
+                    {
+                        break;
+                    }
+                }
+                exportMaterial(path);
+                break;
+            case SaveDialogueState::Save:
+                m_preferences.lastModelDirectory = m_saveFileBrowser.GetPwd();
+                path.replace_extension("cmt");
+
+                if (cro::FileSystem::fileExists(path))
+                {
+                    if (!cro::FileSystem::showMessageBox("Confirm", "File Exists... Overwrite?", cro::FileSystem::YesNo))
+                    {
+                        break;
+                    }
+                }
+                saveModel(path);
+                break;
+            }
+        }
         m_saveFileBrowser.ClearSelected();
         m_saveDialogueState = SaveDialogueState::None;
 
@@ -2486,24 +2523,28 @@ void ModelState::drawBrowser()
 
                 if (ImGui::Button("Export##attachments"))
                 {
-                    auto path = cro::FileSystem::saveFileDialogue("", "atc");
-                    if (!path.empty())
-                    {
-                        cro::ConfigFile cfg("attachments");
-                        for (auto i = 0u; i < attachments.size(); ++i)
+                    m_saveDialogueCallbacks[SaveDialogueState::AttachmentPoints] =
+                        [this, &attachments](const std::filesystem::path& path)
                         {
-                            const auto& attachment = attachments[i];
-                            auto* a = cfg.addObject("attachment", attachment.getName());
-                            a->addProperty("position").setValue(attachment.getPosition());
-                            a->addProperty("rotation").setValue(m_attachmentAngles[i]);
-                            a->addProperty("scale").setValue(attachment.getScale());
-                            a->addProperty("parent").setValue(attachment.getParent());
-                        }
-                        if (!cfg.save(path))
-                        {
-                            cro::FileSystem::showMessageBox("Error", "Failed to export attachements\nSee console for details");
-                        }
-                    }
+                            if (!path.empty())
+                            {
+                                cro::ConfigFile cfg("attachments");
+                                for (auto i = 0u; i < attachments.size(); ++i)
+                                {
+                                    const auto& attachment = attachments[i];
+                                    auto* a = cfg.addObject("attachment", attachment.getName());
+                                    a->addProperty("position").setValue(attachment.getPosition());
+                                    a->addProperty("rotation").setValue(m_attachmentAngles[i]);
+                                    a->addProperty("scale").setValue(attachment.getScale());
+                                    a->addProperty("parent").setValue(attachment.getParent());
+                                }
+                                if (!cfg.save(path))
+                                {
+                                    cro::FileSystem::showMessageBox("Error", "Failed to export attachements\nSee console for details");
+                                }
+                            }
+                        };
+                    showSaveFileDialogue(SaveDialogueState::AttachmentPoints);
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Import##attachments")
@@ -2810,28 +2851,32 @@ void ModelState::drawBrowser()
                 {
                     if (ImGui::Button("Export##notif"))
                     {
-                        auto path = cro::FileSystem::saveFileDialogue("", "ntf");
-                        if (!path.empty())
-                        {
-                            cro::ConfigFile cfg("animation_data");
-                            const auto& notifications = skeleton.getNotifications();
-                            for (auto i = 0u; i < notifications.size(); ++i)
+                        m_saveDialogueCallbacks[SaveDialogueState::NotificationEvents] =
+                            [this, &skeleton](const std::filesystem::path& path)
                             {
-                                const auto& nFrame = notifications[i];
-                                auto* nObj = cfg.addObject("frame");
-                                for (const auto& notif : nFrame)
+                                if (!path.empty())
                                 {
-                                    auto* nfObj = nObj->addObject("event", notif.name);
-                                    nfObj->addProperty("joint").setValue(static_cast<std::int32_t>(notif.jointID));
-                                    nfObj->addProperty("user_data").setValue(notif.userID);
-                                }
-                            }
+                                    cro::ConfigFile cfg("animation_data");
+                                    const auto& notifications = skeleton.getNotifications();
+                                    for (auto i = 0u; i < notifications.size(); ++i)
+                                    {
+                                        const auto& nFrame = notifications[i];
+                                        auto* nObj = cfg.addObject("frame");
+                                        for (const auto& notif : nFrame)
+                                        {
+                                            auto* nfObj = nObj->addObject("event", notif.name);
+                                            nfObj->addProperty("joint").setValue(static_cast<std::int32_t>(notif.jointID));
+                                            nfObj->addProperty("user_data").setValue(notif.userID);
+                                        }
+                                    }
 
-                            if (!cfg.save(path))
-                            {
-                                cro::FileSystem::showMessageBox("Error", "Failed to export animation data.\nSee console for information");
-                            }
-                        }
+                                    if (!cfg.save(path))
+                                    {
+                                        cro::FileSystem::showMessageBox("Error", "Failed to export animation data.\nSee console for information");
+                                    }
+                                }
+                            };
+                        showSaveFileDialogue(SaveDialogueState::NotificationEvents);
                     }
                     toolTip("Export all frame notifications to a file");
                     ImGui::SameLine();
@@ -3214,58 +3259,61 @@ void ModelState::drawImageCombiner()
 
             if (imageOK)
             {
-                auto path = cro::FileSystem::saveFileDialogue("", "png");
-
-                if(!path.empty())
-                {
-                    if (cro::FileSystem::getFileExtension(path) != ".png")
+                m_saveDialogueCallbacks[SaveDialogueState::ImageCombiner] =
+                    [this, lastSize](const std::filesystem::path& path)
                     {
-                        path += ".png";
-                    }
-
-                    //write image file
-                    cro::Image output;
-                    output.create(lastSize.x, lastSize.y, cro::Colour::Black);
-
-                    for (auto y = 0u; y < lastSize.y; ++y)
-                    {
-                        for (auto x = 0u; x < lastSize.x; ++x)
+                        if (!path.empty())
                         {
-                            auto red = m_combinedImages[0].second.getPixel(x, y);
-                            auto green = m_combinedImages[1].second.getPixel(x, y);
-                            auto blue = m_combinedImages[2].second.getPixel(x, y);
-                            auto alpha = m_combinedImages[3].second.getPixel(x, y);
+                            /*if (cro::FileSystem::getFileExtension(path) != ".png")
+                            {
+                                path += ".png";
+                            }*/
 
-                            cro::Colour outPixel;
-                            if (red)
-                            {
-                                outPixel.setRed(red[0]);
-                            }
-                            if (green)
-                            {
-                                outPixel.setGreen(green[1]);
-                            }
-                            if (blue)
-                            {
-                                outPixel.setBlue(blue[2]);
-                            }
-                            if (alpha && m_combinedImages[3].second.getFormat() == cro::ImageFormat::RGBA)
-                            {
-                                outPixel.setAlpha(alpha[3]);
-                            }
+                            //write image file
+                            cro::Image output;
+                            output.create(lastSize.x, lastSize.y, cro::Colour::Black);
 
-                            output.setPixel(x, y, outPixel);
+                            for (auto y = 0u; y < lastSize.y; ++y)
+                            {
+                                for (auto x = 0u; x < lastSize.x; ++x)
+                                {
+                                    auto red = m_combinedImages[0].second.getPixel(x, y);
+                                    auto green = m_combinedImages[1].second.getPixel(x, y);
+                                    auto blue = m_combinedImages[2].second.getPixel(x, y);
+                                    auto alpha = m_combinedImages[3].second.getPixel(x, y);
+
+                                    cro::Colour outPixel;
+                                    if (red)
+                                    {
+                                        outPixel.setRed(red[0]);
+                                    }
+                                    if (green)
+                                    {
+                                        outPixel.setGreen(green[1]);
+                                    }
+                                    if (blue)
+                                    {
+                                        outPixel.setBlue(blue[2]);
+                                    }
+                                    if (alpha && m_combinedImages[3].second.getFormat() == cro::ImageFormat::RGBA)
+                                    {
+                                        outPixel.setAlpha(alpha[3]);
+                                    }
+
+                                    output.setPixel(x, y, outPixel);
+                                }
+                            }
+                            if (output.write(path, true))
+                            {
+                                cro::FileSystem::showMessageBox("Success", "Wrote image successfully");
+                            }
+                            else
+                            {
+                                cro::FileSystem::showMessageBox("Error", "Failed writing " + std::string(U8PATH_CAST(cro::FileSystem::getFileName(path))));
+                            }
                         }
-                    }
-                    if (output.write(path, true))
-                    {
-                        cro::FileSystem::showMessageBox("Success", "Wrote image successfully");
-                    }
-                    else
-                    {
-                        cro::FileSystem::showMessageBox("Error", "Failed writing " + std::string(U8PATH_CAST(cro::FileSystem::getFileName(path))));
-                    }
-                }
+                    };
+                showSaveFileDialogue(SaveDialogueState::ImageCombiner);
             }
         }
 

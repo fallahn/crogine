@@ -156,9 +156,12 @@ private:
         enum
         {
             Save, Export, Material,
+            AttachmentPoints, NotificationEvents,
+            ImageCombiner,
             None
         };
     };
+    std::array<std::function<void(const std::filesystem::path&)>, SaveDialogueState::None> m_saveDialogueCallbacks = {};
     std::int32_t m_saveDialogueState;
     void showSaveFileDialogue(std::int32_t);
     void handleSaveFileDialogue();
