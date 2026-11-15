@@ -4,6 +4,8 @@ model ground_plane
     size = 3,3
     uv=0,0,1,1
 
+    cast_shadows = true
+
     material Unlit
     {
         diffuse = "assets/images/grid.png"

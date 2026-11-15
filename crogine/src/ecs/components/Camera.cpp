@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -120,7 +120,7 @@ void Camera::setPerspective(float fov, float aspect, float nearPlane, float farP
 
     m_orthographicView = { 0.f,0.f,0.f,0.f };
 
-    auto fovTan = std::tan(fov / 2.f);
+    const auto fovTan = std::tan(fov / 2.f);
     m_frustumData.farPlane = -farPlane;
     m_frustumData.nearPlane = -nearPlane;
     m_frustumData.nearRight = aspect * nearPlane * fovTan;
@@ -136,7 +136,7 @@ void Camera::setPerspective(float fov, float aspect, float nearPlane, float farP
     if (shadowMapBuffer.available()
         && shadowMapBuffer.getLayerCount() != numSplits)
     {
-        auto size = shadowMapBuffer.getSize();
+        const auto size = shadowMapBuffer.getSize();
         shadowMapBuffer.create(size.x, size.y, numSplits);
     }
 }

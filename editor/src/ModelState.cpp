@@ -161,7 +161,7 @@ bool ModelState::handleEvent(const cro::Event& evt)
         {
             //m_cameras[CameraID::Default].FOV = std::min(MaxFOV, std::max(MinFOV, m_cameras[CameraID::Default].FOV - (evt.wheel.y * 0.1f)));
             //m_viewportRatio = updateView(m_scene.getActiveCamera(), DefaultFarPlane, m_cameras[CameraID::Default].FOV);
-            m_arcball.zoom(evt.wheel.y * 0.1f);
+            m_arcball.zoom(evt.wheel.y * 0.5f);
             m_cameras[CameraID::Default].camera.getComponent<cro::Transform>().setLocalTransform(m_arcball.getInvTransform());
         }
         break;
@@ -270,11 +270,11 @@ void ModelState::addSystems()
     m_scene.addSystem<FpsCameraSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::ShadowMapRenderer>(mb);
-    if (m_useDeferred)
-    {
-        m_scene.addSystem<cro::DeferredRenderSystem>(mb)->setEnvironmentMap(m_environmentMap);
-    }
-    else
+    //if (m_useDeferred)
+    //{
+    //    m_scene.addSystem<cro::DeferredRenderSystem>(mb)->setEnvironmentMap(m_environmentMap);
+    //}
+    //else
     {
         m_scene.addSystem<cro::ModelRenderer>(mb);
     }
@@ -282,11 +282,11 @@ void ModelState::addSystems()
     m_previewScene.addSystem<cro::SkeletalAnimator>(mb);
     m_previewScene.addSystem<cro::CameraSystem>(mb);
 
-    if (m_useDeferred)
-    {
-        m_previewScene.addSystem<cro::DeferredRenderSystem>(mb)->setEnvironmentMap(m_environmentMap);
-    }
-    else
+    //if (m_useDeferred)
+    //{
+    //    m_previewScene.addSystem<cro::DeferredRenderSystem>(mb)->setEnvironmentMap(m_environmentMap);
+    //}
+    //else
     {
         m_previewScene.addSystem<cro::ModelRenderer>(mb);
     }
@@ -389,9 +389,10 @@ void ModelState::createScene()
     //create the camera - using a custom camera prevents the scene updating the projection on window resize
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setLocalTransform(m_arcball.getInvTransform());// .setPosition(DefaultCameraPosition);
-    entity.addComponent<cro::Camera>().shadowMapBuffer.create(4096, 4096);
-    entity.getComponent<cro::Camera>().setMaxShadowDistance(50.f);
-    entity.getComponent<cro::Camera>().setShadowExpansion(30.f);
+    entity.addComponent<cro::Camera>().shadowMapBuffer.create(2048, 2048);
+    entity.getComponent<cro::Camera>().setMaxShadowDistance(20.f);
+    entity.getComponent<cro::Camera>().setShadowExpansion(17.f);
+    entity.getComponent<cro::Camera>().setBlurPassCount(1);
     m_viewportRatio = updateView(entity, DefaultFarPlane, DefaultFOV);
     m_scene.setActiveCamera(entity);
     m_cameras[CameraID::Default].camera = entity;
