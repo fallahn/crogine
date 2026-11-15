@@ -94,6 +94,8 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context, Shar
     m_showBakingWindow      (false),
     m_useFreecam            (false),
     m_arcball               (DefaultCameraPosition, glm::vec3(0.f), cro::Transform::Y_AXIS),
+    m_openFileBrowser       (ImGuiFileBrowserFlags_CloseOnEsc),
+    m_openDialogueState     (OpenDialogueState::None),
     m_exportAnimation       (true),
     m_skeletonMeshID        (0),
     m_transformUpdated      (false),
@@ -598,15 +600,23 @@ void ModelState::loadPrefs()
             }
             else if (name == "import_dir")
             {
-                m_preferences.lastImportDirectory = prop.getValue<std::string>();
+                m_preferences.lastImportDirectory = prop.getValue<std::filesystem::path>();
             }
             else if (name == "export_dir")
             {
-                m_preferences.lastExportDirectory = prop.getValue<std::string>();
+                m_preferences.lastExportDirectory = prop.getValue<std::filesystem::path>();
             }
             else if (name == "model_dir")
             {
-                m_preferences.lastModelDirectory = prop.getValue<std::string>();
+                m_preferences.lastModelDirectory = prop.getValue<std::filesystem::path>();
+            }
+            else if (name == "mat_dir")
+            {
+                m_preferences.lastMaterialDirectory = prop.getValue<std::filesystem::path>();
+            }
+            else if (name == "tex_dir")
+            {
+                m_preferences.lastTextureDirectory = prop.getValue<std::filesystem::path>();
             }
             else if (name == "sky_colour")
             {
@@ -632,6 +642,8 @@ void ModelState::savePrefs()
     prefsOut.addProperty("import_dir").setValue(m_preferences.lastImportDirectory);
     prefsOut.addProperty("export_dir").setValue(m_preferences.lastExportDirectory);
     prefsOut.addProperty("model_dir").setValue(m_preferences.lastModelDirectory);
+    prefsOut.addProperty("mat_dir").setValue(m_preferences.lastMaterialDirectory);
+    prefsOut.addProperty("tex_dir").setValue(m_preferences.lastTextureDirectory);
 
     if (prefsOut.save(cro::App::getPreferencePath() / "model_viewer.cfg"))
     {

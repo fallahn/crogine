@@ -45,6 +45,7 @@ source distribution.
 #include <crogine/graphics/Image.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/gui/detail/imgui.h>
+#include <crogine/gui/detail/imfilebrowser.h>
 
 #include "ModelViewerConsts.inl"
 
@@ -104,6 +105,8 @@ private:
         std::filesystem::path lastImportDirectory;
         std::filesystem::path lastExportDirectory;
         std::filesystem::path lastModelDirectory;
+        std::filesystem::path lastMaterialDirectory;
+        std::filesystem::path lastTextureDirectory;
     }m_preferences;
     bool m_showPreferences;
     bool m_showGroundPlane;
@@ -125,6 +128,20 @@ private:
     void loadAssets();
     void createScene();
     void toggleFreecam();
+
+    ImGui::FileBrowser m_openFileBrowser;
+    struct OpenDialogueState final
+    {
+        enum
+        {
+            Open, Import,
+            Material, Texture,
+            None
+        };
+    };
+    std::int32_t m_openDialogueState;
+    void showOpenFileDialogue(std::int32_t state);
+    void handleOpenFileDialogue();
 
     //------------ModelStateModels.cpp----------//
     struct ModelProperties final
@@ -152,6 +169,7 @@ private:
 
     }m_modelProperties;
 
+    [[deprecated]]
     void openModel();
     void openModelAtPath(const std::filesystem::path&);
     void saveModel(const std::filesystem::path&);
@@ -172,7 +190,7 @@ private:
 
     bool m_transformUpdated;
 
-    void importModel();
+    void importModel(const std::filesystem::path&);
     void importIQM(const std::filesystem::path&);
     void updateImportNode(CMFHeader, std::vector<float>& verts, std::vector<std::vector<std::uint32_t>>& indices, std::uint32_t primitiveType);
     void buildSkeleton();

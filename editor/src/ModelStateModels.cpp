@@ -586,7 +586,7 @@ void ModelState::closeModel()
     m_currentFilePath.clear();
 }
 
-void ModelState::importModel()
+void ModelState::importModel(const std::filesystem::path& path)
 {
     auto calcFlags = [](const aiMesh* mesh, std::uint32_t& vertexSize)->std::uint8_t
     {
@@ -625,7 +625,7 @@ void ModelState::importModel()
         return retVal;
     };
 
-    auto path = cro::FileSystem::openFileDialogue(m_preferences.lastImportDirectory / "untitled.glb", "obj,dae,fbx,glb,iqm");
+    //auto path = cro::FileSystem::openFileDialogue(m_preferences.lastImportDirectory / "untitled.glb", "obj,dae,fbx,glb,iqm");
     if (!path.empty())
     {
         auto extension = cro::FileSystem::getFileExtension(path);

@@ -356,6 +356,80 @@ void ModelState::showSaveMessage()
     }
 }
 
+void ModelState::showOpenFileDialogue(std::int32_t state)
+{
+    switch (state)
+    {
+    default: return;
+    case OpenDialogueState::Open:
+        m_openFileBrowser.SetPwd(m_preferences.lastModelDirectory.empty() ? std::filesystem::current_path() : m_preferences.lastModelDirectory);
+        m_openFileBrowser.SetTypeFilters({ ".cmt" });
+        m_openFileBrowser.SetTitle("Open Model");
+        break;
+    case OpenDialogueState::Import:
+        m_openFileBrowser.SetPwd(m_preferences.lastImportDirectory.empty() ? std::filesystem::current_path() : m_preferences.lastImportDirectory);
+        m_openFileBrowser.SetTypeFilters({ ".glb", "obj", "dae", "fbx", "iqm" });
+        m_openFileBrowser.SetTitle("Import Model");
+        break;
+    case OpenDialogueState::Material:
+        m_openFileBrowser.SetPwd(m_preferences.lastMaterialDirectory.empty() ? std::filesystem::current_path() : m_preferences.lastMaterialDirectory);
+        m_openFileBrowser.SetTypeFilters({ ".mdf", ".cmt" });
+        m_openFileBrowser.SetTitle("Open Material");
+        break;
+    case OpenDialogueState::Texture:
+        m_openFileBrowser.SetPwd(m_preferences.lastTextureDirectory.empty() ? std::filesystem::current_path() : m_preferences.lastTextureDirectory);
+        m_openFileBrowser.SetTypeFilters({ ".png", ".jpg", ".bmp"});
+        m_openFileBrowser.SetTitle("Open Texture");
+        //TODO this used to select multiple files - but we can't change the dialogue flags dynamically after construction
+        break;
+    }
+    m_openFileBrowser.Open();
+    m_openDialogueState = state;
+}
+
+void ModelState::handleOpenFileDialogue()
+{
+    if (m_openFileBrowser.HasSelected())
+    {
+        const auto path = m_openFileBrowser.GetSelected();
+        
+        switch (m_openDialogueState)
+        {
+        default: break;
+        case OpenDialogueState::Import:
+            m_preferences.lastImportDirectory = m_openFileBrowser.GetPwd();
+            importModel(path);
+            break;
+        case OpenDialogueState::Open:
+            m_preferences.lastModelDirectory = m_openFileBrowser.GetPwd();
+            
+            if (const auto rel = std::filesystem::relative(path, m_sharedData.workingDirectory); rel.empty())
+            {
+                cro::FileSystem::showMessageBox("Warning", "This model was not opened from the current working directory.");
+            }
+
+            openModelAtPath(path);
+            break;
+        case OpenDialogueState::Material:
+            m_preferences.lastMaterialDirectory = m_openFileBrowser.GetPwd();
+            importMaterial(path);
+            break;
+        case OpenDialogueState::Texture:
+            m_preferences.lastTextureDirectory = m_openFileBrowser.GetPwd();
+            addTextureToBrowser(path);
+            /*
+            for (const auto& p : GetMultiSelected()) { addTextureToBrowser(p); }
+            */
+            break;
+        }
+
+        m_openFileBrowser.ClearSelected();
+        m_openDialogueState = OpenDialogueState::None;
+
+        savePrefs();
+    }
+}
+
 void ModelState::buildUI()
 {
     for (auto& [s, i] : m_combinedImages)
@@ -387,7 +461,7 @@ void ModelState::buildUI()
                             }
                         }
 
-                        openModel();
+                        showOpenFileDialogue(OpenDialogueState::Open);
                     }
                     if (ImGui::MenuItem("Save", nullptr, nullptr, !m_currentFilePath.empty()))
                     {
@@ -413,7 +487,8 @@ void ModelState::buildUI()
 
                     if (ImGui::MenuItem("Import Model", nullptr, nullptr))
                     {
-                        importModel();
+                        //importModel();
+                        showOpenFileDialogue(OpenDialogueState::Import);
                     }
                     
                     if (ImGui::MenuItem("Flip Normals", nullptr, nullptr, m_entities[EntityID::ActiveModel].isValid()))
@@ -713,12 +788,17 @@ void ModelState::buildUI()
                 ImGui::End();
             }
 
-
             drawInspector();
             drawBrowser();
             drawInfo();
             drawGizmo();
             
+            m_openFileBrowser.Display();
+            if (m_openFileBrowser.IsOpened())
+            {
+                handleOpenFileDialogue();
+            }
+
             if (m_showImageCombiner)
             {
                 drawImageCombiner();
@@ -1846,11 +1926,7 @@ void ModelState::drawBrowser()
             ImGui::SameLine();
             if (ImGui::Button("Open##01"))
             {
-                const auto path = cro::FileSystem::openFileDialogue(m_sharedData.workingDirectory / "untitled", "mdf,cmt");
-                if (!path.empty())
-                {
-                    importMaterial(path);
-                }
+                showOpenFileDialogue(OpenDialogueState::Material);
             }
             ImGui::SameLine();
             if (ImGui::Button("Remove##01"))
@@ -1990,16 +2066,7 @@ void ModelState::drawBrowser()
         {
             if (ImGui::Button("Add##00"))
             {
-                const std::string path = U8PATH_CAST(cro::FileSystem::openFileDialogue("", "png,jpg,bmp", true));
-                if (!path.empty()
-                    && m_materialTextures.size() < uiConst::MaxMaterials)
-                {
-                    const auto files = cro::Util::String::tokenize(path, '|');
-                    for (const auto& f : files)
-                    {
-                        addTextureToBrowser(f);
-                    }
-                }
+                showOpenFileDialogue(OpenDialogueState::Texture);
             }
             ImGui::SameLine();
             if (ImGui::Button("Remove##00"))
