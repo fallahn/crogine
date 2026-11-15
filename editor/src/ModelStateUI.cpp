@@ -97,7 +97,7 @@ namespace
     };
 
 
-    void toolTip(const char* desc)
+    static inline void toolTip(const char* desc)
     {
         if (ImGui::IsItemHovered())
         {
@@ -110,7 +110,7 @@ namespace
     }
 
 
-    void helpMarker(const char* desc)
+    static inline void helpMarker(const char* desc)
     {
         ImGui::TextDisabled("(?)");
         toolTip(desc);
@@ -336,11 +336,6 @@ void ModelState::showSaveMessage()
         {
             if (m_importedVBO.empty())
             {
-                /*const auto path = cro::FileSystem::saveFileDialogue(m_sharedData.workingDirectory / "untitled", "cmt");
-                if (!path.empty())
-                {
-                    saveModel(path);
-                }*/
                 showSaveFileDialogue(SaveDialogueState::Save);
             }
             else
@@ -349,7 +344,6 @@ void ModelState::showSaveMessage()
                 //export the model
                 m_exportOptions.modelOnly = false;
                 m_exportOptions.openOnExport = false;
-                //exportModel(false, false);
                 showSaveFileDialogue(SaveDialogueState::Export);
             }
         }
@@ -381,10 +375,36 @@ void ModelState::showOpenFileDialogue(std::int32_t state)
         m_openFileBrowser.SetTitle("Open Material");
         break;
     case OpenDialogueState::Texture:
+    case OpenDialogueState::TextureUniform:
         m_openFileBrowser.SetPwd(m_preferences.lastTextureDirectory.empty() ? std::filesystem::current_path() : m_preferences.lastTextureDirectory);
         m_openFileBrowser.SetTypeFilters({ ".png", ".jpg", ".bmp"});
         m_openFileBrowser.SetTitle("Open Texture");
         //TODO this used to select multiple files - but we can't change the dialogue flags dynamically after construction
+        break;
+    case OpenDialogueState::Skybox:
+        m_openFileBrowser.SetPwd(m_sharedData.skymapTexture.empty() ? std::filesystem::current_path() : m_sharedData.skymapTexture);
+        m_openFileBrowser.SetTypeFilters({ ".hdr" });
+        m_openFileBrowser.SetTitle("Open Skybox Texture");
+        break;
+    case OpenDialogueState::AttachmentPoints:
+        m_openFileBrowser.SetPwd(m_preferences.lastAttachmentDirectory.empty() ? std::filesystem::current_path() : m_preferences.lastAttachmentDirectory);
+        m_openFileBrowser.SetTypeFilters({ ".atc" });
+        m_openFileBrowser.SetTitle("Import Attachments");
+        break;
+    case OpenDialogueState::AttachmentPreview:
+        m_openFileBrowser.SetPwd(m_preferences.lastModelDirectory.empty() ? std::filesystem::current_path() : m_preferences.lastModelDirectory);
+        m_openFileBrowser.SetTypeFilters({ ".cmt" });
+        m_openFileBrowser.SetTitle("Open Attachment Preview");
+        break;
+    case OpenDialogueState::NotificationEvents:
+        m_openFileBrowser.SetPwd(m_preferences.lastNotificationDirectory.empty() ? std::filesystem::current_path() : m_preferences.lastNotificationDirectory);
+        m_openFileBrowser.SetTypeFilters({ ".ntf" });
+        m_openFileBrowser.SetTitle("Open Notification Events");
+        break;
+    case OpenDialogueState::ImageCombiner:
+        m_openFileBrowser.SetPwd(m_preferences.lastImageDirectory.empty() ? std::filesystem::current_path() : m_preferences.lastImageDirectory);
+        m_openFileBrowser.SetTypeFilters({ ".png", ".jpg", ".bmp" });
+        m_openFileBrowser.SetTitle("Open Image");
         break;
     }
     m_openFileBrowser.Open();
@@ -397,36 +417,42 @@ void ModelState::handleOpenFileDialogue()
     {
         const auto path = m_openFileBrowser.GetSelected();
         
-        switch (m_openDialogueState)
+        if (m_openDialogueCallbacks[m_openDialogueState])
         {
-        default: break;
-        case OpenDialogueState::Import:
-            m_preferences.lastImportDirectory = m_openFileBrowser.GetPwd();
-            importModel(path);
-            break;
-        case OpenDialogueState::Open:
-            m_preferences.lastModelDirectory = m_openFileBrowser.GetPwd();
-            
-            if (const auto rel = std::filesystem::relative(path, m_sharedData.workingDirectory); rel.empty())
-            {
-                cro::FileSystem::showMessageBox("Warning", "This model was not opened from the current working directory.");
-            }
-
-            openModelAtPath(path);
-            break;
-        case OpenDialogueState::Material:
-            m_preferences.lastMaterialDirectory = m_openFileBrowser.GetPwd();
-            importMaterial(path);
-            break;
-        case OpenDialogueState::Texture:
-            m_preferences.lastTextureDirectory = m_openFileBrowser.GetPwd();
-            addTextureToBrowser(path);
-            /*
-            for (const auto& p : GetMultiSelected()) { addTextureToBrowser(p); }
-            */
-            break;
+            m_openDialogueCallbacks[m_openDialogueState](path);
         }
+        else
+        {
+            switch (m_openDialogueState)
+            {
+            default: break;
+            case OpenDialogueState::Import:
+                m_preferences.lastImportDirectory = m_openFileBrowser.GetPwd();
+                importModel(path);
+                break;
+            case OpenDialogueState::Open:
+                m_preferences.lastModelDirectory = m_openFileBrowser.GetPwd();
 
+                if (const auto rel = std::filesystem::relative(path, m_sharedData.workingDirectory); rel.empty())
+                {
+                    cro::FileSystem::showMessageBox("Warning", "This model was not opened from the current working directory.");
+                }
+
+                openModelAtPath(path);
+                break;
+            case OpenDialogueState::Material:
+                m_preferences.lastMaterialDirectory = m_openFileBrowser.GetPwd();
+                importMaterial(path);
+                break;
+            case OpenDialogueState::Texture:
+                m_preferences.lastTextureDirectory = m_openFileBrowser.GetPwd();
+                addTextureToBrowser(path);
+                /*
+                for (const auto& p : GetMultiSelected()) { addTextureToBrowser(p); }
+                */
+                break;
+            }
+        }
         m_openFileBrowser.ClearSelected();
         m_openDialogueState = OpenDialogueState::None;
 
@@ -535,7 +561,6 @@ void ModelState::buildUI()
                                 if (!path.empty())
                                 {
                                     m_sharedData.workingDirectory = path;
-                                    //std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
                                 }
                             }
                         }
@@ -638,16 +663,18 @@ void ModelState::buildUI()
                 {
                     if (ImGui::MenuItem("Choose Skybox", nullptr, nullptr))
                     {
-                        const auto lastPath = m_sharedData.skymapTexture.empty() ? m_sharedData.workingDirectory / "untitled.hdr" : m_sharedData.skymapTexture;
-
-                        const auto path = cro::FileSystem::openFileDialogue(lastPath, "hdr");
-                        if (!path.empty())
-                        {
-                            if (m_environmentMap.loadFromFile(path))
+                        m_openDialogueCallbacks[OpenDialogueState::Skybox] =
+                            [this](const std::filesystem::path& path)
                             {
-                                m_sharedData.skymapTexture = path;
-                            }
-                        }
+                                if (!path.empty())
+                                {
+                                    if (m_environmentMap.loadFromFile(path))
+                                    {
+                                        m_sharedData.skymapTexture = path;
+                                    }
+                                }
+                            };
+                        showOpenFileDialogue(OpenDialogueState::Skybox);
                     }
                     if (ImGui::MenuItem("Show Skybox", nullptr, &m_showSkybox))
                     {
@@ -746,7 +773,6 @@ void ModelState::buildUI()
                         if (!path.empty())
                         {
                             m_sharedData.workingDirectory = path;
-                            //std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
                         }
                     }
 
@@ -1016,7 +1042,7 @@ void ModelState::drawInspector()
                     helpMarker("Applies this transform directly to the model data, before exporting the model.\nUseful if an imported model uses z-up coordinates, or is much\nlarger or smaller than other models in the scene.\nTIP: if a model doesn't scale enough in either direction try applying the current scale first before rescaling");
 
                     ImGui::NewLine();
-                    //static bool modelOnly = false;
+
                     ImGui::Checkbox("Export Model Only", &m_exportOptions.modelOnly);
                     ImGui::SameLine();
                     helpMarker("If this is checked then only the model data will exported to the crogine file, leaving any existing material data in tact.");
@@ -1026,7 +1052,6 @@ void ModelState::drawInspector()
                     }
                     if (ImGui::Button("Convert##01"))
                     {
-                        //exportModel(modelOnly, true);
                         m_exportOptions.openOnExport = true;
                         showSaveFileDialogue(SaveDialogueState::Export);
                     }
@@ -1706,7 +1731,7 @@ void ModelState::drawInspector()
 
                 static MaterialDefinition::Uniform* newUniform = nullptr;
                 static const auto drawPopup =
-                    [&](MaterialDefinition::Uniform& uniform, bool showCancel)
+                    [this, &matDef](MaterialDefinition::Uniform& uniform, bool showCancel)
                     {
                         ImGui::InputText("##edit_name", &uniform.name);
                         if (ImGui::BeginCombo("Type", TypeStrings[uniform.type].c_str()))
@@ -1740,17 +1765,23 @@ void ModelState::drawInspector()
                         case MaterialDefinition::Uniform::Texture:
                             if (ImGui::Button("Browse"))
                             {
-                                auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp");
-                                if (!path.empty())
-                                {
-                                    //std::replace(path.begin(), path.end(), '\\', '/');
-                                    //if (path.find(m_sharedData.workingDirectory) != std::string::npos)
-                                    if(const auto rel = std::filesystem::relative(path, m_sharedData.workingDirectory); !rel.empty())
+                                //TODO hmmm is this safe to reference the uniform here?
+                                m_openDialogueCallbacks[OpenDialogueState::TextureUniform] =
+                                    [this, &uniform](const std::filesystem::path& path)
                                     {
-                                        path = rel;// path.substr(m_sharedData.workingDirectory.size());
-                                    }
-                                    uniform.stringValue = U8PATH_CAST(path);
-                                }
+                                        if (!path.empty())
+                                        {
+                                            if (const auto rel = std::filesystem::relative(path, m_sharedData.workingDirectory); !rel.empty())
+                                            {
+                                                uniform.stringValue = U8PATH_CAST(rel);
+                                            }
+                                            else
+                                            {
+                                                uniform.stringValue = U8PATH_CAST(path);
+                                            }
+                                        }
+                                    };
+                                showOpenFileDialogue(OpenDialogueState::TextureUniform);
                             }
                             ImGui::SameLine();
                             ImGui::Text("%s", uniform.stringValue.c_str());
@@ -2056,7 +2087,6 @@ void ModelState::drawBrowser()
             ImGui::SameLine();
             if (ImGui::Button("Export##01"))
             {
-                //exportMaterial();
                 showSaveFileDialogue(SaveDialogueState::Material);
             }
             ImGui::SameLine();
@@ -2479,72 +2509,78 @@ void ModelState::drawBrowser()
                 if (ImGui::Button("Import##attachments")
                     && cro::FileSystem::showMessageBox("Warning", "This will replace all existing attachment data", cro::FileSystem::OKCancel, cro::FileSystem::Warning))
                 {
-                    auto path = cro::FileSystem::openFileDialogue("", "atc");
-                    if (!path.empty())
-                    {
-                        cro::ConfigFile cfg;
-                        if (!cfg.loadFromFile(path))
+                    m_openDialogueCallbacks[OpenDialogueState::AttachmentPoints] =
+                        [this, &attachments](const std::filesystem::path& path)
                         {
-                            cro::FileSystem::showMessageBox("Error", "Failed to open attachment file\nSee console for details");
-                        }
-                        else
-                        {
-                            attachments.clear();
-                            m_attachmentAngles.clear();
-                            m_attachmentIndex = 0;
-
-                            const auto& objs = cfg.getObjects();
-                            for (const auto& obj : objs)
+                            if (!path.empty())
                             {
-                                const auto& name = obj.getName();
-                                if (name == "attachment")
+                                cro::ConfigFile cfg;
+                                if (!cfg.loadFromFile(path))
                                 {
-                                    auto aName = obj.getId();
-                                    if (!aName.empty())
+                                    cro::FileSystem::showMessageBox("Error", "Failed to open attachment file\nSee console for details");
+                                }
+                                else
+                                {
+                                    attachments.clear();
+                                    m_attachmentAngles.clear();
+                                    m_attachmentIndex = 0;
+
+                                    const auto& objs = cfg.getObjects();
+                                    for (const auto& obj : objs)
                                     {
-                                        if (aName.length() >= cro::Attachment::MaxNameLength)
+                                        const auto& name = obj.getName();
+                                        if (name == "attachment")
                                         {
-                                            aName = aName.substr(0, cro::Attachment::MaxNameLength - 1);
-                                        }
+                                            auto aName = obj.getId();
+                                            if (!aName.empty())
+                                            {
+                                                if (aName.length() >= cro::Attachment::MaxNameLength)
+                                                {
+                                                    aName = aName.substr(0, cro::Attachment::MaxNameLength - 1);
+                                                }
 
-                                        auto& attachment = attachments.emplace_back();
-                                        auto& rotation = m_attachmentAngles.emplace_back();
+                                                auto& attachment = attachments.emplace_back();
+                                                auto& rotation = m_attachmentAngles.emplace_back();
 
-                                        attachment.setName(aName);
+                                                attachment.setName(aName);
 
-                                        const auto& props = obj.getProperties();
-                                        for (const auto& prop : props)
-                                        {
-                                            auto pName = prop.getName();
-                                            if (pName == "position")
-                                            {
-                                                attachment.setPosition(prop.getValue<glm::vec3>());
-                                            }
-                                            else if (pName == "rotation")
-                                            {
-                                                rotation = prop.getValue<glm::vec3>();
-                                                glm::quat r = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), rotation.z * cro::Util::Const::degToRad, cro::Transform::Z_AXIS);
-                                                r = glm::rotate(r, rotation.y * cro::Util::Const::degToRad, cro::Transform::Y_AXIS);
-                                                r = glm::rotate(r, rotation.x * cro::Util::Const::degToRad, cro::Transform::X_AXIS);
-                                                attachment.setRotation(r);                                                
-                                            }
-                                            else if (pName == "scale")
-                                            {
-                                                attachment.setScale(prop.getValue<glm::vec3>());
-                                            }
-                                            else if (pName == "parent")
-                                            {
-                                                attachment.setParent(prop.getValue<std::int32_t>());
+                                                const auto& props = obj.getProperties();
+                                                for (const auto& prop : props)
+                                                {
+                                                    auto pName = prop.getName();
+                                                    if (pName == "position")
+                                                    {
+                                                        attachment.setPosition(prop.getValue<glm::vec3>());
+                                                    }
+                                                    else if (pName == "rotation")
+                                                    {
+                                                        rotation = prop.getValue<glm::vec3>();
+                                                        glm::quat r = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), rotation.z * cro::Util::Const::degToRad, cro::Transform::Z_AXIS);
+                                                        r = glm::rotate(r, rotation.y * cro::Util::Const::degToRad, cro::Transform::Y_AXIS);
+                                                        r = glm::rotate(r, rotation.x * cro::Util::Const::degToRad, cro::Transform::X_AXIS);
+                                                        attachment.setRotation(r);
+                                                    }
+                                                    else if (pName == "scale")
+                                                    {
+                                                        attachment.setScale(prop.getValue<glm::vec3>());
+                                                    }
+                                                    else if (pName == "parent")
+                                                    {
+                                                        attachment.setParent(prop.getValue<std::int32_t>());
+                                                    }
+                                                }
                                             }
                                         }
                                     }
-                                }
-                            }
 
-                            //TODO we want to make sure to remove duplicate names
-                            //at some point...
-                        }
-                    }
+                                    //TODO we want to make sure to remove duplicate names
+                                    //at some point...
+                                }
+
+                                m_preferences.lastAttachmentDirectory = m_openFileBrowser.GetPwd();
+                            }
+                        };
+                    showOpenFileDialogue(OpenDialogueState::AttachmentPoints);
                 }
 
 
@@ -2669,26 +2705,26 @@ void ModelState::drawBrowser()
                 }
                 if (ImGui::Button("Add##preview_model"))
                 {
-                    auto path = cro::FileSystem::openFileDialogue("", "cmt");
-                    if (!path.empty())
-                    {
-                        //std::replace(path.begin(), path.end(), '\\', '/');
-                        /*if (auto found = path.find(m_sharedData.workingDirectory); found != std::string::npos)
+                    m_openDialogueCallbacks[OpenDialogueState::AttachmentPreview] =
+                        [this](const std::filesystem::path& path)
                         {
-                            path = path.substr(found);
-                        }*/
-
-                        cro::ModelDefinition md(m_resources, &m_environmentMap, m_sharedData.workingDirectory);
-                        if (md.loadFromFile(path))
-                        {
-                            auto entity = m_scene.createEntity();
-                            entity.addComponent<cro::Transform>();
-                            md.createModel(entity);
-                            entity.setLabel(U8PATH_CAST(cro::FileSystem::getFileName(path)));
-                            entity.getComponent<cro::Model>().setHidden(true);
-                            m_attachmentModels.push_back(entity);
-                        }
-                    }
+                            if (!path.empty())
+                            {
+                                cro::ModelDefinition md(m_resources, &m_environmentMap, m_sharedData.workingDirectory);
+                                //this doesn't actually need to be relative else we try loading
+                                //the model from the editor's directory...
+                                if (md.loadFromFile(path))
+                                {
+                                    auto entity = m_scene.createEntity();
+                                    entity.addComponent<cro::Transform>();
+                                    md.createModel(entity);
+                                    entity.setLabel(U8PATH_CAST(cro::FileSystem::getFileName(path)));
+                                    entity.getComponent<cro::Model>().setHidden(true);
+                                    m_attachmentModels.push_back(entity);
+                                }
+                            }
+                        };
+                    showOpenFileDialogue(OpenDialogueState::AttachmentPreview);
                 }
 
                 if (selectedModel != 0)
@@ -2802,76 +2838,82 @@ void ModelState::drawBrowser()
                     if (ImGui::Button("Import##notif")
                         && cro::FileSystem::showMessageBox("Warning", "This will overwrite all existing animation data", cro::FileSystem::OKCancel, cro::FileSystem::Warning))
                     {
-                        auto path = cro::FileSystem::openFileDialogue("", "ntf");
-                        if (!path.empty())
-                        {
-                            cro::ConfigFile cfg;
-                            if (!cfg.loadFromFile(path))
+                        m_openDialogueCallbacks[OpenDialogueState::NotificationEvents] =
+                            [this, &skeleton](const std::filesystem::path& path)
                             {
-                                cro::FileSystem::showMessageBox("Error", "Failed to open animation data.\nSeeconsole for details", cro::FileSystem::OK, cro::FileSystem::Error);
-                            }
-                            else
-                            {
-                                auto& notifications = skeleton.getNotifications();
-                                auto size = notifications.size();
-                                notifications.clear();
-
-                                const auto objs = cfg.getObjects();
-                                auto i = 0u;
-
-                                for (const auto& obj : objs)
+                                if (!path.empty())
                                 {
-                                    //don't load too many frames
-                                    if (i == size)
+                                    cro::ConfigFile cfg;
+                                    if (!cfg.loadFromFile(path))
                                     {
-                                        break;
+                                        cro::FileSystem::showMessageBox("Error", "Failed to open animation data.\nSeeconsole for details", cro::FileSystem::OK, cro::FileSystem::Error);
                                     }
-
-                                    if (obj.getName() == "frame")
+                                    else
                                     {
-                                        auto& frame = notifications.emplace_back();
+                                        auto& notifications = skeleton.getNotifications();
+                                        auto size = notifications.size();
+                                        notifications.clear();
 
-                                        const auto& fObjs = obj.getObjects();
-                                        for (const auto& fObj : fObjs)
+                                        const auto objs = cfg.getObjects();
+                                        auto i = 0u;
+
+                                        for (const auto& obj : objs)
                                         {
-                                            if (fObj.getName() == "event")
+                                            //don't load too many frames
+                                            if (i == size)
                                             {
-                                                auto name = fObj.getId();
-                                                if (!name.empty())
+                                                break;
+                                            }
+
+                                            if (obj.getName() == "frame")
+                                            {
+                                                auto& frame = notifications.emplace_back();
+
+                                                const auto& fObjs = obj.getObjects();
+                                                for (const auto& fObj : fObjs)
                                                 {
-                                                    if (name.length() >= cro::Attachment::MaxNameLength)
+                                                    if (fObj.getName() == "event")
                                                     {
-                                                        name = name.substr(0, cro::Attachment::MaxNameLength - 1);
-                                                    }
-                                                    auto& n = frame.emplace_back();
-                                                    n.name = name;
-                                                    
-                                                    for (const auto& prop : fObj.getProperties())
-                                                    {
-                                                        if (prop.getName() == "joint")
+                                                        auto name = fObj.getId();
+                                                        if (!name.empty())
                                                         {
-                                                            n.jointID = prop.getValue<std::int32_t>();
-                                                        }
-                                                        else if (prop.getName() == "user_data")
-                                                        {
-                                                            n.userID = prop.getValue<std::int32_t>();
+                                                            if (name.length() >= cro::Attachment::MaxNameLength)
+                                                            {
+                                                                name = name.substr(0, cro::Attachment::MaxNameLength - 1);
+                                                            }
+                                                            auto& n = frame.emplace_back();
+                                                            n.name = name;
+
+                                                            for (const auto& prop : fObj.getProperties())
+                                                            {
+                                                                if (prop.getName() == "joint")
+                                                                {
+                                                                    n.jointID = prop.getValue<std::int32_t>();
+                                                                }
+                                                                else if (prop.getName() == "user_data")
+                                                                {
+                                                                    n.userID = prop.getValue<std::int32_t>();
+                                                                }
+                                                            }
                                                         }
                                                     }
                                                 }
+
+                                                i++;
                                             }
                                         }
 
-                                        i++;
+                                        //pad out to correct size if too small
+                                        while (notifications.size() < size)
+                                        {
+                                            notifications.emplace_back();
+                                        }
                                     }
-                                }
 
-                                //pad out to correct size if too small
-                                while (notifications.size() < size)
-                                {
-                                    notifications.emplace_back();
+                                    m_preferences.lastNotificationDirectory = m_openFileBrowser.GetPwd();
                                 }
-                            }
-                        }
+                            };
+                        showOpenFileDialogue(OpenDialogueState::NotificationEvents);
                     }
                 }
                 ImGui::EndChild();
@@ -3114,15 +3156,21 @@ void ModelState::drawImageCombiner()
             std::string button = "Open File##" + std::to_string(i);
             if (ImGui::Button(button.c_str()))
             {
-                auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp");
-                if (!path.empty())
-                {
-                    m_combinedImages[i].second = cro::Image(true);
-                    if (m_combinedImages[i].second.loadFromFile(path))
+                m_openDialogueCallbacks[OpenDialogueState::ImageCombiner] =
+                    [this, i](const std::filesystem::path& path)
                     {
-                        m_combinedImages[i].first = U8PATH_CAST(cro::FileSystem::getFileName(path));
-                    }
-                }
+                        if (!path.empty())
+                        {
+                            m_combinedImages[i].second = cro::Image(true);
+                            if (m_combinedImages[i].second.loadFromFile(path))
+                            {
+                                m_combinedImages[i].first = U8PATH_CAST(cro::FileSystem::getFileName(path));
+                            }
+
+                            m_preferences.lastImageDirectory = m_openFileBrowser.GetPwd();
+                        }
+                    };
+                showOpenFileDialogue(OpenDialogueState::ImageCombiner);
             }
             ImGui::SameLine();
             button = "Clear##" + std::to_string(i);

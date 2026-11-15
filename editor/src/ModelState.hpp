@@ -107,6 +107,9 @@ private:
         std::filesystem::path lastModelDirectory;
         std::filesystem::path lastMaterialDirectory;
         std::filesystem::path lastTextureDirectory;
+        std::filesystem::path lastAttachmentDirectory;
+        std::filesystem::path lastNotificationDirectory;
+        std::filesystem::path lastImageDirectory;
     }m_preferences;
     bool m_showPreferences;
     bool m_showGroundPlane;
@@ -135,10 +138,14 @@ private:
         enum
         {
             Open, Import,
-            Material, Texture,
+            Material, Texture, TextureUniform,
+            Skybox, AttachmentPoints,
+            AttachmentPreview, NotificationEvents,
+            ImageCombiner,
             None
         };
     };
+    std::array<std::function<void(const std::filesystem::path&)>, OpenDialogueState::None> m_openDialogueCallbacks = {};
     std::int32_t m_openDialogueState;
     void showOpenFileDialogue(std::int32_t state);
     void handleOpenFileDialogue();

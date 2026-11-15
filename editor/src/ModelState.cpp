@@ -619,6 +619,18 @@ void ModelState::loadPrefs()
             {
                 m_preferences.lastTextureDirectory = prop.getValue<std::filesystem::path>();
             }
+            else if (name == "atc_dir")
+            {
+                m_preferences.lastAttachmentDirectory = prop.getValue<std::filesystem::path>();
+            }
+            else if (name == "ntf_dir")
+            {
+                m_preferences.lastNotificationDirectory = prop.getValue<std::filesystem::path>();
+            }
+            else if (name == "combine_dir")
+            {
+                m_preferences.lastImageDirectory = prop.getValue<std::filesystem::path>();
+            }
             else if (name == "sky_colour")
             {
                 getContext().appInstance.setClearColour(prop.getValue<cro::Colour>());
@@ -645,6 +657,9 @@ void ModelState::savePrefs()
     prefsOut.addProperty("model_dir").setValue(m_preferences.lastModelDirectory);
     prefsOut.addProperty("mat_dir").setValue(m_preferences.lastMaterialDirectory);
     prefsOut.addProperty("tex_dir").setValue(m_preferences.lastTextureDirectory);
+    prefsOut.addProperty("atc_dir").setValue(m_preferences.lastAttachmentDirectory);
+    prefsOut.addProperty("ntf_dir").setValue(m_preferences.lastNotificationDirectory);
+    prefsOut.addProperty("combine_dir").setValue(m_preferences.lastImageDirectory);
 
     if (prefsOut.save(cro::App::getPreferencePath() / "model_viewer.cfg"))
     {

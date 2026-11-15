@@ -62,25 +62,26 @@ namespace
 
 void ModelState::openModel()
 {
-    const auto path = cro::FileSystem::openFileDialogue(m_preferences.lastModelDirectory, "cmt");
-    if (!path.empty()
-        && cro::FileSystem::getFileExtension(path) == ".cmt")
-    {
-        //std::replace(path.begin(), path.end(), '\\', '/');
-        //if (path.find(m_sharedData.workingDirectory) == std::string::npos)
-        if (const auto rel = std::filesystem::relative(path, m_sharedData.workingDirectory); rel.empty())
-        {
-            cro::FileSystem::showMessageBox("Warning", "This model was not opened from the current working directory.");
-        }
+    //DEPRECATED - TODO -remove this
+    //const auto path = cro::FileSystem::openFileDialogue(m_preferences.lastModelDirectory, "cmt");
+    //if (!path.empty()
+    //    && cro::FileSystem::getFileExtension(path) == ".cmt")
+    //{
+    //    //std::replace(path.begin(), path.end(), '\\', '/');
+    //    //if (path.find(m_sharedData.workingDirectory) == std::string::npos)
+    //    if (const auto rel = std::filesystem::relative(path, m_sharedData.workingDirectory); rel.empty())
+    //    {
+    //        cro::FileSystem::showMessageBox("Warning", "This model was not opened from the current working directory.");
+    //    }
 
-        openModelAtPath(path);
+    //    openModelAtPath(path);
 
-        m_preferences.lastModelDirectory = cro::FileSystem::getFilePath(path);
-    }
-    else
-    {
-        cro::Logger::log(path.string() + ": invalid file path", cro::Logger::Type::Error);
-    }
+    //    m_preferences.lastModelDirectory = cro::FileSystem::getFilePath(path);
+    //}
+    //else
+    //{
+    //    cro::Logger::log(path.string() + ": invalid file path", cro::Logger::Type::Error);
+    //}
 }
 
 void ModelState::openModelAtPath(const std::filesystem::path& path)
