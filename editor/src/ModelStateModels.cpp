@@ -1046,7 +1046,7 @@ void ModelState::buildSkeleton()
     }
 }
 
-void ModelState::exportModel(bool modelOnly, bool openOnSave)
+void ModelState::exportModel(const std::filesystem::path& path)
 {
     CRO_ASSERT(m_importedHeader.flags, "");
     CRO_ASSERT(m_importedHeader.arrayCount, "");
@@ -1054,23 +1054,39 @@ void ModelState::exportModel(bool modelOnly, bool openOnSave)
     CRO_ASSERT(!m_importedVBO.empty(), "");
     CRO_ASSERT(!m_importedIndexArrays.empty(), "");
 
-    if (!modelOnly
-        && !cro::FileSystem::showMessageBox("Confirm", "This will overwrite any existing model definition with the default material. Are you sure?", cro::FileSystem::YesNo, cro::FileSystem::Warning))
+    if (cro::FileSystem::fileExists(path))
     {
-        return;
+        if (!m_exportOptions.modelOnly)
+        {
+            if (!cro::FileSystem::showMessageBox("Confirm", "This will overwrite any existing model definition with the default material. Are you sure?", cro::FileSystem::YesNo, cro::FileSystem::Warning))
+            {
+                return;
+            }
+        }
+        else
+        {
+            if (!cro::FileSystem::showMessageBox("Confirm", "File Exists... Overwrite?", cro::FileSystem::YesNo, cro::FileSystem::Warning))
+            {
+                return;
+            }
+        }
     }
 
-    auto path = cro::FileSystem::saveFileDialogue(m_preferences.lastExportDirectory / "untitled", "cmb");
+    //auto path = cro::FileSystem::saveFileDialogue(m_preferences.lastExportDirectory / "untitled", "cmb");
     //std::replace(path.begin(), path.end(), '\\', '/');
     if (!path.empty())
     {
-        if (cro::FileSystem::getFileExtension(path) != ".cmb")
+        assert(path.extension() == ".cmb");
+
+        /*if (cro::FileSystem::getFileExtension(path) != ".cmb")
         {
             path += ".cmb";
-        }
+        }*/
+
+        //path.replace_extension("cmb");
 
         //write binary file
-        bool animated = m_exportAnimation && m_importedHeader.animated;
+        bool animated = m_exportOptions.exportAnimation && m_importedHeader.animated;
         if (cro::Detail::ModelBinary::write(m_entities[EntityID::ActiveModel], path, animated))
         {
             //create config file and save as cmt
@@ -1104,20 +1120,21 @@ void ModelState::exportModel(bool modelOnly, bool openOnSave)
             }
 
             //path.back() = 't';
-            path.replace_extension("cmt");
+            auto cfgPath = path;
+            cfgPath.replace_extension("cmt");
 
-            if (!modelOnly)
+            if (!m_exportOptions.modelOnly)
             {
-                cfg.save(path);
+                cfg.save(cfgPath);
             }
 
             m_preferences.lastExportDirectory = cro::FileSystem::getFilePath(path);
             savePrefs();
 
-            if (openOnSave)
+            if (m_exportOptions.openOnExport)
             {
                 closeModel();
-                openModelAtPath(path);
+                openModelAtPath(cfgPath);
             }
         }
     }

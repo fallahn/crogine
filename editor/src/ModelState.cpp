@@ -96,7 +96,8 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context, Shar
     m_arcball               (DefaultCameraPosition, glm::vec3(0.f), cro::Transform::Y_AXIS),
     m_openFileBrowser       (ImGuiFileBrowserFlags_CloseOnEsc),
     m_openDialogueState     (OpenDialogueState::None),
-    m_exportAnimation       (true),
+    m_saveFileBrowser       (ImGuiFileBrowserFlags_CloseOnEsc | ImGuiFileBrowserFlags_CreateNewDir | ImGuiFileBrowserFlags_ConfirmOnEnter | ImGuiFileBrowserFlags_EnterNewFilename),
+    m_saveDialogueState     (SaveDialogueState::None),
     m_skeletonMeshID        (0),
     m_transformUpdated      (false),
     m_browseGLTF            (false),
@@ -719,7 +720,7 @@ void ModelState::updateMouseInput(const cro::Event& evt)
             return glm::vec2(in.x * 2.f / size.x - 1.f, 1.f - 2.f * in.y / size.y);
         };
 
-    //HMM we could take advantage here of how SDL proves us the delta in the
+    //HMM we could take advantage here of how SDL provides us the delta in the
     //mouse event, instead of tracking it manually
     const glm::vec2 current = transformMouse(glm::vec2(evt.motion.x, evt.motion.y));
     static glm::vec2 prev = glm::vec2(0.f);
@@ -731,7 +732,7 @@ void ModelState::updateMouseInput(const cro::Event& evt)
             //TODO we're doubly inverting AND decomposing here, this can be optimised.
             m_cameras[CameraID::Default].camera.getComponent<cro::Transform>().setLocalTransform(m_arcball.getInvTransform());
         }
-        else if (evt.motion.state & SDL_BUTTON_RMASK)
+        else if (evt.motion.state & SDL_BUTTON_MMASK)
         {
             const glm::vec2 dxy = current - prev;
             const glm::vec4 dxy4 = glm::inverse(m_cameras[CameraID::Default].camera.getComponent<cro::Camera>().getProjectionMatrix()) * glm::vec4(dxy.x, dxy.y, 0, 1);

@@ -336,17 +336,21 @@ void ModelState::showSaveMessage()
         {
             if (m_importedVBO.empty())
             {
-                const auto path = cro::FileSystem::saveFileDialogue(m_sharedData.workingDirectory / "untitled", "cmt");
+                /*const auto path = cro::FileSystem::saveFileDialogue(m_sharedData.workingDirectory / "untitled", "cmt");
                 if (!path.empty())
                 {
                     saveModel(path);
-                }
+                }*/
+                showSaveFileDialogue(SaveDialogueState::Save);
             }
             else
             {
                 cro::FileSystem::showMessageBox("TODO", "Show options here.");
                 //export the model
-                exportModel(false, false);
+                m_exportOptions.modelOnly = false;
+                m_exportOptions.openOnExport = false;
+                //exportModel(false, false);
+                showSaveFileDialogue(SaveDialogueState::Export);
             }
         }
         else
@@ -430,6 +434,81 @@ void ModelState::handleOpenFileDialogue()
     }
 }
 
+void ModelState::showSaveFileDialogue(std::int32_t state)
+{
+    switch (state)
+    {
+    default: return;
+    case SaveDialogueState::Export:
+        m_saveFileBrowser.SetPwd(m_preferences.lastExportDirectory.empty() ? std::filesystem::current_path() : m_preferences.lastExportDirectory);
+        m_saveFileBrowser.SetTypeFilters({ ".cmb" });
+        m_saveFileBrowser.SetTitle("Export Model");
+        break;
+    case SaveDialogueState::Save:
+        m_saveFileBrowser.SetPwd(m_preferences.lastModelDirectory.empty() ? std::filesystem::current_path() : m_preferences.lastModelDirectory);
+        m_saveFileBrowser.SetTypeFilters({ ".cmt" });
+        m_saveFileBrowser.SetTitle("Save Model As...");
+        break;
+    case SaveDialogueState::Material:
+        m_saveFileBrowser.SetPwd(m_preferences.lastMaterialDirectory.empty() ? std::filesystem::current_path() : m_preferences.lastMaterialDirectory);
+        m_saveFileBrowser.SetTypeFilters({ ".mdf" });
+        m_saveFileBrowser.SetTitle("Export Material");
+        break;
+    }
+
+    m_saveFileBrowser.Open();
+    m_saveDialogueState = state;
+}
+
+void ModelState::handleSaveFileDialogue()
+{
+    if (m_saveFileBrowser.HasSelected())
+    {
+        auto path = m_saveFileBrowser.GetSelected();
+
+        switch (m_saveDialogueState)
+        {
+        default: break;
+        case SaveDialogueState::Export:
+            m_preferences.lastExportDirectory = m_saveFileBrowser.GetPwd();
+            path.replace_extension("cmb");
+            exportModel(path);
+            break;
+        case SaveDialogueState::Material:
+            m_preferences.lastMaterialDirectory = m_saveFileBrowser.GetPwd();
+            path.replace_extension("mdf");
+            
+            if (cro::FileSystem::fileExists(path))
+            {
+                if (!cro::FileSystem::showMessageBox("Confirm", "File Exists... Overwrite?", cro::FileSystem::YesNo))
+                {
+                    break;
+                }
+            }
+            exportMaterial(path);
+            break;
+        case SaveDialogueState::Save:
+            m_preferences.lastModelDirectory = m_saveFileBrowser.GetPwd();
+            path.replace_extension("cmt");
+
+            if (cro::FileSystem::fileExists(path))
+            {
+                if (!cro::FileSystem::showMessageBox("Confirm", "File Exists... Overwrite?", cro::FileSystem::YesNo))
+                {
+                    break;
+                }
+            }
+            saveModel(path);
+            break;
+        }
+
+        m_saveFileBrowser.ClearSelected();
+        m_saveDialogueState = SaveDialogueState::None;
+
+        savePrefs();
+    }
+}
+
 void ModelState::buildUI()
 {
     for (auto& [s, i] : m_combinedImages)
@@ -471,11 +550,7 @@ void ModelState::buildUI()
                     if (ImGui::MenuItem("Save As...", nullptr, nullptr, !m_currentFilePath.empty()))
                     {
                         //if a model is open create a new model def with current materials
-                        const auto path = cro::FileSystem::saveFileDialogue(m_sharedData.workingDirectory / "untitled", "cmt");
-                        if (!path.empty())
-                        {
-                            saveModel(path);
-                        }
+                        showSaveFileDialogue(SaveDialogueState::Save);
                     }
 
                     if (ImGui::MenuItem("Close Model", nullptr, nullptr, m_entities[EntityID::ActiveModel].isValid()))
@@ -487,7 +562,6 @@ void ModelState::buildUI()
 
                     if (ImGui::MenuItem("Import Model", nullptr, nullptr))
                     {
-                        //importModel();
                         showOpenFileDialogue(OpenDialogueState::Import);
                     }
                     
@@ -501,7 +575,10 @@ void ModelState::buildUI()
                         //TODO show modal asking if we want to export animation
                         //and overwrite existing material
                         cro::FileSystem::showMessageBox("TODO", "Show options here");
-                        exportModel();
+
+                        m_exportOptions.modelOnly = false;
+                        m_exportOptions.openOnExport = true;
+                        showSaveFileDialogue(SaveDialogueState::Export);
                     }
 
                     ImGui::Separator();
@@ -791,12 +868,18 @@ void ModelState::buildUI()
             drawInspector();
             drawBrowser();
             drawInfo();
-            drawGizmo();
+            //drawGizmo();
             
             m_openFileBrowser.Display();
             if (m_openFileBrowser.IsOpened())
             {
                 handleOpenFileDialogue();
+            }
+
+            m_saveFileBrowser.Display();
+            if (m_saveFileBrowser.IsOpened())
+            {
+                handleSaveFileDialogue();
             }
 
             if (m_showImageCombiner)
@@ -933,17 +1016,19 @@ void ModelState::drawInspector()
                     helpMarker("Applies this transform directly to the model data, before exporting the model.\nUseful if an imported model uses z-up coordinates, or is much\nlarger or smaller than other models in the scene.\nTIP: if a model doesn't scale enough in either direction try applying the current scale first before rescaling");
 
                     ImGui::NewLine();
-                    static bool modelOnly = false;
-                    ImGui::Checkbox("Export Model Only", &modelOnly);
+                    //static bool modelOnly = false;
+                    ImGui::Checkbox("Export Model Only", &m_exportOptions.modelOnly);
                     ImGui::SameLine();
                     helpMarker("If this is checked then only the model data will exported to the crogine file, leaving any existing material data in tact.");
                     if (m_importedHeader.animated)
                     {
-                        ImGui::Checkbox("Export Animations", &m_exportAnimation);
+                        ImGui::Checkbox("Export Animations", &m_exportOptions.exportAnimation);
                     }
                     if (ImGui::Button("Convert##01"))
                     {
-                        exportModel(modelOnly);
+                        //exportModel(modelOnly, true);
+                        m_exportOptions.openOnExport = true;
+                        showSaveFileDialogue(SaveDialogueState::Export);
                     }
                     ImGui::SameLine();
                     helpMarker("Export this model to Crogine format, and create a model definition file.\nThe model will then be automatically re-opened for material editing.");
@@ -1757,7 +1842,7 @@ void ModelState::drawInspector()
                 ImGui::NewLine();
                 if (ImGui::Button("Export"))
                 {
-                    exportMaterial();
+                    showSaveFileDialogue(SaveDialogueState::Material);
                 }
                 ImGui::SameLine();
                 helpMarker("Export this material to a Material Definition file which can be loaded by the Material Browser");
@@ -1971,7 +2056,8 @@ void ModelState::drawBrowser()
             ImGui::SameLine();
             if (ImGui::Button("Export##01"))
             {
-                exportMaterial();
+                //exportMaterial();
+                showSaveFileDialogue(SaveDialogueState::Material);
             }
             ImGui::SameLine();
             helpMarker("Export this material to a Material Definition file which can be loaded by the Material Browser");

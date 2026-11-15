@@ -143,6 +143,26 @@ private:
     void showOpenFileDialogue(std::int32_t state);
     void handleOpenFileDialogue();
 
+    ImGui::FileBrowser m_saveFileBrowser;
+    struct SaveDialogueState final
+    {
+        enum
+        {
+            Save, Export, Material,
+            None
+        };
+    };
+    std::int32_t m_saveDialogueState;
+    void showSaveFileDialogue(std::int32_t);
+    void handleSaveFileDialogue();
+
+    struct ExportOptions final
+    {
+        bool modelOnly = false;
+        bool openOnExport = true;
+        bool exportAnimation = true;
+    }m_exportOptions;
+
     //------------ModelStateModels.cpp----------//
     struct ModelProperties final
     {
@@ -185,7 +205,7 @@ private:
         glm::vec3 rotation = glm::vec3(0.f);
         float scale = 1.f;
     }m_importedTransform;
-    bool m_exportAnimation;
+    //bool m_exportAnimation;
     std::size_t m_skeletonMeshID;
 
     bool m_transformUpdated;
@@ -194,7 +214,7 @@ private:
     void importIQM(const std::filesystem::path&);
     void updateImportNode(CMFHeader, std::vector<float>& verts, std::vector<std::vector<std::uint32_t>>& indices, std::uint32_t primitiveType);
     void buildSkeleton();
-    void exportModel(bool = false, bool = true);
+    void exportModel(const std::filesystem::path&);
     void applyImportTransform(std::vector<float>& vertexData);
     void flipNormals();
     //-------------------------------------------//
@@ -246,7 +266,7 @@ private:
     void refreshMaterialThumbnail(MaterialDefinition&);
 
     std::vector<std::int32_t> m_activeMaterials; //indices into the materials array of materials used on the currently open model. -1 means default material is applied
-    void exportMaterial() const;
+    void exportMaterial(const std::filesystem::path&) const;
     void importMaterial(const std::filesystem::path&);
     void readMaterialDefinition(MaterialDefinition&, const cro::ConfigObject&);
     //-------------------------------------//

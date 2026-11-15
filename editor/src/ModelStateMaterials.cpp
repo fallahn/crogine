@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2025
+Matt Marchant 2020 - 2026
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -297,7 +297,7 @@ void ModelState::refreshMaterialThumbnail(MaterialDefinition& def)
     def.previewTexture.display();
 }
 
-void ModelState::exportMaterial() const
+void ModelState::exportMaterial(const std::filesystem::path& path) const
 {
     auto defaultName = m_materialDefs[m_selectedMaterial].name;
     if (defaultName.empty())
@@ -309,13 +309,14 @@ void ModelState::exportMaterial() const
         std::replace(defaultName.begin(), defaultName.end(), ' ', '_');
         defaultName = cro::Util::String::toLower(defaultName);
     }
-    auto path = cro::FileSystem::saveFileDialogue(m_sharedData.workingDirectory / defaultName, "mdf");
+    //auto path = cro::FileSystem::saveFileDialogue(m_sharedData.workingDirectory / defaultName, "mdf");
     if (!path.empty())
     {
-        if (cro::FileSystem::getFileExtension(path) != ".mdf")
+        /*if (cro::FileSystem::getFileExtension(path) != ".mdf")
         {
             path.replace_extension("mdf");
-        }
+        }*/
+        assert(path.extension() == ".mdf");
 
         const auto& matDef = m_materialDefs[m_selectedMaterial];
         auto name = matDef.name;

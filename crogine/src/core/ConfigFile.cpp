@@ -97,7 +97,7 @@ void ConfigProperty::setValue(const cro::String& value)
 void ConfigProperty::setValue(const std::filesystem::path& v)
 {
     resetValue();
-    m_utf8Values.emplace_back(v.u8string());
+    m_utf8Values.emplace_back(v.generic_u8string());
 }
 
 void ConfigProperty::setValue(std::int32_t value)
