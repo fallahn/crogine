@@ -204,6 +204,9 @@ void BillboardSystem::process(float)
                 LogW << "More vertices were added to billboard mesh than can be indexed" << std::endl;
             }
 
+            //TODO make sure to update the multidraw indices on the model
+            //here first so that refreshVBO() sets the correct draw function
+
             //we need to resize if larger than previous
             if (meshData.vboAllocator->getBlockCount(vertexData.size()) >
                 meshData.vboAllocation.blockCount)

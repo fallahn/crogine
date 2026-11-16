@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -35,9 +35,11 @@ source distribution.
 #include <crogine/graphics/MaterialData.hpp>
 #include <crogine/graphics/Spatial.hpp>
 
+#include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/mat4x4.hpp>
 
 #include <functional>
+#include <vector>
 
 //use shared VBOs for instanced transforms
 //TODO currently bugged.
@@ -313,6 +315,26 @@ namespace cro
             const Model& m_model;
             DrawInstanced(const Model& m) : m_model(m) {}
         };
+
+        struct DrawMulti final
+        {
+            void operator()(std::int32_t, std::int32_t) const;
+
+            const Model& m_model;
+            DrawMulti(const Model& m) : m_model(m) {}
+        };
+
+        std::vector<GLsizei> m_indexSizeArray; //contains the sizes of each index buffer used in multidraw
+        std::vector<void*> m_indexOffsetArray; //contains the pointers to offsets into the IBO in multidraw
+
+        struct DrawMode final
+        {
+            enum
+            {
+                Single, Instanced, Multi
+            };
+        };
+        std::int32_t m_drawMode;
 
         struct InstanceBuffers final
         {

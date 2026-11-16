@@ -3094,3 +3094,6 @@ GLAPI PFNGLTEXSTORAGE3DMULTISAMPLEPROC glad_glTexStorage3DMultisample;
 #endif
 
 #endif
+//include guard for when we manage to accidentally include both
+//this and GLCheck.hpp in the same source file.
+#define GLAD_INCLUDE

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -27,9 +27,9 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/ecs/components/Model.hpp>
-#include <crogine/detail/Assert.hpp>
 #include "../../detail/GLCheck.hpp"
+#include <crogine/detail/Assert.hpp>
+#include <crogine/ecs/components/Model.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_inverse.hpp>
 
@@ -65,6 +65,7 @@ Model::Model()
     m_hidden            (false),
     m_renderFlags       (std::numeric_limits<std::uint64_t>::max()),
     m_facing            (GL_CCW),
+    m_drawMode          (DrawMode::Single),
     m_skeleton          (nullptr),
     m_jointCount        (0)
 {
@@ -82,6 +83,7 @@ Model::Model(Mesh::Data data, Material::Data material)
     m_boundingSphere    (data.boundingSphere),
     m_boundingBox       (data.boundingBox),
     m_meshData          (data),
+    m_drawMode          (DrawMode::Single),
     m_skeleton          (nullptr),
     m_jointCount        (0)
 {
@@ -154,21 +156,28 @@ Model::Model(Model&& other) noexcept
     std::swap(m_materials, other.m_materials);
 
     std::swap(m_vaos, other.m_vaos);
+    std::swap(m_drawMode, other.m_drawMode);
 
     std::swap(m_skeleton, other.m_skeleton);
     std::swap(m_jointCount, other.m_jointCount);
 
     std::swap(m_instanceBuffers, other.m_instanceBuffers);
 
-    //check the other property to see which draw func we need
-    if (m_instanceBuffers.instanceCount != 0)
+    //check the draw mode property to see which func we need
+    switch (m_drawMode)
     {
-        draw = DrawInstanced(*this);
-    }
-    else
-    {
+    default:
+    case DrawMode::Single:
         draw = DrawSingle(*this);
+        break;
+    case DrawMode::Instanced:
+        draw = DrawInstanced(*this);
+        break;
+    case DrawMode::Multi:
+        draw = DrawMulti(*this);
+        break;
     }
+
     other.draw = {};
 }
 
@@ -207,6 +216,8 @@ Model& Model::operator=(Model&& other) noexcept
             std::fill(pair.begin(), pair.end(), 0);
         }
 
+        m_drawMode = other.m_drawMode;
+
         m_skeleton = other.m_skeleton;
         other.m_skeleton = nullptr;
 
@@ -227,13 +238,18 @@ Model& Model::operator=(Model&& other) noexcept
         m_instanceBuffers = other.m_instanceBuffers;
         other.m_instanceBuffers = {};
 
-        if (m_instanceBuffers.instanceCount)
+        switch (m_drawMode)
         {
-            draw = DrawInstanced(*this);
-        }
-        else
-        {
+        default:
+        case DrawMode::Single:
             draw = DrawSingle(*this);
+            break;
+        case DrawMode::Instanced:
+            draw = DrawInstanced(*this);
+            break;
+        case DrawMode::Multi:
+            draw = DrawMulti(*this);
+            break;
         }
         other.draw = {};
     }
@@ -724,10 +740,19 @@ void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
 #endif
         }
         draw = DrawInstanced(*this);
+        m_drawMode = DrawMode::Instanced;
+    }
+    else if (!m_indexOffsetArray.empty())
+    {
+        draw = DrawMulti(*this);
+        m_drawMode = DrawMode::Multi;
     }
     else
     {
+        //TODO this gets unnecesarily called multiple times
+        //fo each submesh and shadow pass...
         draw = DrawSingle(*this);
+        m_drawMode = DrawMode::Single;
     }
 
     glCheck(glBindVertexArray(0));
@@ -761,6 +786,17 @@ void Model::DrawInstanced::operator()(std::int32_t matID, std::int32_t pass) con
     glCheck(glBindVertexArray(m_model.m_vaos[matID][pass]));
     glCheck(glDrawElementsInstanced(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount,
         static_cast<GLenum>(indexData.format), reinterpret_cast<void*>(indexData.iboAllocation.offset), m_model.m_instanceBuffers.instanceCount));
+}
+
+void Model::DrawMulti::operator()(std::int32_t matID, std::int32_t pass) const
+{
+    CRO_ASSERT(!m_model.m_indexSizeArray.empty(), "");
+    CRO_ASSERT(m_model.m_indexSizeArray.size() == m_model.m_indexOffsetArray.size(), "");
+
+    const auto& indexData = m_model.m_meshData.indexData[matID];
+
+    glCheck(glMultiDrawElements(static_cast<GLenum>(indexData.primitiveType), m_model.m_indexSizeArray.data(),
+        static_cast<GLenum>(indexData.format), m_model.m_indexOffsetArray.data(), static_cast<GLsizei>(m_model.m_indexOffsetArray.size())));
 }
 
 #endif //DESKTOP

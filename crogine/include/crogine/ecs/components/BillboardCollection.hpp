@@ -101,9 +101,20 @@ namespace cro
             m_dirty = true;
         }
 
+        /*!
+        \brief Set the size in world units of a chunk when rendering in multi-draw mode
+        This defaults to -1 where all billboards are stored in one large single array
+        */
+        void setChunkSize(std::int32_t size)
+        {
+            m_chunkSize = std::clamp(size, -1, 100);
+            m_dirty = true;
+        }
+
     private:
-        bool m_dirty = false;
         std::vector<Billboard> m_billboards;
+        std::int32_t m_chunkSize = -1;
+        bool m_dirty = false;
 
         friend class BillboardSystem;
     };
