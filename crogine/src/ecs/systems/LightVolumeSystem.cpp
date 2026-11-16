@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2025
+Matt Marchant 2023 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -27,6 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include "../../detail/GLCheck.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Message.hpp>
@@ -44,7 +45,6 @@ source distribution.
 
 #include <crogine/graphics/Spatial.hpp>
 #include <crogine/util/Constants.hpp>
-#include "../../detail/GLCheck.hpp"
 
 
 //#define PARALLEL_DISABLE

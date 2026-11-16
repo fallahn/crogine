@@ -27,6 +27,8 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include "../../detail/GLCheck.hpp"
+
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -39,8 +41,6 @@ source distribution.
 #include <crogine/graphics/Spatial.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/util/Frustum.hpp>
-
-#include "../../detail/GLCheck.hpp"
 
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
