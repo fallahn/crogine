@@ -4673,8 +4673,8 @@ bool PlaylistState::exportCourse()
     }
 
     cro::ConfigFile cfg;
-    cfg.addProperty("skybox").setValue(U8PATH_CAST(m_courseData.skyboxPath));
-    cfg.addProperty("shrubbery").setValue(U8PATH_CAST(m_courseData.shrubPath));
+    cfg.addProperty("skybox").setValue(m_courseData.skyboxPath);
+    cfg.addProperty("shrubbery").setValue(m_courseData.shrubPath);
     //TODO audio. We'll let the default take care of it for now
 
     cfg.addProperty("title").setValue("Custom Course " + std::to_string(m_saveFileIndex + 1));

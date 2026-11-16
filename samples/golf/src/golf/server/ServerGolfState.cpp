@@ -1824,7 +1824,7 @@ bool GolfState::validateMap()
             else if (name == "model")
             {
                 cro::ConfigFile modelConfig;
-                if (modelConfig.loadFromFile(holeProp.getValue<std::string>()))
+                if (modelConfig.loadFromFile(holeProp.getValue<std::filesystem::path>()))
                 {
                     const auto& modelProps = modelConfig.getProperties();
                     for (const auto& modelProp : modelProps)

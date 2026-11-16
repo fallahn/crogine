@@ -3543,7 +3543,7 @@ void ProfileStateV2::loadClubData()
                             {
                                 if (p.getName() == "path")
                                 {
-                                    if (!cro::FileSystem::fileExists(path / p.getValue<std::string>()))
+                                    if (!cro::FileSystem::fileExists(path / p.getValue<std::filesystem::path>()))
                                     {
                                         LogE << path << " lists model files, but they were not found on disk" << std::endl;
                                         hasModels = false;

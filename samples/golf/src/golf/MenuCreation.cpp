@@ -254,7 +254,7 @@ void MenuState::parseCourseDirectory(const std::filesystem::path& rootDir, bool 
                 else if (propName == "hole")
                 {
                     cro::ConfigFile hole;
-                    if (hole.loadFromFile(prop.getValue<std::string>()))
+                    if (hole.loadFromFile(prop.getValue<std::filesystem::path>()))
                     {
                         if (auto parProp = hole.findProperty("par"); parProp != nullptr)
                         {

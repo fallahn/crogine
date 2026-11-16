@@ -390,7 +390,7 @@ void GolfState::loadMap()
         else if (name == "shrubbery")
         {
             cro::ConfigFile shrubbery;
-            if (shrubbery.loadFromFile(prop.getValue<std::string>()))
+            if (shrubbery.loadFromFile(prop.getValue<std::filesystem::path>()))
             {
                 const auto& shrubProps = shrubbery.getProperties();
                 for (const auto& sp : shrubProps)

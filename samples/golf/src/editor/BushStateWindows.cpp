@@ -847,19 +847,19 @@ void BushState::loadWindowStates()
             }
             else if (name == "open_model")
             {
-                m_openFilePaths[OpenDialogueState::Model] = prop.getValue<std::string>();
+                m_openFilePaths[OpenDialogueState::Model] = prop.getValue<std::filesystem::path>();
             }
             else if (name == "open_treeset")
             {
-                m_openFilePaths[OpenDialogueState::Treeset] = prop.getValue<std::string>();
+                m_openFilePaths[OpenDialogueState::Treeset] = prop.getValue<std::filesystem::path>();
             }
             else if (name == "save_treeset")
             {
-                m_saveFilePaths[SaveDialogueState::Treeset] = prop.getValue<std::string>();
+                m_saveFilePaths[SaveDialogueState::Treeset] = prop.getValue<std::filesystem::path>();
             }
             else if (name == "save_billboard")
             {
-                m_saveFilePaths[SaveDialogueState::Billboard] = prop.getValue<std::string>();
+                m_saveFilePaths[SaveDialogueState::Billboard] = prop.getValue<std::filesystem::path>();
             }
         }
     }
@@ -872,22 +872,22 @@ void BushState::saveWindowStates()
 
     if (!m_openFilePaths[OpenDialogueState::Model].empty())
     {
-        cfg.addProperty("open_model").setValue(U8PATH_CAST(m_openFilePaths[OpenDialogueState::Model]));
+        cfg.addProperty("open_model").setValue(m_openFilePaths[OpenDialogueState::Model]);
     }
 
     if (!m_openFilePaths[OpenDialogueState::Treeset].empty())
     {
-        cfg.addProperty("open_treeset").setValue(U8PATH_CAST(m_openFilePaths[OpenDialogueState::Treeset]));
+        cfg.addProperty("open_treeset").setValue(m_openFilePaths[OpenDialogueState::Treeset]);
     }
 
     if (!m_saveFilePaths[SaveDialogueState::Treeset].empty())
     {
-        cfg.addProperty("save_treeset").setValue(U8PATH_CAST(m_saveFilePaths[SaveDialogueState::Treeset]));
+        cfg.addProperty("save_treeset").setValue(m_saveFilePaths[SaveDialogueState::Treeset]);
     }
 
     if (!m_saveFilePaths[SaveDialogueState::Billboard].empty())
     {
-        cfg.addProperty("save_billboard").setValue(U8PATH_CAST(m_saveFilePaths[SaveDialogueState::Billboard]));
+        cfg.addProperty("save_billboard").setValue(m_saveFilePaths[SaveDialogueState::Billboard]);
     }
 
     cfg.save(cro::App::getPreferencePath() / ConfigFile);

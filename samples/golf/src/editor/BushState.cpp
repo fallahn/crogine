@@ -773,11 +773,11 @@ void BushState::loadPreset(const std::filesystem::path& path)
             const auto& name = p.getName();
             if (name == "model")
             {
-                m_treeset.modelPath = p.getValue<std::string>();
+                m_treeset.modelPath = p.getValue<std::filesystem::path>();
             }
             else if (name == "texture")
             {
-                m_treeset.texturePath = p.getValue<std::string>();
+                m_treeset.texturePath = p.getValue<std::filesystem::path>();
             }
             else if (name == "colour")
             {
@@ -935,8 +935,8 @@ void BushState::loadPreset(const std::filesystem::path& path)
 void BushState::savePreset(const std::filesystem::path& path)
 {
     cro::ConfigFile cfg("m_treeset");
-    cfg.addProperty("model").setValue(U8PATH_CAST(m_treeset.modelPath));
-    cfg.addProperty("texture").setValue(U8PATH_CAST(m_treeset.texturePath));
+    cfg.addProperty("model").setValue(m_treeset.modelPath);
+    cfg.addProperty("texture").setValue(m_treeset.texturePath);
     cfg.addProperty("colour").setValue(m_treeset.colour);
     cfg.addProperty("colour_rotation").setValue(m_treeset.colourRotation);
     cfg.addProperty("randomness").setValue(m_treeset.randomAmount);
@@ -1015,7 +1015,7 @@ void BushState::saveSkyboxFile()
                 glm::vec3 scale = e.getComponent<cro::Transform>().getScale();
 
                 auto* prop = cfg.addObject("prop");
-                prop->addProperty("model").setValue(U8PATH_CAST((modelPath / e.getLabel())));
+                prop->addProperty("model").setValue((modelPath / e.getLabel()));
                 prop->addProperty("position").setValue(pos);
                 prop->addProperty("rotation").setValue(rotation);
                 prop->addProperty("scale").setValue(scale);

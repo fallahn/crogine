@@ -86,7 +86,7 @@ namespace
             const auto& name = p.getName();
             if (name == "model")
             {
-                retVal.modelPath = p.getValue<std::string>();
+                retVal.modelPath = p.getValue<std::filesystem::path>();
             }
             else if (name == "uid")
             {
@@ -123,7 +123,7 @@ namespace
             const auto& name = p.getName();
             if (name == "model")
             {
-                retVal.modelPath = p.getValue<std::string>();
+                retVal.modelPath = p.getValue<std::filesystem::path>();
             }
             else if (name == "uid")
             {
@@ -1102,7 +1102,7 @@ void MenuState::processAvatarList(bool locked, const std::vector<std::filesystem
                     const auto& name = prop.getName();
                     if (name == "model")
                     {
-                        info.modelPath = resourcePath / prop.getValue<std::string>();
+                        info.modelPath = resourcePath / prop.getValue<std::filesystem::path>();
                         if (!info.modelPath.empty())
                         {
                             cro::ConfigFile modelData;
@@ -1116,7 +1116,7 @@ void MenuState::processAvatarList(bool locked, const std::vector<std::filesystem
                                     {
                                         if (p.getName() == "diffuse")
                                         {
-                                            info.texturePath = resourcePath / p.getValue<std::string>();
+                                            info.texturePath = resourcePath / p.getValue<std::filesystem::path>();
                                         }
                                     }
                                 }

@@ -78,7 +78,7 @@ bool VatFile::loadFromFile(const std::filesystem::path& path)
         const auto& name = prop.getName();
         if (name == "model")
         {
-            const auto filepath = workingPath / prop.getValue<std::string>();
+            const auto filepath = workingPath / prop.getValue<std::filesystem::path>();
             if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / filepath))
             {
                 resultFlags |= Model;
@@ -100,7 +100,7 @@ bool VatFile::loadFromFile(const std::filesystem::path& path)
         }
         else if (name == "position")
         {
-            const auto filepath = workingPath / prop.getValue<std::string>();
+            const auto filepath = workingPath / prop.getValue<std::filesystem::path>();
             if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / filepath))
             {
                 resultFlags |= Position;
@@ -119,7 +119,7 @@ bool VatFile::loadFromFile(const std::filesystem::path& path)
         }
         else if (name == "normal")
         {
-            auto filepath = workingPath / prop.getValue<std::string>();
+            auto filepath = workingPath / prop.getValue<std::filesystem::path>();
             if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / filepath))
             {
                 resultFlags |= Normal;
@@ -132,7 +132,7 @@ bool VatFile::loadFromFile(const std::filesystem::path& path)
         }
         else if (name == "tangent")
         {
-            auto filepath = workingPath / prop.getValue<std::string>();
+            auto filepath = workingPath / prop.getValue<std::filesystem::path>();
             if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / filepath))
             {
                 m_dataPaths[DataID::Tangent] = filepath;
@@ -144,7 +144,7 @@ bool VatFile::loadFromFile(const std::filesystem::path& path)
         }
         else if (name == "diffuse")
         {
-            auto filepath = workingPath / prop.getValue<std::string>();
+            auto filepath = workingPath / prop.getValue<std::filesystem::path>();
             if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() / filepath))
             {
                 m_diffusePath = filepath;

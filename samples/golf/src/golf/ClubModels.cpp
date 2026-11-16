@@ -60,7 +60,7 @@ bool ClubModels::loadFromFile(const std::filesystem::path& path, cro::ResourceCo
                 {
                     if (p.getName() == "path")
                     {
-                        const auto modelPath = rootPath / p.getValue<std::string>();
+                        const auto modelPath = rootPath / p.getValue<std::filesystem::path>();
                         if (md.loadFromFile(modelPath))
                         {
                             auto entity = scene.createEntity();
