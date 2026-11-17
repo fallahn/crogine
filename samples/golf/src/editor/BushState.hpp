@@ -235,6 +235,7 @@ private:
         enum
         {
             Model, Treeset,
+            Palette, Texture,
 
             Quit, //used as return value from save dialogue to quit rather than show open dialogue
             None
@@ -275,6 +276,8 @@ private:
 
     void showModelOpenDialogue();
     void showPresetOpenDialogue();
+    void showPaletteOpenDialogue();
+    void showTextureOpenDialogue();
     void showPresetSaveDialogue(std::int32_t dialogueToOpen = OpenDialogueState::None);
     void handleFileDialogues();
 

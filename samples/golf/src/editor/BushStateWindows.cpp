@@ -183,11 +183,7 @@ void BushState::drawProperties(bool*)
             ImGui::NewLine();
             if (ImGui::Button("Load Palette"))
             {
-                auto path = cro::FileSystem::openFileDialogue("", "ase");
-                if (!path.empty())
-                {
-                    m_palette.loadFromFile(path);
-                }
+                showPaletteOpenDialogue();
             }
             auto i = 0;
             for (const auto& swatch : m_palette.getSwatches())
@@ -213,12 +209,7 @@ void BushState::drawProperties(bool*)
             ImGui::NewLine();
             if (ImGui::Button("Load Texture"))
             {
-                auto path = cro::FileSystem::openFileDialogue("", "png");
-                if (!path.empty())
-                {
-                    m_leafTexture->loadFromFile(path);
-                    m_treeset.texturePath = U8PATH_CAST(cro::FileSystem::getFileName(path));
-                }
+                showTextureOpenDialogue();
             }
             ImGui::SameLine();
             ImGui::Image(*m_leafTexture, { 32.f, 32.f }, { 0.f, 0.f }, { 1.f, 1.f });
@@ -729,6 +720,34 @@ void BushState::showPresetOpenDialogue()
     m_openDialogueState = OpenDialogueState::Treeset;
 }
 
+void BushState::showPaletteOpenDialogue()
+{
+    if (!m_openFilePaths[OpenDialogueState::Palette].empty())
+    {
+        m_openFileBrowser.SetPwd(m_openFilePaths[OpenDialogueState::Palette]);
+    }
+
+    m_openFileBrowser.SetTypeFilters({ ".ase" });
+    m_openFileBrowser.SetTitle("Load Palette");
+
+    m_openFileBrowser.Open();
+    m_openDialogueState = OpenDialogueState::Palette;
+}
+
+void BushState::showTextureOpenDialogue()
+{
+    if (!m_openFilePaths[OpenDialogueState::Texture].empty())
+    {
+        m_openFileBrowser.SetPwd(m_openFilePaths[OpenDialogueState::Texture]);
+    }
+
+    m_openFileBrowser.SetTypeFilters({ ".png", ".jpg" });
+    m_openFileBrowser.SetTitle("Load Texture");
+
+    m_openFileBrowser.Open();
+    m_openDialogueState = OpenDialogueState::Texture;
+}
+
 void BushState::showPresetSaveDialogue(std::int32_t dialogueToOpen)
 {
     if (!m_saveFilePaths[SaveDialogueState::Treeset].empty())
@@ -766,6 +785,13 @@ void BushState::handleFileDialogues()
             case OpenDialogueState::Treeset:
                 loadPreset(path);
                 m_saveFilePaths[SaveDialogueState::Treeset] = m_openFileBrowser.GetPwd();
+                break;
+            case OpenDialogueState::Palette:
+                m_palette.loadFromFile(path);
+                break;
+            case OpenDialogueState::Texture:
+                m_leafTexture->loadFromFile(path);
+                m_treeset.texturePath = cro::FileSystem::getFileName(path);
                 break;
             }
             m_openFilePaths[m_openDialogueState] = m_openFileBrowser.GetPwd();
@@ -853,6 +879,15 @@ void BushState::loadWindowStates()
             {
                 m_openFilePaths[OpenDialogueState::Treeset] = prop.getValue<std::filesystem::path>();
             }
+            else if (name == "open_palette")
+            {
+                m_openFilePaths[OpenDialogueState::Palette] = prop.getValue<std::filesystem::path>();
+            }
+            else if (name == "open_texture")
+            {
+                m_openFilePaths[OpenDialogueState::Texture] = prop.getValue<std::filesystem::path>();
+            }
+            
             else if (name == "save_treeset")
             {
                 m_saveFilePaths[SaveDialogueState::Treeset] = prop.getValue<std::filesystem::path>();
@@ -878,6 +913,16 @@ void BushState::saveWindowStates()
     if (!m_openFilePaths[OpenDialogueState::Treeset].empty())
     {
         cfg.addProperty("open_treeset").setValue(m_openFilePaths[OpenDialogueState::Treeset]);
+    }
+
+    if (!m_openFilePaths[OpenDialogueState::Palette].empty())
+    {
+        cfg.addProperty("open_palette").setValue(m_openFilePaths[OpenDialogueState::Palette]);
+    }
+
+    if (!m_openFilePaths[OpenDialogueState::Texture].empty())
+    {
+        cfg.addProperty("open_texture").setValue(m_openFilePaths[OpenDialogueState::Texture]);
     }
 
     if (!m_saveFilePaths[SaveDialogueState::Treeset].empty())
