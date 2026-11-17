@@ -21,6 +21,7 @@
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Wavetable.hpp>
 
 MultidrawState::MultidrawState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
@@ -125,11 +126,13 @@ void MultidrawState::createScene()
         board.position.x = p[0];
         board.position.z = p[1];
     }
+    bbEnt.getComponent<cro::BillboardCollection>().setChunkSize(1);
 
 
     md.loadFromFile("assets/models/plane2.cmt");
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(2.f));
     md.createModel(entity);
 
 
@@ -138,6 +141,25 @@ void MultidrawState::createScene()
     entity.addComponent<cro::Transform>();
     md.createModel(entity);
 
+
+    md.loadFromFile("assets/models/sphere_1m.cmt");
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    md.createModel(entity);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float)
+        {
+            static const auto wavetable = cro::Util::Wavetable::sine(0.1f, 8.f);
+            static std::size_t is = 0;
+            static std::size_t ic = wavetable.size() / 4;
+
+            glm::vec3 pos = { wavetable[is], 2.f, wavetable[ic] };
+            e.getComponent<cro::Transform>().setPosition(pos);
+
+            is = (is + 1) % wavetable.size();
+            ic = (ic + 1) % wavetable.size();
+        };
 
 
     auto resize = [](cro::Camera& cam)
@@ -150,7 +172,7 @@ void MultidrawState::createScene()
     auto camEnt = m_gameScene.getActiveCamera();
 
     auto& cam = camEnt.getComponent<cro::Camera>();
-    cam.shadowMapBuffer.create(1024, 1024);
+    cam.shadowMapBuffer.create(2048, 2048);
     cam.setMaxShadowDistance(20.f);
     cam.setShadowExpansion(17.f);
     //cam.setBlurPassCount(1);
@@ -158,11 +180,11 @@ void MultidrawState::createScene()
     resize(cam);
 
 
-    const auto tx = glm::lookAt({ 0.f, 2.f, 6.f }, { 0.f,  0.f, 0.f }, cro::Transform::Y_AXIS);
+    const auto tx = glm::lookAt({ 0.f, 4.f, 11.f }, { 0.f,  0.f, 0.f }, cro::Transform::Y_AXIS);
     m_gameScene.getActiveCamera().getComponent<cro::Transform>().setLocalTransform(glm::inverse(tx));
 
     m_gameScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -0.439f);
-    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.304f);
+    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.777f);
 
 
     //registerWindow([this]()

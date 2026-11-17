@@ -1,7 +1,7 @@
 model sphere
 {
     mesh = "sphere"
-    radius = 2.50
+    radius = 0.5
     cast_shadows = true
 
     material VertexLit
@@ -12,5 +12,6 @@ model sphere
         smooth = true
         repeat = true
         blendmode = "none"
+        rx_shadows = true
     }
 }

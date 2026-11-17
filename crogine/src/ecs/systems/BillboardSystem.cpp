@@ -62,9 +62,9 @@ void BillboardSystem::process(float)
         if (bbc.m_dirty)
         {
             //update the model data
+            auto& model = entity.getComponent<cro::Model>();
             std::vector<BillboardMeshBuilder::VertexLayout> vertexData;
-            std::vector<std::uint16_t> indexData;
-            auto& meshData = entity.getComponent<cro::Model>().getMeshData();
+            auto& meshData = model.getMeshData();
 
             //boundingbox
             meshData.boundingBox[0] = glm::vec3(std::numeric_limits<float>::max());
@@ -83,13 +83,13 @@ void BillboardSystem::process(float)
                 }
 
                 //two tris
-                indexData.push_back(baseIndex);
+                /*indexData.push_back(baseIndex);
                 indexData.push_back(baseIndex + 2);
                 indexData.push_back(baseIndex + 3);
 
                 indexData.push_back(baseIndex + 2);
                 indexData.push_back(baseIndex);
-                indexData.push_back(baseIndex + 1);
+                indexData.push_back(baseIndex + 1);*/
 
                 //the base position of the quad is stored in the vertex Normal data
                 //rather than any actual normal data.
@@ -204,8 +204,85 @@ void BillboardSystem::process(float)
                 LogW << "More vertices were added to billboard mesh than can be indexed" << std::endl;
             }
 
-            //TODO make sure to update the multidraw indices on the model
+            //make sure to update the multidraw indices on the model
             //here first so that refreshVBO() sets the correct draw function
+            //but AFTER the total bounds has been calculated.
+            //TODO *however* this means double iterating, so maybe send this
+            //all via a std::future and update the VBO once we have a result.
+            std::vector<std::uint16_t> indexData;
+            std::vector<std::vector<std::uint16_t>> indexChunkData;
+            bbc.m_chunkCount = { 0u, 0u };
+
+            if (bbc.m_chunkSize > 0)
+            {
+                bbc.m_chunkCoordStart.x = meshData.boundingBox[0].x;
+                bbc.m_chunkCoordStart.y = meshData.boundingBox[0].z;
+
+                bbc.m_chunkCount.x = static_cast<std::uint32_t>(std::ceil((meshData.boundingBox[1].x - meshData.boundingBox[0].x) / bbc.m_chunkSize));
+                bbc.m_chunkCount.y = static_cast<std::uint32_t>(std::ceil((meshData.boundingBox[1].z - meshData.boundingBox[0].z) / bbc.m_chunkSize));
+                indexChunkData.resize(bbc.m_chunkCount.x * bbc.m_chunkCount.y);
+            }
+
+            const auto getGridIndex = 
+                [this, &bbc, &meshData](glm::vec3 pos)
+                {    
+                    if (bbc.m_chunkSize == 0u) //don't do chunking
+                    {
+                        //we're assuming that we'll never have 4 billion
+                        //chunks - but that's the kind of assumption which
+                        //blew up the Ariane 5.
+                        return std::numeric_limits<std::uint32_t>::max();
+                    }
+                    
+                    const std::uint32_t gridX = static_cast<std::uint32_t>((pos.x - meshData.boundingBox[0].x) / bbc.m_chunkSize);
+                    const std::uint32_t gridY = static_cast<std::uint32_t>((pos.z - meshData.boundingBox[0].z) / bbc.m_chunkSize);
+                    return (gridY * bbc.m_chunkCount.x) + gridX;
+                };
+
+            const auto insertQuadIndices =
+                [](const std::uint32_t baseIndex, std::vector<std::uint16_t>& dest)
+                {
+                    dest.push_back(baseIndex);
+                    dest.push_back(baseIndex + 2);
+                    dest.push_back(baseIndex + 3);
+
+                    dest.push_back(baseIndex + 2);
+                    dest.push_back(baseIndex);
+                    dest.push_back(baseIndex + 1);
+                };
+
+
+            for (auto i = 0u; i < vertexData.size(); i += 4)
+            {
+                const auto gridIndex = getGridIndex(vertexData[i].rootPos);
+                if (gridIndex == std::numeric_limits<std::uint32_t>::max())
+                {
+                    insertQuadIndices(i, indexData);
+                }
+                else
+                {
+                    if (gridIndex < indexChunkData.size())
+                    {
+                        insertQuadIndices(i, indexChunkData[gridIndex]);
+                    }
+                    else
+                    {
+                        LogW << gridIndex << ": invalid grid index" << std::endl;
+                    }
+                }
+            }
+            
+            bbc.m_chunkIndices.clear();
+            for (const auto& chunk : indexChunkData)
+            {
+                auto& offsets = bbc.m_chunkIndices.emplace_back();
+                offsets.count = static_cast<std::uint32_t>(chunk.size());
+                offsets.offset = static_cast<std::uint32_t>(indexData.size() * sizeof(std::uint16_t));
+
+                indexData.insert(indexData.end(), chunk.cbegin(), chunk.cend());
+            }
+
+            bool needsVAORefresh = false;
 
             //we need to resize if larger than previous
             if (meshData.vboAllocator->getBlockCount(vertexData.size()) >
@@ -214,12 +291,8 @@ void BillboardSystem::process(float)
                 meshData.vboAllocator->freeAllocation(meshData.vboAllocation);
                 meshData.vboAllocation = meshData.vboAllocator->newAllocation(vertexData.size());
 
-                entity.getComponent<cro::Model>().refreshVAO();
+                needsVAORefresh = true;
             }
-
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
-            glCheck(glBufferSubData(GL_ARRAY_BUFFER, meshData.vboAllocation.offset, vertexData.size() * sizeof(BillboardMeshBuilder::VertexLayout), vertexData.data()));
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
             //resize IBO if needed
             meshData.indexData[0].indexCount = static_cast<std::uint32_t>(indexData.size());
@@ -228,12 +301,29 @@ void BillboardSystem::process(float)
             {
                 meshData.iboAllocator->freeAllocation(meshData.indexData[0].iboAllocation);
                 meshData.indexData[0].iboAllocation = meshData.iboAllocator->newAllocation(indexData.size());
-                //entity.getComponent<cro::Model>().refreshVAO();
+                //needsVAORefresh = true;
             }
+
+            
+            //this needs updating here because we need the IBO offset
+            model.m_indexOffsetArray.push_back(reinterpret_cast<void*>(meshData.indexData[0].iboAllocation.offset/* + bbc.m_chunkIndices[0].offset*/));
+            model.m_indexSizeArray.push_back(/*bbc.m_chunkIndices[0].count*/static_cast<GLsizei>(indexData.size()));
+
+
+            if (needsVAORefresh)
+            {
+                model.refreshVAO();
+            }
+
+            //don't upload until everything is fully resized and refreshed
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vboAllocation.bufferID));
+            glCheck(glBufferSubData(GL_ARRAY_BUFFER, meshData.vboAllocation.offset, vertexData.size() * sizeof(BillboardMeshBuilder::VertexLayout), vertexData.data()));
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
             meshData.indexData[0].iboAllocation.baseVertex = meshData.indexData[0].iboAllocation.offset / sizeof(std::uint16_t);
             glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].iboAllocation.bufferID));
             glCheck(glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].iboAllocation.offset, indexData.size() * sizeof(std::uint16_t), indexData.data()));
+
 
             //update bounding sphere
             const auto rad = (meshData.boundingBox[1] - meshData.boundingBox[0]) / 2.f;

@@ -795,6 +795,7 @@ void Model::DrawMulti::operator()(std::int32_t matID, std::int32_t pass) const
 
     const auto& indexData = m_model.m_meshData.indexData[matID];
 
+    glCheck(glBindVertexArray(m_model.m_vaos[matID][pass]));
     glCheck(glMultiDrawElements(static_cast<GLenum>(indexData.primitiveType), m_model.m_indexSizeArray.data(),
         static_cast<GLenum>(indexData.format), m_model.m_indexOffsetArray.data(), static_cast<GLsizei>(m_model.m_indexOffsetArray.size())));
 }

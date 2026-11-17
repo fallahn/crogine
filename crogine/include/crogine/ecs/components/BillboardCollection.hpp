@@ -103,18 +103,28 @@ namespace cro
 
         /*!
         \brief Set the size in world units of a chunk when rendering in multi-draw mode
-        This defaults to -1 where all billboards are stored in one large single array
+        This defaults to 0 where all billboards are stored in one large single array
         */
-        void setChunkSize(std::int32_t size)
+        void setChunkSize(std::uint32_t size)
         {
-            m_chunkSize = std::clamp(size, -1, 100);
+            m_chunkSize = std::clamp(size, 0u, 100u);
             m_dirty = true;
         }
 
     private:
         std::vector<Billboard> m_billboards;
-        std::int32_t m_chunkSize = -1;
+        std::uint32_t m_chunkSize = 0;
         bool m_dirty = false;
+
+        struct ChunkIndex final
+        {
+            std::uint32_t count = 0; //! < number of indices in the chunk
+            std::uint32_t offset = 0; //! < offset IN BYTES into the IBO of the chunk (added to IBOAllocation offset)
+        };
+        std::vector<ChunkIndex> m_chunkIndices;
+
+        glm::uvec2 m_chunkCount = { 0u, 0u }; //! < this times m_chunkSize grid
+        glm::vec2 m_chunkCoordStart = glm::vec2(0.f); //! < local coords of grid corner
 
         friend class BillboardSystem;
     };
