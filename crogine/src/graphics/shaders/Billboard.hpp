@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -40,6 +40,8 @@ static inline const std::string Vertex = R"(
 
         ATTRIBUTE MED vec2 a_texCoord0;
         ATTRIBUTE MED vec2 a_texCoord1; //contains the size of the billboard to which this vertex belongs
+
+        uniform float u_nearFadeDistance = 0.15;
 
     //shadow map renderer doesn't use a UBO
     #if defined (SHADOW_MAPPING)
@@ -146,12 +148,11 @@ static inline const std::string Vertex = R"(
             #endif
 
                 const float minDistance = 2.0;
-                const float nearFadeDistance = 12.0; //TODO make this a uniform
                 const float farFadeDistance = 300.f;
                 float distance = length(position - u_cameraWorldPosition);
 
-                v_ditherAmount = pow(clamp((distance - minDistance) / nearFadeDistance, 0.0, 1.0), 5.0);
-                v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / nearFadeDistance, 0.0, 1.0);
+                v_ditherAmount = pow(clamp((distance - minDistance) / u_nearFadeDistance, 0.0, 1.0), 5.0);
+                v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / u_nearFadeDistance, 0.0, 1.0);
 
                 v_colour.rgb *= (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
 #endif

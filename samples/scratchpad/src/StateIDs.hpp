@@ -70,6 +70,7 @@ namespace States
             GKGame,
             PinballGame,
             VertexCloud,
+            Multidraw,
 
             Count
         };
