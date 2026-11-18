@@ -157,8 +157,8 @@ namespace cro
         */
         struct ChunkIndex final
         {
-            std::uint32_t count = 0; //! < number of indices in the chunk
-            std::uint32_t offset = 0; //! < offset IN BYTES into the IBO of the chunk (should be ADDED to IBOAllocation offset)
+            std::intptr_t offset = 0; //! < offset IN BYTES into the IBO of the chunk (should be ADDED to IBOAllocation offset)
+            GLsizei count = 0; //! < number of indices in the chunk
         };
 
 
@@ -185,6 +185,7 @@ namespace cro
             */
             void addChunk(const Mesh::Data& mesh, const ChunkIndex& chunk)
             {
+                assert(chunk.count > 0);
                 indexOffsetArray.push_back(reinterpret_cast<void*>(mesh.indexData[0].iboAllocation.offset + chunk.offset));
                 indexSizeArray.push_back(chunk.count);
             }

@@ -103,6 +103,7 @@ void MultidrawState::addSystems()
 
 void MultidrawState::loadAssets()
 {
+    m_environmentMap.loadFromFile("assets/images/hills.hdr");
 }
 
 void MultidrawState::createScene()
@@ -114,7 +115,7 @@ void MultidrawState::createScene()
     auto bbEnt = m_gameScene.createEntity();
     bbEnt.addComponent<cro::Transform>();
     
-    cro::ModelDefinition md(m_resources);
+    cro::ModelDefinition md(m_resources, &m_environmentMap);
     md.loadFromFile("assets/batcat/models/tree.cmt");
     md.createModel(bbEnt);
 
@@ -188,7 +189,8 @@ void MultidrawState::createScene()
             const auto testPos = sphereEnt.getComponent<cro::Transform>().getPosition();
             auto& bbc = parent.getComponent<cro::BillboardCollection>();
 
-            const auto relPos = glm::vec2(testPos.x, testPos.z) - bbc.getChunkCoordStart();
+            const auto coordStart = bbc.getChunkCoordStart();
+            const auto relPos = glm::vec2(testPos.x, testPos.z) - coordStart;
             const auto xPos = static_cast<std::int32_t>(std::floor(relPos.x / bbc.getChunkSize()));
             const auto yPos = static_cast<std::int32_t>(std::floor(relPos.y / bbc.getChunkSize()));
 
@@ -197,20 +199,32 @@ void MultidrawState::createScene()
             auto& drawList = bbc.getDrawList(camera.getComponent<cro::Camera>().getDrawListIndex());
             drawList.clear();
 
-            static constexpr auto GridSize = 3;
+            static constexpr auto GridSize = 5;
             const auto startX = std::max(0, xPos - GridSize);
             const auto endX = std::min(bbc.getChunkCount().x, std::uint32_t(xPos + GridSize));
 
             const auto startY = std::max(0, yPos - GridSize);
-            const auto endY = std::min(bbc.getChunkCount().x, std::uint32_t(yPos + GridSize));
+            const auto endY = std::min(bbc.getChunkCount().y, std::uint32_t(yPos + GridSize));
 
             for (auto y = startY; y < endY; ++y)
             {
                 for (auto x = startX; x < endX; ++x)
                 {
-                    const auto idx = (y * bbc.getChunkCount().x) + x;
-                    const auto& chunk = bbc.getChunkIndices()[idx];
-                    drawList.addChunk(mesh, chunk);
+                    //TODO some reasonable estimate for Y.
+                    //also don't forget we're testing against local chunk coords
+                    //which only works in this test because the billboard entity
+                    //has no transform currently.
+                    const glm::vec3 centre = 
+                        glm::vec3(coordStart.x + (x * bbc.getChunkSize()) , 
+                                    0.f, 
+                                    coordStart.y + (y * bbc.getChunkSize())) + glm::vec3(0.5f);
+
+                    if (glm::length2(testPos - centre) < 25.f)
+                    {
+                        const auto idx = (y * bbc.getChunkCount().x) + x;
+                        const auto& chunk = bbc.getChunkIndices()[idx];
+                        drawList.addChunk(mesh, chunk);
+                    }
                 }
             }
         });

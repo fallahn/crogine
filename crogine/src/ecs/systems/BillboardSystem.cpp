@@ -78,14 +78,14 @@ void BillboardSystem::process(float)
                 if (drawListIndex == 0
                     && bbc.m_cameraCallbacks[0])
                 {
-                    LogW << "Billboard camera callback at index 0 already assigned - this may indicate an out-of-date index" << std::endl;
+                    LogW << "[Billboards] Billboard camera callback at index 0 already assigned - this may indicate an out-of-date index" << std::endl;
                 }
 
                 bbc.m_cameraCallbacks[drawListIndex] = callback;
 
                 if (bbc.m_chunkSize == 0)
                 {
-                    LogW << "Setting a drawlist callback on a billboard collection with 0 chunk size. THIS IS PROBABLY BAD" << std::endl;
+                    LogW << "[Billboards] Setting a drawlist callback on a billboard collection with 0 chunk size. THIS IS PROBABLY BAD" << std::endl;
                 }
             }
             bbc.m_pendingCallbacks.clear();
@@ -114,15 +114,6 @@ void BillboardSystem::process(float)
                     LogW << "[Billboards] Index count reached " << baseIndex << ": no more billboards can be added" << std::endl;
                     break;
                 }
-
-                //two tris
-                /*indexData.push_back(baseIndex);
-                indexData.push_back(baseIndex + 2);
-                indexData.push_back(baseIndex + 3);
-
-                indexData.push_back(baseIndex + 2);
-                indexData.push_back(baseIndex);
-                indexData.push_back(baseIndex + 1);*/
 
                 //the base position of the quad is stored in the vertex Normal data
                 //rather than any actual normal data.
@@ -234,7 +225,7 @@ void BillboardSystem::process(float)
 
             if (meshData.vertexCount > std::numeric_limits<std::uint16_t>::max())
             {
-                LogW << "More vertices were added to billboard mesh than can be indexed" << std::endl;
+                LogW << "[Billboards] More vertices were added to billboard mesh than can be indexed" << std::endl;
             }
 
             //make sure to update the multidraw indices on the model
@@ -275,6 +266,7 @@ void BillboardSystem::process(float)
             const auto insertQuadIndices =
                 [](const std::uint32_t baseIndex, std::vector<std::uint16_t>& dest)
                 {
+                    //two tris
                     dest.push_back(baseIndex);
                     dest.push_back(baseIndex + 2);
                     dest.push_back(baseIndex + 3);
@@ -300,7 +292,7 @@ void BillboardSystem::process(float)
                     }
                     else
                     {
-                        LogW << gridIndex << ": invalid grid index" << std::endl;
+                        LogW << "[Billboards] " << gridIndex << ": invalid grid index" << std::endl;
                     }
                 }
             }
@@ -421,5 +413,6 @@ void BillboardSystem::render(Entity camera, const RenderTarget&)
         model.m_indexDrawCount = static_cast<GLsizei>(drawlist.indexSizeArray.size());
         model.m_indexOffsetArray = drawlist.indexOffsetArray.data();
         model.m_indexSizeArray = drawlist.indexSizeArray.data();
+        assert(model.m_indexDrawCount == drawlist.indexSizeArray.size());
     }
 }

@@ -821,8 +821,8 @@ void Model::DrawInstanced::operator()(std::int32_t matID, std::int32_t pass) con
 
 void Model::DrawMulti::operator()(std::int32_t matID, std::int32_t pass) const
 {
-    //CRO_ASSERT(!m_model.m_indexSizeArray.empty(), "");
-    //CRO_ASSERT(m_model.m_indexSizeArray.size() == m_model.m_indexOffsetArray.size(), "");
+    assert(m_model.m_indexDrawCount > -1);
+    //assert(m_model.m_indexSizeArray[0] > -1);
 
     const auto& indexData = m_model.m_meshData.indexData[matID];
 
