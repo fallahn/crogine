@@ -59,6 +59,39 @@ void BillboardSystem::process(float)
     for (auto entity : entities)
     {
         auto& bbc = entity.getComponent<BillboardCollection>();
+
+        //check if we have any pending callbacks which need assignment
+        if (!bbc.m_pendingCallbacks.empty())
+        {
+            for (const auto& [camera, callback] : bbc.m_pendingCallbacks)
+            {
+                const auto drawListIndex = camera.getComponent<Camera>().getDrawListIndex();
+                if (bbc.m_cameraCallbacks.size() <= drawListIndex)
+                {
+                    bbc.m_cameraCallbacks.resize(drawListIndex + 1);
+                }
+
+                //this is probably only pertinent when index is
+                //zero as it suggests that the camera system may not
+                //yet have been updated to assign valid indices and
+                //all callbacks are being assigned to index 0
+                if (drawListIndex == 0
+                    && bbc.m_cameraCallbacks[0])
+                {
+                    LogW << "Billboard camera callback at index 0 already assigned - this may indicate an out-of-date index" << std::endl;
+                }
+
+                bbc.m_cameraCallbacks[drawListIndex] = callback;
+
+                if (bbc.m_chunkSize == 0)
+                {
+                    LogW << "Setting a drawlist callback on a billboard collection with 0 chunk size. THIS IS PROBABLY BAD" << std::endl;
+                }
+            }
+            bbc.m_pendingCallbacks.clear();
+        }
+
+
         if (bbc.m_dirty)
         {
             //update the model data
@@ -352,9 +385,10 @@ void BillboardSystem::updateDrawList(Entity camera)
         }
 
         //do custom culling if found
-        if (bbc.m_cameraCallbacks[index])
+        if (bbc.m_cameraCallbacks[index]
+            && !bbc.m_chunkIndices.empty()) //*sigh* this is probably only ever needed for one frame
         {
-            //TODO do we know if this is a shadow pass here?
+            //TODO do we know if this is a shadow pass here? Probably query camera for active pass
             bbc.m_cameraCallbacks[index](camera, entity);
         }
         else

@@ -91,8 +91,8 @@ void MultidrawState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
-    m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
+    m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
@@ -183,7 +183,7 @@ void MultidrawState::createScene()
 
     //use this camera's drawlist index to set the billboard collection culling func
     //TODO drawlist index is always 0 at this point until the entity as actually added to the CameraSystem
-    bbc.setDrawlistCallback(0, [sphereEnt](cro::Entity camera, cro::Entity parent)
+    bbc.setDrawlistCallback(camEnt, [sphereEnt](cro::Entity camera, cro::Entity parent)
         {
             const auto testPos = sphereEnt.getComponent<cro::Transform>().getPosition();
             auto& bbc = parent.getComponent<cro::BillboardCollection>();

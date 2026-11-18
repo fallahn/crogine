@@ -86,6 +86,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/SystemManager.cpp
 
   ${PROJECT_DIR}/ecs/components/AudioEmitter.cpp
+  ${PROJECT_DIR}/ecs/components/BillboardCollection.cpp
   ${PROJECT_DIR}/ecs/components/Camera.cpp
   ${PROJECT_DIR}/ecs/components/Drawable2D.cpp
   ${PROJECT_DIR}/ecs/components/Model.cpp

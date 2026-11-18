@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
+#include <crogine/ecs/Entity.hpp>
 #include <crogine/graphics/Colour.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
@@ -77,7 +78,8 @@ namespace cro
         /*!
         \brief Default constructor
         */
-        BillboardCollection() = default;
+        BillboardCollection();
+
 
         /*!
         \brief Adds a Billboard to the collection.
@@ -87,54 +89,33 @@ namespace cro
         \param billboard A Billboard struct containing the properties of the billboard
         to add to the collection.
         */
-        void addBillboard(Billboard billboard)
-        {
-            m_billboards.push_back(billboard);
-            m_dirty = true;
-        }
+        void addBillboard(Billboard billboard);
+
 
         /*!
         \brief Set the BillboardCollection with a pre-defined set of Billboards
         This overwrites any existing billboard data by *swapping* with the incoming
         data.
         */
-        void setBillboards(std::vector<Billboard>& billboards)
-        {
-            m_billboards.swap(billboards);
-            m_dirty = true;
-        }
+        void setBillboards(std::vector<Billboard>& billboards);
+
 
         /*!
         \brief Set the size in world units of a chunk when rendering in multi-draw mode
         This defaults to 0 where all billboards are stored in one large single array
         */
-        void setChunkSize(std::uint32_t size)
-        {
-            m_chunkSize = std::clamp(size, 0u, 100u);
-            m_dirty = true;
-        }
+        void setChunkSize(std::uint32_t size);
+
 
         /*!
         \brief Sets a callback used by updateDrawlist() to optionally cull billboard chunks.
-        \param index The drawlist index retreived from Camera::getDrawlistIndex() for the
-        camera to which this callback is applied.
+        \param camera The camera to which this callback is applied.
         \param callback A function to be called for this camera with the signature void(Entity camera, Entity parent)
         where camera is the assigned camera entity and parent is the entity to which this
         component is assigned.
         */
-        void setDrawlistCallback(std::size_t drawlistIndex, const std::function<void(Entity, Entity)>& callback)
-        {
-            if (m_cameraCallbacks.size() <= drawlistIndex)
-            {
-                m_cameraCallbacks.resize(drawlistIndex + 1);
-            }
-            m_cameraCallbacks[drawlistIndex] = callback;
+        void setDrawlistCallback(Entity, const std::function<void(Entity, Entity)>& callback);
 
-            if (m_chunkSize == 0)
-            {
-                LogW << "Setting a drawlist callback on a billboard collection with 0 chunk size. THIS IS PROBABLY BAD" << std::endl;
-            }
-        }
 
         /*!
         \brief An array of offsets and index counts into the IBO
@@ -187,29 +168,38 @@ namespace cro
         */
         DrawList& getDrawList(std::size_t cameraDrawListIndex)
         {
-            //assert(cameraDrawlistIndex < m_drawLists.size());
+            assert(cameraDrawListIndex < m_drawLists.size());
             return m_drawLists[cameraDrawListIndex];
         }
 
     private:
         std::vector<Billboard> m_billboards;
-        std::uint32_t m_chunkSize = 0; //! < chunk size in world units
-        bool m_dirty = false;
+        std::uint32_t m_chunkSize; //! < chunk size in world units
+        bool m_dirty;
 
 
         std::vector<ChunkIndex> m_chunkIndices; //! < list of total available chunks
 
-        glm::uvec2 m_chunkCount = { 0u, 0u }; //! < this times m_chunkSize grid
-        glm::vec2 m_chunkCoordStart = glm::vec2(0.f); //! < local coords of grid corner
+        glm::uvec2 m_chunkCount; //! < this times m_chunkSize grid
+        glm::vec2 m_chunkCoordStart; //! < local coords of grid corner
 
 
         //drawlist for each available camera in the Scene
         //called from BillboardSystem::updateDrawlists()
         std::vector<DrawList> m_drawLists;
 
+        using CameraCallback = std::function<void(Entity, Entity)>;
+
         //custom callbacks per camera for culling indices
         //params Camera entity, parent entity
-        std::vector<std::function<void(Entity, Entity)>> m_cameraCallbacks;
+        std::vector<CameraCallback> m_cameraCallbacks;
+
+
+        //this is a bit of a fudge, but at the point in time at which
+        //camera callbacks are most likely added cameras won't yet have
+        //their drawlist IDs assigned, so we need to defer this until
+        //the CameraSystem has been updated at least once...
+        std::vector<std::pair<Entity, CameraCallback>> m_pendingCallbacks;
 
         friend class BillboardSystem;
     };

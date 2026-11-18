@@ -1481,6 +1481,9 @@
     <ClCompile Include="..\crogine\src\audio\TextToSpeech.cpp">
       <Filter>Source Files\audio</Filter>
     </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\components\BillboardCollection.cpp">
+      <Filter>Source Files\ecs\components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\crogine\include\crogine\ecs\Entity.inl">
