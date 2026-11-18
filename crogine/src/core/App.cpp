@@ -604,12 +604,14 @@ void App::run(bool resetSettings)
 
             framesRendered = 0;
 
+#ifndef CRO_DEBUG_
             if (updates++ > MaxUpdates)
             {
                 Logger::log("Max updates reached with frame time " + std::to_string(timeSinceLastUpdate) + " remaining: aborting!", Logger::Type::Warning, Logger::Output::All);
                 simulate(timeSinceLastUpdate);
                 timeSinceLastUpdate = 0;
             }
+#endif
 
             Console::updateAverageUpdateTime(updateClock.restart());
         }

@@ -114,33 +114,102 @@ namespace cro
             m_dirty = true;
         }
 
-    private:
-        std::vector<Billboard> m_billboards;
-        std::uint32_t m_chunkSize = 0;
-        bool m_dirty = false;
+        /*!
+        \brief Sets a callback used by updateDrawlist() to optionally cull billboard chunks.
+        \param index The drawlist index retreived from Camera::getDrawlistIndex() for the
+        camera to which this callback is applied.
+        \param callback A function to be called for this camera with the signature void(Entity camera, Entity parent)
+        where camera is the assigned camera entity and parent is the entity to which this
+        component is assigned.
+        */
+        void setDrawlistCallback(std::size_t drawlistIndex, const std::function<void(Entity, Entity)>& callback)
+        {
+            if (m_cameraCallbacks.size() <= drawlistIndex)
+            {
+                m_cameraCallbacks.resize(drawlistIndex + 1);
+            }
+            m_cameraCallbacks[drawlistIndex] = callback;
 
+            if (m_chunkSize == 0)
+            {
+                LogW << "Setting a drawlist callback on a billboard collection with 0 chunk size. THIS IS PROBABLY BAD" << std::endl;
+            }
+        }
+
+        /*!
+        \brief An array of offsets and index counts into the IBO
+        This is created for each active camera as necessary and
+        used by the ModelRenderer to decide which chunks of the
+        BillboardCollection to draw.
+        */
+        struct DrawList final
+        {
+            std::vector<GLsizei> indexSizeArray; //! < contains the sizes of each index buffer used in multidraw
+            std::vector<void*> indexOffsetArray; //! < contains the pointers to offsets into the IBO in multidraw
+        };
+
+
+        /*!
+        \brief This is the IBO index representing a single chunk
+        */
         struct ChunkIndex final
         {
             std::uint32_t count = 0; //! < number of indices in the chunk
-            std::uint32_t offset = 0; //! < offset IN BYTES into the IBO of the chunk (added to IBOAllocation offset)
+            std::uint32_t offset = 0; //! < offset IN BYTES into the IBO of the chunk (should be ADDED to IBOAllocation offset)
         };
-        std::vector<ChunkIndex> m_chunkIndices;
+
+
+        /*!
+        \brief Accessors provided for use in drawlist callbacks.
+        */
+        const std::vector<ChunkIndex>& getChunkIndices() const { return m_chunkIndices; }
+        
+        /*!
+        \brief Total number of chunks in x and y coords
+        */
+        glm::uvec2 getChunkCount() const { return m_chunkCount; }
+
+        /*!
+        \brief Chunk size in world coords
+        */
+        float getChunkSize() const { return static_cast<float>(m_chunkSize); }
+
+        /*!
+        \brief Coordinates of the starting chunk.
+        Note this is in LOCAL coordinates
+        */
+        glm::vec2 getChunkCoordStart() const { return m_chunkCoordStart; }
+
+        /*!
+        \brief Returns the drawlist for the given camera index.
+        This is not automatically cleared and should be done by the
+        callback if necessary.
+        */
+        DrawList& getDrawList(std::size_t cameraDrawListIndex)
+        {
+            //assert(cameraDrawlistIndex < m_drawLists.size());
+            return m_drawLists[cameraDrawListIndex];
+        }
+
+    private:
+        std::vector<Billboard> m_billboards;
+        std::uint32_t m_chunkSize = 0; //! < chunk size in world units
+        bool m_dirty = false;
+
+
+        std::vector<ChunkIndex> m_chunkIndices; //! < list of total available chunks
 
         glm::uvec2 m_chunkCount = { 0u, 0u }; //! < this times m_chunkSize grid
         glm::vec2 m_chunkCoordStart = glm::vec2(0.f); //! < local coords of grid corner
 
-        struct DrawList final
-        {
-            std::vector<GLsizei> indexSizeArray; //contains the sizes of each index buffer used in multidraw
-            std::vector<void*> indexOffsetArray; //contains the pointers to offsets into the IBO in multidraw
-        };
 
         //drawlist for each available camera in the Scene
         //called from BillboardSystem::updateDrawlists()
         std::vector<DrawList> m_drawLists;
 
         //custom callbacks per camera for culling indices
-        std::vector<std::function<void(Entity)>> m_cameraCallbacks;
+        //params Camera entity, parent entity
+        std::vector<std::function<void(Entity, Entity)>> m_cameraCallbacks;
 
         friend class BillboardSystem;
     };

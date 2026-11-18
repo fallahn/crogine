@@ -282,6 +282,15 @@ void BillboardSystem::process(float)
                 indexData.insert(indexData.end(), chunk.cbegin(), chunk.cend());
             }
 
+            //this isn't valid, but it marks the model as needing to
+            //update the draw function to Multi-draw. This is correctly
+            //updated by the render() function, below. TODO - FIXME!!
+            if (bbc.m_chunkSize)
+            {
+                static constexpr GLsizei primer = 0;
+                model.m_indexSizeArray = &primer;
+            }
+
             bool needsVAORefresh = false;
 
             //we need to resize if larger than previous
@@ -345,8 +354,8 @@ void BillboardSystem::updateDrawList(Entity camera)
         //do custom culling if found
         if (bbc.m_cameraCallbacks[index])
         {
-            //TODO pass in billboard entity...
-            bbc.m_cameraCallbacks[index](camera);
+            //TODO do we know if this is a shadow pass here?
+            bbc.m_cameraCallbacks[index](camera, entity);
         }
         else
         {
@@ -376,8 +385,8 @@ void BillboardSystem::render(Entity camera, const RenderTarget&)
         const auto& bbc = entity.getComponent<BillboardCollection>();
         const auto& drawlist = bbc.m_drawLists[index];
 
+        model.m_indexDrawCount = static_cast<GLsizei>(drawlist.indexSizeArray.size());
         model.m_indexOffsetArray = drawlist.indexOffsetArray.data();
         model.m_indexSizeArray = drawlist.indexSizeArray.data();
-        model.m_drawlistCount = static_cast<GLsizei>(drawlist.indexSizeArray.size());
     }
 }

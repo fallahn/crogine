@@ -91,8 +91,8 @@ void MultidrawState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
-    m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
+    m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
@@ -120,13 +120,14 @@ void MultidrawState::createScene()
 
     const auto positions = thinks::PoissonDiskSampling(0.5f, std::array<float, 2u>({ -10.f, -10.f }), { 10.f, 10.f });
 
+    auto& bbc = bbEnt.getComponent<cro::BillboardCollection>();
     for (const auto p : positions)
     {
-        bbEnt.getComponent<cro::BillboardCollection>().addBillboard(board);
+        bbc.addBillboard(board);
         board.position.x = p[0];
         board.position.z = p[1];
     }
-    //bbEnt.getComponent<cro::BillboardCollection>().setChunkSize(1);
+    bbEnt.getComponent<cro::BillboardCollection>().setChunkSize(3);
 
 
     md.loadFromFile("assets/models/plane2.cmt");
@@ -160,7 +161,7 @@ void MultidrawState::createScene()
             is = (is + 1) % wavetable.size();
             ic = (ic + 1) % wavetable.size();
         };
-
+    auto sphereEnt = entity;
 
     auto resize = [](cro::Camera& cam)
     {
@@ -180,37 +181,38 @@ void MultidrawState::createScene()
     resize(cam);
 
 
+    //use this camera's drawlist index to set the billboard collection culling func
+    //TODO drawlist index is always 0 at this point until the entity as actually added to the CameraSystem
+    bbc.setDrawlistCallback(0, [sphereEnt](cro::Entity camera, cro::Entity parent)
+        {
+            const auto testPos = sphereEnt.getComponent<cro::Transform>().getPosition();
+            auto& bbc = parent.getComponent<cro::BillboardCollection>();
+
+            const auto relPos = glm::vec2(testPos.x, testPos.z) - bbc.getChunkCoordStart();
+            const auto xPos = std::floor(relPos.x / bbc.getChunkSize());
+            const auto yPos = std::floor(relPos.y / bbc.getChunkSize());
+
+            const auto idx = (yPos * bbc.getChunkCount().x) + xPos;
+            const auto& chunk = bbc.getChunkIndices()[static_cast<std::int32_t>(idx)];
+
+            const auto& mesh = parent.getComponent<cro::Model>().getMeshData();
+
+            auto& drawList = bbc.getDrawList(camera.getComponent<cro::Camera>().getDrawListIndex());
+            drawList.indexOffsetArray.clear();
+            drawList.indexSizeArray.clear();
+            //TODO hide this horrible cast in a setter
+            drawList.indexOffsetArray.push_back(reinterpret_cast<void*>(mesh.indexData[0].iboAllocation.offset + chunk.offset));
+            drawList.indexSizeArray.push_back(chunk.count);
+
+
+        });
+
+
     const auto tx = glm::lookAt({ 0.f, 4.f, 11.f }, { 0.f,  0.f, 0.f }, cro::Transform::Y_AXIS);
     m_gameScene.getActiveCamera().getComponent<cro::Transform>().setLocalTransform(glm::inverse(tx));
 
     m_gameScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -0.439f);
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.777f);
-
-
-    //registerWindow([this]()
-    //    {
-
-    //        ImGui::Begin("Funt");
-    //        static float rotX = 0.f;
-    //        static float rotY = 0.f;
-    //        const auto rotate = [this]()
-    //            {
-    //                m_gameScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotY);
-    //                m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rotX);
-    //            };
-
-    //        if (ImGui::SliderFloat("Rotation X", &rotX, -cro::Util::Const::PI, cro::Util::Const::PI))
-    //        {
-    //            rotate();
-    //        }
-
-    //        if (ImGui::SliderFloat("Rotation Y", &rotY, -cro::Util::Const::PI, cro::Util::Const::PI))
-    //        {
-    //            rotate();
-    //        } 
-
-    //        ImGui::End();
-    //    });
 }
 
 void MultidrawState::createUI()

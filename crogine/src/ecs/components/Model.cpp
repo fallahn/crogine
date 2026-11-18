@@ -773,7 +773,7 @@ void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
         draw = DrawInstanced(*this);
         m_drawMode = DrawMode::Instanced;
     }
-    else if (m_indexOffsetArray != nullptr)
+    else if (m_indexSizeArray != nullptr)
     {
         draw = DrawMulti(*this);
         m_drawMode = DrawMode::Multi;

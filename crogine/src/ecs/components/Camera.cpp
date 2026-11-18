@@ -36,6 +36,9 @@ using namespace cro;
 
 Camera::Camera() 
     : viewport          (0.f, 0.f, 1.f, 1.f),
+    m_lastActive        (false),
+    m_passIndex         (Pass::Final),
+    m_drawListIndex     (0),
     m_verticalFOV       (0.6f),
     m_aspectRatio       (1.f),
     m_nearPlane         (0.1f),

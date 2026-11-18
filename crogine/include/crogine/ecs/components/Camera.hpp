@@ -642,11 +642,11 @@ namespace cro
 #endif
 
     private:
-        bool m_lastActive = false; //so we can track if we just changed state
+        bool m_lastActive; //so we can track if we just changed state
         std::array<Pass, 2u> m_passes = {}; //final pass and refraction pass share the same data
-        std::uint32_t m_passIndex = Pass::Final;
+        std::uint32_t m_passIndex;
 
-        std::size_t m_drawListIndex = 0;
+        std::size_t m_drawListIndex;
 
         friend class CameraSystem;
 
