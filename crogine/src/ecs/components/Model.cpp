@@ -65,6 +65,9 @@ Model::Model()
     m_hidden            (false),
     m_renderFlags       (std::numeric_limits<std::uint64_t>::max()),
     m_facing            (GL_CCW),
+    m_indexSizeArray    (nullptr),
+    m_indexOffsetArray  (nullptr),
+    m_indexDrawCount    (0),
     m_drawMode          (DrawMode::Single),
     m_skeleton          (nullptr),
     m_jointCount        (0)
@@ -83,6 +86,9 @@ Model::Model(Mesh::Data data, Material::Data material)
     m_boundingSphere    (data.boundingSphere),
     m_boundingBox       (data.boundingBox),
     m_meshData          (data),
+    m_indexSizeArray    (nullptr),
+    m_indexOffsetArray  (nullptr),
+    m_indexDrawCount    (0),
     m_drawMode          (DrawMode::Single),
     m_skeleton          (nullptr),
     m_jointCount        (0)
@@ -175,6 +181,18 @@ Model::Model(Model&& other) noexcept
         break;
     case DrawMode::Multi:
         draw = DrawMulti(*this);
+
+        //NOTE this are not owned
+        //and are updated at render time
+        //so we don't move these
+        /*
+        m_indexSizeArray;
+        m_indexOffsetArray;
+        m_indexDrawCount;
+        */
+        other.m_indexSizeArray = nullptr;
+        other.m_indexOffsetArray = nullptr;
+        other.m_indexDrawCount = 0;
         break;
     }
 
@@ -249,6 +267,19 @@ Model& Model::operator=(Model&& other) noexcept
             break;
         case DrawMode::Multi:
             draw = DrawMulti(*this);
+
+
+            //NOTE this are not owned
+            //and are updated at render time
+            //so we don't move these
+            /*
+            m_indexSizeArray;
+            m_indexOffsetArray;
+            m_indexDrawCount;
+            */
+            other.m_indexSizeArray = nullptr;
+            other.m_indexOffsetArray = nullptr;
+            other.m_indexDrawCount = 0;
             break;
         }
         other.draw = {};
@@ -742,7 +773,7 @@ void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
         draw = DrawInstanced(*this);
         m_drawMode = DrawMode::Instanced;
     }
-    else if (!m_indexOffsetArray.empty())
+    else if (m_indexOffsetArray != nullptr)
     {
         draw = DrawMulti(*this);
         m_drawMode = DrawMode::Multi;
@@ -790,14 +821,14 @@ void Model::DrawInstanced::operator()(std::int32_t matID, std::int32_t pass) con
 
 void Model::DrawMulti::operator()(std::int32_t matID, std::int32_t pass) const
 {
-    CRO_ASSERT(!m_model.m_indexSizeArray.empty(), "");
-    CRO_ASSERT(m_model.m_indexSizeArray.size() == m_model.m_indexOffsetArray.size(), "");
+    //CRO_ASSERT(!m_model.m_indexSizeArray.empty(), "");
+    //CRO_ASSERT(m_model.m_indexSizeArray.size() == m_model.m_indexOffsetArray.size(), "");
 
     const auto& indexData = m_model.m_meshData.indexData[matID];
 
     glCheck(glBindVertexArray(m_model.m_vaos[matID][pass]));
-    glCheck(glMultiDrawElements(static_cast<GLenum>(indexData.primitiveType), m_model.m_indexSizeArray.data(),
-        static_cast<GLenum>(indexData.format), m_model.m_indexOffsetArray.data(), static_cast<GLsizei>(m_model.m_indexOffsetArray.size())));
+    glCheck(glMultiDrawElements(static_cast<GLenum>(indexData.primitiveType), m_model.m_indexSizeArray,
+        static_cast<GLenum>(indexData.format), m_model.m_indexOffsetArray, m_model.m_indexDrawCount));
 }
 
 #endif //DESKTOP

@@ -31,9 +31,9 @@ source distribution.
 
 #include <crogine/ecs/systems/BillboardSystem.hpp>
 #include <crogine/ecs/components/BillboardCollection.hpp>
+#include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Model.hpp>
 
-#include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/AllocationResource.hpp>
 
 #include <crogine/graphics/BillboardMeshBuilder.hpp>
@@ -62,7 +62,7 @@ void BillboardSystem::process(float)
         if (bbc.m_dirty)
         {
             //update the model data
-            auto& model = entity.getComponent<cro::Model>();
+            auto& model = entity.getComponent<Model>();
             std::vector<BillboardMeshBuilder::VertexLayout> vertexData;
             auto& meshData = model.getMeshData();
 
@@ -304,12 +304,6 @@ void BillboardSystem::process(float)
                 //needsVAORefresh = true;
             }
 
-            
-            //this needs updating here because we need the IBO offset
-            model.m_indexOffsetArray.push_back(reinterpret_cast<void*>(meshData.indexData[0].iboAllocation.offset/* + bbc.m_chunkIndices[0].offset*/));
-            model.m_indexSizeArray.push_back(/*bbc.m_chunkIndices[0].count*/static_cast<GLsizei>(indexData.size()));
-
-
             if (needsVAORefresh)
             {
                 model.refreshVAO();
@@ -332,5 +326,58 @@ void BillboardSystem::process(float)
 
             bbc.m_dirty = false;
         }
+    }
+}
+
+void BillboardSystem::updateDrawList(Entity camera)
+{
+    const auto index = camera.getComponent<Camera>().getDrawListIndex();
+
+    for (auto entity : getEntities())
+    {
+        auto& bbc = entity.getComponent<BillboardCollection>();
+        if (index >= bbc.m_drawLists.size())
+        {
+            bbc.m_drawLists.resize(index + 1);
+            bbc.m_cameraCallbacks.resize(index + 1);
+        }
+
+        //do custom culling if found
+        if (bbc.m_cameraCallbacks[index])
+        {
+            //TODO pass in billboard entity...
+            bbc.m_cameraCallbacks[index](camera);
+        }
+        else
+        {
+            //just draw everything
+            const auto& model = entity.getComponent<Model>();
+            const auto& meshData = model.getMeshData();
+
+            auto& drawlist = bbc.m_drawLists[index];
+            drawlist.indexOffsetArray.clear();
+            drawlist.indexSizeArray.clear();
+
+            drawlist.indexOffsetArray.push_back(reinterpret_cast<void*>(meshData.indexData[0].iboAllocation.offset));
+            drawlist.indexSizeArray.push_back(static_cast<GLsizei>(meshData.indexData[0].indexCount));
+        }
+    }
+}
+
+void BillboardSystem::render(Entity camera, const RenderTarget&)
+{
+    //set the draw list pointers on the model for this camera.
+    const auto index = camera.getComponent<Camera>().getDrawListIndex();
+    for (auto entity : getEntities())
+    {
+        auto& model = entity.getComponent<Model>();
+        const auto& meshData = model.getMeshData();
+
+        const auto& bbc = entity.getComponent<BillboardCollection>();
+        const auto& drawlist = bbc.m_drawLists[index];
+
+        model.m_indexOffsetArray = drawlist.indexOffsetArray.data();
+        model.m_indexSizeArray = drawlist.indexSizeArray.data();
+        model.m_drawlistCount = static_cast<GLsizei>(drawlist.indexSizeArray.size());
     }
 }

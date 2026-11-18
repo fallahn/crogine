@@ -324,9 +324,11 @@ namespace cro
             DrawMulti(const Model& m) : m_model(m) {}
         };
 
+
         friend class BillboardSystem;
-        std::vector<GLsizei> m_indexSizeArray; //contains the sizes of each index buffer used in multidraw
-        std::vector<void*> m_indexOffsetArray; //contains the pointers to offsets into the IBO in multidraw
+        const GLsizei* m_indexSizeArray; //contains the sizes of each index buffer used in multidraw
+        void* const* m_indexOffsetArray; //contains the pointers to offsets into the IBO in multidraw
+        GLsizei m_indexDrawCount;
 
         struct DrawMode final
         {

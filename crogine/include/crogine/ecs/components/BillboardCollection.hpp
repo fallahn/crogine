@@ -32,8 +32,11 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/graphics/Colour.hpp>
 
+#include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/vec3.hpp>
+
+#include <vector>
 
 namespace cro
 {
@@ -125,6 +128,19 @@ namespace cro
 
         glm::uvec2 m_chunkCount = { 0u, 0u }; //! < this times m_chunkSize grid
         glm::vec2 m_chunkCoordStart = glm::vec2(0.f); //! < local coords of grid corner
+
+        struct DrawList final
+        {
+            std::vector<GLsizei> indexSizeArray; //contains the sizes of each index buffer used in multidraw
+            std::vector<void*> indexOffsetArray; //contains the pointers to offsets into the IBO in multidraw
+        };
+
+        //drawlist for each available camera in the Scene
+        //called from BillboardSystem::updateDrawlists()
+        std::vector<DrawList> m_drawLists;
+
+        //custom callbacks per camera for culling indices
+        std::vector<std::function<void(Entity)>> m_cameraCallbacks;
 
         friend class BillboardSystem;
     };

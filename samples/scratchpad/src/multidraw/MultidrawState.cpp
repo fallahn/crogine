@@ -91,8 +91,8 @@ void MultidrawState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
-    m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
+    m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
@@ -126,7 +126,7 @@ void MultidrawState::createScene()
         board.position.x = p[0];
         board.position.z = p[1];
     }
-    bbEnt.getComponent<cro::BillboardCollection>().setChunkSize(1);
+    //bbEnt.getComponent<cro::BillboardCollection>().setChunkSize(1);
 
 
     md.loadFromFile("assets/models/plane2.cmt");

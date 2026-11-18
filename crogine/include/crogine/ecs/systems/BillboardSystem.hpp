@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/ecs/Renderable.hpp>
 
 namespace cro
 {
@@ -37,14 +38,32 @@ namespace cro
     \brief Updates the geometry data of BillboardCollection components
     \see BillboardCollection
     */
-    class CRO_EXPORT_API BillboardSystem final : public cro::System
+    class CRO_EXPORT_API BillboardSystem final : public System, public Renderable
     {
     public:
         explicit BillboardSystem(MessageBus&);
 
         void process(float) override;
 
+        /*!
+        \brief Performs the default or custom grid culling based
+        on the given cameraID for each billboard entity
+        */
+        void updateDrawList(Entity camera) override;
+
+        /*!
+        \brief Rather than actually render anything this picks the
+        correct indexing list for each billboard using the camera
+        ID and applies it to the model component for actual rendering.
+        As such this system should always be placed between the
+        CameraSystem and ModelRenderer systems when added to a Scene
+        */
+        void render(Entity camera, const RenderTarget&) override;
+
     private:
 
+
+        //does nothing other than meet the expectations if the Renderable abstract
+        void flushEntity(Entity) {}
     };
 }
