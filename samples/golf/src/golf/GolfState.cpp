@@ -3803,7 +3803,6 @@ void GolfState::addSystems()
     m_gameScene.addSystem<ClientCollisionSystem>(mb, m_holeData, m_collisionMesh);
     m_gameScene.addSystem<SpectatorSystem>(mb, m_collisionMesh);
     m_gameScene.addSystem<PropFollowSystem>(mb, m_collisionMesh);
-    m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<VatAnimationSystem>(mb);
     m_gameScene.addSystem<BallAnimationSystem>(mb);
     m_gameScene.addSystem<LightAnimationSystem>(mb);
@@ -3817,6 +3816,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<FpsCameraSystem>(mb, m_collisionMesh, m_sharedData)->setHumanCount(m_humanCount);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<ChunkVisSystem>(mb, MapSize, &m_terrainBuilder);
+    m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setRenderInterval(/*m_sharedData.shadowQuality ? 2 : 3*/1); //set to 1 to remove flickering
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb)->setRandomColours( //dear future me: if you're changing these you probably want to update the trophy scene, below

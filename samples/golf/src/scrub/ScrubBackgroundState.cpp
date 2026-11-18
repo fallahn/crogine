@@ -191,10 +191,10 @@ void ScrubBackgroundState::addSystems()
     auto& mb = cro::App::getInstance().getMessageBus();
 
     m_scene.addSystem<CloudSystem>(mb);
-    m_scene.addSystem<cro::BillboardSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<SpectatorSystem>(mb, m_collisionMesh);
     m_scene.addSystem<cro::CameraSystem>(mb);
+    m_scene.addSystem<cro::BillboardSystem>(mb);
     m_scene.addSystem<cro::ShadowMapRenderer>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
 }

@@ -2245,9 +2245,9 @@ void MenuState::addSystems()
     m_backgroundScene.addSystem<cro::CallbackSystem>(mb);
     m_backgroundScene.addSystem<cro::SkeletalAnimator>(mb);
     m_backgroundScene.addSystem<cro::SpriteSystem3D>(mb); //clouds
-    m_backgroundScene.addSystem<cro::BillboardSystem>(mb);
     m_backgroundScene.addSystem<LightmapProjectionSystem>(mb, &m_lightProjectionMap);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
+    m_backgroundScene.addSystem<cro::BillboardSystem>(mb);
     m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
     m_backgroundScene.addSystem<cro::ParticleSystem>(mb);

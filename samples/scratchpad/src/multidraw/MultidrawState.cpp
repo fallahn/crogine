@@ -182,9 +182,9 @@ void MultidrawState::createScene()
 
 
     //use this camera's drawlist index to set the billboard collection culling func
-    //TODO drawlist index is always 0 at this point until the entity as actually added to the CameraSystem
     bbc.setDrawlistCallback(camEnt, [sphereEnt](cro::Entity camera, cro::Entity parent)
         {
+            //TODO create a version of this which uses a radius
             const auto testPos = sphereEnt.getComponent<cro::Transform>().getPosition();
             auto& bbc = parent.getComponent<cro::BillboardCollection>();
 
@@ -198,13 +198,8 @@ void MultidrawState::createScene()
             const auto& mesh = parent.getComponent<cro::Model>().getMeshData();
 
             auto& drawList = bbc.getDrawList(camera.getComponent<cro::Camera>().getDrawListIndex());
-            drawList.indexOffsetArray.clear();
-            drawList.indexSizeArray.clear();
-            //TODO hide this horrible cast in a setter
-            drawList.indexOffsetArray.push_back(reinterpret_cast<void*>(mesh.indexData[0].iboAllocation.offset + chunk.offset));
-            drawList.indexSizeArray.push_back(chunk.count);
-
-
+            drawList.clear();
+            drawList.addChunk(mesh, chunk);
         });
 
 

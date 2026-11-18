@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/graphics/Colour.hpp>
+#include <crogine/graphics/MeshData.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/vec2.hpp>
@@ -118,19 +119,6 @@ namespace cro
 
 
         /*!
-        \brief An array of offsets and index counts into the IBO
-        This is created for each active camera as necessary and
-        used by the ModelRenderer to decide which chunks of the
-        BillboardCollection to draw.
-        */
-        struct DrawList final
-        {
-            std::vector<GLsizei> indexSizeArray; //! < contains the sizes of each index buffer used in multidraw
-            std::vector<void*> indexOffsetArray; //! < contains the pointers to offsets into the IBO in multidraw
-        };
-
-
-        /*!
         \brief This is the IBO index representing a single chunk
         */
         struct ChunkIndex final
@@ -138,6 +126,41 @@ namespace cro
             std::uint32_t count = 0; //! < number of indices in the chunk
             std::uint32_t offset = 0; //! < offset IN BYTES into the IBO of the chunk (should be ADDED to IBOAllocation offset)
         };
+
+
+        /*!
+        \brief An array of offsets and index counts into the IBO
+        This is created for each active camera as necessary and
+        used by the ModelRenderer to decide which chunks of the
+        BillboardCollection to draw.
+        */
+        struct DrawList final
+        {
+        public:
+            /*!
+            \brief Clears the underlying data
+            */
+            void clear()
+            {
+                indexSizeArray.clear();
+                indexOffsetArray.clear();
+            }
+
+            /*!
+            \brief Adds a given chunk to the given mesh
+            */
+            void addChunk(const Mesh::Data& mesh, const ChunkIndex& chunk)
+            {
+                indexOffsetArray.push_back(reinterpret_cast<void*>(mesh.indexData[0].iboAllocation.offset + chunk.offset));
+                indexSizeArray.push_back(chunk.count);
+            }
+
+        private:
+            friend class BillboardSystem;
+            std::vector<GLsizei> indexSizeArray; //! < contains the sizes of each index buffer used in multidraw
+            std::vector<void*> indexOffsetArray; //! < contains the pointers to offsets into the IBO in multidraw
+        };
+
 
 
         /*!

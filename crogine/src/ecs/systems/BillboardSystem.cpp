@@ -398,8 +398,7 @@ void BillboardSystem::updateDrawList(Entity camera)
             const auto& meshData = model.getMeshData();
 
             auto& drawlist = bbc.m_drawLists[index];
-            drawlist.indexOffsetArray.clear();
-            drawlist.indexSizeArray.clear();
+            drawlist.clear();
 
             drawlist.indexOffsetArray.push_back(reinterpret_cast<void*>(meshData.indexData[0].iboAllocation.offset));
             drawlist.indexSizeArray.push_back(static_cast<GLsizei>(meshData.indexData[0].indexCount));
