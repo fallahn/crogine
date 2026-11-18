@@ -127,7 +127,7 @@ void MultidrawState::createScene()
         board.position.x = p[0];
         board.position.z = p[1];
     }
-    bbEnt.getComponent<cro::BillboardCollection>().setChunkSize(3);
+    bbEnt.getComponent<cro::BillboardCollection>().setChunkSize(1);
 
 
     md.loadFromFile("assets/models/plane2.cmt");
@@ -181,25 +181,38 @@ void MultidrawState::createScene()
     resize(cam);
 
 
-    //use this camera's drawlist index to set the billboard collection culling func
-    bbc.setDrawlistCallback(camEnt, [sphereEnt](cro::Entity camera, cro::Entity parent)
+    //use this camera's drawlist to set the billboard collection culling func
+    bbc.setDrawListCallback(camEnt, [sphereEnt](cro::Entity camera, cro::Entity parent)
         {
             //TODO create a version of this which uses a radius
             const auto testPos = sphereEnt.getComponent<cro::Transform>().getPosition();
             auto& bbc = parent.getComponent<cro::BillboardCollection>();
 
             const auto relPos = glm::vec2(testPos.x, testPos.z) - bbc.getChunkCoordStart();
-            const auto xPos = std::floor(relPos.x / bbc.getChunkSize());
-            const auto yPos = std::floor(relPos.y / bbc.getChunkSize());
-
-            const auto idx = (yPos * bbc.getChunkCount().x) + xPos;
-            const auto& chunk = bbc.getChunkIndices()[static_cast<std::int32_t>(idx)];
+            const auto xPos = static_cast<std::int32_t>(std::floor(relPos.x / bbc.getChunkSize()));
+            const auto yPos = static_cast<std::int32_t>(std::floor(relPos.y / bbc.getChunkSize()));
 
             const auto& mesh = parent.getComponent<cro::Model>().getMeshData();
 
             auto& drawList = bbc.getDrawList(camera.getComponent<cro::Camera>().getDrawListIndex());
             drawList.clear();
-            drawList.addChunk(mesh, chunk);
+
+            static constexpr auto GridSize = 3;
+            const auto startX = std::max(0, xPos - GridSize);
+            const auto endX = std::min(bbc.getChunkCount().x, std::uint32_t(xPos + GridSize));
+
+            const auto startY = std::max(0, yPos - GridSize);
+            const auto endY = std::min(bbc.getChunkCount().x, std::uint32_t(yPos + GridSize));
+
+            for (auto y = startY; y < endY; ++y)
+            {
+                for (auto x = startX; x < endX; ++x)
+                {
+                    const auto idx = (y * bbc.getChunkCount().x) + x;
+                    const auto& chunk = bbc.getChunkIndices()[idx];
+                    drawList.addChunk(mesh, chunk);
+                }
+            }
         });
 
 

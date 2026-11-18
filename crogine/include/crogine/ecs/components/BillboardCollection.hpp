@@ -71,6 +71,39 @@ namespace cro
     Creation of these models can be automated with the use of a ModelDefinition file.
     See the ModelDefinition class and model_definition_format.md document in the
     repository for further information
+
+    Large BillboardCollections can be broken into smaller chunks and then callbacks
+    applied, pre scene camera, to allow culling of chunks based on distance and visibility.
+
+    First: call setChunkSize() with a non-zero number to set the size of each of the
+    chunks in world units. Setting this to zero disables chunking and the collection
+    is always drawn as a single mesh.
+
+    By default the ModelRenderer will still draw all the chunks (in a single draw
+    call) if there are no camera callbacks set. However using setDrawListCallback()
+    you can apply a std::function, functor or bound function which is updated every
+    frame via the CameraSystem's call to updateDrawLists().
+
+    \begincode
+    //example always draws chunk zero
+    billboardCollection.setDrawListCallback(scene.getDefaultCamera(),
+        [](cro::Entity camera, cro::Entity parent)
+        {
+            auto& bbc = parent.getComponent<cro::BillboardCollection>();
+            //Chunks can otherwise be selected via frustum culling or distance to the camera
+            const auto& chunk = bbc.getChunkIndices()[0];
+            const auto& mesh = parent.getComponent<cro::Model>().getMeshData();
+
+            auto& drawList = bbc.getDrawList(camera.getComponent<cro::Camera>().getDrawListIndex());
+            drawList.clear();
+            drawList.addChunk(mesh, chunk);
+        };
+    \endcode
+
+    Calculations can be made using getChunkSize() getChunkCoordStart() and getChunkCount(). Also
+    note that the default billboard shaders have uniforms u_nearFadeDistance and u_farFadeDistance
+    which can be used in combination with culling to soften the effect.
+
     \see ModelDefinition
     */
     class CRO_EXPORT_API BillboardCollection final
@@ -103,7 +136,8 @@ namespace cro
 
         /*!
         \brief Set the size in world units of a chunk when rendering in multi-draw mode
-        This defaults to 0 where all billboards are stored in one large single array
+        This defaults to 0 where all billboards are stored in one large single array.
+        The maximum size of a chunk is 100 units.
         */
         void setChunkSize(std::uint32_t size);
 
@@ -115,7 +149,7 @@ namespace cro
         where camera is the assigned camera entity and parent is the entity to which this
         component is assigned.
         */
-        void setDrawlistCallback(Entity, const std::function<void(Entity, Entity)>& callback);
+        void setDrawListCallback(Entity, const std::function<void(Entity, Entity)>& callback);
 
 
         /*!
@@ -168,21 +202,25 @@ namespace cro
         */
         const std::vector<ChunkIndex>& getChunkIndices() const { return m_chunkIndices; }
         
+
         /*!
         \brief Total number of chunks in x and y coords
         */
         glm::uvec2 getChunkCount() const { return m_chunkCount; }
+
 
         /*!
         \brief Chunk size in world coords
         */
         float getChunkSize() const { return static_cast<float>(m_chunkSize); }
 
+
         /*!
         \brief Coordinates of the starting chunk.
         Note this is in LOCAL coordinates
         */
         glm::vec2 getChunkCoordStart() const { return m_chunkCoordStart; }
+
 
         /*!
         \brief Returns the drawlist for the given camera index.

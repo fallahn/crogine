@@ -60,7 +60,7 @@ void BillboardCollection::setChunkSize(std::uint32_t size)
     m_dirty = true;
 }
 
-void BillboardCollection::setDrawlistCallback(Entity camera, const std::function<void(Entity, Entity)>& callback)
+void BillboardCollection::setDrawListCallback(Entity camera, const std::function<void(Entity, Entity)>& callback)
 {
     m_pendingCallbacks.emplace_back(camera, callback);
 }
