@@ -245,6 +245,11 @@ void BillboardSystem::process(float)
                 bbc.m_chunkCount.x = static_cast<std::uint32_t>(std::ceil((meshData.boundingBox[1].x - meshData.boundingBox[0].x) / bbc.m_chunkSize));
                 bbc.m_chunkCount.y = static_cast<std::uint32_t>(std::ceil((meshData.boundingBox[1].z - meshData.boundingBox[0].z) / bbc.m_chunkSize));
                 indexChunkData.resize(bbc.m_chunkCount.x * bbc.m_chunkCount.y);
+
+                for (auto& dl : bbc.m_drawLists)
+                {
+                    dl.resize(indexChunkData.size());
+                }
             }
 
             const auto getGridIndex = 
@@ -373,6 +378,8 @@ void BillboardSystem::updateDrawList(Entity camera)
         if (index >= bbc.m_drawLists.size())
         {
             bbc.m_drawLists.resize(index + 1);
+            bbc.m_drawLists[index].resize(bbc.m_chunkCount.x * bbc.m_chunkCount.y);
+
             bbc.m_cameraCallbacks.resize(index + 1);
         }
 
@@ -391,9 +398,11 @@ void BillboardSystem::updateDrawList(Entity camera)
 
             auto& drawlist = bbc.m_drawLists[index];
             drawlist.clear();
+            drawlist.resize(1);
 
-            drawlist.indexOffsetArray.push_back(reinterpret_cast<void*>(meshData.indexData[0].iboAllocation.offset));
-            drawlist.indexSizeArray.push_back(static_cast<GLsizei>(meshData.indexData[0].indexCount));
+            drawlist.m_indexOffsetArray[0] = (reinterpret_cast<void*>(meshData.indexData[0].iboAllocation.offset));
+            drawlist.m_indexSizeArray[0] = (static_cast<GLsizei>(meshData.indexData[0].indexCount));
+            drawlist.m_size = 1;
         }
     }
 }
@@ -410,9 +419,9 @@ void BillboardSystem::render(Entity camera, const RenderTarget&)
         const auto& bbc = entity.getComponent<BillboardCollection>();
         const auto& drawlist = bbc.m_drawLists[index];
 
-        model.m_indexDrawCount = static_cast<GLsizei>(drawlist.indexSizeArray.size());
-        model.m_indexOffsetArray = drawlist.indexOffsetArray.data();
-        model.m_indexSizeArray = drawlist.indexSizeArray.data();
-        assert(model.m_indexDrawCount == drawlist.indexSizeArray.size());
+        model.m_indexDrawCount = static_cast<GLsizei>(drawlist.m_size);
+        model.m_indexOffsetArray = drawlist.m_indexOffsetArray.data();
+        model.m_indexSizeArray = drawlist.m_indexSizeArray.data();
+        //assert(model.m_indexDrawCount == drawlist.indexSizeArray.size());
     }
 }

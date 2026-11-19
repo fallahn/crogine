@@ -49,11 +49,11 @@ namespace cro
     */
     struct CRO_EXPORT_API Billboard final
     {
-        glm::vec2 size = glm::vec2(1.f); //!< the width and height of the quad
-        glm::vec3 position = glm::vec3(0.f); //!< position of the quad relative to the entity's Transform
-        glm::vec2 origin = glm::vec2(0.f); //!< the origin around which the quad geometry is centred
-        Colour colour = Colour::White; //!< the colour of the billboard, multiplied by the material colour
-        FloatRect textureRect = FloatRect(0.f,0.f,1.f,1.f); //!< subrect of the material texture to use, in texture coordinates
+        glm::vec2 size = glm::vec2(1.f); //! < the width and height of the quad
+        glm::vec3 position = glm::vec3(0.f); //! < position of the quad relative to the entity's Transform
+        glm::vec2 origin = glm::vec2(0.f); //! < the origin around which the quad geometry is centred
+        Colour colour = Colour::White; //! < the colour of the billboard, multiplied by the material colour
+        FloatRect textureRect = FloatRect(0.f,0.f,1.f,1.f); //! < subrect of the material texture to use, in texture coordinates
     };
 
     /*!
@@ -176,8 +176,7 @@ namespace cro
             */
             void clear()
             {
-                indexSizeArray.clear();
-                indexOffsetArray.clear();
+                m_size = 0;
             }
 
             /*!
@@ -186,14 +185,25 @@ namespace cro
             void addChunk(const Mesh::Data& mesh, const ChunkIndex& chunk)
             {
                 assert(chunk.count > 0);
-                indexOffsetArray.push_back(reinterpret_cast<void*>(mesh.indexData[0].iboAllocation.offset + chunk.offset));
-                indexSizeArray.push_back(chunk.count);
+                m_indexOffsetArray[m_size] = (reinterpret_cast<void*>(mesh.indexData[0].iboAllocation.offset + chunk.offset));
+                m_indexSizeArray[m_size++] = (chunk.count);
+            }
+
+            /*!
+            \brief Used to resize the draw list to maximum number of chunks
+            */
+            void resize(std::size_t size)
+            {
+                m_indexSizeArray.resize(size);
+                m_indexOffsetArray.resize(size);
             }
 
         private:
             friend class BillboardSystem;
-            std::vector<GLsizei> indexSizeArray; //! < contains the sizes of each index buffer used in multidraw
-            std::vector<void*> indexOffsetArray; //! < contains the pointers to offsets into the IBO in multidraw
+            std::vector<GLsizei> m_indexSizeArray; //! < contains the sizes of each index buffer used in multidraw
+            std::vector<void*> m_indexOffsetArray; //! < contains the pointers to offsets into the IBO in multidraw
+
+            std::size_t m_size = 0;
         };
 
 
