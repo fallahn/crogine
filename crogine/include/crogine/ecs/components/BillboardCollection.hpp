@@ -276,4 +276,21 @@ namespace cro
 
         friend class BillboardSystem;
     };
+
+    /*!
+    \brief Default camera callback for culling chunked BillboardCollection
+    Culls the chunks to the camer frustum AABB and minimum and maximum radius
+    eg: collection.setDrawListCallback(camEnt, DefaultBillboardCallback(0.1f, 20.f))
+    */
+    struct CRO_EXPORT_API DefaultBillboardCallback final
+    {
+    public:
+        explicit DefaultBillboardCallback(float minRadius, float maxRadius);
+
+        void operator()(Entity camera, Entity parent);
+
+    private:
+        const float m_minDist2;
+        const float m_maxDist2;
+    };
 }

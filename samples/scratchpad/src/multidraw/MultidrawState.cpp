@@ -186,7 +186,7 @@ void MultidrawState::createScene()
     {
         glm::vec2 size(cro::App::getWindow().getSize());
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-        cam.setPerspective(70.f * cro::Util::Const::degToRad, (size.x /*/ 2.f*/) / size.y, 0.1f, 50.f);
+        cam.setPerspective(70.f * cro::Util::Const::degToRad, size.x / size.y, 0.1f, 50.f);
     };
 
     auto camEnt = m_gameScene.getActiveCamera();
@@ -227,6 +227,8 @@ void MultidrawState::createScene()
             }
 
             auto& bbc = parent.getComponent<cro::BillboardCollection>();
+            minPos += glm::vec3(bbc.getChunkSize());
+            maxPos += glm::vec3(bbc.getChunkSize());
 
             const auto coordStart = bbc.getChunkCoordStart();
             const auto relPos = glm::vec2(minPos.x, minPos.z) - coordStart;
@@ -262,7 +264,7 @@ void MultidrawState::createScene()
                     const glm::vec3 centre = 
                         glm::vec3(coordStart.x + (x * bbc.getChunkSize()) , 
                                     chunk.meanHeight, 
-                                    coordStart.y + (y * bbc.getChunkSize())) + glm::vec3(0.5f);
+                                    coordStart.y + (y * bbc.getChunkSize())) + glm::vec3(bbc.getChunkSize() / 2.f);
 
                     const auto dir = centre - testPos;
                     if (const auto len2 = glm::length2(dir); len2 < MaxDist2 && len2 > MinDist2)
@@ -306,54 +308,11 @@ void MultidrawState::createScene()
     m_overheadCam = entity;
     sphereEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    bbc.setDrawListCallback(entity, cro::DefaultBillboardCallback(1.f, 10.f));
 
     m_overheadTexture.create(240, 240);
     m_overheadQuad.setTexture(m_overheadTexture.getTexture());
     m_overheadQuad.setPosition({ 10.f, 10.f });
-
-    //bbc.setDrawListCallback(entity, [sphereEnt](cro::Entity camera, cro::Entity parent)
-    //    {
-    //        //TODO create a version of this which uses a radius
-    //        auto testPos = sphereEnt.getComponent<cro::Transform>().getPosition();
-    //        testPos = glm::vec3(glm::inverse(parent.getComponent<cro::Transform>().getWorldTransform()) * glm::vec4(testPos, 1.f));
-
-    //        auto& bbc = parent.getComponent<cro::BillboardCollection>();
-
-    //        const auto coordStart = bbc.getChunkCoordStart();
-    //        const auto relPos = glm::vec2(testPos.x, testPos.z) - coordStart;
-    //        const auto xPos = static_cast<std::int32_t>(std::floor(relPos.x / bbc.getChunkSize()));
-    //        const auto yPos = static_cast<std::int32_t>(std::floor(relPos.y / bbc.getChunkSize()));
-
-    //        const auto& mesh = parent.getComponent<cro::Model>().getMeshData();
-
-    //        auto& drawList = bbc.getDrawList(camera.getComponent<cro::Camera>().getDrawListIndex());
-    //        drawList.clear();
-
-    //        static constexpr auto GridSize = 5;
-    //        const auto startX = std::max(0, xPos - GridSize);
-    //        const auto endX = std::min(bbc.getChunkCount().x, std::uint32_t(xPos + GridSize));
-
-    //        const auto startY = std::max(0, yPos - GridSize);
-    //        const auto endY = std::min(bbc.getChunkCount().y, std::uint32_t(yPos + GridSize));
-
-    //        for (auto y = startY; y < endY; ++y)
-    //        {
-    //            for (auto x = startX; x < endX; ++x)
-    //            {
-    //                const glm::vec3 centre =
-    //                    glm::vec3(coordStart.x + (x * bbc.getChunkSize()),
-    //                        0.f,
-    //                        coordStart.y + (y * bbc.getChunkSize())) + glm::vec3(0.5f);
-
-    //                if (glm::length2(testPos - centre) > 25.f)
-    //                {
-    //                    const auto idx = (y * bbc.getChunkCount().x) + x;
-    //                    const auto& chunk = bbc.getChunkIndices()[idx];
-    //                    drawList.addChunk(mesh, chunk);
-    //                }
-    //            }
-    //        }
-    //    });
 }
 
 void MultidrawState::createUI()
