@@ -159,6 +159,7 @@ namespace cro
         {
             std::intptr_t offset = 0; //! < offset IN BYTES into the IBO of the chunk (should be ADDED to IBOAllocation offset)
             GLsizei count = 0; //! < number of indices in the chunk
+            float meanHeight = 0.f; //! < averaged height of all billbaords in this chunk based on root position (local coords)
         };
 
 

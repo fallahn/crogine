@@ -9,6 +9,8 @@
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
 
 class MultidrawState final : public cro::State, public cro::GuiClient
 {
@@ -31,9 +33,12 @@ private:
     cro::ResourceCollection m_resources;
     cro::EnvironmentMap m_environmentMap;
 
+    cro::Entity m_overheadCam;
+    cro::RenderTexture m_overheadTexture;
+    cro::SimpleQuad m_overheadQuad;
+
     void addSystems();
     void loadAssets();
     void createScene();
     void createUI();
-
 };

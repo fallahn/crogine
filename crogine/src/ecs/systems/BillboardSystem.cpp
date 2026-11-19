@@ -235,6 +235,8 @@ void BillboardSystem::process(float)
             //all via a std::future and update the VBO once we have a result.
             std::vector<std::uint16_t> indexData;
             std::vector<std::vector<std::uint16_t>> indexChunkData;
+            std::vector<std::pair<float, std::int32_t>> meanHeight; //track the average height of a chunk so culling options can use a 3D position
+
             bbc.m_chunkCount = { 0u, 0u };
 
             if (bbc.m_chunkSize > 0)
@@ -245,6 +247,7 @@ void BillboardSystem::process(float)
                 bbc.m_chunkCount.x = static_cast<std::uint32_t>(std::ceil((meshData.boundingBox[1].x - meshData.boundingBox[0].x) / bbc.m_chunkSize));
                 bbc.m_chunkCount.y = static_cast<std::uint32_t>(std::ceil((meshData.boundingBox[1].z - meshData.boundingBox[0].z) / bbc.m_chunkSize));
                 indexChunkData.resize(bbc.m_chunkCount.x * bbc.m_chunkCount.y);
+                meanHeight.resize(indexChunkData.size());
 
                 for (auto& dl : bbc.m_drawLists)
                 {
@@ -294,6 +297,10 @@ void BillboardSystem::process(float)
                     if (gridIndex < indexChunkData.size())
                     {
                         insertQuadIndices(i, indexChunkData[gridIndex]);
+
+                        //this value should be the same across all 4 verts.
+                        meanHeight[gridIndex].first += vertexData[i].rootPos.y;
+                        meanHeight[gridIndex].second++;
                     }
                     else
                     {
@@ -302,14 +309,18 @@ void BillboardSystem::process(float)
                 }
             }
             
+            //concatenate the index arrays ready to upload to the IBO
             bbc.m_chunkIndices.clear();
+            std::int32_t i = 0;
             for (const auto& chunk : indexChunkData)
             {
                 auto& offsets = bbc.m_chunkIndices.emplace_back();
                 offsets.count = static_cast<std::uint32_t>(chunk.size());
                 offsets.offset = static_cast<std::uint32_t>(indexData.size() * sizeof(std::uint16_t));
+                offsets.meanHeight = meanHeight[i].first / meanHeight[i].second;
 
                 indexData.insert(indexData.end(), chunk.cbegin(), chunk.cend());
+                i++;
             }
 
             //this isn't valid, but it marks the model as needing to

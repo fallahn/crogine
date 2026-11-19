@@ -21,6 +21,7 @@
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Matrix.hpp>
 #include <crogine/util/Wavetable.hpp>
 
 MultidrawState::MultidrawState(cro::StateStack& stack, cro::State::Context context)
@@ -78,11 +79,19 @@ bool MultidrawState::simulate(float dt)
 void MultidrawState::preRender()
 {
     m_gameScene.preRender();
+
+    m_overheadTexture.clear();
+    auto oldCam = m_gameScene.setActiveCamera(m_overheadCam);
+    m_gameScene.render();
+    m_gameScene.setActiveCamera(oldCam);
+    m_overheadTexture.display();
 }
 
 void MultidrawState::render()
 {
     m_gameScene.render();
+
+    m_overheadQuad.draw();
     m_uiScene.render();
 }
 
@@ -126,9 +135,16 @@ void MultidrawState::createScene()
     {
         bbc.addBillboard(board);
         board.position.x = p[0];
+        board.position.y = cro::Util::Random::value(-1.f, 1.f);
         board.position.z = p[1];
     }
     bbEnt.getComponent<cro::BillboardCollection>().setChunkSize(1);
+    //bbEnt.addComponent<cro::Callback>().active = true;
+    //bbEnt.getComponent<cro::Callback>().function =
+    //    [](cro::Entity e, float dt)
+    //    {
+    //        e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -dt * 0.1f);
+    //    };
 
 
     md.loadFromFile("assets/models/plane2.cmt");
@@ -144,9 +160,9 @@ void MultidrawState::createScene()
     md.createModel(entity);
 
 
-    md.loadFromFile("assets/models/sphere_1m.cmt");
+    md.loadFromFile("assets/models/cube2.cmt");
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setPosition({ 2.f, 2.f, 1.f });
     md.createModel(entity);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
@@ -161,14 +177,16 @@ void MultidrawState::createScene()
 
             is = (is + 1) % wavetable.size();
             ic = (ic + 1) % wavetable.size();
+
+            e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -std::atan2(-pos.x, pos.z));
         };
     auto sphereEnt = entity;
 
-    auto resize = [](cro::Camera& cam)
+    const auto resize = [](cro::Camera& cam)
     {
         glm::vec2 size(cro::App::getWindow().getSize());
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-        cam.setPerspective(70.f * cro::Util::Const::degToRad, size.x / size.y, 0.1f, 50.f);
+        cam.setPerspective(70.f * cro::Util::Const::degToRad, (size.x /*/ 2.f*/) / size.y, 0.1f, 50.f);
     };
 
     auto camEnt = m_gameScene.getActiveCamera();
@@ -183,47 +201,78 @@ void MultidrawState::createScene()
 
 
     //use this camera's drawlist to set the billboard collection culling func
-    bbc.setDrawListCallback(camEnt, [sphereEnt](cro::Entity camera, cro::Entity parent)
+    bbc.setDrawListCallback(camEnt, [this, sphereEnt](cro::Entity camera, cro::Entity parent)
         {
-            //TODO create a version of this which uses a radius
-            const auto testPos = sphereEnt.getComponent<cro::Transform>().getPosition();
+            const auto inverseTx = glm::inverse(parent.getComponent<cro::Transform>().getWorldTransform());
+
+            //TODO this ought to be the camera pos, we just want to visualise the cube as a camera
+            const auto camTx = inverseTx * m_overheadCam.getComponent<cro::Transform>().getWorldTransform();
+            const auto testPos = glm::vec3(camTx[3]);
+
+            //calc AABB of frustum - use this to only test the chunks which fall into its grid area
+            glm::vec3 minPos(std::numeric_limits<float>::max());
+            glm::vec3 maxPos(std::numeric_limits<float>::lowest());
+            const auto& corners = m_overheadCam.getComponent<cro::Camera>().getFrustumCorners();
+
+            for (const auto& c : corners)
+            {
+                const auto p = camTx * c;
+                minPos.x = std::min(minPos.x, p.x);
+                minPos.y = std::min(minPos.y, p.y);
+                minPos.z = std::min(minPos.z, p.z);
+
+                maxPos.x = std::max(maxPos.x, p.x);
+                maxPos.y = std::max(maxPos.y, p.y);
+                maxPos.z = std::max(maxPos.z, p.z);
+            }
+
             auto& bbc = parent.getComponent<cro::BillboardCollection>();
 
             const auto coordStart = bbc.getChunkCoordStart();
-            const auto relPos = glm::vec2(testPos.x, testPos.z) - coordStart;
+            const auto relPos = glm::vec2(minPos.x, minPos.z) - coordStart;
             const auto xPos = static_cast<std::int32_t>(std::floor(relPos.x / bbc.getChunkSize()));
             const auto yPos = static_cast<std::int32_t>(std::floor(relPos.y / bbc.getChunkSize()));
 
-            const auto& mesh = parent.getComponent<cro::Model>().getMeshData();
+            const auto GridSizeX = static_cast<std::int32_t>(std::floor((maxPos.x - minPos.x) / bbc.getChunkSize()));
+            const auto startX = std::max(0, xPos);
+            const auto endX = std::min(bbc.getChunkCount().x, std::uint32_t(xPos + GridSizeX));
+
+            const auto GridSizeY = static_cast<std::int32_t>(std::floor((maxPos.z - minPos.z) / bbc.getChunkSize()));
+            const auto startY = std::max(0, yPos);
+            const auto endY = std::min(bbc.getChunkCount().y, std::uint32_t(yPos + GridSizeY));
 
             auto& drawList = bbc.getDrawList(camera.getComponent<cro::Camera>().getDrawListIndex());
             drawList.clear();
 
-            static constexpr auto GridSize = 5;
-            const auto startX = std::max(0, xPos - GridSize);
-            const auto endX = std::min(bbc.getChunkCount().x, std::uint32_t(xPos + GridSize));
+            const auto& mesh = parent.getComponent<cro::Model>().getMeshData();
 
-            const auto startY = std::max(0, yPos - GridSize);
-            const auto endY = std::min(bbc.getChunkCount().y, std::uint32_t(yPos + GridSize));
+            //min / max draw distances
+            static constexpr float MinDist = 3.f;
+            static constexpr float MaxDist = 10.f;
+            static constexpr float MinDist2 = MinDist * MinDist;
+            static constexpr float MaxDist2 = MaxDist * MaxDist;
 
             for (auto y = startY; y < endY; ++y)
             {
                 for (auto x = startX; x < endX; ++x)
                 {
-                    //TODO some reasonable estimate for Y.
-                    //also don't forget we're testing against local chunk coords
-                    //which only works in this test because the billboard entity
-                    //has no transform currently.
+                    const auto idx = (y * bbc.getChunkCount().x) + x;
+                    const auto& chunk = bbc.getChunkIndices()[idx];
+
                     const glm::vec3 centre = 
                         glm::vec3(coordStart.x + (x * bbc.getChunkSize()) , 
-                                    0.f, 
+                                    chunk.meanHeight, 
                                     coordStart.y + (y * bbc.getChunkSize())) + glm::vec3(0.5f);
 
-                    if (glm::length2(testPos - centre) < 25.f)
+                    const auto dir = centre - testPos;
+                    if (const auto len2 = glm::length2(dir); len2 < MaxDist2 && len2 > MinDist2)
                     {
-                        const auto idx = (y * bbc.getChunkCount().x) + x;
-                        const auto& chunk = bbc.getChunkIndices()[idx];
-                        drawList.addChunk(mesh, chunk);
+                        //const float hFOV = std::tan(cam.getFOV() / 2.f) * cam.getAspectRatio();
+                        const float hFOV = 0.5f; //nice idea but a) assumes horizontal is widest axis b) doesn't account for AABB overlap
+                        //if (const auto d = glm::dot(glm::normalize(dir), cro::Util::Matrix::getForwardVector(camTx)); d > hFOV)
+                        {
+                            drawList.addChunk(mesh, chunk);
+                        }
                     }
                 }
             }
@@ -235,6 +284,76 @@ void MultidrawState::createScene()
 
     m_gameScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -0.439f);
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.777f);
+
+
+    const auto resize2 = 
+        [](cro::Camera& cam)
+        {
+            glm::vec2 size(cro::App::getWindow().getSize());
+            cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+            cam.setPerspective(70.f * cro::Util::Const::degToRad, 1.f, 0.5f, 30.f);
+        };
+
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -cro::Util::Const::PI / 2.f);
+    auto& cam2 = entity.addComponent<cro::Camera>();
+    cam2.shadowMapBuffer.create(2048, 2048);
+    cam2.setMaxShadowDistance(20.f);
+    cam2.setShadowExpansion(17.f);    
+    resize2(cam2);
+    cam2.resizeCallback = resize2;
+
+    m_overheadCam = entity;
+    sphereEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    m_overheadTexture.create(240, 240);
+    m_overheadQuad.setTexture(m_overheadTexture.getTexture());
+    m_overheadQuad.setPosition({ 10.f, 10.f });
+
+    //bbc.setDrawListCallback(entity, [sphereEnt](cro::Entity camera, cro::Entity parent)
+    //    {
+    //        //TODO create a version of this which uses a radius
+    //        auto testPos = sphereEnt.getComponent<cro::Transform>().getPosition();
+    //        testPos = glm::vec3(glm::inverse(parent.getComponent<cro::Transform>().getWorldTransform()) * glm::vec4(testPos, 1.f));
+
+    //        auto& bbc = parent.getComponent<cro::BillboardCollection>();
+
+    //        const auto coordStart = bbc.getChunkCoordStart();
+    //        const auto relPos = glm::vec2(testPos.x, testPos.z) - coordStart;
+    //        const auto xPos = static_cast<std::int32_t>(std::floor(relPos.x / bbc.getChunkSize()));
+    //        const auto yPos = static_cast<std::int32_t>(std::floor(relPos.y / bbc.getChunkSize()));
+
+    //        const auto& mesh = parent.getComponent<cro::Model>().getMeshData();
+
+    //        auto& drawList = bbc.getDrawList(camera.getComponent<cro::Camera>().getDrawListIndex());
+    //        drawList.clear();
+
+    //        static constexpr auto GridSize = 5;
+    //        const auto startX = std::max(0, xPos - GridSize);
+    //        const auto endX = std::min(bbc.getChunkCount().x, std::uint32_t(xPos + GridSize));
+
+    //        const auto startY = std::max(0, yPos - GridSize);
+    //        const auto endY = std::min(bbc.getChunkCount().y, std::uint32_t(yPos + GridSize));
+
+    //        for (auto y = startY; y < endY; ++y)
+    //        {
+    //            for (auto x = startX; x < endX; ++x)
+    //            {
+    //                const glm::vec3 centre =
+    //                    glm::vec3(coordStart.x + (x * bbc.getChunkSize()),
+    //                        0.f,
+    //                        coordStart.y + (y * bbc.getChunkSize())) + glm::vec3(0.5f);
+
+    //                if (glm::length2(testPos - centre) > 25.f)
+    //                {
+    //                    const auto idx = (y * bbc.getChunkCount().x) + x;
+    //                    const auto& chunk = bbc.getChunkIndices()[idx];
+    //                    drawList.addChunk(mesh, chunk);
+    //                }
+    //            }
+    //        }
+    //    });
 }
 
 void MultidrawState::createUI()

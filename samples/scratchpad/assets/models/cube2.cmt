@@ -1,6 +1,6 @@
 model cube
 {
-    mesh = cube
+    mesh = "cube"
     size = 1.000000,1.000000,1.000000
     cast_shadows = true
 
@@ -18,7 +18,6 @@ model cube
         row_count = 1
         col_count = 1
         framerate = 1.000000
-        blendmode = none
-
+        blendmode = "none"
     }
 }
