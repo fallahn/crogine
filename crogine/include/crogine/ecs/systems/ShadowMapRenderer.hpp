@@ -163,7 +163,7 @@ namespace cro
         struct BufferResource final
         {
             std::int32_t refcount = 0; //number of cameras this has been assigned to
-            std::int32_t useCount = 0; //number of cameras using the resoure *this frame*
+            std::int32_t useCount = 0; //number of cameras using the resource *this frame*
 
             std::unique_ptr<DepthTexture> depthTexture;
             bool gc = false; //this only checks for garbage collection - it doesn't actually happen unless refcount is 0

@@ -440,11 +440,11 @@ namespace cro
             NOTE layers is ignored and read directly from Camera::getCascadeCount()
             and left here only for backwards compatibility (ie I'm lazy)
             */
-            void create(std::uint32_t width, std::uint32_t height, std::uint32_t layers = 1)
+            void create(std::uint32_t width, std::uint32_t height, std::uint32_t = 1)
             {
                 m_size = { width, height };
                 //this is actually set by the ShadowMap renderer based on the camera's cascade count
-                //we've left  the func param for compatibility
+                //we've left the func param for compatibility
                 //m_layers = layers; 
                 m_dirty = true;
             }

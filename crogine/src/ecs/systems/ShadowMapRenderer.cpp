@@ -245,8 +245,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 {
     //this gets called once for each Camera in the CameraSystem
     //from CameraSystem::process() - so we'll check here if
-    //the camera should actually be updated then render all the
-    //cameras at once in process(), above
+    //the camera should actually be updated in process(), above
     auto& camera = camEnt.getComponent<Camera>();
 
 
@@ -288,7 +287,9 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
             });
 
         std::int32_t index = -1;
-        if (res == m_bufferResources.end())
+        //TODO this is currently a hack which creates a new texture for every camera FIXME
+        if (/*res == m_bufferResources.end()*/true
+            && !m_bufferIndices.empty())
         {
             //create a new one
             index = m_bufferIndices.back();
@@ -299,7 +300,8 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         }
         else
         {
-            index = static_cast<std::int32_t>(std::distance(m_bufferResources.begin(), res));
+            //index = static_cast<std::int32_t>(std::distance(m_bufferResources.begin(), res));
+            LogW << "No depth map buffer resources available for camera." << std::endl;
         }
 
         //then assign it and increase the ref count.
@@ -344,7 +346,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         m_bufferResources[camera.shadowMapBuffer.m_resourceIndex].useCount++;
 
         //TODO if useCount exceeds available texture count, increase textures
-        const auto count = m_bufferResources[camera.shadowMapBuffer.m_resourceIndex].useCount;
+        //const auto count = m_bufferResources[camera.shadowMapBuffer.m_resourceIndex].useCount;
         /*if (count > 1)
         {
             LogW << "Use count for depth tex is " << count << std::endl;

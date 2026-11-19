@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -207,7 +207,7 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
     //apple drivers don't support immutable textures.
     glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT16, width, height, layers, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL));
 #else
-    glCheck(glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_DEPTH_COMPONENT24, width, height, layers));
+    glCheck(glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_DEPTH_COMPONENT16, width, height, layers));
 #endif
     glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
     glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
@@ -368,7 +368,7 @@ void DepthTexture::updateHandles()
         }
         else
         {
-            glCheck(glTextureView(m_layerHandles[i], GL_TEXTURE_2D, m_depthID, GL_DEPTH_COMPONENT24, 0, 1, i, 1));
+            glCheck(glTextureView(m_layerHandles[i], GL_TEXTURE_2D, m_depthID, GL_DEPTH_COMPONENT16, 0, 1, i, 1));
         }
     }
 #endif
