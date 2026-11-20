@@ -60,38 +60,6 @@ void BillboardSystem::process(float)
     {
         auto& bbc = entity.getComponent<BillboardCollection>();
 
-        //check if we have any pending callbacks which need assignment
-        if (!bbc.m_pendingCallbacks.empty())
-        {
-            for (const auto& [camera, callback] : bbc.m_pendingCallbacks)
-            {
-                const auto drawListIndex = camera.getComponent<Camera>().getDrawListIndex();
-                if (bbc.m_cameraCallbacks.size() <= drawListIndex)
-                {
-                    bbc.m_cameraCallbacks.resize(drawListIndex + 1);
-                }
-
-                //this is probably only pertinent when index is
-                //zero as it suggests that the camera system may not
-                //yet have been updated to assign valid indices and
-                //all callbacks are being assigned to index 0
-                if (drawListIndex == 0
-                    && bbc.m_cameraCallbacks[0])
-                {
-                    LogW << "[Billboards] Billboard camera callback at index 0 already assigned - this may indicate an out-of-date index" << std::endl;
-                }
-
-                bbc.m_cameraCallbacks[drawListIndex] = callback;
-
-                if (bbc.m_chunkSize == 0)
-                {
-                    LogW << "[Billboards] Setting a drawlist callback on a billboard collection with 0 chunk size. THIS IS PROBABLY BAD" << std::endl;
-                }
-            }
-            bbc.m_pendingCallbacks.clear();
-        }
-
-
         if (bbc.m_dirty)
         {
             //update the model data
@@ -375,6 +343,38 @@ void BillboardSystem::process(float)
             meshData.boundingSphere.radius = glm::length(rad);
 
             bbc.m_dirty = false;
+        }
+
+
+        //check if we have any pending callbacks which need assignment
+        if (!bbc.m_pendingCallbacks.empty())
+        {
+            for (const auto& [camera, callback] : bbc.m_pendingCallbacks)
+            {
+                const auto drawListIndex = camera.getComponent<Camera>().getDrawListIndex();
+                if (bbc.m_cameraCallbacks.size() <= drawListIndex)
+                {
+                    bbc.m_cameraCallbacks.resize(drawListIndex + 1);
+                }
+
+                //this is probably only pertinent when index is
+                //zero as it suggests that the camera system may not
+                //yet have been updated to assign valid indices and
+                //all callbacks are being assigned to index 0
+                if (drawListIndex == 0
+                    && bbc.m_cameraCallbacks[0])
+                {
+                    LogW << "[Billboards] Billboard camera callback at index 0 already assigned - this may indicate an out-of-date index" << std::endl;
+                }
+
+                bbc.m_cameraCallbacks[drawListIndex] = callback;
+
+                if (bbc.m_chunkSize == 0)
+                {
+                    LogW << "[Billboards] Setting a drawlist callback on a billboard collection with 0 chunk size. THIS IS PROBABLY BAD" << std::endl;
+                }
+            }
+            bbc.m_pendingCallbacks.clear();
         }
     }
 }

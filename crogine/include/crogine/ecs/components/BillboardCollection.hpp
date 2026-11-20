@@ -185,9 +185,12 @@ namespace cro
             */
             void addChunk(const Mesh::Data& mesh, const ChunkIndex& chunk)
             {
-                assert(chunk.count > 0);
-                m_indexOffsetArray[m_size] = (reinterpret_cast<void*>(mesh.indexData[0].iboAllocation.offset + chunk.offset));
-                m_indexSizeArray[m_size++] = (chunk.count);
+                //assert(chunk.count > 0);
+                if (chunk.count != 0)
+                {
+                    m_indexOffsetArray[m_size] = (reinterpret_cast<void*>(mesh.indexData[0].iboAllocation.offset + chunk.offset));
+                    m_indexSizeArray[m_size++] = (chunk.count);
+                }
             }
 
             /*!

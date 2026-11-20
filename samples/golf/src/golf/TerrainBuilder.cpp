@@ -40,6 +40,7 @@ source distribution.
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
@@ -216,6 +217,8 @@ namespace
 
         cro::Entity terrainEntity;
     };
+
+    std::vector<std::int32_t> billboardChunkIndices;
 }
 
 TerrainBuilder::TerrainBuilder(SharedStateData& sd, const std::vector<HoleData>& hd)
@@ -518,10 +521,6 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         auto bbe = createBillboardEnt();
         if (bbe.hasComponent<cro::Model>())
         {
-            //bbe.getComponent<cro::BillboardCollection>().setChunkSize(50);
-            //hmmm we don't have access to cameras here to set the relevant callbacks...
-            //bbe.getComponent<cro::BillboardCollection>().setDrawListCallback(scene.getActiveCamera(), cro::DefaultBillboardCallback(0.5f, 30.f));
-
             m_billboardEntities[b] = bbe;
         }
         //these have billboarded trees used for flight cam and when
@@ -760,7 +759,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     m_billboardTemplates[BillboardID::Tree03] = spriteToBillboard(spriteSheet.getSprite("tree03"));
     m_billboardTemplates[BillboardID::Tree04] = spriteToBillboard(spriteSheet.getSprite("tree04"));
 
-    applyTreeQuality();
+    applyTreeQuality({}); //TODO if this works make the camera list available here
 
     //create a mesh to display the slope data
     flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal | cro::VertexProperty::UV0;
@@ -1057,15 +1056,32 @@ bool TerrainBuilder::getSlopeVisible() const
     return !m_slopeProperties.entity.getComponent<cro::Model>().isHidden();
 }
 
-void TerrainBuilder::applyTreeQuality()
+void TerrainBuilder::applyTreeQuality(const std::vector<cro::Entity>&/* cameras*/)
 {
     std::uint64_t hqFlags = 0;
     std::uint64_t bbFlags = RenderFlags::FlightCam | RenderFlags::Main | RenderFlags::Reflection;
 
+    std::int32_t bbChunkSize = 0;
+    std::function<void(cro::Entity, cro::Entity)> bbCallback;
     if (m_sharedData.treeQuality == SharedStateData::TreeQuality::High)
     {
         hqFlags = RenderFlags::Main;
         bbFlags = RenderFlags::FlightCam | RenderFlags::Reflection;
+        //bbChunkSize = 54;
+
+        //bbCallback = [](cro::Entity camera, cro::Entity parent)
+        //    {
+        //        const auto& mesh = parent.getComponent<cro::Model>().getMeshData();
+        //        auto& bbc = parent.getComponent<cro::BillboardCollection>();
+        //        auto& drawList = bbc.getDrawList(camera.getComponent<cro::Camera>().getDrawListIndex());
+        //        drawList.clear();
+
+        //        //for (auto i : billboardChunkIndices)
+        //        for (auto i = 0u; i < bbc.getChunkIndices().size(); ++i)
+        //        {
+        //            drawList.addChunk(mesh, bbc.getChunkIndices()[billboardChunkIndices[i]]);
+        //        }
+        //    };
     }
     
     for (const auto& ents : m_instancedShrubs)
@@ -1084,6 +1100,15 @@ void TerrainBuilder::applyTreeQuality()
         if (e.isValid())
         {
             e.getComponent<cro::Model>().setRenderFlags(bbFlags);
+            /*e.getComponent<cro::BillboardCollection>().setChunkSize(bbChunkSize);
+
+            if (bbCallback)
+            {
+                for (auto cam : cameras)
+                {
+                    e.getComponent<cro::BillboardCollection>().setDrawListCallback(cam, bbCallback);
+                }
+            }*/
         }
     }
 }
@@ -1250,6 +1275,8 @@ void TerrainBuilder::onChunkUpdate(const std::vector<std::int32_t>& visibleChunk
 {
     auto shrubIndex = m_swapIndex % 2;
 
+    billboardChunkIndices.clear();
+
     //for each instanced model
     for (auto i = 0u; i < MaxShrubInstances; ++i)
     {
@@ -1264,11 +1291,21 @@ void TerrainBuilder::onChunkUpdate(const std::vector<std::int32_t>& visibleChunk
             //check each visible cell and stash it if not empty
             for (auto c : visibleChunks)
             {
-                if (!treeCells[c].transforms.empty())
+                //check for HQ flag
+                //if (c & 0xffff0000)
                 {
-                    transforms.push_back(&treeCells[c].transforms);
-                    normals.push_back(&treeCells[c].normalMats);
+                    const auto idx = c & 0x0000ffff;
+                    if (!treeCells[idx].transforms.empty())
+                    {
+                        transforms.push_back(&treeCells[idx].transforms);
+                        normals.push_back(&treeCells[idx].normalMats);
+                    }
                 }
+                //else
+                //{
+                //    //billboard
+                //    billboardChunkIndices.push_back(c);
+                //}
             }
 
             //if transforms exist update the model

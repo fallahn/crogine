@@ -161,7 +161,18 @@ void ChunkVisSystem::process(float)
                     m_visibilityStates[i].distToCamSqr = l2;
 
                     m_currentIndex |= (std::size_t(1) << i);
-                    m_indexList.push_back(i);
+
+                    //flag closer chunks so we render HQ trees
+                    //nearby and billboards further out
+                    static constexpr float NearDist = 80.f * 80.f;
+                    if (l2 < NearDist)
+                    {
+                        m_indexList.push_back(i | 0xffff0000);
+                    }
+                    else
+                    {
+                        m_indexList.push_back(i);
+                    }
 //#ifdef CRO_DEBUG_
 //                    narrowphaseCount++;
 //                }

@@ -1561,7 +1561,7 @@ void GolfState::handleMessage(const cro::Message& msg)
         }
         else if (data.type == SystemEvent::TreeQualityChanged)
         {
-            m_terrainBuilder.applyTreeQuality();
+            m_terrainBuilder.applyTreeQuality({m_cameras.begin(), m_cameras.end()}); //TODO if this works we need to include the freecam
             m_gameScene.setSystemActive<ChunkVisSystem>(m_sharedData.treeQuality == SharedStateData::TreeQuality::High || m_sharedData.grassDensity != 0);
         }
         else if (data.type == SystemEvent::CrowdDensityChanged)

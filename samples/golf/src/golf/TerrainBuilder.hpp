@@ -98,7 +98,7 @@ public:
 
     bool getSlopeVisible() const;
 
-    void applyTreeQuality();
+    void applyTreeQuality(const std::vector<cro::Entity>& billboardCameras); //list of cameras which should apply billboard callback
 
     void applyCrowdDensity();
 
