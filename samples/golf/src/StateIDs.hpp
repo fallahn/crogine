@@ -54,7 +54,6 @@ struct StateID final
         Billiards,
         Trophy,
         News,
-        Bush,
         Playlist,
         MessageOverlay,
         Credits,
@@ -81,6 +80,11 @@ struct StateID final
         SBallBackground,
         SBallGame,
         SBallAttract,
+
+        EditorBush,
+        EditorHole,
+        EditorCourse,
+
 
         SQLite, //used for testing SQLite features
         Workshop = 1100,

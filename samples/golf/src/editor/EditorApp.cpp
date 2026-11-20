@@ -28,6 +28,8 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "BushState.hpp"
+#include "HoleState.hpp"
+#include "CourseState.hpp"
 #include "EditorApp.hpp"
 #include "../icon.hpp"
 #include "../ImTheme.hpp"
@@ -45,7 +47,9 @@ EditorApp::EditorApp()
 {
     setApplicationStrings("Trederia", "golf_editor");
 
-    m_stateStack.registerState<BushState>(StateID::Bush, m_sharedData);
+    m_stateStack.registerState<BushState>(StateID::EditorBush, m_sharedData);
+    m_stateStack.registerState<HoleState>(StateID::EditorHole, m_sharedData);
+    m_stateStack.registerState<CourseState>(StateID::EditorCourse, m_sharedData);
 }
 
 //public
@@ -90,7 +94,6 @@ void EditorApp::render()
 
 bool EditorApp::initialise()
 {
-    getWindow().setTitle("Super Video Golf - Editor");
     getWindow().setIcon(icon);
 
     //check mount directories
@@ -127,7 +130,7 @@ bool EditorApp::initialise()
 
     applyImGuiStyle(m_sharedData);
 
-    m_stateStack.pushState(StateID::Bush);
+    m_stateStack.pushState(StateID::EditorHole);
 
     return true;
 }

@@ -2,5 +2,7 @@
 set(EDITOR_SRC
   ${PROJECT_DIR}/editor/BushState.cpp
   ${PROJECT_DIR}/editor/BushStateWindows.cpp
+  ${PROJECT_DIR}/editor/CourseState.cpp
   ${PROJECT_DIR}/editor/EditorApp.cpp
-  ${PROJECT_DIR}/editor/GrassProcessing.cpp)
+  ${PROJECT_DIR}/editor/GrassProcessing.cpp
+  ${PROJECT_DIR}/editor/HoleState.cpp)

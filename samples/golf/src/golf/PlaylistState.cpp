@@ -358,7 +358,7 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
             //break;
 #ifdef CRO_DEBUG_
         case SDLK_F9:
-            requestStackPush(StateID::Bush);
+            requestStackPush(StateID::EditorBush);
             break;
         case SDLK_KP_0:
             confirmSave();

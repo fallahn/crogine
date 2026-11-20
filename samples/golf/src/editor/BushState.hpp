@@ -58,7 +58,7 @@ public:
     BushState(cro::StateStack&, cro::State::Context, const SharedStateData&);
     ~BushState() = default;
 
-    cro::StateID getStateID() const override { return StateID::Bush; }
+    cro::StateID getStateID() const override { return StateID::EditorBush; }
 
     bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
@@ -238,6 +238,8 @@ private:
             Palette, Texture,
 
             Quit, //used as return value from save dialogue to quit rather than show open dialogue
+            CourseEditor,
+            HoleEditor,
             None
         };
     };

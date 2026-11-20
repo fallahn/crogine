@@ -87,6 +87,8 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context, const 
     m_saveDialogueState         (SaveDialogueState::None),
     m_saveFileBrowser           (ImGuiFileBrowserFlags_CloseOnEsc | ImGuiFileBrowserFlags_CreateNewDir | ImGuiFileBrowserFlags_ConfirmOnEnter | ImGuiFileBrowserFlags_EnterNewFilename)
 {
+    cro::App::getWindow().setTitle("Super Video Golf - Treeset Editor");
+
     context.mainWindow.loadResources([this]() {
         addSystems();
         loadAssets();
@@ -129,32 +131,32 @@ bool BushState::handleEvent(const cro::Event& evt)
 
     if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.key)
-        {
-        default: break;
-        case SDLK_BACKSPACE:
-        case SDLK_ESCAPE:
-        {
-            auto entity = m_gameScene.createEntity();
-            entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().setUserData<float>(0.f);
-            entity.getComponent<cro::Callback>().function =
-                [&](cro::Entity e, float dt)
-            {
-                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-                currTime = std::min(1.f, currTime + (dt * 2.f));
+        //switch (evt.key.key)
+        //{
+        //default: break;
+        //case SDLK_BACKSPACE:
+        //case SDLK_ESCAPE:
+        //{
+        //    auto entity = m_gameScene.createEntity();
+        //    entity.addComponent<cro::Callback>().active = true;
+        //    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+        //    entity.getComponent<cro::Callback>().function =
+        //        [&](cro::Entity e, float dt)
+        //    {
+        //        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        //        currTime = std::min(1.f, currTime + (dt * 2.f));
 
-                cro::AudioMixer::setPrefadeVolume(currTime, MixerChannel::Vehicles);
+        //        cro::AudioMixer::setPrefadeVolume(currTime, MixerChannel::Vehicles);
 
-                if (currTime == 1)
-                {
-                    requestStackPop();
-                    e.getComponent<cro::Callback>().active = false;
-                }
-            };
-        }
-            break;
-        }
+        //        if (currTime == 1)
+        //        {
+        //            requestStackPop();
+        //            e.getComponent<cro::Callback>().active = false;
+        //        }
+        //    };
+        //}
+        //    break;
+        //}
 
         switch (evt.key.scancode)
         {

@@ -86,21 +86,44 @@ void BushState::drawMenuBar(bool*)
             ImGui::Separator();
             if (ImGui::MenuItem("Quit"))
             {
-                if (getStateCount() == 1)
+                if (!cro::FileSystem::showMessageBox("Save Settings", "Do you want to save the current treeset first?", cro::FileSystem::YesNo))
                 {
-                    if (!cro::FileSystem::showMessageBox("Save Settings", "Do you want to save the current treeset first?", cro::FileSystem::YesNo))
-                    {
-                        cro::App::quit();
-                    }
-                    else
-                    {
-                        showPresetSaveDialogue(OpenDialogueState::Quit);
-                    }
+                    cro::App::quit();
                 }
                 else
                 {
-                    requestStackPop();
-                    Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
+                    showPresetSaveDialogue(OpenDialogueState::Quit);
+                }
+            }
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Edit"))
+        {
+            if (ImGui::MenuItem("Hole Editor"))
+            {
+                if (!cro::FileSystem::showMessageBox("Save Settings", "Do you want to save the current treeset first?", cro::FileSystem::YesNo))
+                {
+                    requestStackClear();
+                    requestStackPush(StateID::EditorHole);
+                }
+                else
+                {
+                    showPresetSaveDialogue(OpenDialogueState::HoleEditor);
+                }
+            }
+
+            if (ImGui::MenuItem("Course Editor"))
+            {
+                if (!cro::FileSystem::showMessageBox("Save Settings", "Do you want to save the current treeset first?", cro::FileSystem::YesNo))
+                {
+                    requestStackClear();
+                    requestStackPush(StateID::EditorCourse);
+                }
+                else
+                {
+                    showPresetSaveDialogue(OpenDialogueState::CourseEditor);
                 }
             }
 
@@ -850,6 +873,14 @@ void BushState::handleFileDialogues()
                 break;
             case OpenDialogueState::Quit:
                 cro::App::quit();
+                break;
+            case OpenDialogueState::CourseEditor:
+                requestStackClear();
+                requestStackPush(StateID::EditorCourse);
+                break;
+            case OpenDialogueState::HoleEditor:
+                requestStackClear();
+                requestStackPush(StateID::EditorHole);
                 break;
             }
             m_pendingDialogueState = OpenDialogueState::None;

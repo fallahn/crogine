@@ -759,6 +759,12 @@
     <ClCompile Include="src\editor\BushStateWindows.cpp">
       <Filter>Source Files\editor</Filter>
     </ClCompile>
+    <ClCompile Include="src\editor\CourseState.cpp">
+      <Filter>Source Files\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\editor\HoleState.cpp">
+      <Filter>Source Files\editor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -1569,6 +1575,15 @@
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
     <ClInclude Include="src\editor\BushStateConsts.hpp">
+      <Filter>Header Files\editor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\editor\EditorUtils.hpp">
+      <Filter>Header Files\editor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\editor\CourseState.hpp">
+      <Filter>Header Files\editor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\editor\HoleState.hpp">
       <Filter>Header Files\editor</Filter>
     </ClInclude>
   </ItemGroup>
