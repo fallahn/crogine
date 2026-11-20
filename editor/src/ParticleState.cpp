@@ -70,6 +70,7 @@ ParticleState::ParticleState(cro::StateStack& ss, cro::State::Context ctx, Share
     m_particleSettings  (nullptr),
     m_selectedBlendMode (0),
     m_showPreferences   (false),
+    m_openFolderDialogue(ImGuiFileBrowserFlags_CloseOnEsc | ImGuiFileBrowserFlags_SelectDirectory | ImGuiFileBrowserFlags_HideRegularFiles | ImGuiFileBrowserFlags_ConfirmOnEnter),
     m_showRenderer      (false),
     m_renderFOV         (0.5f),
     m_renderFrameRate   (6.f)

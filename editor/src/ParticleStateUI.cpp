@@ -577,12 +577,18 @@ void ParticleState::drawOptions()
             ImGui::SameLine();
             if (ImGui::Button("Browse"))
             {
-                const auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
-                if (!path.empty())
-                {
-                    m_sharedData.workingDirectory = path;
-                    //std::replace(m_sharedData.workingDirectory.begin(), m_sharedData.workingDirectory.end(), '\\', '/');
-                }
+                m_openFolderDialogue.SetPwd(m_sharedData.workingDirectory.empty() ? std::filesystem::current_path() : m_sharedData.workingDirectory);
+                m_openFolderDialogue.SetTitle("Choose Working Directory");
+                m_openFolderDialogue.Open();
+            }
+
+            m_openFolderDialogue.Display();
+            if (m_openFolderDialogue.IsOpened()
+                && m_openFolderDialogue.HasSelected())
+            {
+                m_sharedData.workingDirectory = m_openFolderDialogue.GetSelected();
+                m_openFolderDialogue.ClearSelected();
+                m_openFolderDialogue.Close();
             }
 
             ImGui::NewLine();

@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/gui/GuiClient.hpp>
+#include <crogine/gui/Gui.hpp>
 #include <crogine/graphics/TextureResource.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/Palette.hpp>
@@ -85,6 +86,7 @@ private:
     using SpritePair = std::pair<const std::string, cro::Sprite>;
     SpritePair* m_activeSprite;
 
+    ImGui::FileBrowser m_openFolderDialogue;
     bool m_showPreferences;
     bool m_showNewSprite;
     bool m_showPalette;

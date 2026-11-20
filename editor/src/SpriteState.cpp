@@ -43,8 +43,6 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
-#include <crogine/gui/Gui.hpp>
-
 namespace
 {
 	bool dragEnabled = false;
@@ -56,6 +54,7 @@ SpriteState::SpriteState(cro::StateStack& stack, cro::State::Context ctx, Shared
 	m_sharedData		(sd),
 	m_scene				(ctx.appInstance.getMessageBus()),
 	m_activeSprite		(nullptr),
+	m_openFolderDialogue(ImGuiFileBrowserFlags_CloseOnEsc | ImGuiFileBrowserFlags_SelectDirectory | ImGuiFileBrowserFlags_HideRegularFiles | ImGuiFileBrowserFlags_ConfirmOnEnter),
 	m_showPreferences	(false),
 	m_showNewSprite		(false),
 	m_showPalette		(true)

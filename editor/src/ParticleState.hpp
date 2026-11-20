@@ -139,6 +139,7 @@ private:
     cro::Texture m_texture;
 
     bool m_showPreferences;
+    ImGui::FileBrowser m_openFolderDialogue;
 
     static constexpr float RenderNear = 1.f;
     static constexpr float RenderFar = 9.f;
