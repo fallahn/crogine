@@ -98,6 +98,7 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context, Shar
     m_openDialogueState     (OpenDialogueState::None),
     m_saveFileBrowser       (ImGuiFileBrowserFlags_CloseOnEsc | ImGuiFileBrowserFlags_CreateNewDir | ImGuiFileBrowserFlags_ConfirmOnEnter | ImGuiFileBrowserFlags_EnterNewFilename),
     m_saveDialogueState     (SaveDialogueState::None),
+    m_openFolderDialogue    (ImGuiFileBrowserFlags_CloseOnEsc | ImGuiFileBrowserFlags_SelectDirectory | ImGuiFileBrowserFlags_HideRegularFiles | ImGuiFileBrowserFlags_ConfirmOnEnter),
     m_skeletonMeshID        (0),
     m_transformUpdated      (false),
     m_browseGLTF            (false),

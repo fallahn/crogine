@@ -166,6 +166,10 @@ private:
     void showSaveFileDialogue(std::int32_t);
     void handleSaveFileDialogue();
 
+    ImGui::FileBrowser m_openFolderDialogue;
+    void showOpenFolderDialogue();
+    void handleOpenFolderDialogue();
+
     struct ExportOptions final
     {
         bool modelOnly = false;

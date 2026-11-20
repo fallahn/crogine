@@ -572,6 +572,22 @@ void ModelState::handleSaveFileDialogue()
     }
 }
 
+void ModelState::showOpenFolderDialogue()
+{
+    m_openFolderDialogue.SetPwd(m_sharedData.workingDirectory.empty() ? std::filesystem::current_path() : m_sharedData.workingDirectory);
+    m_openFolderDialogue.SetTitle("Set Working Directory");
+    m_openFolderDialogue.Open();
+}
+
+void ModelState::handleOpenFolderDialogue()
+{
+    if (m_openFolderDialogue.HasSelected())
+    {
+        m_sharedData.workingDirectory = m_openFolderDialogue.GetSelected();
+        m_openFolderDialogue.ClearSelected();
+    }
+}
+
 void ModelState::buildUI()
 {
     for (auto& [s, i] : m_combinedImages)
@@ -806,11 +822,12 @@ void ModelState::buildUI()
                     ImGui::SameLine();
                     if (ImGui::Button("Browse"))
                     {
-                        const auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
+                        /*const auto path = cro::FileSystem::openFolderDialogue(m_sharedData.workingDirectory);
                         if (!path.empty())
                         {
                             m_sharedData.workingDirectory = path;
-                        }
+                        }*/
+                        showOpenFolderDialogue();
                     }
 
                     //ImGui::PushItemWidth(100.f);
@@ -943,6 +960,12 @@ void ModelState::buildUI()
             if (m_saveFileBrowser.IsOpened())
             {
                 handleSaveFileDialogue();
+            }
+
+            m_openFolderDialogue.Display();
+            if (m_openFolderDialogue.IsOpened())
+            {
+                handleOpenFolderDialogue();
             }
 
             if (m_showImageCombiner)
