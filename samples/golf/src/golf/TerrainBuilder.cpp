@@ -518,6 +518,10 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         auto bbe = createBillboardEnt();
         if (bbe.hasComponent<cro::Model>())
         {
+            //bbe.getComponent<cro::BillboardCollection>().setChunkSize(50);
+            //hmmm we don't have access to cameras here to set the relevant callbacks...
+            //bbe.getComponent<cro::BillboardCollection>().setDrawListCallback(scene.getActiveCamera(), cro::DefaultBillboardCallback(0.5f, 30.f));
+
             m_billboardEntities[b] = bbe;
         }
         //these have billboarded trees used for flight cam and when

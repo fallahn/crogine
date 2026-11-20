@@ -138,7 +138,7 @@ void MultidrawState::createScene()
         board.position.y = cro::Util::Random::value(-1.f, 1.f);
         board.position.z = p[1];
     }
-    bbEnt.getComponent<cro::BillboardCollection>().setChunkSize(3);
+    bbEnt.getComponent<cro::BillboardCollection>().setChunkSize(2);
 
 
 
@@ -196,84 +196,84 @@ void MultidrawState::createScene()
 
 
     //use this camera's drawlist to set the billboard collection culling func
-    //bbc.setDrawListCallback(camEnt, [this, sphereEnt](cro::Entity camera, cro::Entity parent)
-    //    {
-    //        const auto inverseTx = glm::inverse(parent.getComponent<cro::Transform>().getWorldTransform());
+    bbc.setDrawListCallback(camEnt, [this, sphereEnt](cro::Entity camera, cro::Entity parent)
+        {
+            const auto inverseTx = glm::inverse(parent.getComponent<cro::Transform>().getWorldTransform());
 
-    //        //TODO this ought to be the camera pos, we just want to visualise the cube as a camera
-    //        const auto camTx = inverseTx * m_overheadCam.getComponent<cro::Transform>().getWorldTransform();
-    //        const auto testPos = glm::vec3(camTx[3]);
+            //TODO this ought to be the camera pos, we just want to visualise the cube as a camera
+            const auto camTx = inverseTx * m_overheadCam.getComponent<cro::Transform>().getWorldTransform();
+            const auto testPos = glm::vec3(camTx[3]);
 
-    //        //calc AABB of frustum - use this to only test the chunks which fall into its grid area
-    //        glm::vec3 minPos(std::numeric_limits<float>::max());
-    //        glm::vec3 maxPos(std::numeric_limits<float>::lowest());
-    //        const auto& corners = m_overheadCam.getComponent<cro::Camera>().getFrustumCorners();
+            //calc AABB of frustum - use this to only test the chunks which fall into its grid area
+            glm::vec3 minPos(std::numeric_limits<float>::max());
+            glm::vec3 maxPos(std::numeric_limits<float>::lowest());
+            const auto& corners = m_overheadCam.getComponent<cro::Camera>().getFrustumCorners();
 
-    //        for (const auto& c : corners)
-    //        {
-    //            const auto p = camTx * c;
-    //            minPos.x = std::min(minPos.x, p.x);
-    //            minPos.y = std::min(minPos.y, p.y);
-    //            minPos.z = std::min(minPos.z, p.z);
+            for (const auto& c : corners)
+            {
+                const auto p = camTx * c;
+                minPos.x = std::min(minPos.x, p.x);
+                minPos.y = std::min(minPos.y, p.y);
+                minPos.z = std::min(minPos.z, p.z);
 
-    //            maxPos.x = std::max(maxPos.x, p.x);
-    //            maxPos.y = std::max(maxPos.y, p.y);
-    //            maxPos.z = std::max(maxPos.z, p.z);
-    //        }
+                maxPos.x = std::max(maxPos.x, p.x);
+                maxPos.y = std::max(maxPos.y, p.y);
+                maxPos.z = std::max(maxPos.z, p.z);
+            }
 
-    //        auto& bbc = parent.getComponent<cro::BillboardCollection>();
-    //        minPos += glm::vec3(bbc.getChunkSize()*2.f);
-    //        maxPos += glm::vec3(bbc.getChunkSize()*2.f);
+            auto& bbc = parent.getComponent<cro::BillboardCollection>();
+            minPos += glm::vec3(bbc.getChunkSize()*2.f);
+            maxPos += glm::vec3(bbc.getChunkSize()*2.f);
 
-    //        const auto coordStart = bbc.getChunkCoordStart();
-    //        const auto relPos = glm::vec2(minPos.x, minPos.z) - coordStart;
-    //        const auto xPos = static_cast<std::int32_t>(std::floor(relPos.x / bbc.getChunkSize()));
-    //        const auto yPos = static_cast<std::int32_t>(std::floor(relPos.y / bbc.getChunkSize()));
+            const auto coordStart = bbc.getChunkCoordStart();
+            const auto relPos = glm::vec2(minPos.x, minPos.z) - coordStart;
+            const auto xPos = static_cast<std::int32_t>(std::floor(relPos.x / bbc.getChunkSize()));
+            const auto yPos = static_cast<std::int32_t>(std::floor(relPos.y / bbc.getChunkSize()));
 
-    //        const auto GridSizeX = static_cast<std::int32_t>(std::floor((maxPos.x - minPos.x) / bbc.getChunkSize()));
-    //        const auto startX = std::max(0, xPos);
-    //        const auto endX = std::min(bbc.getChunkCount().x, std::uint32_t(xPos + GridSizeX));
+            const auto GridSizeX = static_cast<std::int32_t>(std::floor((maxPos.x - minPos.x) / bbc.getChunkSize()));
+            const auto startX = std::max(0, xPos);
+            const auto endX = std::min(bbc.getChunkCount().x, std::uint32_t(xPos + GridSizeX));
 
-    //        const auto GridSizeY = static_cast<std::int32_t>(std::floor((maxPos.z - minPos.z) / bbc.getChunkSize()));
-    //        const auto startY = std::max(0, yPos);
-    //        const auto endY = std::min(bbc.getChunkCount().y, std::uint32_t(yPos + GridSizeY));
+            const auto GridSizeY = static_cast<std::int32_t>(std::floor((maxPos.z - minPos.z) / bbc.getChunkSize()));
+            const auto startY = std::max(0, yPos);
+            const auto endY = std::min(bbc.getChunkCount().y, std::uint32_t(yPos + GridSizeY));
 
-    //        auto& drawList = bbc.getDrawList(camera.getComponent<cro::Camera>().getDrawListIndex());
-    //        drawList.clear();
+            auto& drawList = bbc.getDrawList(camera.getComponent<cro::Camera>().getDrawListIndex());
+            drawList.clear();
 
-    //        const auto& mesh = parent.getComponent<cro::Model>().getMeshData();
+            const auto& mesh = parent.getComponent<cro::Model>().getMeshData();
 
-    //        //min / max draw distances
-    //        static constexpr float MinDist = 1.f;
-    //        static constexpr float MaxDist = 10.f;
-    //        static constexpr float MinDist2 = MinDist * MinDist;
-    //        static constexpr float MaxDist2 = MaxDist * MaxDist;
+            //min / max draw distances
+            static constexpr float MinDist = 1.f;
+            static constexpr float MaxDist = 10.f;
+            static constexpr float MinDist2 = MinDist * MinDist;
+            static constexpr float MaxDist2 = MaxDist * MaxDist;
 
-    //        for (auto y = startY; y < endY; ++y)
-    //        {
-    //            for (auto x = startX; x < endX; ++x)
-    //            {
-    //                const auto idx = (y * bbc.getChunkCount().x) + x;
-    //                const auto& chunk = bbc.getChunkIndices()[idx];
+            for (auto y = startY; y < endY; ++y)
+            {
+                for (auto x = startX; x < endX; ++x)
+                {
+                    const auto idx = (y * bbc.getChunkCount().x) + x;
+                    const auto& chunk = bbc.getChunkIndices()[idx];
 
-    //                const glm::vec3 centre = 
-    //                    glm::vec3(coordStart.x + (x * bbc.getChunkSize()) , 
-    //                                chunk.meanHeight, 
-    //                                coordStart.y + (y * bbc.getChunkSize())) + glm::vec3(bbc.getChunkSize() / 2.f);
+                    const glm::vec3 centre = 
+                        glm::vec3(coordStart.x + (x * bbc.getChunkSize()) , 
+                                    chunk.meanHeight, 
+                                    coordStart.y + (y * bbc.getChunkSize())) + glm::vec3(bbc.getChunkSize() / 2.f);
 
-    //                const auto dir = centre - testPos;
-    //                if (const auto len2 = glm::length2(dir); len2 < MaxDist2 && len2 > MinDist2)
-    //                {
-    //                    //const float hFOV = std::tan(cam.getFOV() / 2.f) * cam.getAspectRatio();
-    //                    const float hFOV = 0.5f; //nice idea but a) assumes horizontal is widest axis b) doesn't account for AABB overlap
-    //                    //if (const auto d = glm::dot(glm::normalize(dir), cro::Util::Matrix::getForwardVector(camTx)); d > hFOV)
-    //                    {
-    //                        drawList.addChunk(mesh, chunk);
-    //                    }
-    //                }
-    //            }
-    //        }
-    //    });
+                    const auto dir = centre - testPos;
+                    if (const auto len2 = glm::length2(dir); len2 < MaxDist2 && len2 > MinDist2)
+                    {
+                        //const float hFOV = std::tan(cam.getFOV() / 2.f) * cam.getAspectRatio();
+                        const float hFOV = 0.5f; //nice idea but a) assumes horizontal is widest axis b) doesn't account for AABB overlap
+                        //if (const auto d = glm::dot(glm::normalize(dir), cro::Util::Matrix::getForwardVector(camTx)); d > hFOV)
+                        {
+                            drawList.addChunk(mesh, chunk);
+                        }
+                    }
+                }
+            }
+        });
 
 
     const auto tx = glm::lookAt({ 0.f, 4.f, 11.f }, { 0.f,  0.f, 0.f }, cro::Transform::Y_AXIS);
@@ -306,7 +306,7 @@ void MultidrawState::createScene()
 
     bbc.setDrawListCallback(entity, cro::DefaultBillboardCallback(1.f, 50.f));
 
-    m_overheadTexture.create(240, 240);
+    m_overheadTexture.create(400, 400);
     m_overheadQuad.setTexture(m_overheadTexture.getTexture());
     m_overheadQuad.setPosition({ 10.f, 10.f });
 

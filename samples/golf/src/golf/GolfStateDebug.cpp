@@ -897,6 +897,19 @@ void GolfState::registerDebugCommands()
 
 void GolfState::registerDebugWindows()
 {
+    registerWindow([this]()
+        {
+            const auto cam = m_gameScene.getActiveCamera();
+            if (m_photoMode &&
+                cam != m_freeCam)
+            {
+                ImGui::Begin("Free Camera");
+                ImGui::Text("Please tell the dev:");
+                ImGui::Text("Active camera is [%s] but free-cam is ACTIVE!", CameraStrings[m_currentCamera].c_str());
+                ImGui::End();
+            }
+        });
+
 #ifdef SKY_PICKER
     registerWindow([&]()
         {

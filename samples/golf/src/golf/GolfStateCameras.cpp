@@ -1064,7 +1064,12 @@ void GolfState::applyShadowQuality()
 
 void GolfState::updateSkybox(float dt)
 {
-    auto activeCam = m_photoMode ? m_freeCam : m_cameras[m_currentCamera];
+    //hmm there are cases in multiplayer when photmode can remain
+    //active even when the game has switched back to a player view
+    //this may cover up the effects - so WE NEED TO FIX IT!!
+
+    //const auto activeCam = m_photoMode ? m_freeCam : m_cameras[m_currentCamera];
+    const auto activeCam = m_gameScene.getActiveCamera();
 
     const auto& srcCam = activeCam.getComponent<cro::Camera>();
     auto& dstCam = m_skyCameras[SkyCam::Main].getComponent<cro::Camera>();

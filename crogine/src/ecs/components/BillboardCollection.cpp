@@ -104,7 +104,7 @@ void DefaultBillboardCallback::operator()(Entity camera, Entity parent)
     }
 
     auto& bbc = parent.getComponent<cro::BillboardCollection>();
-    const auto BoundsPadding = glm::vec3(bbc.getChunkSize());
+    const auto BoundsPadding = glm::vec3(bbc.getChunkSize() * 1.5f);
     minPos -= BoundsPadding;
     maxPos += BoundsPadding;
 

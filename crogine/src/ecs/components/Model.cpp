@@ -826,9 +826,13 @@ void Model::DrawMulti::operator()(std::int32_t matID, std::int32_t pass) const
 
     const auto& indexData = m_model.m_meshData.indexData[matID];
 
-    glCheck(glBindVertexArray(m_model.m_vaos[matID][pass]));
-    glCheck(glMultiDrawElements(static_cast<GLenum>(indexData.primitiveType), m_model.m_indexSizeArray,
-        static_cast<GLenum>(indexData.format), m_model.m_indexOffsetArray, m_model.m_indexDrawCount));
+    //no point binding or issuing useless draw calls
+    if (m_model.m_indexDrawCount)
+    {
+        glCheck(glBindVertexArray(m_model.m_vaos[matID][pass]));
+        glCheck(glMultiDrawElements(static_cast<GLenum>(indexData.primitiveType), m_model.m_indexSizeArray,
+            static_cast<GLenum>(indexData.format), m_model.m_indexOffsetArray, m_model.m_indexDrawCount));
+    }
 }
 
 #endif //DESKTOP

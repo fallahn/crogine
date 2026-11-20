@@ -385,35 +385,39 @@ void BillboardSystem::updateDrawList(Entity camera)
 
     for (auto entity : getEntities())
     {
-        auto& bbc = entity.getComponent<BillboardCollection>();
-        if (index >= bbc.m_drawLists.size())
+        const auto& model = entity.getComponent<Model>();
+        //if (!model.isHidden())
         {
-            bbc.m_drawLists.resize(index + 1);
-            bbc.m_drawLists[index].resize(bbc.m_chunkCount.x * bbc.m_chunkCount.y);
+            auto& bbc = entity.getComponent<BillboardCollection>();
+            if (index >= bbc.m_drawLists.size())
+            {
+                bbc.m_drawLists.resize(index + 1);
+                bbc.m_drawLists[index].resize(bbc.m_chunkCount.x * bbc.m_chunkCount.y);
 
-            bbc.m_cameraCallbacks.resize(index + 1);
-        }
+                bbc.m_cameraCallbacks.resize(index + 1);
+            }
 
-        //do custom culling if found
-        if (bbc.m_cameraCallbacks[index]
-            && !bbc.m_chunkIndices.empty()) //*sigh* this is probably only ever needed for one frame
-        {
-            //TODO do we know if this is a shadow pass here? Probably query camera for active pass
-            bbc.m_cameraCallbacks[index](camera, entity);
-        }
-        else
-        {
-            //just draw everything
-            const auto& model = entity.getComponent<Model>();
-            const auto& meshData = model.getMeshData();
+            //do custom culling if found
+            if (!model.isHidden()
+                && bbc.m_cameraCallbacks[index]
+                && !bbc.m_chunkIndices.empty()) //*sigh* this is probably only ever needed for one frame
+            {
+                //TODO do we know if this is a shadow pass here? Probably query camera for active pass
+                bbc.m_cameraCallbacks[index](camera, entity);
+            }
+            else
+            {
+                //just draw everything
+                const auto& meshData = model.getMeshData();
 
-            auto& drawlist = bbc.m_drawLists[index];
-            drawlist.clear();
-            drawlist.resize(1);
+                auto& drawlist = bbc.m_drawLists[index];
+                drawlist.clear();
+                drawlist.resize(1); //hmm should we be resizing every frame?
 
-            drawlist.m_indexOffsetArray[0] = (reinterpret_cast<void*>(meshData.indexData[0].iboAllocation.offset));
-            drawlist.m_indexSizeArray[0] = (static_cast<GLsizei>(meshData.indexData[0].indexCount));
-            drawlist.m_size = 1;
+                drawlist.m_indexOffsetArray[0] = (reinterpret_cast<void*>(meshData.indexData[0].iboAllocation.offset));
+                drawlist.m_indexSizeArray[0] = (static_cast<GLsizei>(meshData.indexData[0].indexCount));
+                drawlist.m_size = 1;
+            }
         }
     }
 }
@@ -425,14 +429,24 @@ void BillboardSystem::render(Entity camera, const RenderTarget&)
     for (auto entity : getEntities())
     {
         auto& model = entity.getComponent<Model>();
-        const auto& meshData = model.getMeshData();
+        if (!model.isHidden())
+        {
+            const auto& meshData = model.getMeshData();
 
-        const auto& bbc = entity.getComponent<BillboardCollection>();
-        const auto& drawlist = bbc.m_drawLists[index];
+            const auto& bbc = entity.getComponent<BillboardCollection>();
 
-        model.m_indexDrawCount = static_cast<GLsizei>(drawlist.m_size);
-        model.m_indexOffsetArray = drawlist.m_indexOffsetArray.data();
-        model.m_indexSizeArray = drawlist.m_indexSizeArray.data();
-        //assert(model.m_indexDrawCount == drawlist.indexSizeArray.size());
+            //TODO find out why this happens and fix it instead of hacking around it
+            //*probably* because the camera gets set active after the first call to
+            //updateDrawList()
+            if (index < bbc.m_drawLists.size())
+            {
+                const auto& drawlist = bbc.m_drawLists[index];
+
+                model.m_indexDrawCount = static_cast<GLsizei>(drawlist.m_size);
+                model.m_indexOffsetArray = drawlist.m_indexOffsetArray.data();
+                model.m_indexSizeArray = drawlist.m_indexSizeArray.data();
+                //assert(model.m_indexDrawCount == drawlist.indexSizeArray.size());
+            }
+        }
     }
 }
