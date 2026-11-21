@@ -140,7 +140,7 @@ void Camera::setPerspective(float fov, float aspect, float nearPlane, float farP
         && shadowMapBuffer.getLayerCount() != numSplits)
     {
         const auto size = shadowMapBuffer.getSize();
-        shadowMapBuffer.create(size.x, size.y, numSplits);
+        shadowMapBuffer.create(size.x, size.y);
     }
 }
 
@@ -189,7 +189,7 @@ void Camera::setOrthographic(float left, float right, float bottom, float top, f
         && shadowMapBuffer.getLayerCount() != numSplits)
     {
         auto size = shadowMapBuffer.getSize();
-        shadowMapBuffer.create(size.x, size.y, numSplits);
+        shadowMapBuffer.create(size.x, size.y);
     }
 
     //const float splitSize = (m_maxShadowDistance - nearPlane) / numSplits;

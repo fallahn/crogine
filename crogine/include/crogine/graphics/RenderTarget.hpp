@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2025
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -159,6 +159,13 @@ namespace cro
 
     private:
         friend class Window;
+
+        FloatRect m_view;
+        IntRect m_viewport;
+        std::array<std::int32_t, 4u> m_previousViewport;
+
+        glm::mat4 m_projectionMatrix = glm::mat4(1.f);
+
         //this is always set to true/false based on setActive()
         //however the window is a special case which sets this
         //manually so we know if we need to restore the frame
@@ -166,11 +173,6 @@ namespace cro
         bool m_inUse = false;
         bool m_restorePrevious = false;
 
-        FloatRect m_view;
-        IntRect m_viewport;
-        std::array<std::int32_t, 4u> m_previousViewport;
-
-        glm::mat4 m_projectionMatrix = glm::mat4(1.f);
 
         //used to track the active render target. This only works as
         //long as there's only one window/context active - else we

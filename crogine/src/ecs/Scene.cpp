@@ -640,6 +640,11 @@ void Scene::updateDrawLists(Entity camera)
     CRO_ASSERT(camera.hasComponent<Camera>(), "Camera component missing!");
     CRO_ASSERT(m_entityManager.owns(camera), "This entity must belong to this scene!");
 
+    /*
+    BE AWARE this can be called multiple times for a long update time
+    before render() is called - so be careful if these systems create
+    copies of cameras for their draw list - you may end up with many duplicates!!
+    */
     for (auto r : m_renderables)
     {
         r->updateDrawList(camera);

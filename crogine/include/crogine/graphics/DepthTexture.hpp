@@ -123,8 +123,14 @@ namespace cro
         */
         std::uint32_t getLayerCount() const { return m_layerCount; }
 
+
+        /*!
+        \brief Returns the memory usage, in bytes, based on the size, depth and format of the texture
+        Note that this is only an estimation and not necessarily what's committed to VRAM
+        */
+        std::uint32_t getMemoryUsage() const { return m_memorySize; }
+
     private:
-        bool m_depthOnly;
         std::uint32_t m_fboID;
         std::uint32_t m_depthID;
         std::uint32_t m_colourID;
@@ -132,6 +138,7 @@ namespace cro
 
         glm::uvec2 m_size;
         std::uint32_t m_layerCount;
+        std::uint32_t m_memorySize;
 
         std::array<float, 4u> m_lastClearColour = {};
         std::uint32_t getFrameBufferID() const override { return m_fboID; }
@@ -141,6 +148,7 @@ namespace cro
 #ifndef __APPLE__
         std::vector<std::uint32_t> m_layerHandles;
 #endif
+        bool m_depthOnly;
         void updateHandles();
 
     };

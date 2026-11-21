@@ -373,12 +373,14 @@ namespace cro
         */
         bool active = true;
 
+
         /*!
         \brief Returns true if the Camera was actived this frame
         Useful for cases where eg, a shadow map requires an immediate update.
         Only valid during Renderable::updateDrawList()
         */
         bool activatedThisFrame() const { return active && !m_lastActive; }
+
 
         /*!
         \brief If this camera is in a static Scene then this can be set to true.
@@ -414,7 +416,6 @@ namespace cro
         RenderTexture refractionBuffer;
 
 
-
         /*
         \brief Depth map buffer used for rendering directional shadow maps.
         This must first be explicitly created at the desired resolution
@@ -437,15 +438,10 @@ namespace cro
             /*!
             \brief Used by ShadowMapRenderer to assign a depthmap texture so
             that it can be recycled between multiple cameras
-            NOTE layers is ignored and read directly from Camera::getCascadeCount()
-            and left here only for backwards compatibility (ie I'm lazy)
             */
-            void create(std::uint32_t width, std::uint32_t height, std::uint32_t = 1)
+            void create(std::uint32_t width, std::uint32_t height)
             {
                 m_size = { width, height };
-                //this is actually set by the ShadowMap renderer based on the camera's cascade count
-                //we've left the func param for compatibility
-                //m_layers = layers; 
                 m_dirty = true;
             }
 
@@ -470,6 +466,7 @@ namespace cro
 
             std::int32_t m_resourceIndex = -1;
             bool m_dirty = false; //shadow map renderer should reassign map if this is true
+            bool m_pendingDraw = false; //if this is true it's already in the drawlist for rendering
         }shadowMapBuffer;
 #else
         RenderTexture shadowMapBuffer;

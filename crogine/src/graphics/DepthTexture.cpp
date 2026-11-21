@@ -34,13 +34,14 @@ source distribution.
 using namespace cro;
 
 DepthTexture::DepthTexture(bool d)
-    : m_depthOnly   (d),
-    m_fboID         (0),
+    : m_fboID       (0),
     m_depthID       (0),
     m_colourID      (0),
     m_returnTexture (0),
     m_size          (0,0),
-    m_layerCount    (0)
+    m_layerCount    (0),
+    m_memorySize    (0),
+    m_depthOnly     (d)
 {
 
 }
@@ -81,6 +82,7 @@ DepthTexture::DepthTexture(DepthTexture&& other) noexcept
     setViewport(other.getViewport());
     setView(other.getView());
     m_layerCount = other.m_layerCount;
+    m_memorySize = other.m_memorySize;
 
     other.m_fboID = 0;
     other.m_depthID = 0;
@@ -89,6 +91,7 @@ DepthTexture::DepthTexture(DepthTexture&& other) noexcept
     other.setViewport({ 0, 0, 0, 0 });
     other.setView({ 0.f, 0.f });
     other.m_layerCount = 0;
+    other.m_memorySize = 0;
 
 #ifndef __APPLE__
     m_layerHandles.swap(other.m_layerHandles);
@@ -133,6 +136,7 @@ DepthTexture& DepthTexture::operator=(DepthTexture&& other) noexcept
         setViewport(other.getViewport());
         setView(other.getView());
         m_layerCount = other.m_layerCount;
+        m_memorySize = other.m_memorySize;
 
         other.m_fboID = 0;
         other.m_depthID = 0;
@@ -141,6 +145,7 @@ DepthTexture& DepthTexture::operator=(DepthTexture&& other) noexcept
         other.setViewport({ 0, 0, 0, 0 });
         other.setView({ 0.f, 0.f });
         other.m_layerCount = 0;
+        other.m_memorySize = 0;
     }
     return *this;
 }
@@ -148,11 +153,12 @@ DepthTexture& DepthTexture::operator=(DepthTexture&& other) noexcept
 //public
 bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32_t layers)
 {
+
 #ifdef PLATFORM_MOBILE
     LogE << "Depth Textures are not available on mobile platforms" << std::endl;
     return false;
 #else
-    CRO_ASSERT(layers > 0, "");
+    CRO_ASSERT(width > 0 && height > 0 && layers > 0, "");
 
     if (width == m_size.x && height == m_size.y && layers == m_layerCount)
     {
@@ -160,12 +166,16 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
         return true;
     }
 
+    m_memorySize = 0;
+
     if (m_depthID)
     {
 #ifdef GL41
         //resize the buffer
         glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, m_depthID));
         glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT16, width, height, layers, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL));
+
+        m_memorySize = width * height * layers * sizeof(float);
 
         if (!m_depthOnly)
         {
@@ -175,6 +185,8 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
 
             glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, m_colourID));
             glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, width, height, layers, 0, GL_RG, /*GL_FLOAT*/GL_HALF_FLOAT, NULL));
+
+            m_memorySize += width * height * layers * sizeof(float) * 2;
         }
 
         setViewport({ 0, 0, static_cast<std::int32_t>(width), static_cast<std::int32_t>(height) });
@@ -217,6 +229,8 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
     glCheck(glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, borderColor));
     m_returnTexture = m_depthID;
 
+    m_memorySize = width * height * layers * sizeof(float);
+
     if (!m_depthOnly)
     {
         glCheck(glGenTextures(1, &m_colourID));
@@ -237,6 +251,8 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
         //glGenerateMipmap(GL_TEXTURE_2D_ARRAY); //this would need to be done every time the texture is rendered to...
 
         m_returnTexture = m_colourID;
+
+        m_memorySize += width * height * layers * sizeof(float) * 2;
     }
 
 
@@ -271,6 +287,10 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
         m_size = { width, height };
         m_layerCount = layers;
         updateHandles();
+    }
+    else
+    {
+        m_memorySize = 0;
     }
 
     return result;
