@@ -160,17 +160,14 @@ namespace cro
         std::vector<std::vector<std::vector<Drawable>>> m_drawLists;
 
         //buffer resource creates depthmaps for cameras currently in use
-        //eg if a camera is disable for a frame then another camera can use
+        //eg if a camera is disabled for a frame then another camera can use
         //the depthmap if it matches the requirements instead of creating
-        //a new one.
+        //a new one for itself.
         static constexpr std::size_t MaxDepthMaps = 8;
         struct BufferResource final
         {
-            //std::int32_t refcount = 0; //number of cameras this has been assigned to
             std::int32_t useCount = 0; //number of cameras using the resource *this frame*
-
             std::unique_ptr<DepthTexture> depthTexture;
-            //bool gc = false; //this only checks for garbage collection - it doesn't actually happen unless refcount is 0
         };
         std::array<BufferResource, MaxDepthMaps> m_bufferResources = {};
         std::vector<std::int32_t> m_bufferIndices;

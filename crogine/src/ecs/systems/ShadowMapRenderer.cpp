@@ -230,24 +230,6 @@ void ShadowMapRenderer::process(float)
         m_wantsRender = true;
     }
 
-    //check buffer resource for updated refs and remove any now at zero
-    //for (auto i = 0u; i< m_bufferResources.size(); ++i)
-    //{
-    //    auto& buff = m_bufferResources[i];
-    //    if (buff.gc
-    //        && buff.refcount == 0)
-    //    {
-    //        //remove the texture
-    //        buff.depthTexture.reset();
-
-    //        //mark index as free
-    //        m_bufferIndices.push_back(i);
-    //    }
-    //    buff.gc = false;
-    //    //ideally we want to early-out but we can't
-    //    //gaurantee unused resources are contiguous.
-    //}
-
     intervalCounter++;
 
 
@@ -268,8 +250,9 @@ void ShadowMapRenderer::process(float)
 void ShadowMapRenderer::updateDrawList(Entity camEnt)
 {
     //this gets called once for each Camera in the CameraSystem
-    //from CameraSystem::process() - so we'll check here if
-    //the camera should actually be updated in process(), above
+    //from CameraSystem::process() - although a large frame time
+    //might cause multiple updates before rendering has cleared
+    //the camera list!!!
     auto& camera = camEnt.getComponent<Camera>();
 
 
@@ -293,13 +276,6 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
             dmap.m_resourceIndex != -1)
         {
             m_bufferResources[dmap.m_resourceIndex].depthTexture->create(dmap.m_size.x, dmap.m_size.y, layerCount);
-
-            LogI << "Resized existing shadow map" << std::endl;
-            //m_bufferResources[dmap.m_resourceIndex].refcount--;
-
-            //mark the buffer as having its refcount changed - in process we use this to
-            //see if we should garbage collect any textures which are now not referenced
-            //m_bufferResources[dmap.m_resourceIndex].gc = true;
 
 //#ifndef GL41
 //            dmap.m_textureViews.clear();
@@ -335,10 +311,9 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         }
 
 
-        //then assign it and increase the ref count.
+        //then assign it and increase the use count.
         if (index != -1)
         {
-            //m_bufferResources[index].refcount++;
             m_bufferResources[index].useCount = 1;
             dmap.m_textureID = m_bufferResources[index].depthTexture->getTexture();
 
