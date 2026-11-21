@@ -284,22 +284,27 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
     auto& dmap = camera.shadowMapBuffer;
     if (dmap.m_dirty || (!dmap.m_pendingDraw && dmap.m_size.x))
     {
-        //check if we already has an assignment and remove it, decrementing ref count
-//        if (dmap.m_resourceIndex != -1)
-//        {
-//            m_bufferResources[dmap.m_resourceIndex].refcount--;
-//
-//            //mark the buffer as having its refcount changed - in process we use this to
-//            //see if we should garbage collect any textures which are now not referenced
-//            m_bufferResources[dmap.m_resourceIndex].gc = true;
-//
+        const auto layerCount = camera.getCascadeCount();
+        dmap.m_layers = layerCount; //set this so that it returns the correct value from getLayerCount()
+
+
+        //check if we already has an assignment resize it
+        if (dmap.m_dirty &&
+            dmap.m_resourceIndex != -1)
+        {
+            m_bufferResources[dmap.m_resourceIndex].depthTexture->create(dmap.m_size.x, dmap.m_size.y, layerCount);
+
+            LogI << "Resized existing shadow map" << std::endl;
+            //m_bufferResources[dmap.m_resourceIndex].refcount--;
+
+            //mark the buffer as having its refcount changed - in process we use this to
+            //see if we should garbage collect any textures which are now not referenced
+            //m_bufferResources[dmap.m_resourceIndex].gc = true;
+
 //#ifndef GL41
 //            dmap.m_textureViews.clear();
 //#endif
-//        }
-
-        const auto layerCount = camera.getCascadeCount();
-        dmap.m_layers = layerCount; //set this so that it returns the correct value from getLayerCount()
+        }
 
         //search the resource to see if we have and existing buffer we can use
         auto res = std::find_if(m_bufferResources.begin(), m_bufferResources.end(), 
@@ -344,8 +349,8 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 //            }
 //#endif
         }
-        dmap.m_resourceIndex = index; //assign this anyway if we didn't get one so we don't try rendering to it
         dmap.m_dirty = false;
+        dmap.m_resourceIndex = index; //assign this anyway if we didn't get one so we don't try rendering to it
     }
 
 
