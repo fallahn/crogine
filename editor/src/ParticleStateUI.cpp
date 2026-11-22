@@ -81,28 +81,18 @@ void ParticleState::drawMenuBar()
         {
             if (ImGui::MenuItem("New##Particle", nullptr, nullptr))
             {
-                confirmSave();
-
-                m_cameras[CameraID::ThreeDee].emitter.getComponent<cro::ParticleEmitter>().settings = {};
-
-                //make sure to save the 2D particles
-                auto& settings = m_cameras[CameraID::TwoDee].emitter.getComponent<cro::ParticleEmitter>().settings;
-                settings = {};
-                settings.acceleration *= TwoDeeScale;
-                settings.size *= TwoDeeScale;
-                settings.initialVelocity *= TwoDeeScale;
-                settings.gravity *= TwoDeeScale;
-
-                lastSavePath.clear();
+                if (!confirmSave(PostDialogueOption::NewPreset))
+                {
+                    newFile();
+                }
             }
 
             if (ImGui::MenuItem("Open##Particle", nullptr, nullptr))
             {
-                m_openFileBrowser.SetTypeFilters({ ".cps", ".xyp" });
-                m_openFileBrowser.SetTitle("Open Particle Preset");
-                m_openFileBrowser.SetPwd(m_lastPath.empty() ? std::filesystem::current_path() : m_lastPath);
-                m_openFileBrowser.Open();
-                m_openFileState = OpenFileState::Preset;
+                if (!confirmSave(PostDialogueOption::BrowsePreset))
+                {
+                    showOpenDialogue();
+                }
             }
 
             if (ImGui::MenuItem("Save##Particle", nullptr, nullptr))
@@ -113,24 +103,13 @@ void ParticleState::drawMenuBar()
                 }
                 else
                 {
-                    auto path = cro::FileSystem::saveFileDialogue(lastSavePath, "cps");
-                    if (!path.empty())
-                    {
-                        m_particleSettings->saveToFile(path);
-                        lastSavePath = path;
-                    }
+                    showSaveDialogue();
                 }
             }
 
             if (ImGui::MenuItem("Save As...##Particle", nullptr, nullptr))
             {
-                auto path = cro::FileSystem::saveFileDialogue(lastSavePath, "cps");
-                if (!path.empty())
-                {
-                    m_particleSettings->saveToFile(path);
-                    lastSavePath = path;
-                    m_history.add(lastSavePath);
-                }
+                showSaveDialogue();
             }
 
             const auto& items = m_history.getHistory();
@@ -152,7 +131,14 @@ void ParticleState::drawMenuBar()
                 //to do it mid-iteration is a Bad Thing.
                 if (!toOpen.empty())
                 {
-                    openFile(toOpen);
+                    if (!confirmSave(PostDialogueOption::LoadPreset))
+                    {
+                        openFile(toOpen);
+                    }
+                    else
+                    {
+                        m_pendingFile = toOpen;
+                    }
                 }
 
                 ImGui::EndMenu();
@@ -163,17 +149,20 @@ void ParticleState::drawMenuBar()
             {
                 if (ImGui::MenuItem("Return To World Editor"))
                 {
-                    confirmSave();
-
-                    getContext().mainWindow.setTitle("Crogine Editor");
-                    requestStackPop();
+                    if (!confirmSave(PostDialogueOption::QuitState))
+                    {
+                        getContext().mainWindow.setTitle("Crogine Editor");
+                        requestStackPop();
+                    }
                 }
             }
 
             if (ImGui::MenuItem("Quit##Particle", nullptr, nullptr))
             {
-                confirmSave();
-                cro::App::quit();
+                if (!confirmSave(PostDialogueOption::QuitApp))
+                {
+                    cro::App::quit();
+                }
             }
             ImGui::EndMenu();
         }
@@ -194,12 +183,6 @@ void ParticleState::drawMenuBar()
                     cro::FileSystem::showMessageBox("Warning", "Working Directory not set.\nModel may not load correctly.");
                 }
 
-                //TODO track last used path
-                /*const auto path = cro::FileSystem::openFileDialogue("", "cmt");
-                if (!path.empty())
-                {
-                    openModel(path);
-                }*/
                 m_openFileBrowser.SetTypeFilters({ ".cmt" });
                 m_openFileBrowser.SetTitle("Open Preview Model");
                 m_openFileBrowser.SetPwd(m_lastPath.empty() ? std::filesystem::current_path() : m_lastPath);
@@ -784,10 +767,23 @@ void ParticleState::updateMouseInput(const cro::Event& evt)
     }
 }
 
+void ParticleState::newFile()
+{
+    m_cameras[CameraID::ThreeDee].emitter.getComponent<cro::ParticleEmitter>().settings = {};
+
+    //make sure to save the 2D particles
+    auto& settings = m_cameras[CameraID::TwoDee].emitter.getComponent<cro::ParticleEmitter>().settings;
+    settings = {};
+    settings.acceleration *= TwoDeeScale;
+    settings.size *= TwoDeeScale;
+    settings.initialVelocity *= TwoDeeScale;
+    settings.gravity *= TwoDeeScale;
+
+    lastSavePath.clear();
+}
+
 void ParticleState::openFile(const std::filesystem::path& path)
 {
-    confirmSave();
-
     m_cameras[m_cameraIndex].emitter.getComponent<cro::ParticleEmitter>().stop();
 
     //if (m_particleSettings->loadFromFile(path, m_resources.textures)) //huh?
@@ -843,8 +839,9 @@ void ParticleState::openModel(const std::filesystem::path& path)
     }
 }
 
-void ParticleState::confirmSave()
+bool ParticleState::confirmSave(std::int32_t postDialogueOption)
 {
+    m_postDialogueState = postDialogueOption;
     if (cro::FileSystem::showMessageBox("Confirm", "Save Current Settings?", cro::FileSystem::ButtonType::YesNo))
     {
         if (!lastSavePath.empty())
@@ -853,14 +850,38 @@ void ParticleState::confirmSave()
         }
         else
         {
-            auto path = cro::FileSystem::saveFileDialogue(lastSavePath, "cps");
-            if (!path.empty())
-            {
-                m_particleSettings->saveToFile(path);
-                lastSavePath = path;
-            }
+            showSaveDialogue();
         }
+
+        return true;
     }
+    return false;
+}
+
+void ParticleState::showOpenDialogue()
+{
+    m_openFileBrowser.SetTypeFilters({ ".cps", ".xyp" });
+    m_openFileBrowser.SetTitle("Open Particle Preset");
+    m_openFileBrowser.SetPwd(m_lastPath.empty() ? std::filesystem::current_path() : m_lastPath);
+    m_openFileBrowser.Open();
+    m_openFileState = OpenFileState::Preset;
+}
+
+void ParticleState::showSaveDialogue()
+{
+    if (lastSavePath.empty())
+    {
+        m_saveFileBrowser.SetPwd(m_lastPath.empty() ? std::filesystem::current_path() : m_lastPath);
+    }
+    else
+    {
+        //HAH
+        m_saveFileBrowser.SetPwd(lastSavePath.has_parent_path() ? lastSavePath.parent_path() : m_lastPath.empty() ? std::filesystem::current_path() : m_lastPath);
+    }
+    m_saveFileBrowser.SetTitle("Save File");
+    m_saveFileBrowser.Open();
+
+    m_saveFileState = SaveFileState::Preset;
 }
 
 void ParticleState::handleFileDialogues()
@@ -910,6 +931,58 @@ void ParticleState::handleFileDialogues()
                 }
 
                 savePrefs();
+            }
+        }
+    }
+
+    else if (m_saveFileState != SaveFileState::None)
+    {
+        m_saveFileBrowser.Display();
+        if (m_saveFileBrowser.IsOpened())
+        {
+            if (m_saveFileBrowser.HasSelected())
+            {
+                auto path = m_saveFileBrowser.GetSelected();
+                m_lastPath = m_saveFileBrowser.GetPwd();
+                m_saveFileBrowser.ClearSelected();
+
+                switch (m_saveFileState)
+                {
+                default: break;
+                case SaveFileState::Preset:
+                    path.replace_extension("cps");
+                    m_particleSettings->saveToFile(path);
+                    lastSavePath = path;
+                    m_history.add(path);
+                    break;
+                }
+
+                m_saveFileState = SaveFileState::None;
+                savePrefs();
+
+                switch (m_postDialogueState)
+                {
+                default: break;
+                case PostDialogueOption::BrowsePreset:
+                    showOpenDialogue();
+                    break;
+                case PostDialogueOption::LoadPreset:
+                    openFile(m_pendingFile);
+                    m_pendingFile.clear();
+                    break;
+                case PostDialogueOption::NewPreset:
+                    newFile();
+                    break;
+                case PostDialogueOption::QuitApp:
+                    cro::App::quit();
+                    break;
+                case PostDialogueOption::QuitState:
+                    getContext().mainWindow.setTitle("Crogine Editor");
+                    requestStackPop();
+                    break;
+                }
+
+                m_postDialogueState = PostDialogueOption::None;
             }
         }
     }

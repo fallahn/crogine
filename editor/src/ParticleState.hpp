@@ -79,10 +79,34 @@ private:
         };
     };
     std::int32_t m_openFileState;
-    
     ImGui::FileBrowser m_openFileBrowser;
+
+    struct SaveFileState final
+    {
+        enum
+        {
+            Preset, Render,
+
+            None
+        };
+    };
+    std::int32_t m_saveFileState;
     ImGui::FileBrowser m_saveFileBrowser;
     std::filesystem::path m_lastPath;
+
+    struct PostDialogueOption final
+    {
+        enum
+        {
+            QuitApp, LoadPreset,
+            BrowsePreset,
+            NewPreset, QuitState,
+
+            None
+        };
+    };
+    std::int32_t m_postDialogueState;
+    std::filesystem::path m_pendingFile;
 
     float m_viewportRatio;
     float m_fov;
@@ -180,8 +204,11 @@ private:
     void updateLayout(std::int32_t, std::int32_t);
     void updateMouseInput(const cro::Event&);
 
+    void newFile();
     void openFile(const std::filesystem::path&);
     void openModel(const std::filesystem::path&);
-    void confirmSave();
+    bool confirmSave(std::int32_t postDialogue); //returns true if we're showing the save dialogue
+    void showOpenDialogue();
+    void showSaveDialogue();
     void handleFileDialogues();
 };

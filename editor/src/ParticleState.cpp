@@ -65,7 +65,10 @@ ParticleState::ParticleState(cro::StateStack& ss, cro::State::Context ctx, Share
     m_scene             (ctx.appInstance.getMessageBus()),
     m_openFileState     (OpenFileState::None),
     m_openFileBrowser   (ImGuiFileBrowserFlags_CloseOnEsc | ImGuiFileBrowserFlags_ConfirmOnEnter),
+    m_saveFileState     (SaveFileState::None),
     m_saveFileBrowser   (ImGuiFileBrowserFlags_CloseOnEsc | ImGuiFileBrowserFlags_CreateNewDir | ImGuiFileBrowserFlags_ConfirmOnEnter | ImGuiFileBrowserFlags_EnterNewFilename),
+    m_lastPath          (std::filesystem::current_path()),
+    m_postDialogueState (PostDialogueOption::None),
     m_viewportRatio     (1.f),
     m_fov               (DefaultFOV),
     m_gizmoMode         (ImGuizmo::TRANSLATE),
@@ -117,7 +120,7 @@ bool ParticleState::handleEvent(const cro::Event& evt)
     {
     default: break;
     case SDL_EVENT_QUIT:
-        confirmSave();
+        confirmSave(PostDialogueOption::QuitApp);
         break;
     case SDL_EVENT_KEY_DOWN:
         if (evt.key.mod & (SDL_KMOD_LSHIFT | SDL_KMOD_RSHIFT))
