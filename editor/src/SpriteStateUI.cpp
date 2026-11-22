@@ -45,6 +45,95 @@ namespace
     std::string newSpriteName;
 }
 
+void SpriteState::showOpenFileBrowser(std::int32_t state)
+{
+    m_openFileBrowser.SetPwd(m_lastPath);
+
+    m_openFileState = state;
+    switch (state)
+    {
+    default: break;
+    case OpenFileState::CurrentTexture:
+    case OpenFileState::NewTexture:
+        m_openFileBrowser.SetTitle("Choose Image");
+        m_openFileBrowser.SetTypeFilters({ ".png", ".jpg", ".bmp" });
+        break;
+    case OpenFileState::Palette:
+        m_openFileBrowser.SetTitle("Load Palette");
+        m_openFileBrowser.SetTypeFilters({ ".ase" });
+        break;
+    case OpenFileState::Sprite:
+        m_openFileBrowser.SetTitle("Load Sprite");
+        m_openFileBrowser.SetTypeFilters({ ".spt" });
+        break;
+    }
+    m_openFileBrowser.Open();
+}
+
+void SpriteState::handleFileBrowser()
+{
+    m_openFileBrowser.Display();
+
+    if (m_openFileBrowser.IsOpened())
+    {
+        if (m_openFileBrowser.HasSelected())
+        {
+            const auto path = m_openFileBrowser.GetSelected();
+            m_lastPath = m_openFileBrowser.GetPwd();
+            m_openFileBrowser.ClearSelected();
+
+            switch (m_openFileState)
+            {
+            default: break;
+            case OpenFileState::CurrentTexture:
+                if (const auto rel = std::filesystem::relative(path, m_sharedData.workingDirectory); rel.empty())
+                {
+                    cro::FileSystem::showMessageBox("Error", "Texture not opened from working directory");
+                }
+                else
+                {
+                    m_spriteSheet.setTexture(rel, m_textures, m_sharedData.workingDirectory);
+
+                    auto* texture = m_spriteSheet.getTexture();
+                    m_entities[EntityID::Root].getComponent<cro::Sprite>().setTexture(*texture);
+                }
+
+                break;
+            case OpenFileState::NewTexture:
+                if (const auto rel = std::filesystem::relative(path, m_sharedData.workingDirectory); rel.empty())
+                {
+                    cro::FileSystem::showMessageBox("Error", "Texture not opened from working directory");
+                }
+                else
+                {
+                    m_spriteSheet = {};
+                    m_spriteSheet.setTexture(rel, m_textures, m_sharedData.workingDirectory);
+
+                    auto* texture = m_spriteSheet.getTexture();
+                    m_entities[EntityID::Root].getComponent<cro::Sprite>().setTexture(*texture);
+                }
+                break;
+            case OpenFileState::Palette:
+                m_palette.loadFromFile(path);
+                break;
+            case OpenFileState::Sprite:
+                if (const auto rel = std::filesystem::relative(path, m_sharedData.workingDirectory); rel.empty())
+                {
+                    cro::FileSystem::showMessageBox("Error", "Sprite Sheet not opened from working directory");
+                }
+                else
+                {
+                    openSprite(path);
+                }
+                break;
+            }
+
+            savePrefs();
+            m_openFileState = OpenFileState::None;
+        }
+    }
+}
+
 void SpriteState::openSprite(const std::filesystem::path& path)
 {
     if (m_spriteSheet.loadFromFile(path, m_textures, m_sharedData.workingDirectory))
@@ -153,42 +242,11 @@ void SpriteState::drawMenuBar()
                     save();
                 }
 
-                const auto path = cro::FileSystem::openFileDialogue("", "png,jpg");
-                if (!path.empty())
-                {
-                    //std::replace(path.begin(), path.end(), '\\', '/');
-                    //if (auto pathPos = path.find(m_sharedData.workingDirectory); pathPos == std::string::npos)
-                    if (const auto rel = std::filesystem::relative(path, m_sharedData.workingDirectory); rel.empty())
-                    {
-                        cro::FileSystem::showMessageBox("Error", "Texture not opened from working directory");
-                    }
-                    else
-                    {
-                        m_spriteSheet = {};
-                        //m_spriteSheet.setTexture(path.substr(m_sharedData.workingDirectory.length() + 1), m_textures, m_sharedData.workingDirectory);
-                        m_spriteSheet.setTexture(rel, m_textures, m_sharedData.workingDirectory);
-
-                        auto* texture = m_spriteSheet.getTexture();
-                        m_entities[EntityID::Root].getComponent<cro::Sprite>().setTexture(*texture);
-                    }
-                }
+                showOpenFileBrowser(OpenFileState::NewTexture);
             }
             if (ImGui::MenuItem("Open##sprite", nullptr, nullptr))
             {
-                const auto path = cro::FileSystem::openFileDialogue("", "spt");
-                if (!path.empty())
-                {
-                    //std::replace(path.begin(), path.end(), '\\', '/');
-                    //if (path.find(m_sharedData.workingDirectory) == std::string::npos)
-                    if (const auto rel = std::filesystem::relative(path, m_sharedData.workingDirectory); rel.empty())
-                    {
-                        cro::FileSystem::showMessageBox("Error", "Sprite Sheet not opened from working directory");
-                    }
-                    else
-                    {
-                        openSprite(path);
-                    }
-                }
+                showOpenFileBrowser(OpenFileState::Sprite);
             }
             if (ImGui::MenuItem("Save##sprite", nullptr, nullptr))
             {
@@ -227,6 +285,8 @@ void SpriteState::drawMenuBar()
             ImGui::MenuItem("Palette", nullptr, &m_showPalette);
             ImGui::EndMenu();
         }
+
+        handleFileBrowser();
 
         ImGui::EndMainMenuBar();
     }
@@ -267,24 +327,7 @@ void SpriteState::drawInspector()
         ImGui::SameLine();
         if (ImGui::Button("Browse##texPath"))
         {
-            const auto path = cro::FileSystem::openFileDialogue("", "png,jpg");
-            if (!path.empty())
-            {
-                //std::replace(path.begin(), path.end(), '\\', '/');
-                //if (auto pathPos = path.find(m_sharedData.workingDirectory); pathPos == std::string::npos)
-                if (const auto rel = std::filesystem::relative(path, m_sharedData.workingDirectory); rel.empty())
-                {
-                    cro::FileSystem::showMessageBox("Error", "Texture not opened from working directory");
-                }
-                else
-                {
-                    //m_spriteSheet.setTexture(path.substr(m_sharedData.workingDirectory.length() + 1), m_textures, m_sharedData.workingDirectory + "/");
-                    m_spriteSheet.setTexture(rel, m_textures, m_sharedData.workingDirectory);
-
-                    auto* texture = m_spriteSheet.getTexture();
-                    m_entities[EntityID::Root].getComponent<cro::Sprite>().setTexture(*texture);
-                }
-            }
+            showOpenFileBrowser(OpenFileState::CurrentTexture);
         }
         ImGui::Text("Texture Size: %d, %d", texture->getSize().x, texture->getSize().y);
         ImGui::NewLine();
@@ -634,11 +677,7 @@ void SpriteState::drawPalette()
         {
             if (ImGui::Button("Open"))
             {
-                auto path = cro::FileSystem::openFileDialogue("", "ase");
-                if (!path.empty())
-                {
-                    m_palette.loadFromFile(path);
-                }
+                showOpenFileBrowser(OpenFileState::Palette);
             }
 
             const auto& swatches = m_palette.getSwatches();

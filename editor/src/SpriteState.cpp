@@ -57,10 +57,14 @@ SpriteState::SpriteState(cro::StateStack& stack, cro::State::Context ctx, Shared
 	m_openFolderDialogue(ImGuiFileBrowserFlags_CloseOnEsc | ImGuiFileBrowserFlags_SelectDirectory | ImGuiFileBrowserFlags_HideRegularFiles | ImGuiFileBrowserFlags_ConfirmOnEnter),
 	m_showPreferences	(false),
 	m_showNewSprite		(false),
-	m_showPalette		(true)
+	m_showPalette		(true),
+	m_openFileBrowser	(ImGuiFileBrowserFlags_CloseOnEsc | ImGuiFileBrowserFlags_ConfirmOnEnter),
+	m_openFileState		(OpenFileState::None),
+	m_lastPath			(std::filesystem::current_path())
 {
 	ctx.mainWindow.loadResources([this]()
 		{
+			loadPrefs();
 			initScene();
 			createUI();
 		});
@@ -123,14 +127,13 @@ bool SpriteState::handleEvent(const cro::Event& evt)
 
 			if (m_activeSprite)
 			{
-				if (m_doubleClickClock.elapsed() < DoubleClickTime)
+				if (evt.button.clicks == 2)
 				{
 					glm::vec2 mousePos(evt.button.x, cro::App::getWindow().getSize().y - evt.button.y);
 					auto relPos = getRelativePosition(mousePos);
 					setBoundsPosition(relPos);
 				}
 			}
-			m_doubleClickClock.restart();
 		}
 	}
 	else if (evt.type == SDL_EVENT_QUIT)
@@ -221,4 +224,32 @@ void SpriteState::setBoundsPosition(glm::vec2 relPos)
 		m_activeSprite->second.setTextureRect(bounds);
 		updateBoundsEntity();
 	}
+}
+
+void SpriteState::loadPrefs()
+{
+	const auto path = cro::App::getPreferencePath() / "sprite_editor.cfg";
+	cro::ConfigFile cfg;
+	if (cfg.loadFromFile(path))
+	{
+		const auto& props = cfg.getProperties();
+		for (const auto& prop : props)
+		{
+			const auto& name = prop.getName();
+			if (name == "last_path")
+			{
+				m_lastPath = prop.getValue<std::filesystem::path>();
+			}
+		}
+	}
+}
+
+void SpriteState::savePrefs() const
+{
+	const auto path = cro::App::getPreferencePath() / "sprite_editor.cfg";
+
+	cro::ConfigFile cfg;
+	cfg.addProperty("last_path").setValue(m_lastPath);
+
+	cfg.save(path);
 }

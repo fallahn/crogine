@@ -92,11 +92,27 @@ private:
     bool m_showPalette;
     cro::Palette m_palette;
 
-    cro::Clock m_doubleClickClock;
+    ImGui::FileBrowser m_openFileBrowser;
+    struct OpenFileState final
+    {
+        enum
+        {
+            NewTexture, CurrentTexture, 
+            Sprite, Palette,
+            None
+        };
+    };
+    std::int32_t m_openFileState;
+    std::filesystem::path m_lastPath;
 
     void initScene();
     glm::vec2 getRelativePosition(glm::vec2);
     void setBoundsPosition(glm::vec2);
+    void loadPrefs();
+    void savePrefs() const;
+
+    void showOpenFileBrowser(std::int32_t);
+    void handleFileBrowser();
 
     void openSprite(const std::filesystem::path&);
     void save();

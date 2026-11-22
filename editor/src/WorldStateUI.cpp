@@ -162,11 +162,11 @@ void WorldState::drawMenuBar()
                 requestStackPush(States::ParticleEditor);
                 unregisterWindows();
             }
-            if (ImGui::MenuItem("Layout Editor", nullptr, nullptr))
+            /*if (ImGui::MenuItem("Layout Editor", nullptr, nullptr))
             {
                 requestStackPush(States::LayoutEditor);
                 unregisterWindows();
-            }
+            }*/
             if (ImGui::MenuItem("Sprite Editor", nullptr, nullptr))
             {
                 requestStackPush(States::SpriteEditor);
