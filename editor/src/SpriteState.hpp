@@ -105,6 +105,9 @@ private:
     std::int32_t m_openFileState;
     std::filesystem::path m_lastPath;
 
+    ImGui::FileBrowser m_saveFileBrowser;
+
+
     void initScene();
     glm::vec2 getRelativePosition(glm::vec2);
     void setBoundsPosition(glm::vec2);

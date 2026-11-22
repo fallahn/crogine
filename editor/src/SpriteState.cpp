@@ -60,7 +60,8 @@ SpriteState::SpriteState(cro::StateStack& stack, cro::State::Context ctx, Shared
 	m_showPalette		(true),
 	m_openFileBrowser	(ImGuiFileBrowserFlags_CloseOnEsc | ImGuiFileBrowserFlags_ConfirmOnEnter),
 	m_openFileState		(OpenFileState::None),
-	m_lastPath			(std::filesystem::current_path())
+	m_lastPath			(std::filesystem::current_path()),
+	m_saveFileBrowser	(ImGuiFileBrowserFlags_CloseOnEsc | ImGuiFileBrowserFlags_CreateNewDir | ImGuiFileBrowserFlags_ConfirmOnEnter | ImGuiFileBrowserFlags_EnterNewFilename)
 {
 	ctx.mainWindow.loadResources([this]()
 		{
@@ -240,6 +241,10 @@ void SpriteState::loadPrefs()
 			{
 				m_lastPath = prop.getValue<std::filesystem::path>();
 			}
+			else if (name == "last_file")
+			{
+				m_currentFilePath = prop.getValue<std::filesystem::path>();
+			}
 		}
 	}
 }
@@ -250,6 +255,7 @@ void SpriteState::savePrefs() const
 
 	cro::ConfigFile cfg;
 	cfg.addProperty("last_path").setValue(m_lastPath);
+	cfg.addProperty("last_file").setValue(m_currentFilePath);
 
 	cfg.save(path);
 }

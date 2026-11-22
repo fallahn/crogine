@@ -132,6 +132,22 @@ void SpriteState::handleFileBrowser()
             m_openFileState = OpenFileState::None;
         }
     }
+
+    m_saveFileBrowser.Display();
+    if (m_saveFileBrowser.IsOpened())
+    {
+        if (m_saveFileBrowser.HasSelected())
+        {
+            auto path = m_saveFileBrowser.GetSelected();
+            path.replace_extension("spt");
+
+            m_spriteSheet.saveToFile(path);
+            m_currentFilePath = path;
+
+            m_saveFileBrowser.ClearSelected();
+            m_saveFileBrowser.Close();
+        }
+    }
 }
 
 void SpriteState::openSprite(const std::filesystem::path& path)
@@ -178,12 +194,10 @@ void SpriteState::save()
 
 void SpriteState::saveAs()
 {
-    const auto path = cro::FileSystem::saveFileDialogue(m_currentFilePath, "spt");
-    if (!path.empty())
-    {
-        m_spriteSheet.saveToFile(path);
-        m_currentFilePath = path;
-    }
+    m_saveFileBrowser.SetPwd(m_currentFilePath.empty() ? std::filesystem::current_path() : m_currentFilePath.has_parent_path() ? m_currentFilePath.parent_path() : std::filesystem::current_path());
+    m_saveFileBrowser.SetTitle("Save Sprite Sheet");
+    m_saveFileBrowser.SetTypeFilters({ ".spt" });
+    m_saveFileBrowser.Open();
 }
 
 void SpriteState::updateBoundsEntity()
