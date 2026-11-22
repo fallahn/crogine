@@ -68,6 +68,22 @@ private:
     cro::EnvironmentMap m_environmentMap;
     cro::ResourceCollection m_resources;
 
+    struct OpenFileState final
+    {
+        enum
+        {
+            Preset, Texture,
+            Model,
+
+            None
+        };
+    };
+    std::int32_t m_openFileState;
+    
+    ImGui::FileBrowser m_openFileBrowser;
+    ImGui::FileBrowser m_saveFileBrowser;
+    std::filesystem::path m_lastPath;
+
     float m_viewportRatio;
     float m_fov;
     ImVec4 m_messageColour;
@@ -164,6 +180,8 @@ private:
     void updateLayout(std::int32_t, std::int32_t);
     void updateMouseInput(const cro::Event&);
 
+    void openFile(const std::filesystem::path&);
     void openModel(const std::filesystem::path&);
     void confirmSave();
+    void handleFileDialogues();
 };

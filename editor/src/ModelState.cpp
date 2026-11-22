@@ -94,7 +94,7 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context, Shar
     m_showBakingWindow      (false),
     m_useFreecam            (false),
     m_arcball               (DefaultCameraPosition, glm::vec3(0.f), cro::Transform::Y_AXIS),
-    m_openFileBrowser       (ImGuiFileBrowserFlags_CloseOnEsc),
+    m_openFileBrowser       (ImGuiFileBrowserFlags_CloseOnEsc | ImGuiFileBrowserFlags_ConfirmOnEnter),
     m_openDialogueState     (OpenDialogueState::None),
     m_saveFileBrowser       (ImGuiFileBrowserFlags_CloseOnEsc | ImGuiFileBrowserFlags_CreateNewDir | ImGuiFileBrowserFlags_ConfirmOnEnter | ImGuiFileBrowserFlags_EnterNewFilename),
     m_saveDialogueState     (SaveDialogueState::None),

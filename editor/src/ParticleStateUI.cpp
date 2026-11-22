@@ -74,46 +74,6 @@ void ParticleState::initUI()
 
 void ParticleState::drawMenuBar()
 {
-    const auto openFile = [&](const std::filesystem::path& path)
-    {
-        confirmSave();
-
-        m_cameras[m_cameraIndex].emitter.getComponent<cro::ParticleEmitter>().stop();
-
-        //if (m_particleSettings->loadFromFile(path, m_resources.textures))
-        (m_particleSettings->loadFromFile(path, m_resources.textures));
-        {
-            lastSavePath = path;
-
-            m_selectedBlendMode = m_particleSettings->blendmode;
-            m_particleSettings->textureID = 0;
-
-            if (!m_particleSettings->texturePath.empty())
-            {
-                auto texPath = m_sharedData.workingDirectory / m_particleSettings->texturePath;
-                if (cro::FileSystem::fileExists(texPath)
-                    && m_texture.loadFromFile(texPath))
-                {
-                    m_particleSettings->textureID = m_texture.getGLHandle();
-                    m_particleSettings->textureSize = m_texture.getSize();
-                    m_texture.setSmooth(m_particleSettings->textureSmoothing);
-                    m_texture.setRepeated(true);
-                }
-            }
-
-            for (auto i = 0u; i < m_cameras.size(); ++i)
-            {
-                //copy settings into the other emitters
-                if (i != m_cameraIndex)
-                {
-                    m_cameras[i].emitter.getComponent<cro::ParticleEmitter>().settings = *m_particleSettings;
-                }
-            }
-
-            m_history.add(path);
-        }
-    };
-
     if (ImGui::BeginMainMenuBar())
     {
         //file menu
@@ -138,12 +98,13 @@ void ParticleState::drawMenuBar()
 
             if (ImGui::MenuItem("Open##Particle", nullptr, nullptr))
             {
-                auto path = cro::FileSystem::openFileDialogue(lastSavePath, "xyp,cps");
-                if (!path.empty())
-                {
-                    openFile(path);
-                }
+                m_openFileBrowser.SetTypeFilters({ ".cps", ".xyp" });
+                m_openFileBrowser.SetTitle("Open Particle Preset");
+                m_openFileBrowser.SetPwd(m_lastPath.empty() ? std::filesystem::current_path() : m_lastPath);
+                m_openFileBrowser.Open();
+                m_openFileState = OpenFileState::Preset;
             }
+
             if (ImGui::MenuItem("Save##Particle", nullptr, nullptr))
             {
                 if (!lastSavePath.empty())
@@ -234,11 +195,16 @@ void ParticleState::drawMenuBar()
                 }
 
                 //TODO track last used path
-                const auto path = cro::FileSystem::openFileDialogue("", "cmt");
+                /*const auto path = cro::FileSystem::openFileDialogue("", "cmt");
                 if (!path.empty())
                 {
                     openModel(path);
-                }
+                }*/
+                m_openFileBrowser.SetTypeFilters({ ".cmt" });
+                m_openFileBrowser.SetTitle("Open Preview Model");
+                m_openFileBrowser.SetPwd(m_lastPath.empty() ? std::filesystem::current_path() : m_lastPath);
+                m_openFileBrowser.Open();
+                m_openFileState = OpenFileState::Model;
             }
 
             if (m_entities[EntityID::Model].isValid() &&
@@ -255,6 +221,8 @@ void ParticleState::drawMenuBar()
 
             ImGui::EndMenu();
         }
+
+        handleFileDialogues();
 
         ImGui::EndMainMenuBar();
     }
@@ -357,41 +325,24 @@ void ParticleState::drawInspector()
                 m_particleSettings->blendmode = static_cast<cro::EmitterSettings::BlendMode>(m_selectedBlendMode);
             }
             
-            //open tetxure
+            //open texture
             if (m_particleSettings->texturePath.empty())
             {
                 ImGui::Text("No Texture Loaded.");
             }
             else
             {
-                ImGui::Text("%s", m_particleSettings->texturePath.c_str());
+                ImGui::Text("%s", U8PATH_CAST(m_particleSettings->texturePath));
             }
 
 
             if (ImGui::Button("Set Texture"))
             {
-                auto path = cro::FileSystem::openFileDialogue(m_sharedData.workingDirectory, "png,jpg,bmp");
-                if (!path.empty()
-                    && m_texture.loadFromFile(path))
-                {
-                    m_texture.setSmooth(true);
-                    m_texture.setRepeated(true);
-
-                    //std::replace(path.begin(), path.end(), '\\', '/');
-
-                    //try correcting with current working directory
-                    if (!m_sharedData.workingDirectory.empty())
-                    {
-                        //if (path.find(m_sharedData.workingDirectory) != std::string::npos)
-                        if (const auto rel = std::filesystem::relative(path, m_sharedData.workingDirectory); !rel.empty())
-                        {
-                            path = rel;// path.substr(m_sharedData.workingDirectory.size());
-                        }
-                    }
-                    m_particleSettings->textureID = m_texture.getGLHandle();
-                    m_particleSettings->texturePath = path;
-                    m_particleSettings->textureSize = m_texture.getSize();
-                }
+                m_openFileBrowser.SetTypeFilters({ ".png", ".jpg", ".bmp" });
+                m_openFileBrowser.SetTitle("Load Image");
+                m_openFileBrowser.SetPwd(m_lastPath);
+                m_openFileBrowser.Open();
+                m_openFileState = OpenFileState::Texture;
             }
             if (!m_particleSettings->texturePath.empty())
             {
@@ -833,6 +784,46 @@ void ParticleState::updateMouseInput(const cro::Event& evt)
     }
 }
 
+void ParticleState::openFile(const std::filesystem::path& path)
+{
+    confirmSave();
+
+    m_cameras[m_cameraIndex].emitter.getComponent<cro::ParticleEmitter>().stop();
+
+    //if (m_particleSettings->loadFromFile(path, m_resources.textures)) //huh?
+    (m_particleSettings->loadFromFile(path, m_resources.textures));
+    {
+        lastSavePath = path;
+
+        m_selectedBlendMode = m_particleSettings->blendmode;
+        m_particleSettings->textureID = 0;
+
+        if (!m_particleSettings->texturePath.empty())
+        {
+            auto texPath = m_sharedData.workingDirectory / m_particleSettings->texturePath;
+            if (cro::FileSystem::fileExists(texPath)
+                && m_texture.loadFromFile(texPath))
+            {
+                m_particleSettings->textureID = m_texture.getGLHandle();
+                m_particleSettings->textureSize = m_texture.getSize();
+                m_texture.setSmooth(m_particleSettings->textureSmoothing);
+                m_texture.setRepeated(true);
+            }
+        }
+
+        for (auto i = 0u; i < m_cameras.size(); ++i)
+        {
+            //copy settings into the other emitters
+            if (i != m_cameraIndex)
+            {
+                m_cameras[i].emitter.getComponent<cro::ParticleEmitter>().settings = *m_particleSettings;
+            }
+        }
+
+        m_history.add(path);
+    }
+}
+
 void ParticleState::openModel(const std::filesystem::path& path)
 {
     cro::ModelDefinition modelDef(m_resources, &m_environmentMap, m_sharedData.workingDirectory);
@@ -867,6 +858,58 @@ void ParticleState::confirmSave()
             {
                 m_particleSettings->saveToFile(path);
                 lastSavePath = path;
+            }
+        }
+    }
+}
+
+void ParticleState::handleFileDialogues()
+{
+    if (m_openFileState != OpenFileState::None)
+    {
+        m_openFileBrowser.Display();
+        if (m_openFileBrowser.IsOpened())
+        {
+            if (m_openFileBrowser.HasSelected())
+            {
+                const auto path = m_openFileBrowser.GetSelected();
+                m_lastPath = m_openFileBrowser.GetPwd();
+
+                m_openFileBrowser.ClearSelected();
+
+                switch (m_openFileState)
+                {
+                default: break;
+                case OpenFileState::Preset:
+                    openFile(path);
+                    break;
+                case OpenFileState::Texture:
+                    if (m_texture.loadFromFile(path))
+                    {
+                        m_texture.setSmooth(true);
+                        m_texture.setRepeated(true);
+
+                        
+                        m_particleSettings->texturePath = path;
+
+                        //try correcting with current working directory
+                        if (!m_sharedData.workingDirectory.empty())
+                        {
+                            if (const auto rel = std::filesystem::relative(path, m_sharedData.workingDirectory); !rel.empty())
+                            {
+                                m_particleSettings->texturePath = rel;
+                            }
+                        }
+                        m_particleSettings->textureID = m_texture.getGLHandle();
+                        m_particleSettings->textureSize = m_texture.getSize();
+                    }
+                    break;
+                case OpenFileState::Model:
+                    openModel(path);
+                    break;
+                }
+
+                savePrefs();
             }
         }
     }

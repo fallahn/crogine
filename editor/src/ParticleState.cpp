@@ -63,6 +63,9 @@ ParticleState::ParticleState(cro::StateStack& ss, cro::State::Context ctx, Share
     : cro::State        (ss, ctx),
     m_sharedData        (sd),
     m_scene             (ctx.appInstance.getMessageBus()),
+    m_openFileState     (OpenFileState::None),
+    m_openFileBrowser   (ImGuiFileBrowserFlags_CloseOnEsc | ImGuiFileBrowserFlags_ConfirmOnEnter),
+    m_saveFileBrowser   (ImGuiFileBrowserFlags_CloseOnEsc | ImGuiFileBrowserFlags_CreateNewDir | ImGuiFileBrowserFlags_ConfirmOnEnter | ImGuiFileBrowserFlags_EnterNewFilename),
     m_viewportRatio     (1.f),
     m_fov               (DefaultFOV),
     m_gizmoMode         (ImGuizmo::TRANSLATE),
@@ -444,11 +447,15 @@ void ParticleState::loadPrefs()
             }
             else if (name == "recent")
             {
-                auto path = prop.getValue<std::string>();
+                const auto path = prop.getValue<std::filesystem::path>();
                 if (cro::FileSystem::fileExists(path))
                 {
                     m_history.add(path);
                 }
+            }
+            else if (name == "last_path")
+            {
+                m_lastPath = prop.getValue<std::filesystem::path>();
             }
         }
     }
@@ -460,6 +467,7 @@ void ParticleState::savePrefs()
     cfg.addProperty("sky_colour").setValue(getContext().appInstance.getClearColour());
     cfg.addProperty("render_colour").setValue(m_renderClearColour);
     cfg.addProperty("camera").setValue(m_cameraIndex);
+    cfg.addProperty("last_path").setValue(m_lastPath);
 
     for (auto item = m_history.getHistory().crbegin(); item != m_history.getHistory().crend(); item++)
     {
