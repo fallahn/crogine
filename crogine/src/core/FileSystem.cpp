@@ -77,8 +77,29 @@ source distribution.
 
 #endif //_WIN32
 
+#define SDL_DIALOGUES
+
 namespace
 {
+    std::vector<std::pair<std::string, std::string>> parseFileFilterSDL(const std::string& filter)
+    {
+        std::vector<std::pair<std::string, std::string>> retVal;
+
+        std::string current;
+        std::stringstream ss(filter);
+        while (std::getline(ss, current, ','))
+        {
+            retVal.emplace_back(current + " Files", current);
+        }
+
+        if (retVal.empty())
+        {
+            retVal.emplace_back("All Files", "*");
+        }
+
+        return retVal;
+    }
+
     std::vector<std::string> parseFileFilter(const std::string& filter)
     {
         std::vector<std::string> retVal;
@@ -92,32 +113,17 @@ namespace
         return retVal;
     }
 
+
     struct FileDialogueCallbackResult final
     {
-        std::filesystem::path result; //TODO this needs to be a vector in the case of multiple files...
+        std::filesystem::path result;
         std::atomic_bool hasResult = false;
-    };
 
-    static void SDLCALL fileDialogueCallback(void* userData, const char* const* fileList, int /*filterIndex*/)
-    {
-        auto& callbackResult = *reinterpret_cast<FileDialogueCallbackResult*>(userData);
-
-        //this might be nullptr if there was an error
-        if (fileList)
+        ~FileDialogueCallbackResult()
         {
-            //TODO push back or concat the list...
-            while (*fileList)
-            {
-                callbackResult.result = *fileList;
-            }
-            fileList++;
+            hasResult = true;
         }
-
-        //TODO filterIndex will return the index of the given
-        //file filters selected by the user - not used currently
-
-        callbackResult.hasResult = true;
-    }
+    };
 }
 
 using namespace cro;
@@ -292,45 +298,53 @@ std::filesystem::path FileSystem::openFileDialogue(const std::filesystem::path& 
     Logger::log("File Dialogues are not supported", Logger::Type::Error);
     return {};
 #else
-    //SDL is actually much more flexible with file filters, but we're (currently)
-    //bound by the rules of backwards compatibility. Note that filters must exist
-    //until the file dialogue box is complete, hence the weird pointing of chars
-    //static const std::string defaultName = "All Files";
-    //static const std::string defaultFilter = "*";
-    //static const std::string filterName = "Files";
+    
+#ifdef SDL_DIALOGUES
+    FileDialogueCallbackResult result;
+    const auto callback = [](void* resultData, const char* const* filelist, int filter)
+        {
+            auto& retVal = *reinterpret_cast<FileDialogueCallbackResult*>(resultData);
+            if (filelist == nullptr)
+            {
+                //error
+                LogE << SDL_GetError() << std::endl;
+            }
+            else if (*filelist)
+            {
+                std::string f = filelist[0];
+                filelist++;
 
-    //std::string filterList = filter;
-    //std::replace(filterList.begin(), filterList.end(), ',', ';');
+                while (*filelist)
+                {
+                    f += "|" + std::string(*filelist);
+                    filelist++;
+                }
 
-    //SDL_DialogFileFilter filters = {};
-    //if (filter.empty())
-    //{
-    //    filters.name = defaultName.c_str();
-    //    filters.pattern = defaultFilter.c_str();
-    //}
-    //else
-    //{
-    //    filters.name = filterName.c_str();
-    //    filters.pattern = filterList.c_str();
-    //}
+                retVal.result = f;
+            }
 
-    //FileDialogueCallbackResult callbackResult;
+            retVal.hasResult = true;
+        };
 
-    //const auto threadFunc = [&]() {
-    //    SDL_ShowOpenFileDialog(fileDialogueCallback, &callbackResult, /*App::getWindow().m_window*/nullptr,
-    //        &filters, 1, U8PATH_CAST(defaultDir), selectMultiple);
-    //    };
-    //std::thread t(std::bind(threadFunc));
+    const auto filters = parseFileFilterSDL(filter);
+    std::vector<SDL_DialogFileFilter> filterlist;
+    for (const auto& [desc, type] : filters)
+    {
+        filterlist.emplace_back(desc.c_str(), type.c_str());
+    }
 
-    //t.join();
+    SDL_ShowOpenFileDialog(callback, &result, App::getWindow(), filterlist.data(), 
+        static_cast<std::int32_t>(filterlist.size()), U8PATH_CAST(defaultDir), selectMultiple);
 
-    //while (!callbackResult.hasResult)
-    //{
-    //    std::this_thread::sleep_for(std::chrono::milliseconds(16));
-    //}
-    //return callbackResult.result;
+    while (!result.hasResult)
+    {
+        SDL_PumpEvents();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
 
+    return result.result;
 
+#else
     //filter is comma delimited list
     const auto filters = parseFileFilter(filter);
     std::vector<const char*> filterArray;
@@ -343,6 +357,7 @@ std::filesystem::path FileSystem::openFileDialogue(const std::filesystem::path& 
     const auto path = tinyfd_openFileDialog("Open File", U8PATH_CAST(defaultDir), static_cast<std::int32_t>(filterArray.size()), filterArray.data(), nullptr, selectMultiple ? 1 : 0);
 
     return path ? path : std::filesystem::path();
+#endif
 #endif //__ANDROID__
 }
 
@@ -364,6 +379,44 @@ std::filesystem::path FileSystem::openFolderDialogue(const std::filesystem::path
 }
 
 std::filesystem::path FileSystem::saveFileDialogue(const std::filesystem::path& defaultDir, const std::string& filter)
+#ifdef SDL_DIALOGUES
+{
+    FileDialogueCallbackResult result;
+
+    const auto callback = [](void* resultData, const char* const* filelist, int filter)
+        {
+            auto& retVal = *reinterpret_cast<FileDialogueCallbackResult*>(resultData);
+            if (filelist == nullptr)
+            {
+                //error
+                LogE << SDL_GetError() << std::endl;
+            }
+            else if (*filelist)
+            {
+                retVal.result = filelist[0];
+            }
+
+            retVal.hasResult = true;
+        };
+
+    const auto filters = parseFileFilterSDL(filter);
+    std::vector<SDL_DialogFileFilter> filterlist;
+    for (const auto& [desc, type] : filters)
+    {
+        filterlist.emplace_back(desc.c_str(), type.c_str());
+    }
+
+    SDL_ShowSaveFileDialog(callback, &result, cro::App::getWindow(), filterlist.data(), static_cast<std::int32_t>(filterlist.size()), U8PATH_CAST(defaultDir));
+
+    while (!result.hasResult)
+    {
+        SDL_PumpEvents();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    return result.result;
+}
+#else
 {
 #ifdef __ANDROID__
     Logger::log("File Dialogues are not supported", Logger::Type::Error);
@@ -383,6 +436,7 @@ std::filesystem::path FileSystem::saveFileDialogue(const std::filesystem::path& 
     return path ? path : std::filesystem::path();
 #endif //__ANDROID__
 }
+#endif
 
 std::filesystem::path FileSystem::getResourcePath()
 {

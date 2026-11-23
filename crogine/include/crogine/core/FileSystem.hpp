@@ -156,7 +156,7 @@ namespace cro
         \param selectMultiple If true then allows selecting multiple files
         \returns the path selected by the user which is empty if cancelled or concatenated with | if multiple files were selected
         */
-        static std::filesystem::path openFileDialogue(const std::filesystem::path& defaultDir = "", const std::string& filter = "", bool selectMultiple = false);
+        static std::filesystem::path openFileDialogue(const std::filesystem::path& defaultDir = std::filesystem::current_path(), const std::string& filter = "", bool selectMultiple = false);
 
         /*!
         \brief Show a native file dialogue to open a file
@@ -169,7 +169,7 @@ namespace cro
         by the user, which may be empty ifs empty if the dialogue was cancelled
         */
         [[nodiscard]]
-        static std::future<std::vector<std::filesystem::path>> openFileDialogueAsync(const std::filesystem::path& defaultDir = "", const std::string& filter = "", bool selectMultiple = false);
+        static std::future<std::vector<std::filesystem::path>> openFileDialogueAsync(const std::filesystem::path& defaultDir = std::filesystem::current_path(), const std::string& filter = "", bool selectMultiple = false);
 
 
         /*!
@@ -177,7 +177,7 @@ namespace cro
         \param defaultPath std::filesystem::path containing the default path to browse to
         \returns the path selected by the user which is empty if the user cancelled
         */
-        static std::filesystem::path openFolderDialogue(const std::filesystem::path& path = "");
+        static std::filesystem::path openFolderDialogue(const std::filesystem::path& path = std::filesystem::current_path());
         
         /*!
         \brief Show a platform native file dialogue for saving files.
@@ -185,7 +185,7 @@ namespace cro
         \param filter String containing file extension filter in the format "png,jpg,bmp"
         \returns path containing the selected file path which is empty if the user cancelled
         */
-        static std::filesystem::path saveFileDialogue(const std::filesystem::path& defaultDir = "", const std::string& filter = "");
+        static std::filesystem::path saveFileDialogue(const std::filesystem::path& defaultDir = std::filesystem::current_path(), const std::string& filter = "");
 
         /*!
         \brief Currently only relevant on macOS when creating an app bundle.

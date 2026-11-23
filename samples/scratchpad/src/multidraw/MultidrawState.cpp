@@ -319,6 +319,13 @@ void MultidrawState::createScene()
 
             const auto& cam2 = entity.getComponent<cro::Camera>();
             ImGui::Text("Camera 2 DMap %d", cam2.shadowMapBuffer.getTexture().textureID);
+
+            if (ImGui::Button("Click"))
+            {
+                const auto path = cro::FileSystem::openFileDialogue(std::filesystem::current_path() / "buns.png", "png,jpg,bmp", true);
+                LogI << path << std::endl;
+            }
+
             ImGui::End();
         });
 }
