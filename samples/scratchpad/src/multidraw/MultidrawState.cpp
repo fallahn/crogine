@@ -322,7 +322,7 @@ void MultidrawState::createScene()
 
             if (ImGui::Button("Click"))
             {
-                const auto path = cro::FileSystem::openFileDialogue(std::filesystem::current_path() / "buns.png", "png,jpg,bmp", true);
+                const auto path = cro::FileSystem::openFolderDialogue("C:\\perflogs");
                 LogI << path << std::endl;
             }
 

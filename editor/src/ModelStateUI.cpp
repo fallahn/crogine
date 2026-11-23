@@ -336,7 +336,25 @@ void ModelState::showSaveMessage()
         {
             if (m_importedVBO.empty())
             {
-                showSaveFileDialogue(SaveDialogueState::Save);
+                //showSaveFileDialogue(SaveDialogueState::Save);
+
+                auto path = cro::FileSystem::saveFileDialogue(m_preferences.lastModelDirectory);
+
+                if (!path.empty())
+                {
+                    path.replace_extension("cmt");
+                    m_preferences.lastModelDirectory = path.parent_path();
+                    m_currentFilePath = path;
+
+                    if (cro::FileSystem::fileExists(path))
+                    {
+                        if (!cro::FileSystem::showMessageBox("Confirm", "File Exists... Overwrite?", cro::FileSystem::YesNo))
+                        {
+                            return;
+                        }
+                    }
+                    saveModel(path);
+                }
             }
             else
             {
@@ -344,7 +362,15 @@ void ModelState::showSaveMessage()
                 //export the model
                 m_exportOptions.modelOnly = false;
                 m_exportOptions.openOnExport = false;
-                showSaveFileDialogue(SaveDialogueState::Export);
+                //showSaveFileDialogue(SaveDialogueState::Export);
+
+                auto path = cro::FileSystem::saveFileDialogue(m_preferences.lastModelDirectory, "cmb");
+                if (!path.empty())
+                {
+                    path.replace_extension("cmb");
+                    m_preferences.lastExportDirectory = path.parent_path();
+                    exportModel(path);
+                }
             }
         }
         else

@@ -336,9 +336,12 @@ std::filesystem::path FileSystem::openFileDialogue(const std::filesystem::path& 
     SDL_ShowOpenFileDialog(callback, &result, App::getWindow(), filterlist.data(), 
         static_cast<std::int32_t>(filterlist.size()), U8PATH_CAST(defaultDir), selectMultiple);
 
+    //this needs to be done for the dialogue to display
+    SDL_Event e = {};
     while (!result.hasResult)
     {
-        SDL_PumpEvents();
+        //TODO is this healthy?
+        while (SDL_PollEvent(&e));
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
@@ -373,8 +376,49 @@ std::filesystem::path FileSystem::openFolderDialogue(const std::filesystem::path
     Logger::log("File Dialogues are not supported", Logger::Type::Error);
     return {};
 #else
+#ifdef SDL_DIALOGUES
+    FileDialogueCallbackResult result;
+    const auto callback = [](void* resultData, const char* const* filelist, int filter)
+        {
+            auto& retVal = *reinterpret_cast<FileDialogueCallbackResult*>(resultData);
+            if (filelist == nullptr)
+            {
+                //error
+                LogE << SDL_GetError() << std::endl;
+            }
+            else if (*filelist)
+            {
+                std::string f = filelist[0];
+                filelist++;
+
+                while (*filelist)
+                {
+                    f += "|" + std::string(*filelist);
+                    filelist++;
+                }
+
+                retVal.result = f;
+            }
+
+            retVal.hasResult = true;
+        };
+
+
+    SDL_ShowOpenFolderDialog(callback, &result, App::getWindow(), U8PATH_CAST(defPath), false);
+
+    SDL_Event e = {};
+    while (!result.hasResult)
+    {
+        //TODO is this healthy?
+        while (SDL_PollEvent(&e));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    return result.result;
+#else
     const auto path = tinyfd_selectFolderDialog("Select Folder", U8PATH_CAST(defPath));
     return path ? path : std::filesystem::path();
+#endif
 #endif //__ANDROID__
 }
 
@@ -406,11 +450,14 @@ std::filesystem::path FileSystem::saveFileDialogue(const std::filesystem::path& 
         filterlist.emplace_back(desc.c_str(), type.c_str());
     }
 
-    SDL_ShowSaveFileDialog(callback, &result, cro::App::getWindow(), filterlist.data(), static_cast<std::int32_t>(filterlist.size()), U8PATH_CAST(defaultDir));
+    SDL_ShowSaveFileDialog(callback, &result, App::getWindow(), filterlist.data(), static_cast<std::int32_t>(filterlist.size()), U8PATH_CAST(defaultDir));
 
+    //this needs to be done for the dialogue to display
+    SDL_Event e = {};
     while (!result.hasResult)
     {
-        SDL_PumpEvents();
+        //TODO is this healthy?
+        while (SDL_PollEvent(&e));
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 

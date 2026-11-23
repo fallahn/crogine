@@ -850,7 +850,17 @@ bool ParticleState::confirmSave(std::int32_t postDialogueOption)
         }
         else
         {
-            showSaveDialogue();
+            //showSaveDialogue();
+            auto path = cro::FileSystem::saveFileDialogue(lastSavePath, "cps");
+            if (!path.empty()) 
+            {
+                path.replace_extension("cps");
+                m_particleSettings->saveToFile(path);
+                lastSavePath = path;
+                m_history.add(path);
+                m_lastPath = path.parent_path();
+                savePrefs();
+            }
         }
 
         return true;
