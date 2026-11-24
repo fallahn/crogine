@@ -79,7 +79,7 @@ bool HoleState::handleEvent(const cro::Event& evt)
     //}
 
     m_gameScene.forwardEvent(evt);
-    return true;
+    return false;
 }
 
 void HoleState::handleMessage(const cro::Message& msg)
@@ -97,6 +97,7 @@ void HoleState::preRender()
 {
     m_gameScene.preRender();
 }
+
 void HoleState::render()
 {
     m_gameScene.render();
@@ -150,7 +151,7 @@ void HoleState::drawMenuBar()
             {
                 if (!cro::FileSystem::showMessageBox("Save Settings", "Do you want to save first?", cro::FileSystem::YesNo))
                 {
-                    cro::App::quit();
+                    requestStackPop();
                 }
                 else
                 {
@@ -163,19 +164,19 @@ void HoleState::drawMenuBar()
 
         if (ImGui::BeginMenu("Edit"))
         {
-            if (ImGui::MenuItem("Treeset Editor"))
-            {
-                //TODO show save dialogue first
-                requestStackClear();
-                requestStackPush(StateID::EditorBush);
-            }
+            //if (ImGui::MenuItem("Treeset Editor"))
+            //{
+            //    //TODO show save dialogue first
+            //    requestStackClear();
+            //    requestStackPush(StateID::EditorBush);
+            //}
 
-            if (ImGui::MenuItem("Course Editor"))
-            {
-                //TODO show save dialogue first
-                requestStackClear();
-                requestStackPush(StateID::EditorCourse);
-            }
+            //if (ImGui::MenuItem("Course Editor"))
+            //{
+            //    //TODO show save dialogue first
+            //    requestStackClear();
+            //    requestStackPush(StateID::EditorCourse);
+            //}
 
             ImGui::EndMenu();
         }
@@ -188,7 +189,7 @@ void HoleState::drawMenuBar()
 
         if (ImGui::BeginMenu("Help"))
         {
-            ImGui::MenuItem("About");
+            ImGui::MenuItem("Documentation");
 
             ImGui::EndMenu();
         }

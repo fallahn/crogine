@@ -130,7 +130,7 @@ bool EditorApp::initialise()
 
     applyImGuiStyle(m_sharedData);
 
-    m_stateStack.pushState(StateID::EditorHole);
+    m_stateStack.pushState(StateID::EditorCourse);
 
     return true;
 }

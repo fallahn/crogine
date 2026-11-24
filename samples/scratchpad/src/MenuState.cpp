@@ -1625,6 +1625,7 @@ bool MenuState::createStub(const std::string& name) const
 {
     m_gameScene.preRender();
 }
+
 )";
 
         cppFile << "void " << className << "State::render()";

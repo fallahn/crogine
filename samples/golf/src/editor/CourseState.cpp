@@ -46,14 +46,17 @@ CourseState::CourseState(cro::StateStack& stack, cro::State::Context context, co
     : cro::State    (stack, context),
     m_gameScene     (context.appInstance.getMessageBus())
 {
-    cro::App::getWindow().setTitle("Super Video Golf -  Course Editor");
-    cro::App::getInstance().setClearColour(cro::Colour::CornflowerBlue);
-
     context.mainWindow.loadResources([this]() {
+        setWindowTitle();
+        cro::App::getInstance().setClearColour(cro::Colour::CornflowerBlue);
+        std::fill(m_windowStates.begin(), m_windowStates.end(), std::make_pair(false, std::function<void()>()));
+
         addSystems();
         loadAssets();
         createScene();
         createUI();
+
+        loadSettings();
     });
 }
 
@@ -63,6 +66,11 @@ bool CourseState::handleEvent(const cro::Event& evt)
     if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
     {
         return true;
+    }
+
+    if (evt.type == SDL_EVENT_QUIT)
+    {
+        confirmQuit();
     }
 
     //if (evt.type == SDL_EVENT_KEY_DOWN)
@@ -84,6 +92,15 @@ bool CourseState::handleEvent(const cro::Event& evt)
 
 void CourseState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == cro::Message::StateMessage)
+    {
+        const auto& data = msg.getData<cro::Message::StateEvent>();
+        if (data.action == cro::Message::StateEvent::Popped)
+        {
+            setWindowTitle();
+        }
+    }
+
     m_gameScene.forwardMessage(msg);
 }
 
@@ -95,11 +112,18 @@ bool CourseState::simulate(float dt)
 
 void CourseState::preRender()
 {
-    m_gameScene.preRender();
+    if (getStateCount() == 1)
+    {
+        m_gameScene.preRender();
+    }
 }
+
 void CourseState::render()
 {
-    m_gameScene.render();
+    if (getStateCount() == 1)
+    {
+        m_gameScene.render();
+    }
 }
 
 //private
@@ -135,66 +159,167 @@ void CourseState::createUI()
 {
     registerWindow([this]() 
         {
-            drawMenuBar();
-        
+            //don't draw if we're not the top state
+            if (getStateCount() == 1)
+            {
+                drawMenuBar();
+
+                for (auto& [state, window] : m_windowStates)
+                {
+                    if (state)
+                    {
+                        window();
+                    }
+                }
+            }
         });
+
+    m_windowStates[WindowID::NewProject].second = std::bind(&CourseState::drawNewProject, this);
 }
 
-void CourseState::drawMenuBar()
+void CourseState::loadProject(const std::filesystem::path& path)
 {
-    if (ImGui::BeginMainMenuBar())
+    m_projectSettings = {};
+
+    cro::ConfigFile cfg;
+    if (cfg.loadFromFile(path / "settings.svgproj"))
     {
-        if (ImGui::BeginMenu("File"))
+        for (const auto& prop : cfg.getProperties())
         {
-            if (ImGui::MenuItem("Quit"))
+            const auto name = prop.getName();
+            if (name == "name")
             {
-                if (!cro::FileSystem::showMessageBox("Save Settings", "Do you want to save first?", cro::FileSystem::YesNo))
-                {
-                    cro::App::quit();
-                }
-                else
-                {
-                    //showPresetSaveDialogue(OpenDialogueState::Quit);
-                }
+                m_projectSettings.name = prop.getValue<std::string>();
             }
-
-            ImGui::EndMenu();
-        }
-
-        if (ImGui::BeginMenu("Edit"))
-        {
-            if (ImGui::MenuItem("Treeset Editor"))
+            else if (name == "id")
             {
-                //TODO show save dialogue first
-                requestStackClear();
-                requestStackPush(StateID::EditorBush);
+                m_projectSettings.id = prop.getValue<std::string>();
             }
-
-            if (ImGui::MenuItem("Hole Editor"))
-            {
-                //TODO show save dialogue first
-                requestStackClear();
-                requestStackPush(StateID::EditorHole);
-            }
-
-            ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Tools"))
+        m_projectSettings.workingDirectory = path;
+        
+        if (!validateProjectDirectories(m_projectSettings.id))
         {
-
-            ImGui::EndMenu();
+            cro::FileSystem::showMessageBox("Error", "One or more project directories are missing");
+            m_projectSettings = {};
         }
-
-        if (ImGui::BeginMenu("Help"))
+        else
         {
-            ImGui::MenuItem("About");
-
-            ImGui::EndMenu();
+            setWindowTitle();
+            saveSettings();
         }
-
-        ImGui::EndMainMenuBar();
     }
+    else
+    {
+        cro::FileSystem::showMessageBox("Error", "Could not load project settings");
+    }
+}
 
-    //handleFileDialogues();
+void CourseState::saveProject(const std::filesystem::path& dirPath) const
+{
+    //make sure this is the correct directory
+    const auto dirlist = cro::FileSystem::listDirectories(dirPath);
+    if (dirlist.empty() || dirlist[0] != "golf")
+    {
+        cro::FileSystem::showMessageBox("Error", "Not a valid project directory");
+        LogE << "Failed saving to " << dirPath << std::endl;
+    }
+    else
+    {
+        //TODO this doesn't really make much sense if we're transferring
+        //projects from other computers, we should infer this from dirPath
+        cro::ConfigFile cfg;
+        //cfg.addProperty("working_dir").setValue(m_projectSettings.workingDirectory.relative_path());
+        cfg.addProperty("name").setValue(m_projectSettings.name);
+        cfg.addProperty("id").setValue(m_projectSettings.id);
+
+        cfg.save(dirPath / "settings.svgproj");
+
+        saveSettings();
+    }
+}
+
+std::array<std::filesystem::path, 11u> CourseState::getProjectDirectories(const std::string& id) const
+{
+    return
+    {
+        std::filesystem::path("golf"),
+        std::filesystem::path("golf/courses"),
+        std::filesystem::path("golf/courses") / id,
+        std::filesystem::path("golf/images"),
+        std::filesystem::path("golf/images/skybox"),
+        std::filesystem::path("golf/images/terrain"),
+        std::filesystem::path("golf/models"),
+        std::filesystem::path("golf/models/") / id,
+        std::filesystem::path("golf/models/skybox"),
+        std::filesystem::path("golf/skyboxes"),
+        std::filesystem::path("golf/treesets")
+    };
+}
+
+bool CourseState::validateProjectDirectories(const std::string& id) const
+{
+    const auto dirs = getProjectDirectories(id);
+    for (const auto d : dirs)
+    {
+        if (!cro::FileSystem::directoryExists(m_projectSettings.workingDirectory / d))
+        {
+            LogE << d << ": project directory missing or not found" << std::endl;
+            return false;
+        }
+    }
+    return true;
+}
+
+void CourseState::setWindowTitle()
+{
+    std::string title = "Super Video Golf - Course Editor";
+    if (!m_projectSettings.name.empty())
+    {
+        title += " (" + m_projectSettings.name + ")";
+    }
+    cro::App::getWindow().setTitle(title);
+}
+
+void CourseState::loadSettings()
+{
+    cro::ConfigFile cfg;
+    if (cfg.loadFromFile(cro::App::getPreferencePath() / "course_editor.cfg"))
+    {
+        const auto& props = cfg.getProperties();
+        for (const auto& prop : props)
+        {
+            const auto& name = prop.getName();
+            if (name == "open_location")
+            {
+                m_editorSettings.lastLoadDirectory = prop.getValue<std::filesystem::path>();
+            }
+            else if (name == "save_location")
+            {
+                m_editorSettings.lastSaveDirectory = prop.getValue<std::filesystem::path>();
+            }
+        }
+    }
+}
+
+void CourseState::saveSettings() const
+{
+    cro::ConfigFile cfg;
+    cfg.addProperty("open_location").setValue(m_editorSettings.lastLoadDirectory.empty() ? std::filesystem::current_path() : m_editorSettings.lastLoadDirectory);
+    cfg.addProperty("save_location").setValue(m_editorSettings.lastSaveDirectory.empty() ? std::filesystem::current_path() : m_editorSettings.lastSaveDirectory);
+
+    cfg.save(cro::App::getPreferencePath() / "course_editor.cfg");
+}
+
+void CourseState::confirmQuit() const
+{
+    if (!m_projectSettings.workingDirectory.empty())
+    {
+        if (cro::FileSystem::showMessageBox("Confirm", "Do you want to save the current project?", cro::FileSystem::ButtonType::YesNo))
+        {
+            saveProject(m_projectSettings.workingDirectory);
+        }
+    }
+    cro::App::quit();
 }

@@ -61,5 +61,47 @@ private:
     void createScene();
     void createUI();
 
+    struct ProjectSettings final
+    {
+        std::string name;
+        std::string id;
+
+        //TODO working directories etc
+
+        std::filesystem::path workingDirectory;
+    }m_projectSettings;
+
+    //used to hold input from the new project window
+    ProjectSettings m_newProjectBuffer;
+
+    void loadProject(const std::filesystem::path&);
+    void saveProject(const std::filesystem::path&) const;
+    std::array<std::filesystem::path, 11u> getProjectDirectories(const std::string& id) const;
+    bool validateProjectDirectories(const std::string& id) const;
+    void setWindowTitle();
+
+    struct EditorSettings final
+    {
+        std::filesystem::path lastSaveDirectory;
+        std::filesystem::path lastLoadDirectory;
+    }m_editorSettings;
+
+    void loadSettings();
+    void saveSettings() const;
+    void confirmQuit() const;
+
+    struct WindowID final
+    {
+        enum
+        {
+            NewProject,
+
+            Count
+        };
+    };
+    std::array<std::pair<bool, std::function<void()>>, WindowID::Count> m_windowStates = {};
+
+    //CourseStateWindows.cpp//
     void drawMenuBar();
+    void drawNewProject();
 };

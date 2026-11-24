@@ -84,11 +84,11 @@ void BushState::drawMenuBar(bool*)
                 showPresetSaveDialogue();
             }
             ImGui::Separator();
-            if (ImGui::MenuItem("Quit"))
+            if (ImGui::MenuItem("Close Editor"))
             {
                 if (!cro::FileSystem::showMessageBox("Save Settings", "Do you want to save the current treeset first?", cro::FileSystem::YesNo))
                 {
-                    cro::App::quit();
+                    requestStackPop();
                 }
                 else
                 {
@@ -101,7 +101,7 @@ void BushState::drawMenuBar(bool*)
 
         if (ImGui::BeginMenu("Edit"))
         {
-            if (ImGui::MenuItem("Hole Editor"))
+            /*if (ImGui::MenuItem("Hole Editor"))
             {
                 if (!cro::FileSystem::showMessageBox("Save Settings", "Do you want to save the current treeset first?", cro::FileSystem::YesNo))
                 {
@@ -125,7 +125,7 @@ void BushState::drawMenuBar(bool*)
                 {
                     showPresetSaveDialogue(OpenDialogueState::CourseEditor);
                 }
-            }
+            }*/
 
             ImGui::EndMenu();
         }
@@ -142,7 +142,7 @@ void BushState::drawMenuBar(bool*)
         if (ImGui::BeginMenu("Help"))
         {
             ImGui::MenuItem("Controls", nullptr, &m_windows[m_windowIndices[WindowIndex::Help]].visible);
-            ImGui::MenuItem("About");
+            ImGui::MenuItem("Documentation");
 
             ImGui::EndMenu();
         }
@@ -872,15 +872,15 @@ void BushState::handleFileDialogues()
                 showPresetOpenDialogue();
                 break;
             case OpenDialogueState::Quit:
-                cro::App::quit();
+                requestStackPop();
                 break;
             case OpenDialogueState::CourseEditor:
-                requestStackClear();
-                requestStackPush(StateID::EditorCourse);
+                //requestStackClear();
+                //requestStackPush(StateID::EditorCourse);
                 break;
             case OpenDialogueState::HoleEditor:
-                requestStackClear();
-                requestStackPush(StateID::EditorHole);
+                //requestStackClear();
+                //requestStackPush(StateID::EditorHole);
                 break;
             }
             m_pendingDialogueState = OpenDialogueState::None;

@@ -689,6 +689,7 @@
     <ClCompile Include="src\editor\BushState.cpp" />
     <ClCompile Include="src\editor\BushStateWindows.cpp" />
     <ClCompile Include="src\editor\CourseState.cpp" />
+    <ClCompile Include="src\editor\CourseStateWindows.cpp" />
     <ClCompile Include="src\editor\EditorApp.cpp" />
     <ClCompile Include="src\editor\GrassProcessing.cpp" />
     <ClCompile Include="src\editor\HoleState.cpp" />
