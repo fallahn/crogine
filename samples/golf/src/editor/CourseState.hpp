@@ -109,6 +109,17 @@ private:
     void assertCourseDataPath(const std::filesystem::path& inPath, std::filesystem::path& dst);
 
 
+    //lists the available resources, used to draw the interface
+    std::vector<std::filesystem::path> m_skyboxFiles;
+    void refreshSkyboxFiles();
+    std::vector<std::filesystem::path> m_shrubFiles;
+    void refreshShrubFiles();
+    //HMMM how to list instanced models without do stupid things like instancing buildings?
+    std::vector<std::filesystem::path> m_audioFiles;
+    void refreshAudioFiles(); //again we only want enviro files...
+
+
+
     struct WindowID final
     {
         enum

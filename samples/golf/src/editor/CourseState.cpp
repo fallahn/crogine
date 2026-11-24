@@ -184,6 +184,12 @@ void CourseState::loadProject(const std::filesystem::path& path)
     if (!m_projectSettings.workingDirectory.empty())
     {
         cro::IOResource::removePath(m_projectSettings.workingDirectory);
+
+        //we have to do this to make sure we remove any files
+        //which were listed from the previously mounted dir
+        refreshAudioFiles();
+        refreshSkyboxFiles();
+        refreshShrubFiles();
     }
 
     m_projectSettings = {};
@@ -267,6 +273,10 @@ void CourseState::loadProject(const std::filesystem::path& path)
             setWindowTitle();
 
             cro::IOResource::addPath(m_projectSettings.workingDirectory, std::filesystem::path("assets"));
+            refreshAudioFiles();
+            refreshSkyboxFiles();
+            refreshShrubFiles();
+
             m_editorSettings.lastLoadDirectory = path;
             saveSettings();
         }
@@ -428,5 +438,64 @@ void CourseState::assertCourseDataPath(const std::filesystem::path& inPath, std:
     {
         dest.clear();
         LogW << dest << ": File not found" << std::endl;
+    }
+}
+
+void CourseState::refreshSkyboxFiles()
+{
+    //TODO these paths get referenced a lot so
+    //we probably want to make a const array somewhere
+    const std::filesystem::path BasePath("assets/golf/skyboxes/");
+
+    m_skyboxFiles.clear();
+    const auto files = cro::FileSystem::listFiles(BasePath);
+    for (const auto& file : files)
+    {
+        //we need to (crudely) remove the _n variants as these
+        //are automatically applied at night time and not
+        //listed in the course data files specifically.
+        if (file.extension() == ".sbf")
+        {
+            if (file.string().find("_n") == std::string::npos)
+            {
+                m_skyboxFiles.emplace_back(BasePath / file);
+            }
+        }
+    }
+}
+
+void CourseState::refreshShrubFiles()
+{
+    const std::filesystem::path BasePath("assets/golf/shrubs/");
+
+    m_shrubFiles.clear();
+
+    const auto files = cro::FileSystem::listFiles(BasePath);
+    for (const auto& file : files)
+    {
+        if (file.extension() == ".shb")
+        {
+            m_shrubFiles.emplace_back(BasePath / file);
+        }
+    }
+}
+
+void CourseState::refreshAudioFiles()
+{
+    const std::filesystem::path BasePath("assets/golf/sound/");
+
+    m_audioFiles.clear();
+
+    const auto files = cro::FileSystem::listFiles(BasePath);
+    for (const auto& file : files)
+    {
+        //we only want ambience files, and not the night version
+        //as these aren't specified in the data file
+        if (file.extension() == ".xas"
+            && file.string().find("ambience") == 0
+            && file.string().find("_n") == std::string::npos)
+        {
+            m_audioFiles.emplace_back(BasePath / file);
+        }
     }
 }
