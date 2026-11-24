@@ -92,6 +92,26 @@ bool IOResource::addPath(const std::filesystem::path& path, const std::filesyste
     return true;
 }
 
+bool IOResource::removePath(const std::filesystem::path& path)
+{
+    if (!PHYSFS_isInit())
+    {
+        LogE << "PHYSFS was not successfully initialised - PHYSFS functions are unavailable." << std::endl;
+        return false;
+    }
+
+    //this path HAS to be platform specific - ie '\\' for windows
+    //and MUST end with a separator if mounting a directory.
+
+    if (PHYSFS_unmount(U8PATH_CAST(path)) == 0)
+    {
+        LogE << "Failed to remove " << path << " from search paths, reason: " << PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()) << std::endl;
+        return false;
+    }
+    LogI << "Successfully unmounted " << path << std::endl;
+    return true;
+}
+
 IOStream IOResource::open(const std::filesystem::path& path)
 {
     IOStream retVal;

@@ -66,8 +66,8 @@ private:
         std::string name;
         std::string id;
 
-        //TODO working directories etc
-
+        //this is an absolute path to the project directory
+        //so that it can be mounted / unmounted in the virtual FS
         std::filesystem::path workingDirectory;
     }m_projectSettings;
 
@@ -75,7 +75,7 @@ private:
     ProjectSettings m_newProjectBuffer;
 
     void loadProject(const std::filesystem::path&);
-    void saveProject(const std::filesystem::path&) const;
+    void saveProject(const std::filesystem::path&);
     std::array<std::filesystem::path, 11u> getProjectDirectories(const std::string& id) const;
     bool validateProjectDirectories(const std::string& id) const;
     void setWindowTitle();
@@ -88,7 +88,26 @@ private:
 
     void loadSettings();
     void saveSettings() const;
-    void confirmQuit() const;
+    void confirmQuit();
+
+    //represents the course.data file
+    struct CourseData final
+    {
+        //NOTE all paths are relative to assets
+        //directory - that is they all start assets/golf
+        std::filesystem::path skybox; //sbf
+        std::filesystem::path shrubs; //shb
+        std::filesystem::path instanceModel; //optional cmt
+        std::filesystem::path audio; //xas
+
+        cro::String displayTitle;
+        cro::String displayDescription;
+
+        //note that these may be partially empty
+        std::array<std::filesystem::path, 18u> holePaths = {};
+    }m_courseData;
+    void assertCourseDataPath(const std::filesystem::path& inPath, std::filesystem::path& dst);
+
 
     struct WindowID final
     {

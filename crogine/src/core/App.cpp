@@ -283,6 +283,7 @@ App::App(std::uint32_t styleFlags)
 #endif
 
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS5, "1");
+    SDL_SetHint(SDL_HINT_ENABLE_SCREEN_KEYBOARD, "0"); //prevent showing keyboard on Steam Deck when ImGui invoked - we do this manually
 #ifdef _WIN32
     //SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2");
 #endif

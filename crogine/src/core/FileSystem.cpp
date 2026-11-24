@@ -404,7 +404,17 @@ std::filesystem::path FileSystem::openFolderDialogue(const std::filesystem::path
         };
 
 
-    SDL_ShowOpenFolderDialog(callback, &result, App::getWindow(), U8PATH_CAST(defPath), false);
+    //hmmm SDL very specifically wants correct file path separators for the
+    //current platform AND a trailing separator. Let's hope the replace doesn't
+    //mangle the utf8 encoding...
+    std::string platformPath = reinterpret_cast<const char*>(defPath.u8string().c_str());
+#ifdef _WIN32
+    std::replace(platformPath.begin(), platformPath.end(), '/', '\\');
+    platformPath += "\\";
+#else
+    platformPath += "/";
+#endif
+    SDL_ShowOpenFolderDialog(callback, &result, App::getWindow(), /*U8PATH_CAST(defPath)*/platformPath.c_str(), false);
 
     SDL_Event e = {};
     while (!result.hasResult)

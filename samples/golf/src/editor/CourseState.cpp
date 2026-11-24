@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2026
+Matt Marchant 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,6 +29,7 @@ source distribution.
 
 #include "CourseState.hpp"
 
+#include <crogine/detail/IOStream.hpp>
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/Camera.hpp>
@@ -179,7 +180,14 @@ void CourseState::createUI()
 
 void CourseState::loadProject(const std::filesystem::path& path)
 {
+    //unmount any existing project
+    if (!m_projectSettings.workingDirectory.empty())
+    {
+        cro::IOResource::removePath(m_projectSettings.workingDirectory);
+    }
+
     m_projectSettings = {};
+    m_courseData = {};
 
     cro::ConfigFile cfg;
     if (cfg.loadFromFile(path / "settings.svgproj"))
@@ -206,7 +214,60 @@ void CourseState::loadProject(const std::filesystem::path& path)
         }
         else
         {
+            std::int32_t holeIndex = 0;
+
+            cro::ConfigFile holeData;
+            holeData.loadFromFile(path / "golf/courses" / m_projectSettings.id / "course.data");
+
+            static constexpr std::size_t MaxDescChar = 34;
+
+            for (const auto& prop : holeData.getProperties())
+            {
+                const auto& name = prop.getName();
+                if (name == "skybox")
+                {
+                    assertCourseDataPath(prop.getValue<std::filesystem::path>(), m_courseData.skybox);
+                }
+                else if (name == "shrubbery")
+                {
+                    assertCourseDataPath(prop.getValue<std::filesystem::path>(), m_courseData.shrubs);
+                }
+                else if (name == "audio")
+                {
+                    assertCourseDataPath(prop.getValue<std::filesystem::path>(), m_courseData.audio);
+                }
+                else if (name == "instance_model")
+                {
+                    assertCourseDataPath(prop.getValue<std::filesystem::path>(), m_courseData.instanceModel);
+                }
+                else if (name == "title")
+                {
+                    auto str = prop.getValue<cro::String>();
+                    if (str.size() > MaxDescChar)
+                    {
+                        str = str.substr(0, MaxDescChar);
+                    }
+                    m_courseData.displayTitle = str;
+                }
+                else if (name == "description")
+                {
+                    auto str = prop.getValue<cro::String>();
+                    if (str.size() > MaxDescChar)
+                    {
+                        str = str.substr(0, MaxDescChar);
+                    }
+                    m_courseData.displayDescription = str;
+                }
+                else if (name == "hole")
+                {
+                    assertCourseDataPath(prop.getValue<std::filesystem::path>(), m_courseData.holePaths[holeIndex++]);
+                }
+            }
+
             setWindowTitle();
+
+            cro::IOResource::addPath(m_projectSettings.workingDirectory, std::filesystem::path("assets"));
+            m_editorSettings.lastLoadDirectory = path;
             saveSettings();
         }
     }
@@ -216,7 +277,7 @@ void CourseState::loadProject(const std::filesystem::path& path)
     }
 }
 
-void CourseState::saveProject(const std::filesystem::path& dirPath) const
+void CourseState::saveProject(const std::filesystem::path& dirPath)
 {
     //make sure this is the correct directory
     const auto dirlist = cro::FileSystem::listDirectories(dirPath);
@@ -227,15 +288,35 @@ void CourseState::saveProject(const std::filesystem::path& dirPath) const
     }
     else
     {
-        //TODO this doesn't really make much sense if we're transferring
-        //projects from other computers, we should infer this from dirPath
+        //save the course file
+        cro::ConfigFile courseCfg("course");
+        courseCfg.addProperty("skybox").setValue(m_courseData.skybox);
+        courseCfg.addProperty("shrubbery").setValue(m_courseData.shrubs);
+        courseCfg.addProperty("audio").setValue(m_courseData.audio);
+        if (!m_courseData.instanceModel.empty())
+        {
+            courseCfg.addProperty("instance_model").setValue(m_courseData.instanceModel);
+        }
+        courseCfg.addProperty("title").setValue(m_courseData.displayTitle);
+        courseCfg.addProperty("description").setValue(m_courseData.displayDescription);
+
+        for (const auto& path : m_courseData.holePaths)
+        {
+            if (!path.empty())
+            {
+                courseCfg.addProperty("hole").setValue(path);
+            }
+        }
+        courseCfg.save(dirPath / "golf/courses" / m_projectSettings.id / "course.data");
+
+        //save the project settings
         cro::ConfigFile cfg;
-        //cfg.addProperty("working_dir").setValue(m_projectSettings.workingDirectory.relative_path());
         cfg.addProperty("name").setValue(m_projectSettings.name);
         cfg.addProperty("id").setValue(m_projectSettings.id);
 
         cfg.save(dirPath / "settings.svgproj");
 
+        m_editorSettings.lastSaveDirectory = dirPath;
         saveSettings();
     }
 }
@@ -312,7 +393,7 @@ void CourseState::saveSettings() const
     cfg.save(cro::App::getPreferencePath() / "course_editor.cfg");
 }
 
-void CourseState::confirmQuit() const
+void CourseState::confirmQuit()
 {
     if (!m_projectSettings.workingDirectory.empty())
     {
@@ -322,4 +403,30 @@ void CourseState::confirmQuit() const
         }
     }
     cro::App::quit();
+}
+
+void CourseState::assertCourseDataPath(const std::filesystem::path& inPath, std::filesystem::path& dest)
+{
+    if (inPath.empty())
+    {
+        return;
+    }
+
+    static const std::filesystem::path Base("assets");
+
+    //make sure the resource paths are all assets/golf/etc...
+    if (const auto rel = std::filesystem::relative(inPath, Base); rel.empty())
+    {
+        dest = Base / inPath;
+    }
+    else
+    {
+        dest = inPath;
+    }
+
+    if (!cro::FileSystem::fileExists(dest))
+    {
+        dest.clear();
+        LogW << dest << ": File not found" << std::endl;
+    }
 }

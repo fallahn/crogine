@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2026
+Matt Marchant 2026
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -202,6 +202,8 @@ void CourseState::drawNewProject()
                     }
                     else
                     {
+                        m_courseData = {};
+
                         //save project to create the settings file
                         m_projectSettings = m_newProjectBuffer;
                         saveProject(m_newProjectBuffer.workingDirectory);

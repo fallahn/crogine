@@ -116,6 +116,16 @@ namespace cro
 
 
         /*!
+        \brief Unmounts a file path or archive previously mounted with addPath()
+        \param path The path to the actualy archive or location on disk which was previously
+        used with addPath() NOT the destination path
+        \returns true if successfully unmounted, else false if the path was invalid. See console
+        for any error details.
+        */
+        static bool removePath(const std::filesystem::path& path);
+
+
+        /*!
         \brief Searches mounted filesystem (via physfs) for given path and returns a handle if the file was opened.
         If the file is not found in the mounted file system the absolute path on the filesystem is tried.
         Note that this is intended for resources and should always be considered READ-ONLY and in BINARY mode.
