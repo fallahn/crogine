@@ -34,6 +34,7 @@ source distribution.
 #include "../icon.hpp"
 #include "../ImTheme.hpp"
 #include "../StateIDs.hpp"
+#include "../Colordome-32.hpp"
 
 #include <crogine/core/Clock.hpp>
 
@@ -128,7 +129,12 @@ bool EditorApp::initialise()
         }
     }
 
+    //TODO set a more appropriate theme - but bear in mind that
+    //this func also sets things like fonts.
     applyImGuiStyle(m_sharedData);
+
+    const auto borderColour = CD32::Colours[CD32::MauveDark].getVec4();
+    ImGui::GetStyle().Colors[ImGuiCol_Border] = ImVec4(borderColour.r, borderColour.g, borderColour.b, 1.f);
 
     m_stateStack.pushState(StateID::EditorCourse);
 

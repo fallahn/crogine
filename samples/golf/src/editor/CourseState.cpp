@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "CourseState.hpp"
+#include "EditorConsts.hpp"
 
 #include <crogine/detail/IOStream.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -45,7 +46,10 @@ source distribution.
 
 CourseState::CourseState(cro::StateStack& stack, cro::State::Context context, const SharedStateData&)
     : cro::State    (stack, context),
-    m_gameScene     (context.appInstance.getMessageBus())
+    m_gameScene     (context.appInstance.getMessageBus()),
+    m_skyboxIndex   (0),
+    m_shrubIndex    (0),
+    m_audioIndex    (0)
 {
     context.mainWindow.loadResources([this]() {
         setWindowTitle();
@@ -176,6 +180,7 @@ void CourseState::createUI()
         });
 
     m_windowStates[WindowID::NewProject].second = std::bind(&CourseState::drawNewProject, this);
+    m_windowStates[WindowID::Properties].second = std::bind(&CourseState::drawProjectProperties, this);
 }
 
 void CourseState::loadProject(const std::filesystem::path& path)
@@ -194,6 +199,7 @@ void CourseState::loadProject(const std::filesystem::path& path)
 
     m_projectSettings = {};
     m_courseData = {};
+    m_windowStates[WindowID::Properties].first = false;
 
     cro::ConfigFile cfg;
     if (cfg.loadFromFile(path / "settings.svgproj"))
@@ -225,8 +231,6 @@ void CourseState::loadProject(const std::filesystem::path& path)
             cro::ConfigFile holeData;
             holeData.loadFromFile(path / "golf/courses" / m_projectSettings.id / "course.data");
 
-            static constexpr std::size_t MaxDescChar = 34;
-
             for (const auto& prop : holeData.getProperties())
             {
                 const auto& name = prop.getName();
@@ -254,6 +258,7 @@ void CourseState::loadProject(const std::filesystem::path& path)
                         str = str.substr(0, MaxDescChar);
                     }
                     m_courseData.displayTitle = str;
+                    m_courseData.displayTitleBuffer = str.toUtf8Char();
                 }
                 else if (name == "description")
                 {
@@ -263,11 +268,23 @@ void CourseState::loadProject(const std::filesystem::path& path)
                         str = str.substr(0, MaxDescChar);
                     }
                     m_courseData.displayDescription = str;
+                    m_courseData.displayDescriptionBuffer = str.toUtf8Char();
                 }
                 else if (name == "hole")
                 {
                     assertCourseDataPath(prop.getValue<std::filesystem::path>(), m_courseData.holePaths[holeIndex++]);
                 }
+            }
+            if (m_courseData.displayTitle.empty())
+            {
+                //*SIGH*
+                m_courseData.displayTitle = m_projectSettings.name;
+                m_courseData.displayTitleBuffer = m_projectSettings.name;
+            }
+            if (m_courseData.displayDescription.empty())
+            {
+                m_courseData.displayDescription = "Enter Description";
+                m_courseData.displayDescriptionBuffer = "Enter Description";
             }
 
             setWindowTitle();
@@ -279,6 +296,8 @@ void CourseState::loadProject(const std::filesystem::path& path)
 
             m_editorSettings.lastLoadDirectory = path;
             saveSettings();
+
+            m_windowStates[WindowID::Properties].first = true;
         }
     }
     else
@@ -462,6 +481,17 @@ void CourseState::refreshSkyboxFiles()
             }
         }
     }
+
+    m_skyboxIndex = 0;
+    if (const auto res = std::find_if(m_skyboxFiles.begin(), m_skyboxFiles.end(),
+        [this](const std::filesystem::path& p)
+        {
+            return p == m_courseData.skybox;
+        });
+        res != m_skyboxFiles.end())
+    {
+        m_skyboxIndex = std::distance(m_skyboxFiles.begin(), res);
+    }
 }
 
 void CourseState::refreshShrubFiles()
@@ -477,6 +507,17 @@ void CourseState::refreshShrubFiles()
         {
             m_shrubFiles.emplace_back(BasePath / file);
         }
+    }
+
+    m_shrubIndex = 0;
+    if (const auto res = std::find_if(m_shrubFiles.begin(), m_shrubFiles.end(),
+        [this](const std::filesystem::path& p)
+        {
+            return p == m_courseData.shrubs;
+        });
+        res != m_shrubFiles.end())
+    {
+        m_shrubIndex = std::distance(m_shrubFiles.begin(), res);
     }
 }
 
@@ -497,5 +538,16 @@ void CourseState::refreshAudioFiles()
         {
             m_audioFiles.emplace_back(BasePath / file);
         }
+    }
+
+    m_audioIndex = 0;
+    if (const auto res = std::find_if(m_audioFiles.begin(), m_audioFiles.end(),
+        [this](const std::filesystem::path& p)
+        {
+            return p == m_courseData.audio;
+        });
+        res != m_audioFiles.end())
+    {
+        m_audioIndex = std::distance(m_audioFiles.begin(), res);
     }
 }

@@ -124,6 +124,8 @@ namespace
             hasResult = true;
         }
     };
+
+    static constexpr auto ThreadSleepTime = std::chrono::milliseconds(3);
 }
 
 using namespace cro;
@@ -333,8 +335,16 @@ std::filesystem::path FileSystem::openFileDialogue(const std::filesystem::path& 
         filterlist.emplace_back(desc.c_str(), type.c_str());
     }
 
+#ifdef _WIN32
+    std::string platformPath = reinterpret_cast<const char*>(defaultDir.u8string().c_str());
+    std::replace(platformPath.begin(), platformPath.end(), '/', '\\');
+
+    SDL_ShowOpenFileDialog(callback, &result, App::getWindow(), filterlist.data(),
+        static_cast<std::int32_t>(filterlist.size()), platformPath.c_str(), selectMultiple);
+#else
     SDL_ShowOpenFileDialog(callback, &result, App::getWindow(), filterlist.data(), 
         static_cast<std::int32_t>(filterlist.size()), U8PATH_CAST(defaultDir), selectMultiple);
+#endif
 
     //this needs to be done for the dialogue to display
     SDL_Event e = {};
@@ -342,7 +352,7 @@ std::filesystem::path FileSystem::openFileDialogue(const std::filesystem::path& 
     {
         //TODO is this healthy?
         while (SDL_PollEvent(&e));
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(ThreadSleepTime);
     }
 
     return result.result;
@@ -421,7 +431,7 @@ std::filesystem::path FileSystem::openFolderDialogue(const std::filesystem::path
     {
         //TODO is this healthy?
         while (SDL_PollEvent(&e));
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(ThreadSleepTime);
     }
 
     return result.result;
@@ -468,7 +478,7 @@ std::filesystem::path FileSystem::saveFileDialogue(const std::filesystem::path& 
     {
         //TODO is this healthy?
         while (SDL_PollEvent(&e));
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(ThreadSleepTime);
     }
 
     return result.result;

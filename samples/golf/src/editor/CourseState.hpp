@@ -101,7 +101,9 @@ private:
         std::filesystem::path audio; //xas
 
         cro::String displayTitle;
+        std::string displayTitleBuffer; //needed for ImGui
         cro::String displayDescription;
+        std::string displayDescriptionBuffer; //for imGui
 
         //note that these may be partially empty
         std::array<std::filesystem::path, 18u> holePaths = {};
@@ -110,11 +112,14 @@ private:
 
 
     //lists the available resources, used to draw the interface
+    std::size_t m_skyboxIndex;
     std::vector<std::filesystem::path> m_skyboxFiles;
     void refreshSkyboxFiles();
+    std::size_t m_shrubIndex;
     std::vector<std::filesystem::path> m_shrubFiles;
     void refreshShrubFiles();
     //HMMM how to list instanced models without do stupid things like instancing buildings?
+    std::size_t m_audioIndex;
     std::vector<std::filesystem::path> m_audioFiles;
     void refreshAudioFiles(); //again we only want enviro files...
 
@@ -124,7 +129,7 @@ private:
     {
         enum
         {
-            NewProject,
+            NewProject, Properties,
 
             Count
         };
@@ -134,4 +139,5 @@ private:
     //CourseStateWindows.cpp//
     void drawMenuBar();
     void drawNewProject();
+    void drawProjectProperties();
 };

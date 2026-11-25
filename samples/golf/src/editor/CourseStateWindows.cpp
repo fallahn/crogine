@@ -28,8 +28,14 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "CourseState.hpp"
+#include "EditorConsts.hpp"
 
 #include <crogine/gui/Gui.hpp>
+
+namespace
+{
+
+}
 
 void CourseState::drawMenuBar()
 {
@@ -53,7 +59,7 @@ void CourseState::drawMenuBar()
 
             if (ImGui::MenuItem("Open Project"))
             {
-                const auto path = cro::FileSystem::openFolderDialogue(m_editorSettings.lastLoadDirectory);
+                const auto path = cro::FileSystem::openFileDialogue(m_editorSettings.lastLoadDirectory / "settings.svgproj", "svgproj");
                 if (!path.empty())
                 {
                     if (!m_projectSettings.name.empty())
@@ -64,7 +70,7 @@ void CourseState::drawMenuBar()
                         }
                     }
 
-                    loadProject(path);
+                    loadProject(path.parent_path());
                     saveSettings();
                 }
             }
@@ -97,6 +103,11 @@ void CourseState::drawMenuBar()
             if (ImGui::MenuItem("Hole Editor"))
             {
                 requestStackPush(StateID::EditorHole);
+            }
+
+            if (ImGui::MenuItem("Audio Editor"))
+            {
+                //TODO show editor as modal
             }
 
             ImGui::EndMenu();
@@ -233,4 +244,125 @@ void CourseState::drawNewProject()
 
         ImGui::EndPopup();
     }
+}
+
+void CourseState::drawProjectProperties()
+{
+    const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
+    ImGui::SetNextWindowPos({ 0.f, ToolBarSize });
+    ImGui::SetNextWindowSize({ 300.f, windowSize.y - ToolBarSize });
+    ImGui::Begin("Project Properties", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+
+    //display title
+    ImGui::Text("Display Title");
+    helpMarker("The name of the course to display in game. Max 34 chars");
+    ImGui::SetNextItemWidth(-1.f);
+    if (ImGui::InputText("##dName", &m_courseData.displayTitleBuffer))
+    {
+        //urrrg such string conversion. If we weren't clamping the length here
+        //it might be better to just set the cro::String once when saving the cfg
+        m_courseData.displayTitle = cro::String::fromUtf8(m_courseData.displayTitleBuffer.begin(), m_courseData.displayTitleBuffer.end());
+        if (m_courseData.displayTitle.size() > MaxDescChar)
+        {
+            m_courseData.displayTitle = m_courseData.displayTitle.substr(0, MaxDescChar);
+            m_courseData.displayTitleBuffer = m_courseData.displayTitle.toUtf8Char();
+        }
+    }
+
+    //display description
+    ImGui::NewLine();
+    ImGui::Text("Display Description");
+    helpMarker("The description of the course to display in game. Max 34 chars");
+    ImGui::SetNextItemWidth(-1.f);
+    if (ImGui::InputText("##dDesc", &m_courseData.displayDescriptionBuffer))
+    {
+        m_courseData.displayDescription = cro::String::fromUtf8(m_courseData.displayDescriptionBuffer.begin(), m_courseData.displayDescriptionBuffer.end());
+        if (m_courseData.displayDescription.size() > MaxDescChar)
+        {
+            m_courseData.displayDescription = m_courseData.displayDescription.substr(0, MaxDescChar);
+            m_courseData.displayDescriptionBuffer = m_courseData.displayDescription.toUtf8Char();
+        }
+    }
+
+    //TODO make these a tab pane if they
+    //create a large scrollable area
+
+    //skybox
+    if (!m_skyboxFiles.empty())
+    {
+        ImGui::NewLine();
+        ImGui::Text("Skybox");
+        helpMarker("Select a skybox to use with this course. The selection of skyboxes includes the default ones provided with the game as well as any authoured for this projectusing the skybox editor");
+
+        ImGui::SetNextItemWidth(-1.f);
+        if (ImGui::BeginCombo("##skybox", m_skyboxFiles[m_skyboxIndex].filename().string().c_str()))
+        {
+            for (auto i = 0u; i < m_skyboxFiles.size(); ++i)
+            {
+                if (ImGui::Selectable(m_skyboxFiles[i].filename().string().c_str(), i == m_skyboxIndex))
+                {
+                    m_skyboxIndex = i;
+                    m_courseData.skybox = m_skyboxFiles[i];
+
+                    LogI << FILE_LINE << ": update 3D preview!!" << std::endl;
+                }
+            }
+            ImGui::EndCombo();
+        }
+    }
+
+    //shrubs
+    if (!m_shrubFiles.empty())
+    {
+        ImGui::NewLine();
+        ImGui::Text("Shrubs and Trees");
+        helpMarker("Select the treeset used for the shrubber in the game. Treesets can be created in the treeset editor.");
+
+        ImGui::SetNextItemWidth(-1.f);
+        if (ImGui::BeginCombo("##shrubs", m_shrubFiles[m_skyboxIndex].filename().string().c_str()))
+        {
+            for (auto i = 0u; i < m_shrubFiles.size(); ++i)
+            {
+                if (ImGui::Selectable(m_shrubFiles[i].filename().string().c_str(), i == m_shrubIndex))
+                {
+                    m_shrubIndex = i;
+                    m_courseData.shrubs = m_shrubFiles[i];
+
+                    LogI << FILE_LINE << ": update 3D preview!!" << std::endl;
+                }
+            }
+
+            ImGui::EndCombo();
+        }
+    }
+
+    //TODO instance model
+
+    //audio
+    if (!m_audioFiles.empty())
+    {
+        ImGui::NewLine();
+        ImGui::Text("Environment Audio");
+        helpMarker("Select the environment audio played in the background. The selection is available from the default game audio as well as any created in the Audio Editor. See the Edit menu");
+
+        ImGui::SetNextItemWidth(-1.f);
+        if (ImGui::BeginCombo("##audio", m_audioFiles[m_audioIndex].filename().string().c_str()))
+        {
+            for (auto i = 0u; i < m_audioFiles.size(); ++i)
+            {
+                if (ImGui::Selectable(m_audioFiles[i].filename().string().c_str(), i == m_audioIndex))
+                {
+                    m_audioIndex = i;
+                    m_courseData.audio = m_audioFiles[i];
+
+                    LogI << FILE_LINE << ": update 3D preview!!" << std::endl;
+                }
+            }
+
+            ImGui::EndCombo();
+        }
+    }
+
+
+    ImGui::End();
 }
