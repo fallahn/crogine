@@ -31,7 +31,6 @@ source distribution.
 #include "EditorConsts.hpp"
 
 #include <crogine/detail/IOStream.hpp>
-#include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -42,6 +41,8 @@ source distribution.
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
+#include <crogine/graphics/Image.hpp>
+#include <crogine/gui/Gui.hpp>
 #include <crogine/util/Constants.hpp>
 
 CourseState::CourseState(cro::StateStack& stack, cro::State::Context context, const SharedStateData&)
@@ -218,6 +219,7 @@ void CourseState::loadProject(const std::filesystem::path& path)
 
     m_projectSettings = {};
     m_courseData = {};
+    m_previewTexture = {};
     m_windowStates[WindowID::Properties].first = false;
 
     cro::ConfigFile cfg;
@@ -312,6 +314,18 @@ void CourseState::loadProject(const std::filesystem::path& path)
                 m_courseData.displayDescription = "Enter Description";
                 m_courseData.displayDescriptionBuffer = "Enter Description";
             }
+
+            const std::filesystem::path previewImage = m_projectSettings.workingDirectory / "golf/courses" / m_projectSettings.id / "preview.png";
+            if (cro::FileSystem::fileExists(previewImage))
+            {
+                m_previewTexture.loadFromFile(previewImage);
+            }
+
+            /*std::int32_t i = 0;
+            for (auto& h : m_courseData.holePaths)
+            {
+                h = std::to_string(i++) + ".hole";
+            }*/
 
             setWindowTitle();
 
@@ -586,5 +600,24 @@ void CourseState::refreshAudioFiles()
         res != m_audioFiles.end())
     {
         m_audioIndex = std::distance(m_audioFiles.begin(), res);
+    }
+}
+
+void CourseState::loadPreviewTexture(const std::filesystem::path& path)
+{
+    cro::Image image(true);
+    if (image.loadFromFile(path))
+    {
+        if (image.getSize().x != 640 && image.getSize().y != 480)
+        {
+            image.resize({ 640u, 480u });
+        }
+        image.write(m_projectSettings.workingDirectory / "golf/courses" / m_projectSettings.id / "preview.png", true);
+
+        m_previewTexture.loadFromImage(image);
+    }
+    else
+    {
+        cro::FileSystem::showMessageBox("Error", "Failed opening image. See console for details");
     }
 }

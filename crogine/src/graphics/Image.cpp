@@ -221,6 +221,7 @@ void image_writer_func(void* context, void* data, int size)
 
 bool Image::write(const std::filesystem::path& path, bool flipOnWrite)
 {
+    //TODO this isn't very consistent naming - should be save() or saveToFile()
     if (cro::FileSystem::getFileExtension(path) != ".png")
     {
         Logger::log("Only png files currently supported", Logger::Type::Error);

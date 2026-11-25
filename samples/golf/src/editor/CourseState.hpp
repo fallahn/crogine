@@ -129,6 +129,8 @@ private:
     std::vector<std::filesystem::path> m_audioFiles;
     void refreshAudioFiles(); //again we only want enviro files...
 
+    cro::Texture m_previewTexture;
+    void loadPreviewTexture(const std::filesystem::path&);
 
     struct WindowID final
     {

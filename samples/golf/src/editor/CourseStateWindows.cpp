@@ -297,133 +297,173 @@ void CourseState::drawProjectProperties()
         }
     }
 
-    //skybox
-    if (!m_skyboxFiles.empty())
+    ImGui::NewLine();
+    if (ImGui::CollapsingHeader("Theme", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed))
     {
-        ImGui::NewLine();
-        ImGui::Text("Skybox");
-        helpMarker("Select a skybox to use with this course. The selection of skyboxes includes the default ones provided with the game as well as any authoured for this projectusing the skybox editor");
-
-        ImGui::SetNextItemWidth(-1.f);
-        if (ImGui::BeginCombo("##skybox", m_skyboxFiles[m_skyboxIndex].filename().string().c_str()))
+        //skybox
+        if (!m_skyboxFiles.empty())
         {
-            for (auto i = 0u; i < m_skyboxFiles.size(); ++i)
-            {
-                if (ImGui::Selectable(m_skyboxFiles[i].filename().string().c_str(), i == m_skyboxIndex))
-                {
-                    m_skyboxIndex = i;
-                    m_courseData.skybox = m_skyboxFiles[i];
+            ImGui::NewLine();
+            ImGui::Text("Skybox");
+            helpMarker("Select a skybox to use with this course. The selection of skyboxes includes the default ones provided with the game as well as any authoured for this projectusing the skybox editor");
 
-                    LogI << FILE_LINE << ": update 3D preview!!" << std::endl;
+            ImGui::SetNextItemWidth(-1.f);
+            if (ImGui::BeginCombo("##skybox", m_skyboxFiles[m_skyboxIndex].filename().string().c_str()))
+            {
+                for (auto i = 0u; i < m_skyboxFiles.size(); ++i)
+                {
+                    if (ImGui::Selectable(m_skyboxFiles[i].filename().string().c_str(), i == m_skyboxIndex))
+                    {
+                        m_skyboxIndex = i;
+                        m_courseData.skybox = m_skyboxFiles[i];
+
+                        LogI << FILE_LINE << ": update 3D preview!!" << std::endl;
+                    }
                 }
+                ImGui::EndCombo();
             }
-            ImGui::EndCombo();
         }
+
+        //shrubs
+        if (!m_shrubFiles.empty())
+        {
+            ImGui::NewLine();
+            ImGui::Text("Shrubs and Trees");
+            helpMarker("Select the treeset used for the shrubber in the game. Treesets can be created in the treeset editor.");
+
+            ImGui::SetNextItemWidth(-1.f);
+            if (ImGui::BeginCombo("##shrubs", m_shrubFiles[m_skyboxIndex].filename().string().c_str()))
+            {
+                for (auto i = 0u; i < m_shrubFiles.size(); ++i)
+                {
+                    if (ImGui::Selectable(m_shrubFiles[i].filename().string().c_str(), i == m_shrubIndex))
+                    {
+                        m_shrubIndex = i;
+                        m_courseData.shrubs = m_shrubFiles[i];
+
+                        LogI << FILE_LINE << ": update 3D preview!!" << std::endl;
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
+        }
+
+        //TODO instance model
+
+        //audio
+        if (!m_audioFiles.empty())
+        {
+            ImGui::NewLine();
+            ImGui::Text("Environment Audio");
+            helpMarker("Select the environment audio played in the background. The selection is available from the default game audio as well as any created in the Audio Editor. See the Edit menu");
+
+            ImGui::SetNextItemWidth(-1.f);
+            if (ImGui::BeginCombo("##audio", m_audioFiles[m_audioIndex].filename().string().c_str()))
+            {
+                for (auto i = 0u; i < m_audioFiles.size(); ++i)
+                {
+                    if (ImGui::Selectable(m_audioFiles[i].filename().string().c_str(), i == m_audioIndex))
+                    {
+                        m_audioIndex = i;
+                        m_courseData.audio = m_audioFiles[i];
+
+                        LogI << FILE_LINE << ": update 3D preview!!" << std::endl;
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
+        }
+
     }
 
-    //shrubs
-    if (!m_shrubFiles.empty())
-    {
-        ImGui::NewLine();
-        ImGui::Text("Shrubs and Trees");
-        helpMarker("Select the treeset used for the shrubber in the game. Treesets can be created in the treeset editor.");
-
-        ImGui::SetNextItemWidth(-1.f);
-        if (ImGui::BeginCombo("##shrubs", m_shrubFiles[m_skyboxIndex].filename().string().c_str()))
-        {
-            for (auto i = 0u; i < m_shrubFiles.size(); ++i)
-            {
-                if (ImGui::Selectable(m_shrubFiles[i].filename().string().c_str(), i == m_shrubIndex))
-                {
-                    m_shrubIndex = i;
-                    m_courseData.shrubs = m_shrubFiles[i];
-
-                    LogI << FILE_LINE << ": update 3D preview!!" << std::endl;
-                }
-            }
-
-            ImGui::EndCombo();
-        }
-    }
-
-    //TODO instance model
-
-    //audio
-    if (!m_audioFiles.empty())
-    {
-        ImGui::NewLine();
-        ImGui::Text("Environment Audio");
-        helpMarker("Select the environment audio played in the background. The selection is available from the default game audio as well as any created in the Audio Editor. See the Edit menu");
-
-        ImGui::SetNextItemWidth(-1.f);
-        if (ImGui::BeginCombo("##audio", m_audioFiles[m_audioIndex].filename().string().c_str()))
-        {
-            for (auto i = 0u; i < m_audioFiles.size(); ++i)
-            {
-                if (ImGui::Selectable(m_audioFiles[i].filename().string().c_str(), i == m_audioIndex))
-                {
-                    m_audioIndex = i;
-                    m_courseData.audio = m_audioFiles[i];
-
-                    LogI << FILE_LINE << ": update 3D preview!!" << std::endl;
-                }
-            }
-
-            ImGui::EndCombo();
-        }
-    }
-
+    //list of holes
     if (!m_courseData.holePaths[0].empty())
     {
-        static std::uint32_t selectedIndex = 0;
+        ImGui::NewLine();
 
-        ImGui::Text("Holes");
-        helpMarker("Double Click a hole to edit it, or use the up and down buttons to change the hole order.");
-        if (ImGui::BeginListBox("##Holes", { -1.f, 0.f }));
+        if (ImGui::CollapsingHeader("Hole Selection", ImGuiTreeNodeFlags_Framed))
         {
-            for (auto i = 0u; i < m_courseData.holePaths.size(); ++i)
-            {
-                if (!m_courseData.holePaths[i].empty())
-                {
-                    if (ImGui::Selectable(m_courseData.holePaths[i].filename().string().c_str(), i == selectedIndex, ImGuiSelectableFlags_AllowDoubleClick))                        
-                    {
-                        selectedIndex = i;
+            ImGui::NewLine();
 
-                        if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+            static std::uint32_t selectedIndex = 0;
+
+            ImGui::Text("Holes");
+            helpMarker("Double Click a hole to edit it, or use the up and down buttons to change the hole order.");
+            if (ImGui::BeginListBox("##Holes", { -1.f, 0.f }))
+            {
+                for (auto i = 0u; i < m_courseData.holePaths.size(); ++i)
+                {
+                    if (!m_courseData.holePaths[i].empty())
+                    {
+                        if (ImGui::Selectable(m_courseData.holePaths[i].filename().string().c_str(), i == selectedIndex, ImGuiSelectableFlags_AllowDoubleClick))
                         {
-                            //TODO edit hole
+                            selectedIndex = i;
+
+                            if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                            {
+                                //TODO edit hole
+                            }
                         }
                     }
                 }
+                ImGui::EndListBox();
             }
-            ImGui::EndListBox();
-        }
 
-        const auto ButtonWidth = (ProjectPanelWidth / 2.f) - 13.f;
-        if (ImGui::Button("Up", { ButtonWidth, 0.f }))
-        {
-            if (selectedIndex > 0)
+            const auto ButtonWidth = (ProjectPanelWidth / 2.f) - 13.f;
+            if (ImGui::Button("Up", { ButtonWidth, 0.f }))
             {
-                selectedIndex--;
-                std::swap(m_courseData.holePaths[selectedIndex], m_courseData.holePaths[selectedIndex + 1]);
+                if (selectedIndex > 0)
+                {
+                    selectedIndex--;
+                    std::swap(m_courseData.holePaths[selectedIndex], m_courseData.holePaths[selectedIndex + 1]);
+                }
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Down", { ButtonWidth, 0.f }))
+            {
+                if (selectedIndex < m_courseData.holePaths.size() - 1
+                    && !m_courseData.holePaths[selectedIndex + 1].empty())
+                {
+                    std::swap(m_courseData.holePaths[selectedIndex], m_courseData.holePaths[selectedIndex + 1]);
+                    selectedIndex++;
+                }
+            }
+            if (ImGui::Button("Edit Selected", { -1.f, 0.f }))
+            {
+                //TODO launch editor
             }
         }
-        ImGui::SameLine();
-        if (ImGui::Button("Down", { ButtonWidth, 0.f }))
+    }
+    else
+    {
+        ImGui::NewLine();
+        ImGui::Separator();
+        ImGui::NewLine();
+        if (ImGui::Button("New Hole", { -1.f, 0.f }))
         {
-            if (selectedIndex < m_courseData.holePaths.size() - 1
-                && !m_courseData.holePaths[selectedIndex + 1].empty())
-            {
-                std::swap(m_courseData.holePaths[selectedIndex], m_courseData.holePaths[selectedIndex + 1]);
-                selectedIndex++;
-            }
-        }
-        if (ImGui::Button("Edit Selected", { -1.f, 0.f }))
-        {
-            //TODO launch editor
+            //TODO launch new hole editor
         }
     }
 
+    //preview image
+    if (m_previewTexture.getSize().x != 0)
+    {
+        ImGui::NewLine();
+        ImGui::Image(m_previewTexture, { 280.f, 210.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    }
+
+    ImGui::NewLine();
+    if (ImGui::Button("Set Preview Image", {-1.f, 0.f}))
+    {
+        const auto path = cro::FileSystem::openFileDialogue(m_editorSettings.lastLoadDirectory / "untitled.png", "png");
+        if (!path.empty())
+        {
+            loadPreviewTexture(path);
+        }
+    }
+    toolTip("Select an image to be used as the in-game preview. This will automatically be resized to 640 x 480 so images should be 4:3 ratio");
 
     ImGui::End();
 }
