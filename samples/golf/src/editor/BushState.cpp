@@ -126,7 +126,7 @@ bool BushState::handleEvent(const cro::Event& evt)
                 LogI << "Flaps" << std::endl;
             }
         }*/
-        return true;
+        return false;
     }
 
     if (evt.type == SDL_EVENT_KEY_UP)

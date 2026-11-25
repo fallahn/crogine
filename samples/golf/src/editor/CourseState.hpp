@@ -149,4 +149,8 @@ private:
     void drawNewProject();
     void drawProjectProperties();
     void drawAudioEditor();
+
+    void menuConfirmThenOpen(const std::filesystem::path&);
+    void menuNewProject();
+    void menuOpenProject();
 };

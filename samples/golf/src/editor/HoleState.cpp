@@ -62,7 +62,7 @@ bool HoleState::handleEvent(const cro::Event& evt)
 {
     if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
     {
-        return true;
+        return false;
     }
 
     //if (evt.type == SDL_EVENT_KEY_DOWN)

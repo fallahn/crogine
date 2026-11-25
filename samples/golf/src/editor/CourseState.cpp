@@ -69,6 +69,38 @@ CourseState::CourseState(cro::StateStack& stack, cro::State::Context context, co
 //public
 bool CourseState::handleEvent(const cro::Event& evt)
 {
+    //handle hotkey/shortcuts here
+    if (evt.type == SDL_EVENT_KEY_DOWN)
+    {
+        if (evt.key.mod & SDL_KMOD_CTRL)
+        {
+            switch (evt.key.scancode)
+            {
+            default: break;
+            case SDL_SCANCODE_N:
+                //new project
+                menuNewProject();
+                break;
+            case SDL_SCANCODE_O:
+                //open project
+                menuOpenProject();
+                break;
+            case SDL_SCANCODE_S:
+                //save project
+                if (!m_projectSettings.workingDirectory.empty())
+                {
+                    saveProject(m_projectSettings.workingDirectory);
+                }
+                LogI << "Project Saved..." << std::endl;
+                break;
+            case SDL_SCANCODE_Q:
+                confirmQuit();
+                break;
+            }
+        }
+    }
+
+
     if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
     {
         return true;

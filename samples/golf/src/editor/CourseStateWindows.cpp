@@ -39,45 +39,19 @@ namespace
 
 void CourseState::drawMenuBar()
 {
-    const auto confirmThenOpen = //path to directory not file
-        [this](const std::filesystem::path& path)
-        {
-            if (!m_projectSettings.name.empty())
-            {
-                if (cro::FileSystem::showMessageBox("Confirm", "Save current project?", cro::FileSystem::ButtonType::YesNo))
-                {
-                    saveProject(m_projectSettings.workingDirectory);
-                }
-            }
-            loadProject(path);
-            saveSettings();
-        };
 
     if (ImGui::BeginMainMenuBar())
     {
         if (ImGui::BeginMenu("File"))
         {
-            if (ImGui::MenuItem("New Project"))
+            if (ImGui::MenuItem("New Project", "Ctrl+N"))
             {
-                if (!m_projectSettings.name.empty())
-                {
-                    if (cro::FileSystem::showMessageBox("Confirm", "Save current project?", cro::FileSystem::ButtonType::YesNo))
-                    {
-                        saveProject(m_projectSettings.workingDirectory);
-                    }
-                }
-
-                m_newProjectBuffer.name = {};
-                m_windowStates[WindowID::NewProject].first = true;
+                menuNewProject();
             }
 
             if (ImGui::MenuItem("Open Project"))
             {
-                const auto path = cro::FileSystem::openFileDialogue(m_editorSettings.lastLoadDirectory / "settings.svgproj", "svgproj");
-                if (!path.empty())
-                {
-                    confirmThenOpen(path.parent_path());
-                }
+                menuOpenProject();
             }
 
             if (ImGui::MenuItem("Save Project", nullptr, false, !m_projectSettings.workingDirectory.empty()))
@@ -95,14 +69,14 @@ void CourseState::drawMenuBar()
                     {
                         if (ImGui::MenuItem(item.filename().string().c_str()))
                         {
-                            confirmThenOpen(item);
+                            menuConfirmThenOpen(item);
                         }
                     }
                     ImGui::EndMenu();
                 }
             }
 
-            if (ImGui::MenuItem("Quit"))
+            if (ImGui::MenuItem("Quit", "Ctrl+Q"))
             {
                 confirmQuit();
             }
@@ -329,10 +303,10 @@ void CourseState::drawProjectProperties()
         {
             ImGui::NewLine();
             ImGui::Text("Shrubs and Trees");
-            helpMarker("Select the treeset used for the shrubber in the game. Treesets can be created in the treeset editor.");
+            helpMarker("Select the treeset used for the shrubbery in the game. Treesets can be created in the treeset editor.");
 
             ImGui::SetNextItemWidth(-1.f);
-            if (ImGui::BeginCombo("##shrubs", m_shrubFiles[m_skyboxIndex].filename().string().c_str()))
+            if (ImGui::BeginCombo("##shrubs", m_shrubFiles[m_shrubIndex].filename().string().c_str()))
             {
                 for (auto i = 0u; i < m_shrubFiles.size(); ++i)
                 {
@@ -483,5 +457,42 @@ void CourseState::drawAudioEditor()
             refreshAudioFiles();
         }
         ImGui::EndPopup();
+    }
+}
+
+//menu functions which are also invoked with keyboard shortcuts
+void CourseState::menuConfirmThenOpen(const std::filesystem::path& path)
+{
+    if (!m_projectSettings.name.empty())
+    {
+        if (cro::FileSystem::showMessageBox("Confirm", "Save current project?", cro::FileSystem::ButtonType::YesNo))
+        {
+            saveProject(m_projectSettings.workingDirectory);
+        }
+    }
+    loadProject(path);
+    saveSettings();
+}
+
+void CourseState::menuNewProject()
+{
+    if (!m_projectSettings.name.empty())
+    {
+        if (cro::FileSystem::showMessageBox("Confirm", "Save current project?", cro::FileSystem::ButtonType::YesNo))
+        {
+            saveProject(m_projectSettings.workingDirectory);
+        }
+    }
+
+    m_newProjectBuffer.name = {};
+    m_windowStates[WindowID::NewProject].first = true;
+}
+
+void CourseState::menuOpenProject()
+{
+    const auto path = cro::FileSystem::openFileDialogue(m_editorSettings.lastLoadDirectory / "settings.svgproj", "svgproj");
+    if (!path.empty())
+    {
+        menuConfirmThenOpen(path.parent_path());
     }
 }
