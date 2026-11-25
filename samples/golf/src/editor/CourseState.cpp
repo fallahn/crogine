@@ -181,6 +181,23 @@ void CourseState::createUI()
 
     m_windowStates[WindowID::NewProject].second = std::bind(&CourseState::drawNewProject, this);
     m_windowStates[WindowID::Properties].second = std::bind(&CourseState::drawProjectProperties, this);
+    m_windowStates[WindowID::AudioEditor].second = std::bind(&CourseState::drawAudioEditor, this);
+}
+
+void CourseState::addToHistory(const std::filesystem::path& item)
+{
+    m_history.erase(std::remove_if(m_history.begin(), m_history.end(),
+        [&item](const std::filesystem::path str)
+        {
+            return str == item;
+        }), m_history.end());
+
+    m_history.push_front(item);
+
+    if (m_history.size() > MaxHistorySize)
+    {
+        m_history.pop_back();
+    }
 }
 
 void CourseState::loadProject(const std::filesystem::path& path)
@@ -188,6 +205,8 @@ void CourseState::loadProject(const std::filesystem::path& path)
     //unmount any existing project
     if (!m_projectSettings.workingDirectory.empty())
     {
+        addToHistory(m_projectSettings.workingDirectory);
+
         cro::IOResource::removePath(m_projectSettings.workingDirectory);
 
         //we have to do this to make sure we remove any files
@@ -290,6 +309,7 @@ void CourseState::loadProject(const std::filesystem::path& path)
             setWindowTitle();
 
             cro::IOResource::addPath(m_projectSettings.workingDirectory, std::filesystem::path("assets"));
+            addToHistory(m_projectSettings.workingDirectory);
             refreshAudioFiles();
             refreshSkyboxFiles();
             refreshShrubFiles();
@@ -409,6 +429,10 @@ void CourseState::loadSettings()
             {
                 m_editorSettings.lastSaveDirectory = prop.getValue<std::filesystem::path>();
             }
+            else if (name == "history_item")
+            {
+                addToHistory(prop.getValue<std::filesystem::path>());
+            }
         }
     }
 }
@@ -418,6 +442,11 @@ void CourseState::saveSettings() const
     cro::ConfigFile cfg;
     cfg.addProperty("open_location").setValue(m_editorSettings.lastLoadDirectory.empty() ? std::filesystem::current_path() : m_editorSettings.lastLoadDirectory);
     cfg.addProperty("save_location").setValue(m_editorSettings.lastSaveDirectory.empty() ? std::filesystem::current_path() : m_editorSettings.lastSaveDirectory);
+
+    for (const auto& item : m_history)
+    {
+        cfg.addProperty("history_item").setValue(item);
+    }
 
     cfg.save(cro::App::getPreferencePath() / "course_editor.cfg");
 }

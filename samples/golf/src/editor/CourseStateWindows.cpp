@@ -39,6 +39,20 @@ namespace
 
 void CourseState::drawMenuBar()
 {
+    const auto confirmThenOpen = //path to directory not file
+        [this](const std::filesystem::path& path)
+        {
+            if (!m_projectSettings.name.empty())
+            {
+                if (cro::FileSystem::showMessageBox("Confirm", "Save current project?", cro::FileSystem::ButtonType::YesNo))
+                {
+                    saveProject(m_projectSettings.workingDirectory);
+                }
+            }
+            loadProject(path);
+            saveSettings();
+        };
+
     if (ImGui::BeginMainMenuBar())
     {
         if (ImGui::BeginMenu("File"))
@@ -62,28 +76,31 @@ void CourseState::drawMenuBar()
                 const auto path = cro::FileSystem::openFileDialogue(m_editorSettings.lastLoadDirectory / "settings.svgproj", "svgproj");
                 if (!path.empty())
                 {
-                    if (!m_projectSettings.name.empty())
-                    {
-                        if (cro::FileSystem::showMessageBox("Confirm", "Save current project?", cro::FileSystem::ButtonType::YesNo))
-                        {
-                            saveProject(m_projectSettings.workingDirectory);
-                        }
-                    }
-
-                    loadProject(path.parent_path());
-                    saveSettings();
+                    confirmThenOpen(path.parent_path());
                 }
             }
 
-            if (!m_projectSettings.workingDirectory.empty())
+            if (ImGui::MenuItem("Save Project", nullptr, false, !m_projectSettings.workingDirectory.empty()))
             {
-                if (ImGui::MenuItem("Save Project"))
-                {
-                    saveProject(m_projectSettings.workingDirectory);
-                }
+                saveProject(m_projectSettings.workingDirectory);
             }
+
 
             //if not empty history display recent projects
+            if (!m_history.empty())
+            {
+                if (ImGui::BeginMenu("Recent"))
+                {
+                    for (const auto& item : m_history)
+                    {
+                        if (ImGui::MenuItem(item.filename().string().c_str()))
+                        {
+                            confirmThenOpen(item);
+                        }
+                    }
+                    ImGui::EndMenu();
+                }
+            }
 
             if (ImGui::MenuItem("Quit"))
             {
@@ -93,25 +110,27 @@ void CourseState::drawMenuBar()
             ImGui::EndMenu();
         }
 
+        const auto enabled = !m_projectSettings.id.empty();
         if (ImGui::BeginMenu("Edit"))
         {
-            if (ImGui::MenuItem("Treeset Editor"))
+            if (ImGui::MenuItem("Treeset Editor", nullptr, false, enabled))
             {
                 requestStackPush(StateID::EditorBush);
             }
 
-            if (ImGui::MenuItem("Hole Editor"))
+            if (ImGui::MenuItem("Hole Editor", nullptr, false, enabled))
             {
                 requestStackPush(StateID::EditorHole);
             }
 
-            if (ImGui::MenuItem("Audio Editor"))
+            if (ImGui::MenuItem("Audio Editor", nullptr, false, enabled))
             {
-                //TODO show editor as modal
+                m_windowStates[WindowID::AudioEditor].first = true;
             }
 
             ImGui::EndMenu();
         }
+
 
         if (ImGui::BeginMenu("Tools"))
         {
@@ -138,12 +157,7 @@ void CourseState::drawNewProject()
 {
     ImGui::OpenPopup("New Project##new_project");
 
-    const auto winSize = glm::vec2(cro::App::getWindow().getSize());
-    constexpr auto displaySize = glm::vec2(380.f, 160.f);
-    const auto displayPos = (winSize - displaySize) / 2.f;
-
-    ImGui::SetNextWindowSize({ displaySize.x, displaySize.y });
-    ImGui::SetNextWindowPos({ displayPos.x, displayPos.y });
+    setModalSizeAndPos();
     if (ImGui::BeginPopupModal("New Project##new_project", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
     {
         ImGui::Text("Project Directory: %s", m_newProjectBuffer.workingDirectory.empty() ? "None Set" : U8PATH_CAST(m_newProjectBuffer.workingDirectory));
@@ -160,14 +174,13 @@ void CourseState::drawNewProject()
         //project name
         ImGui::Text("Name:");
         ImGui::SameLine();
-        static const std::size_t MaxNameChars = 128;
         static cro::String conversionBuffer; //hack to convert to proper characters where we can check limit
         if (ImGui::InputText("##Name:new_project", &m_newProjectBuffer.name))
         {
             conversionBuffer = m_newProjectBuffer.name;
-            if (conversionBuffer.size() > MaxNameChars)
+            if (conversionBuffer.size() > MaxProjectNameChars)
             {
-                conversionBuffer = conversionBuffer.substr(0, MaxNameChars);
+                conversionBuffer = conversionBuffer.substr(0, MaxProjectNameChars);
                 m_newProjectBuffer.name = conversionBuffer.toUtf8Char();
             }
         }
@@ -365,4 +378,22 @@ void CourseState::drawProjectProperties()
 
 
     ImGui::End();
+}
+
+void CourseState::drawAudioEditor()
+{
+    ImGui::OpenPopup("Audio Editor");
+
+    setModalSizeAndPos();
+    if (ImGui::BeginPopupModal("Audio Editor", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
+    {
+
+        if (ImGui::Button("Close"))
+        {
+            m_windowStates[WindowID::AudioEditor].first = false;
+            ImGui::CloseCurrentPopup();
+            refreshAudioFiles();
+        }
+        ImGui::EndPopup();
+    }
 }

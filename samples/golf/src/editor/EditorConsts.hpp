@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/gui/detail/imgui.h>
 
+static constexpr std::size_t MaxProjectNameChars = 128; //maxmimum number of chars for the project name
 static constexpr std::size_t MaxDescChar = 34; //maximum chars for title / desription strings
 static constexpr float ToolBarSize = 20.f; // menu bar size at top of windows + 2px padding
 
@@ -54,4 +55,15 @@ static inline void helpMarker(const std::string& desc)
     ImGui::SameLine();
     ImGui::TextDisabled("(?)");
     toolTip(desc);
+}
+
+//sets the fixed size for modal pop-ups
+static inline void setModalSizeAndPos()
+{
+    const auto winSize = glm::vec2(cro::App::getWindow().getSize());
+    constexpr auto displaySize = glm::vec2(380.f, 160.f);
+    const auto displayPos = (winSize - displaySize) / 2.f;
+
+    ImGui::SetNextWindowSize({ displaySize.x, displaySize.y });
+    ImGui::SetNextWindowPos({ displayPos.x, displayPos.y });
 }

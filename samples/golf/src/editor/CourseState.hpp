@@ -36,6 +36,8 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 
+#include <deque>
+
 struct SharedStateData;
 class CourseState final : public cro::State, public cro::GuiClient
 {
@@ -73,6 +75,10 @@ private:
 
     //used to hold input from the new project window
     ProjectSettings m_newProjectBuffer;
+
+    static constexpr std::size_t MaxHistorySize = 10;
+    std::deque<std::filesystem::path> m_history;
+    void addToHistory(const std::filesystem::path&);
 
     void loadProject(const std::filesystem::path&);
     void saveProject(const std::filesystem::path&);
@@ -130,6 +136,7 @@ private:
         enum
         {
             NewProject, Properties,
+            AudioEditor,
 
             Count
         };
@@ -140,4 +147,5 @@ private:
     void drawMenuBar();
     void drawNewProject();
     void drawProjectProperties();
+    void drawAudioEditor();
 };
