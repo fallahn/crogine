@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2026
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -112,7 +112,7 @@ namespace cro
         \brief Saves this image to the given path
         \returns true on success else false
         */
-        bool write(const std::filesystem::path& path, bool flipOnWrite = false);
+        bool saveToFile(const std::filesystem::path& path, bool flipOnWrite = false);
 
         /*!
         \brief Sets the pixel at the given position to the given colour

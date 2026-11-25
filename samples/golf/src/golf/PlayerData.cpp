@@ -135,7 +135,7 @@ bool PlayerData::saveProfile() const
     }
 
     path /= (profileID + ".pfl");
-    return cfg.save(path);
+    return cfg.saveToFile(path);
 }
 
 bool PlayerData::loadProfile(const std::filesystem::path& path, const std::string& uid)

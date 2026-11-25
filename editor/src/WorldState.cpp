@@ -332,5 +332,5 @@ void WorldState::savePrefs()
 
 
 
-    cfg.save(cro::App::getPreferencePath() / "world_viewer.cfg");
+    cfg.saveToFile(cro::App::getPreferencePath() / "world_viewer.cfg");
 }

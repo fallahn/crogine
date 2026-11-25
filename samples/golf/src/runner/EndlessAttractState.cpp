@@ -125,7 +125,7 @@ bool EndlessAttractState::handleEvent(const cro::Event& evt)
         cro::App::getWindow().setCursorVisible(true);
     }
 
-    if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
+    if (ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard)
     {
         return true;
     }
@@ -614,7 +614,7 @@ void EndlessAttractState::refreshHighScores()
     const auto path = Content::getBaseContentPath() / ScoreFile;
     cro::ConfigFile cfg;
     cfg.addProperty("best").setValue(m_sharedGameData.bestScore);
-    cfg.save(path);
+    cfg.saveToFile(path);
 
     
     CRO_ASSERT(m_cycleEnts[CycleEnt::HighScore].isValid(), "");

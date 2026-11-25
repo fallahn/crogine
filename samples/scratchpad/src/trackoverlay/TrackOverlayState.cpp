@@ -481,7 +481,7 @@ void TrackOverlayState::createUI()
 
                                 if (trackNumber)
                                 {
-                                    cfg.save(cro::FileSystem::getFilePath(path).string() + "tracklist.cfg");
+                                    cfg.saveToFile(cro::FileSystem::getFilePath(path).string() + "tracklist.cfg");
                                     LogI << "Wrote " << trackNumber << " tracks to tracklist.cfg" << std::endl;
                                 }
                             }
@@ -669,7 +669,7 @@ void TrackOverlayState::writeSettings() const
     cfg.addProperty("artist_font").setValue(m_settings.artistFont);
     cfg.addProperty("artist_font_size").setValue(m_settings.artistFontSize);
     cfg.addProperty("directory").setValue(m_settings.albumDirectory);
-    cfg.save("settings.cfg");
+    cfg.saveToFile("settings.cfg");
 }
 
 void TrackOverlayState::nextTrack()

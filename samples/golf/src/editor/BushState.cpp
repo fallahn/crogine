@@ -969,7 +969,7 @@ void BushState::savePreset(const std::filesystem::path& path)
         co->addProperty("rotation").setValue(glm::vec4(tx.getRotation().x, tx.getRotation().y, tx.getRotation().z, tx.getRotation().w));
     }
 
-    if (cfg.save(path))
+    if (cfg.saveToFile(path))
     {
         m_lastTreeset = path;
     }
@@ -1024,7 +1024,7 @@ void BushState::saveSkyboxFile()
             }
         }
 
-        cfg.save(path);
+        cfg.saveToFile(path);
     }
 }
 

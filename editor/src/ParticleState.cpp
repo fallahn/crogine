@@ -477,5 +477,5 @@ void ParticleState::savePrefs()
         cfg.addProperty("recent").setValue(*item);
     }
 
-    cfg.save(cro::App::getPreferencePath() / "particle_editor.cfg");
+    cfg.saveToFile(cro::App::getPreferencePath() / "particle_editor.cfg");
 }

@@ -121,7 +121,7 @@ TutorialState::TutorialState(cro::StateStack& ss, cro::State::Context ctx, Share
 //public
 bool TutorialState::handleEvent(const cro::Event& evt)
 {
-    if (cro::ui::wantsKeyboard() || cro::ui::wantsMouse())
+    if (ImGui::GetIO().WantCaptureKeyboard || ImGui::GetIO().WantCaptureMouse)
     {
         return false;
     }

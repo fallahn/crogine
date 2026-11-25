@@ -958,7 +958,7 @@ void BushState::savePreset(const std::string& path)
     cfg.addProperty("branch_index").setValue(0);
     cfg.addProperty("leaf_index").setValue(1);
 
-    if (cfg.save(path))
+    if (cfg.saveToFile(path))
     {
         lastTreeset = path;
     }

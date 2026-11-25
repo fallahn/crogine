@@ -619,7 +619,7 @@ void VoxelState::saveSettings()
     cfg.addProperty("show_overview").setValue(m_drawTopView);
 
     const auto cfgPath = cro::App::getPreferencePath() / "voxels.cfg";
-    cfg.save(cfgPath);
+    cfg.saveToFile(cfgPath);
 }
 
 void VoxelState::applyEdit()

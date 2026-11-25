@@ -160,5 +160,5 @@ void MyApp::saveSettings()
     cfg.addProperty("player_name").setValue(m_sharedData.localPlayer.name);
     cfg.addProperty("target_ip").setValue(m_sharedData.targetIP);
 
-    cfg.save(configPath);
+    cfg.saveToFile(configPath);
 }

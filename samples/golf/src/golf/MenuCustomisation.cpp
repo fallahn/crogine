@@ -312,7 +312,7 @@ void MenuState::createBallScene()
             {
                 info.uid = SpookyHash::Hash32(ShopPaths[i].data(), ShopPaths[i].size(), 0);
                 cfg.addProperty("uid").setValue(info.uid);
-                cfg.save(ShopPaths[i]);
+                cfg.saveToFile(ShopPaths[i]);
             }
 
             if ((m_sharedData.inventory.manufacturerFlags & flag) == 0)
@@ -360,7 +360,7 @@ void MenuState::createBallScene()
             {
                 info.uid = SpookyHash::Hash32(SpecialPaths[i].data(), SpecialPaths[i].size(), 0);
                 cfg.addProperty("uid").setValue(info.uid);
-                cfg.save(SpecialPaths[i]);
+                cfg.saveToFile(SpecialPaths[i]);
             }
 
             if (level >= SpecialLevels[i])
@@ -465,7 +465,7 @@ void MenuState::createBallScene()
             {
                 info.uid = SpookyHash::Hash32(file.u8string().data(), file.u8string().size(), 0);
                 cfg.addProperty("uid").setValue(info.uid);
-                cfg.save(file);
+                cfg.saveToFile(file);
             }
 
             insertInfo(info, m_sharedData.ballInfo, true);
@@ -850,7 +850,7 @@ void MenuState::parseAvatarDirectory()
             {
                 info.uid = SpookyHash::Hash32(file.u8string().data(), file.u8string().size(), 0);
                 cfg.addProperty("uid").setValue(info.uid);
-                cfg.save(file);
+                cfg.saveToFile(file);
             }
         }
     }
@@ -1147,7 +1147,7 @@ void MenuState::processAvatarList(bool locked, const std::vector<std::filesystem
                         //uses Bob Jenkins' spooky hash
                         info.uid = SpookyHash::Hash32(file.u8string().data(), file.u8string().size(), 0);
                         cfg.addProperty("uid").setValue(info.uid);
-                        cfg.save(searchPath / file);
+                        cfg.saveToFile(searchPath / file);
                     }
 
                     //check uid doesn't exist

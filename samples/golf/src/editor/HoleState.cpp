@@ -60,7 +60,7 @@ HoleState::HoleState(cro::StateStack& stack, cro::State::Context context, const 
 //public
 bool HoleState::handleEvent(const cro::Event& evt)
 {
-    if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
+    if (ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard)
     {
         return false;
     }

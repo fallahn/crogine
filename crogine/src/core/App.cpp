@@ -1598,7 +1598,7 @@ void App::saveSettings()
         aObj->addProperty("channel" + std::to_string(i)).setValue(AudioMixer::getVolume(i));
     }
 
-    saveSettings.save(m_prefPath / cfgName);
+    saveSettings.saveToFile(m_prefPath / cfgName);
 }
 
 bool Detail::isPSLayout(SDL_Gamepad* gc)

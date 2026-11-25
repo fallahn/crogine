@@ -515,7 +515,7 @@ void ModelState::saveModel(const std::filesystem::path& path)
         }
     }
 
-    if (newCfg.save(path))
+    if (newCfg.saveToFile(path))
     {
         m_currentFilePath = path;
         m_currentModelConfig = newCfg;
@@ -1126,7 +1126,7 @@ void ModelState::exportModel(const std::filesystem::path& path)
 
             if (!m_exportOptions.modelOnly)
             {
-                cfg.save(cfgPath);
+                cfg.saveToFile(cfgPath);
             }
 
             m_preferences.lastExportDirectory = cro::FileSystem::getFilePath(path);

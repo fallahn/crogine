@@ -257,5 +257,5 @@ void SpriteState::savePrefs() const
 	cfg.addProperty("last_path").setValue(m_lastPath);
 	cfg.addProperty("last_file").setValue(m_currentFilePath);
 
-	cfg.save(path);
+	cfg.saveToFile(path);
 }

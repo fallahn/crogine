@@ -398,7 +398,7 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
         cro::App::getWindow().setCursorVisible(true);
     }
 
-    if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
+    if (ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard)
     {
         return true;
     }

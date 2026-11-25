@@ -437,7 +437,7 @@ void Social::storeDrivingStats(const std::array<float, 3u>& topScores)
     cfg.addProperty("five").setValue(topScores[0]);
     cfg.addProperty("nine").setValue(topScores[1]);
     cfg.addProperty("eighteen").setValue(topScores[2]);
-    cfg.save(savePath);
+    cfg.saveToFile(savePath);
 }
 
 void Social::readDrivingStats(std::array<float, 3u>& topScores)

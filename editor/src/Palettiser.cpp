@@ -105,5 +105,5 @@ bool pt::processPalette(const cro::Image& image, const std::filesystem::path& ou
 		}
 	}
 
-	return outImage.write(outPath);
+	return outImage.saveToFile(outPath);
 }

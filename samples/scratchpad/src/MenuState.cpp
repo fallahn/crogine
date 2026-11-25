@@ -1577,7 +1577,7 @@ bool MenuState::createStub(const std::string& name) const
         cppFile << "bool " << className << "State::handleEvent(const cro::Event& evt)";
         cppFile << R"(
 {
-    if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
+    if (ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard)
     {
         return true;
     }
@@ -1845,7 +1845,7 @@ void MenuState::saveConfig()
     cro::ConfigFile cfg;
     cfg.addProperty("cube_load").setValue(m_cubemapLoadPath);
     cfg.addProperty("cube_save").setValue(m_cubemapSavePath);
-    cfg.save(outpath);
+    cfg.saveToFile(outpath);
 }
 
 void MenuState::imageQuantizer()
@@ -1955,7 +1955,7 @@ void MenuState::cubemapWindow()
                         cfg.addProperty("right").setValue("px.png");
                         cfg.addProperty("back").setValue("nz.png");
                         cfg.addProperty("down").setValue("ny.png");
-                        cfg.save(path.string() + "/cubemap.ccm");
+                        cfg.saveToFile(path.string() + "/cubemap.ccm");
 
                         cro::SimpleQuad q;
                         q.setTexture(m_cubemapPreview);

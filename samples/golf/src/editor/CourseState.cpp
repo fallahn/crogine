@@ -101,7 +101,7 @@ bool CourseState::handleEvent(const cro::Event& evt)
     }
 
 
-    if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
+    if (ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard)
     {
         return true;
     }
@@ -410,14 +410,14 @@ void CourseState::saveProject(const std::filesystem::path& dirPath)
                 courseCfg.addProperty("hole").setValue(path);
             }
         }
-        courseCfg.save(dirPath / "golf/courses" / m_projectSettings.id / "course.data");
+        courseCfg.saveToFile(dirPath / "golf/courses" / m_projectSettings.id / "course.data");
 
         //save the project settings
         cro::ConfigFile cfg;
         cfg.addProperty("name").setValue(m_projectSettings.name);
         cfg.addProperty("id").setValue(m_projectSettings.id);
 
-        cfg.save(dirPath / "settings.svgproj");
+        cfg.saveToFile(dirPath / "settings.svgproj");
 
         m_editorSettings.lastSaveDirectory = dirPath;
         saveSettings();
@@ -502,7 +502,7 @@ void CourseState::saveSettings() const
         cfg.addProperty("history_item").setValue(item);
     }
 
-    cfg.save(cro::App::getPreferencePath() / "course_editor.cfg");
+    cfg.saveToFile(cro::App::getPreferencePath() / "course_editor.cfg");
 }
 
 void CourseState::confirmQuit()
@@ -644,7 +644,7 @@ void CourseState::loadPreviewTexture(const std::filesystem::path& path)
         {
             image.resize({ 640u, 480u });
         }
-        image.write(m_projectSettings.workingDirectory / "golf/courses" / m_projectSettings.id / "preview.png", true);
+        image.saveToFile(m_projectSettings.workingDirectory / "golf/courses" / m_projectSettings.id / "preview.png", true);
 
         m_previewTexture.loadFromImage(image);
     }

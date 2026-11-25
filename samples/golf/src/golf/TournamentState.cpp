@@ -2925,7 +2925,7 @@ void TournamentState::saveConfig() const
     cfg.addProperty("gimme").setValue(m_sharedData.gimmeRadius);
     cfg.addProperty("night").setValue(m_sharedData.nightTime);
     cfg.addProperty("weather").setValue(m_sharedData.weatherType);
-    cfg.save(Content::getUserContentPath(Content::UserContent::Career) / ConfigFile);
+    cfg.saveToFile(Content::getUserContentPath(Content::UserContent::Career) / ConfigFile);
 }
 
 void TournamentState::onCachedPush()

@@ -79,11 +79,13 @@ namespace cro
         /*!
         \brief Returns true if the ui wants to capture mouse input
         */
+        [[deprecated("Use ImGui directly")]]
         CRO_EXPORT_API bool wantsMouse();
 
         /*!
         \brief Returns true if the ui wants to capture keyboard input
         */
+        [[deprecated("Use ImGui directly")]]
         CRO_EXPORT_API bool wantsKeyboard();
     }
 }

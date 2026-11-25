@@ -663,7 +663,7 @@ void ModelState::savePrefs()
     prefsOut.addProperty("ntf_dir").setValue(m_preferences.lastNotificationDirectory);
     prefsOut.addProperty("combine_dir").setValue(m_preferences.lastImageDirectory);
 
-    if (prefsOut.save(cro::App::getPreferencePath() / "model_viewer.cfg"))
+    if (prefsOut.saveToFile(cro::App::getPreferencePath() / "model_viewer.cfg"))
     {
         //notify so the global prefs are also written
         auto* msg = getContext().appInstance.getMessageBus().post<UIEvent>(MessageID::UIMessage);

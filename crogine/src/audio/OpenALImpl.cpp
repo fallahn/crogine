@@ -123,7 +123,7 @@ bool OpenALImpl::init()
             //store this in the config as last known good device
             ConfigFile cfg;
             cfg.addProperty("preferred_device").setValue(m_preferredDevice);
-            cfg.save(getPreferencePath());
+            cfg.saveToFile(getPreferencePath());
         }
 #endif
     }
@@ -655,7 +655,7 @@ void OpenALImpl::setActiveDevice(const std::string& str)
     
     ConfigFile cfg;
     cfg.addProperty("preferred_device").setValue(m_preferredDevice);
-    cfg.save(getPreferencePath());
+    cfg.saveToFile(getPreferencePath());
 }
 
 void OpenALImpl::playbackDisconnectEvent()
@@ -828,7 +828,7 @@ void OpenALImpl::enumerateDevices()
 
                             ConfigFile cfg;
                             cfg.addProperty("preferred_device").setValue(m_preferredDevice);
-                            cfg.save(prefPath);
+                            cfg.saveToFile(prefPath);
 
                             reconnect(m_preferredDevice.c_str());
                         }

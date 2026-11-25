@@ -242,7 +242,7 @@ bool SpriteSheet::saveToFile(const std::filesystem::path& path)
         }
     }
 
-    return sheetFile.save(path);
+    return sheetFile.saveToFile(path);
 }
 
 Sprite SpriteSheet::getSprite(const std::string& name) const

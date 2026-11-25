@@ -368,5 +368,5 @@ void TimeOfDay::writeDataFile() const
     cro::ConfigFile cfg;
     cfg.addProperty("lat_lon").setValue(m_latlon);
     cfg.addProperty("timestamp").setValue(static_cast<std::uint32_t>(std::time(nullptr)));
-    cfg.save(path);
+    cfg.saveToFile(path);
 }

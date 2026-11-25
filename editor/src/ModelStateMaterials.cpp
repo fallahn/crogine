@@ -416,7 +416,7 @@ void ModelState::exportMaterial(const std::filesystem::path& path) const
             }
         }
 
-        file.save(path);
+        file.saveToFile(path);
     }
 }
 

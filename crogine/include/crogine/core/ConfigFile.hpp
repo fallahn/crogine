@@ -217,7 +217,7 @@ namespace cro
         /*!
         \brief Writes this object and all its children to given path
         */
-        bool save(const std::filesystem::path& path);
+        bool saveToFile(const std::filesystem::path& path);
 
         /*!
         \brief Attempts to load a config file into the object.
@@ -258,7 +258,7 @@ namespace cro
         \endcode
 
         Config files parsed from json will be written in the ConfigFile format
-        when written with save()
+        when written with saveToFile()
 
         \returns true on success, else false if something went wrong
         */

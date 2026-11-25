@@ -160,7 +160,7 @@ SplashState::SplashState(cro::StateStack& stack, cro::State::Context context, Sh
 //public
 bool SplashState::handleEvent(const cro::Event& evt)
 {
-    if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
+    if (ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard)
     {
         return true;
     }

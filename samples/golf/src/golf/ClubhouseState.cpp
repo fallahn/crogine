@@ -1795,7 +1795,7 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
                     obj->addProperty("ball").setValue(table.ballSkinIndex);
                     obj->addProperty("table").setValue(table.tableSkinIndex);
                 }
-                cfg.save(cro::App::getPreferencePath() / "table_data.cfg");
+                cfg.saveToFile(cro::App::getPreferencePath() / "table_data.cfg");
 
                 requestStackClear();
                 requestStackPush(StateID::Billiards);

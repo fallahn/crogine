@@ -4687,7 +4687,7 @@ bool PlaylistState::exportCourse()
         cfg.addProperty("hole").setValue(holePath);
     }
 
-    return cfg.save(exportDir / "course.data");
+    return cfg.saveToFile(exportDir / "course.data");
 }
 
 //void PlaylistState::showToolTip(const std::string& label)

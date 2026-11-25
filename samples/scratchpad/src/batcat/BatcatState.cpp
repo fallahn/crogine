@@ -237,7 +237,7 @@ BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
 
                             if (cfgModified)
                             {
-                                cfg.save(src + file.string());
+                                cfg.saveToFile(src + file.string());
                             }
                         }
                     }
@@ -295,7 +295,7 @@ BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
 
                             if (cfgModified)
                             {
-                                cfg.save(src + file.string());
+                                cfg.saveToFile(src + file.string());
                             }
                         }
                     }

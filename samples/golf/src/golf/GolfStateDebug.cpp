@@ -1080,7 +1080,7 @@ void GolfState::buildCubemap(glm::vec3 position, const std::string& path)
         cfg.addProperty("right").setValue(path + "/px.png");
         cfg.addProperty("front").setValue(path + "/pz.png");
         cfg.addProperty("back").setValue(path + "/nz.png");
-        cfg.save(path + "/cmap.ccm");
+        cfg.saveToFile(path + "/cmap.ccm");
 
 
         struct Rotation final

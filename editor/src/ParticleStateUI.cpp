@@ -651,7 +651,7 @@ void ParticleState::drawRenderPreview()
                             }
                         }
                         img.loadFromMemory(pixelBuffer.data(), frameCount * texSize, texSize, cro::ImageFormat::Type::RGBA);
-                        img.write(outputPath / (std::string(U8PATH_CAST(outputName)) + ".png"));
+                        img.saveToFile(outputPath / (std::string(U8PATH_CAST(outputName)) + ".png"));
 
                         //check if we want to write a sprite sheet
                         if (spt)
@@ -697,7 +697,7 @@ void ParticleState::drawRenderPreview()
 
                             auto output = outputPath / outputName;
                             output.replace_extension("spt");
-                            cfg.save(output);
+                            cfg.saveToFile(output);
                         }
 
                         cro::FileSystem::showMessageBox("Done", "Output " + std::to_string(frameCount) + " frames");

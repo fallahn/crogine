@@ -330,7 +330,7 @@ DrivingState::~DrivingState()
 //public
 bool DrivingState::handleEvent(const cro::Event& evt)
 {
-    if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
+    if (ImGui::GetIO().WantCaptureMouse || cro::ui::wantsKeyboard())
     {
         if (evt.type == SDL_EVENT_MOUSE_MOTION)
         {

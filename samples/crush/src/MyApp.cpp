@@ -220,5 +220,5 @@ void MyApp::saveSettings()
 
     //TODO write key/controller bindings
 
-    cfg.save(configPath);
+    cfg.saveToFile(configPath);
 }

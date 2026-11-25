@@ -2158,7 +2158,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("web_port").setValue(m_sharedData.webPort);
     cfg.addProperty("grass_density").setValue(m_sharedData.grassDensity);
     cfg.addProperty("graphics_preset").setValue(m_sharedData.graphicsPreset);
-    cfg.save(path);
+    cfg.saveToFile(path);
 
 
     //per-user options
@@ -2217,7 +2217,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("daily_streak").setValue(m_sharedData.enableDailyStreak);
     cfg.addProperty("tts_voice").setValue(m_sharedData.ttsVoice);
     //cfg.addProperty("filter_assist").setValue(Social::getLeaderboardFilter(Social::LeaderboardFilterValue::NoAssist));
-    cfg.save(path);
+    cfg.saveToFile(path);
 
 
 

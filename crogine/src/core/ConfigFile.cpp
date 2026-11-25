@@ -532,7 +532,7 @@ bool ConfigObject::parseAsJson(SDL_IOStream* file)
     return true;
 }
 
-bool ConfigObject::save(const std::filesystem::path& p)
+bool ConfigObject::saveToFile(const std::filesystem::path& p)
 {
     IOStream out;
 #ifdef OLD_PARSER

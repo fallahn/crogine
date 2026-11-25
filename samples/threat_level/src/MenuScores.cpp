@@ -170,7 +170,7 @@ void MainState::createScoreMenu(std::uint32_t mouseEnterCallback, std::uint32_t 
         {
             scores.addProperty(std::to_string(cro::Util::Random::value(10000, 500000))).setValue(names[i]);
         }
-        if (!scores.save(cro::App::getPreferencePath() / highscoreFile))
+        if (!scores.saveToFile(cro::App::getPreferencePath() / highscoreFile))
         {
             cro::Logger::log("Failed saving default score file", cro::Logger::Type::Warning);
         }

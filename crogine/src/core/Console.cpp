@@ -817,7 +817,7 @@ void Console::finalise()
     //TODO if we add anything else here make sure
     //to modify setConvarValue as it calls this to
     //update the file with new values.
-    convars.save(App::getPreferencePath() / convarName);
+    convars.saveToFile(App::getPreferencePath() / convarName);
 }
 
 void Console::refreshResolutionList()

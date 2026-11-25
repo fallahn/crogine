@@ -264,7 +264,7 @@ void GameOverState::load()
             if (scores.loadFromFile(cro::App::getPreferencePath() / highscoreFile))
             {
                 scores.addProperty(std::to_string(m_sharedResources.score)).setValue(m_sharedResources.playerName);
-                scores.save(cro::App::getPreferencePath() / highscoreFile);
+                scores.saveToFile(cro::App::getPreferencePath() / highscoreFile);
             }
 
             SDL_StopTextInput(cro::App::getWindow());

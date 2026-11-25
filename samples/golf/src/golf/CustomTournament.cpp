@@ -113,7 +113,7 @@ void CustomTournament::save(const std::filesystem::path& path)
         cfg.addProperty("tier_" + std::to_string(i)).setValue(m_courses[i]);
     }
 
-    cfg.save(path / FileName);
+    cfg.saveToFile(path / FileName);
 }
 
 void CustomTournament::setCourse(std::size_t idx, const std::string& course)

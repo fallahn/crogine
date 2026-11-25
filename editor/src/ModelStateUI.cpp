@@ -2582,7 +2582,7 @@ void ModelState::drawBrowser()
                                     a->addProperty("scale").setValue(attachment.getScale());
                                     a->addProperty("parent").setValue(attachment.getParent());
                                 }
-                                if (!cfg.save(path))
+                                if (!cfg.saveToFile(path))
                                 {
                                     cro::FileSystem::showMessageBox("Error", "Failed to export attachements\nSee console for details");
                                 }
@@ -2914,7 +2914,7 @@ void ModelState::drawBrowser()
                                         }
                                     }
 
-                                    if (!cfg.save(path))
+                                    if (!cfg.saveToFile(path))
                                     {
                                         cro::FileSystem::showMessageBox("Error", "Failed to export animation data.\nSee console for information");
                                     }
@@ -3347,7 +3347,7 @@ void ModelState::drawImageCombiner()
                                     output.setPixel(x, y, outPixel);
                                 }
                             }
-                            if (output.write(path, true))
+                            if (output.saveToFile(path, true))
                             {
                                 cro::FileSystem::showMessageBox("Success", "Wrote image successfully");
                             }

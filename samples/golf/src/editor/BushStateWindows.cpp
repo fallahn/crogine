@@ -966,5 +966,5 @@ void BushState::saveWindowStates()
         cfg.addProperty("save_billboard").setValue(m_saveFilePaths[SaveDialogueState::Billboard]);
     }
 
-    cfg.save(cro::App::getPreferencePath() / ConfigFile);
+    cfg.saveToFile(cro::App::getPreferencePath() / ConfigFile);
 }

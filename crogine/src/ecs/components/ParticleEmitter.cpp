@@ -357,5 +357,5 @@ bool EmitterSettings::saveToFile(const std::filesystem::path& path)
         forceObj->addProperty("force").setValue(f);
     }
 
-    return cfg.save(path);
+    return cfg.saveToFile(path);
 }
