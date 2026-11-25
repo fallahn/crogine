@@ -113,14 +113,14 @@ void CourseState::drawMenuBar()
         const auto enabled = !m_projectSettings.id.empty();
         if (ImGui::BeginMenu("Edit"))
         {
+            if (ImGui::MenuItem("Add Hole", nullptr, false, enabled && m_courseData.holePaths.back().empty()))
+            {
+                requestStackPush(StateID::EditorHole);
+            }
+
             if (ImGui::MenuItem("Treeset Editor", nullptr, false, enabled))
             {
                 requestStackPush(StateID::EditorBush);
-            }
-
-            if (ImGui::MenuItem("Hole Editor", nullptr, false, enabled))
-            {
-                requestStackPush(StateID::EditorHole);
             }
 
             if (ImGui::MenuItem("Audio Editor", nullptr, false, enabled))
@@ -263,7 +263,7 @@ void CourseState::drawProjectProperties()
 {
     const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
     ImGui::SetNextWindowPos({ 0.f, ToolBarSize });
-    ImGui::SetNextWindowSize({ 300.f, windowSize.y - ToolBarSize });
+    ImGui::SetNextWindowSize({ ProjectPanelWidth, windowSize.y - ToolBarSize });
     ImGui::Begin("Project Properties", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
     //display title
@@ -296,9 +296,6 @@ void CourseState::drawProjectProperties()
             m_courseData.displayDescriptionBuffer = m_courseData.displayDescription.toUtf8Char();
         }
     }
-
-    //TODO make these a tab pane if they
-    //create a large scrollable area
 
     //skybox
     if (!m_skyboxFiles.empty())
@@ -373,6 +370,57 @@ void CourseState::drawProjectProperties()
             }
 
             ImGui::EndCombo();
+        }
+    }
+
+    if (!m_courseData.holePaths[0].empty())
+    {
+        static std::uint32_t selectedIndex = 0;
+
+        ImGui::Text("Holes");
+        helpMarker("Double Click a hole to edit it, or use the up and down buttons to change the hole order.");
+        if (ImGui::BeginListBox("##Holes", { -1.f, 0.f }));
+        {
+            for (auto i = 0u; i < m_courseData.holePaths.size(); ++i)
+            {
+                if (!m_courseData.holePaths[i].empty())
+                {
+                    if (ImGui::Selectable(m_courseData.holePaths[i].filename().string().c_str(), i == selectedIndex, ImGuiSelectableFlags_AllowDoubleClick))                        
+                    {
+                        selectedIndex = i;
+
+                        if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                        {
+                            //TODO edit hole
+                        }
+                    }
+                }
+            }
+            ImGui::EndListBox();
+        }
+
+        const auto ButtonWidth = (ProjectPanelWidth / 2.f) - 13.f;
+        if (ImGui::Button("Up", { ButtonWidth, 0.f }))
+        {
+            if (selectedIndex > 0)
+            {
+                selectedIndex--;
+                std::swap(m_courseData.holePaths[selectedIndex], m_courseData.holePaths[selectedIndex + 1]);
+            }
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Down", { ButtonWidth, 0.f }))
+        {
+            if (selectedIndex < m_courseData.holePaths.size() - 1
+                && !m_courseData.holePaths[selectedIndex + 1].empty())
+            {
+                std::swap(m_courseData.holePaths[selectedIndex], m_courseData.holePaths[selectedIndex + 1]);
+                selectedIndex++;
+            }
+        }
+        if (ImGui::Button("Edit Selected", { -1.f, 0.f }))
+        {
+            //TODO launch editor
         }
     }
 

@@ -291,7 +291,14 @@ void CourseState::loadProject(const std::filesystem::path& path)
                 }
                 else if (name == "hole")
                 {
-                    assertCourseDataPath(prop.getValue<std::filesystem::path>(), m_courseData.holePaths[holeIndex++]);
+                    //make sure the path belongs to this project
+                    //and that the file exists
+                    const auto path = prop.getValue<std::filesystem::path>();
+                    if (!std::filesystem::relative(path, std::filesystem::path("assets/golf/courses") / m_projectSettings.id).empty()
+                        && cro::FileSystem::fileExists(path))
+                    {
+                        assertCourseDataPath(path, m_courseData.holePaths[holeIndex++]);
+                    }
                 }
             }
             if (m_courseData.displayTitle.empty())
@@ -351,7 +358,8 @@ void CourseState::saveProject(const std::filesystem::path& dirPath)
 
         for (const auto& path : m_courseData.holePaths)
         {
-            if (!path.empty())
+            if (!path.empty()
+                && cro::FileSystem::fileExists(path))
             {
                 courseCfg.addProperty("hole").setValue(path);
             }

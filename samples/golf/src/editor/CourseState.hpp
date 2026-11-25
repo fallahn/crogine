@@ -130,7 +130,6 @@ private:
     void refreshAudioFiles(); //again we only want enviro files...
 
 
-
     struct WindowID final
     {
         enum
