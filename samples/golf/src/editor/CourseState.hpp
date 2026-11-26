@@ -82,7 +82,7 @@ private:
 
     void loadProject(const std::filesystem::path&);
     void saveProject(const std::filesystem::path&);
-    std::array<std::filesystem::path, 11u> getProjectDirectories(const std::string& id) const;
+    std::array<std::filesystem::path, 12u> getProjectDirectories(const std::string& id) const;
     bool validateProjectDirectories(const std::string& id) const;
     void setWindowTitle();
 
@@ -124,10 +124,44 @@ private:
     std::size_t m_shrubIndex;
     std::vector<std::filesystem::path> m_shrubFiles;
     void refreshShrubFiles();
-    //HMMM how to list instanced models without do stupid things like instancing buildings?
+    //HMMM how to list instanced models without doing stupid things like instancing buildings?
     std::size_t m_audioIndex;
     std::vector<std::filesystem::path> m_audioFiles;
     void refreshAudioFiles(); //again we only want enviro files...
+
+    struct AudioID final
+    {
+        enum
+        {
+            One, Two, Three,
+            Four, Five, Six,
+            Inc01, Inc02,
+            Count
+        };
+    };
+    struct AudioPreview final
+    {
+        std::filesystem::path inputFile;
+        std::string label;
+        std::string toolTip;
+
+        float volume = 1.f;
+
+        AudioPreview() = default;
+        AudioPreview(const std::string& l, const std::string& t)
+            :label(l), toolTip(t) { }
+    };
+    std::array<AudioPreview, AudioID::Count> m_audioPreviewsDay;
+    std::array<AudioPreview, AudioID::Count> m_audioPreviewsNight;
+    void exportAudioFile();
+    
+    struct AudioPaths final
+    {
+        std::filesystem::path base;
+        std::filesystem::path day;
+        std::filesystem::path night;
+    };
+    AudioPaths getAudioFilePaths() const;
 
     cro::Texture m_previewTexture;
     void loadPreviewTexture(const std::filesystem::path&);

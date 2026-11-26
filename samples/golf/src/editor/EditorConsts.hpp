@@ -58,10 +58,9 @@ static inline void helpMarker(const std::string& desc)
 }
 
 //sets the fixed size for modal pop-ups
-static inline void setModalSizeAndPos()
+static inline void setModalSizeAndPos(glm::vec2 displaySize = glm::vec2(380.f, 170.f))
 {
     const auto winSize = glm::vec2(cro::App::getWindow().getSize());
-    constexpr auto displaySize = glm::vec2(380.f, 160.f);
     const auto displayPos = (winSize - displaySize) / 2.f;
 
     ImGui::SetNextWindowSize({ displaySize.x, displaySize.y });

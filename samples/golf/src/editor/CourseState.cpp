@@ -57,6 +57,23 @@ CourseState::CourseState(cro::StateStack& stack, cro::State::Context context, co
         cro::App::getInstance().setClearColour(cro::Colour::CornflowerBlue);
         std::fill(m_windowStates.begin(), m_windowStates.end(), std::make_pair(false, std::function<void()>()));
 
+        m_audioPreviewsDay =
+        {
+            AudioPreview("Environment 01", "Must be mono, loopable and ogg encoded"), AudioPreview("Environment 02", "Must be mono, loopable and ogg encoded"),
+            AudioPreview("Environment 03", "Must be mono, loopable and ogg encoded"), AudioPreview("Environment 04", "Must be mono, loopable and ogg encoded"),
+            AudioPreview("Environment 05", "Must be mono, loopable and ogg encoded"), AudioPreview("Environment 06", "Must be mono, loopable and ogg encoded"),
+            AudioPreview("Incidental  01", "Must be mono and ogg encoded, used for occasional sounds such as planes flying overhead"),
+            AudioPreview("Incidental  02", "Must be mono and ogg encoded, used for occasional sounds such as planes flying overhead"),
+        };
+        m_audioPreviewsNight =
+        {
+            AudioPreview("Environment 01", "Must be mono, loopable and ogg encoded"), AudioPreview("Environment 02", "Must be mono, loopable and ogg encoded"),
+            AudioPreview("Environment 03", "Must be mono, loopable and ogg encoded"), AudioPreview("Environment 04", "Must be mono, loopable and ogg encoded"),
+            AudioPreview("Environment 05", "Must be mono, loopable and ogg encoded"), AudioPreview("Environment 06", "Must be mono, loopable and ogg encoded"),
+            AudioPreview("Incidental  01", "Must be mono and ogg encoded, used for occasional sounds such as planes flying overhead"),
+            AudioPreview("Incidental  02", "Must be mono and ogg encoded, used for occasional sounds such as planes flying overhead"),
+        };
+
         addSystems();
         loadAssets();
         createScene();
@@ -254,6 +271,15 @@ void CourseState::loadProject(const std::filesystem::path& path)
     m_previewTexture = {};
     m_windowStates[WindowID::Properties].first = false;
 
+    for (auto& prev : m_audioPreviewsDay)
+    {
+        prev.inputFile = std::filesystem::path();
+    }
+    for (auto& prev : m_audioPreviewsNight)
+    {
+        prev.inputFile = std::filesystem::path();
+    }
+
     cro::ConfigFile cfg;
     if (cfg.loadFromFile(path / "settings.svgproj"))
     {
@@ -424,7 +450,7 @@ void CourseState::saveProject(const std::filesystem::path& dirPath)
     }
 }
 
-std::array<std::filesystem::path, 11u> CourseState::getProjectDirectories(const std::string& id) const
+std::array<std::filesystem::path, 12u> CourseState::getProjectDirectories(const std::string& id) const
 {
     return
     {
@@ -438,6 +464,7 @@ std::array<std::filesystem::path, 11u> CourseState::getProjectDirectories(const 
         std::filesystem::path("golf/models/") / id,
         std::filesystem::path("golf/models/skybox"),
         std::filesystem::path("golf/skyboxes"),
+        std::filesystem::path("golf/sound") / id,
         std::filesystem::path("golf/treesets")
     };
 }
@@ -445,12 +472,24 @@ std::array<std::filesystem::path, 11u> CourseState::getProjectDirectories(const 
 bool CourseState::validateProjectDirectories(const std::string& id) const
 {
     const auto dirs = getProjectDirectories(id);
-    for (const auto d : dirs)
+    for (const auto& d : dirs)
     {
         if (!cro::FileSystem::directoryExists(m_projectSettings.workingDirectory / d))
         {
-            LogE << d << ": project directory missing or not found" << std::endl;
-            return false;
+            LogW << d << ": project directory missing or not found" << std::endl;
+            std::error_code ec;
+            std::filesystem::create_directories(m_projectSettings.workingDirectory / d, ec);
+
+            if (ec)
+            {
+                LogE << "Failed to recreate missing project directory " << d << ", reason: " << ec.message() << std::endl;
+                return false;
+            }
+            else
+            {
+                LogW << "Recreated missing project directory " << d << std::endl;
+                return true;
+            }
         }
     }
     return true;
@@ -610,16 +649,127 @@ void CourseState::refreshAudioFiles()
 
     m_audioFiles.clear();
 
-    const auto files = cro::FileSystem::listFiles(BasePath);
-    for (const auto& file : files)
-    {
-        //we only want ambience files, and not the night version
-        //as these aren't specified in the data file
-        if (file.extension() == ".xas"
-            && file.string().find("ambience") == 0
-            && file.string().find("_n") == std::string::npos)
+    const auto processPath =
+        [this](const std::filesystem::path& p)
         {
-            m_audioFiles.emplace_back(BasePath / file);
+            const auto files = cro::FileSystem::listFiles(p);
+            for (const auto& file : files)
+            {
+                //we only want ambience files, and not the night version
+                //as these aren't specified in the data file
+                if (file.extension() == ".xas"
+                    && file.string().find("ambience") == 0
+                    && file.string().find("_n") == std::string::npos)
+                {
+                    m_audioFiles.emplace_back(p / file);
+                }
+            }
+        };
+
+    processPath(BasePath);
+
+    //check for custom audio
+    if (!m_projectSettings.id.empty())
+    {
+        auto [audioPath, pathDay, pathNight] = getAudioFilePaths();
+        processPath(audioPath);
+
+        const auto readCfg = 
+            [this](const std::filesystem::path& src, std::array<AudioPreview, AudioID::Count>& dst)
+            {
+                for (auto& prev : dst)
+                {
+                    prev.inputFile = std::filesystem::path();
+                }
+
+                const auto readProps =
+                    [this](const cro::ConfigObject& o, AudioPreview& prev)
+                    {
+                        for (const auto& p : o.getProperties())
+                        {
+                            if (p.getName() == "volume")
+                            {
+                                prev.volume = std::clamp(p.getValue<float>(), 0.f, 2.f);
+                            }
+                            else if (p.getName() == "path")
+                            {
+                                const auto path = p.getValue<std::filesystem::path>();
+                                if (const auto rel = std::filesystem::relative(path, "assets");
+                                    !rel.empty())
+                                {
+                                    //must check files exists, are mono ogg and under 2mb
+                                    std::error_code ec;
+                                    if (cro::FileSystem::fileExists(m_projectSettings.workingDirectory / rel)
+                                        && std::filesystem::file_size(m_projectSettings.workingDirectory / rel, ec) < 2000000)
+                                    {
+                                        prev.inputFile = path;
+                                    }
+                                    else
+                                    {
+                                        LogW << "Skipped " << path << ": file doesn't exist or is greater than 2MB" << std::endl;
+                                    }
+
+                                    //TODO can't really check if files are mono here as it means
+                                    //opening and closing them all the time...
+                                }
+                            }
+                        }
+                    };
+
+
+                cro::ConfigFile cfg;
+                if (cfg.loadFromFile(src))
+                {
+                    for (const auto& obj : cfg.getObjects())
+                    {
+                        if (obj.getName() == "emitter")
+                        {
+                            const auto& id = obj.getId();
+                            if (id == "01")
+                            {
+                                readProps(obj, dst[0]);
+                            }
+                            else if (id == "02")
+                            {
+                                readProps(obj, dst[1]);
+                            }
+                            else if (id == "03")
+                            {
+                                readProps(obj, dst[2]);
+                            }
+                            else if (id == "04")
+                            {
+                                readProps(obj, dst[3]);
+                            }
+                            else if (id == "05")
+                            {
+                                readProps(obj, dst[4]);
+                            }
+                            else if (id == "06")
+                            {
+                                readProps(obj, dst[5]);
+                            }
+                            else if (id == "incidental01")
+                            {
+                                readProps(obj, dst[6]);
+                            }
+                            else if (id == "incidental02")
+                            {
+                                readProps(obj, dst[7]);
+                            }
+                        }
+                    }
+                }
+            };
+
+        if (cro::FileSystem::fileExists(pathDay))
+        {
+            readCfg(pathDay, m_audioPreviewsDay);
+        }
+
+        if (cro::FileSystem::fileExists(pathNight))
+        {
+            readCfg(pathNight, m_audioPreviewsNight);
         }
     }
 
@@ -633,6 +783,119 @@ void CourseState::refreshAudioFiles()
     {
         m_audioIndex = std::distance(m_audioFiles.begin(), res);
     }
+}
+
+void CourseState::exportAudioFile()
+{
+    //for each preview file in day / night
+    //check if not already project path, copy file
+    std::uint32_t i = 0;
+    const auto processFiles = [this, &i](std::array<AudioPreview, AudioID::Count>& previews)
+        {
+            for (auto& prev : previews)
+            {
+                if (prev.inputFile.is_absolute())
+                {
+                    const std::filesystem::path dest = std::filesystem::path("golf/sound") / m_projectSettings.id / (std::to_string(i) + ".ogg");
+                    std::error_code ec;
+                    std::filesystem::copy_file(prev.inputFile, m_projectSettings.workingDirectory / dest, 
+                                                std::filesystem::copy_options::overwrite_existing, ec);
+
+                    if (!ec)
+                    {
+                        prev.inputFile = "assets" / dest;
+                    }
+                    else
+                    {
+                        LogE << "Failed to copy " << dest << " - reason: " << ec.message() << std::endl;
+                    }
+                }
+                i++;
+            }
+        };
+    processFiles(m_audioPreviewsDay);
+    processFiles(m_audioPreviewsNight);
+
+    //write an audioscape for both day and night
+    const std::array EmitterNames =
+    {
+        std::string("01"),
+        std::string("02"),
+        std::string("03"),
+        std::string("04"),
+        std::string("05"),
+        std::string("06"),
+        std::string("incidental01"),
+        std::string("incidental02"),
+    };
+
+    cro::ConfigFile dayCfg("audioscape", m_projectSettings.id);
+    cro::ConfigFile nightCfg("audioscape", m_projectSettings.id + "_n");
+    
+    const auto processConfig = 
+        [this, &EmitterNames](cro::ConfigFile& cfg, const std::array<AudioPreview, AudioID::Count>& previews)
+        {
+            auto i = 0;
+            for (const auto& prev : previews)
+            {
+                if (!prev.inputFile.empty()
+                    && !prev.inputFile.is_absolute())
+                {
+                    auto& obj = *cfg.addObject("emitter", EmitterNames[i]);
+
+                    const bool incidental = cfg.getId().find("incidental") != std::string::npos;
+
+                    obj.addProperty("path").setValue(prev.inputFile);
+                    obj.addProperty("streaming").setValue(true);
+                    obj.addProperty("volume").setValue(prev.volume);
+                    obj.addProperty("mixer_channel").setValue(6);
+                    obj.addProperty("attenuation").setValue(incidental ? 0.f : 0.01f);
+                    obj.addProperty("looped").setValue(!incidental);
+                }
+                i++;
+            }
+
+            //add the default music / plane emitters to each config
+            auto* obj = cfg.addObject("emitter", "plane");
+            obj->addProperty("path").setValue("assets/golf/sound/ambience/plane.ogg");
+            obj->addProperty("streaming").setValue(true);
+            obj->addProperty("volume").setValue(2.f);
+            obj->addProperty("mixer_channel").setValue(6);
+            obj->addProperty("attenuation").setValue(0.01f);
+            obj->addProperty("looped").setValue(false);
+
+            obj = cfg.addObject("emitter", "music");
+            obj->addProperty("path").setValue("assets/golf/sound/new_hole.ogg");
+            obj->addProperty("streaming").setValue(true);
+            obj->addProperty("volume").setValue(0.5f);
+            obj->addProperty("mixer_channel").setValue(0);
+            obj->addProperty("looped").setValue(false);
+        };
+    processConfig(dayCfg, m_audioPreviewsDay);
+    processConfig(nightCfg, m_audioPreviewsNight);
+
+
+    const auto [_, pathDay, pathNight] = getAudioFilePaths();
+    dayCfg.saveToFile(pathDay);
+    nightCfg.saveToFile(pathNight);
+}
+
+CourseState::AudioPaths CourseState::getAudioFilePaths() const
+{
+    if (m_projectSettings.id.empty())
+    {
+        return {};
+    }
+
+    const auto audioPath = m_projectSettings.workingDirectory / "golf/sound" / m_projectSettings.id;
+
+    auto pathDay = audioPath / m_projectSettings.id;
+    pathDay.replace_extension(".xas");
+
+    auto pathNight = audioPath / (m_projectSettings.id + "_n");
+    pathNight.replace_extension(".xas");
+
+    return { audioPath, pathDay, pathNight };
 }
 
 void CourseState::loadPreviewTexture(const std::filesystem::path& path)

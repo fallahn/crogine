@@ -30,6 +30,7 @@ source distribution.
 #include "CourseState.hpp"
 #include "EditorConsts.hpp"
 
+#include <crogine/audio/sound_system/MusicPlayer.hpp>
 #include <crogine/gui/Gui.hpp>
 
 namespace
@@ -444,14 +445,126 @@ void CourseState::drawProjectProperties()
 
 void CourseState::drawAudioEditor()
 {
-    ImGui::OpenPopup("Audio Editor");
+    if (ImGui::OpenPopup("Audio Editor"))
+    {
+        //for (auto& p : m_audioPreviewsDay)
+        //{
+        //    //TODO don't do this if it's a project path
+        //    p.inputFile = std::filesystem::path();
+        //}
+    }
 
-    setModalSizeAndPos();
+    static constexpr auto DisplaySize = glm::vec2(580.f, 360.f);
+
+    const auto drawInputs = 
+        [this](std::array<AudioPreview, AudioID::Count>& previews)
+        {
+            for (auto i = 0u; i < previews.size(); ++i)
+            {
+                const auto id = "##" + std::to_string(i);
+                auto str = previews[i].inputFile.empty() ? "No File" : previews[i].inputFile.filename().string();
+                ImGui::Text("%s", previews[i].label.c_str());
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(160.f);
+                ImGui::InputText(id.c_str(), &str, ImGuiInputTextFlags_ReadOnly);
+                ImGui::SameLine();
+
+                if (ImGui::Button(("Browse" + id).c_str()))
+                {
+                    const auto path = cro::FileSystem::openFileDialogue(m_editorSettings.lastLoadDirectory / "untitled.ogg");
+                    if (!path.empty())
+                    {
+                        m_editorSettings.lastLoadDirectory = path.parent_path();
+
+                        if (!path.has_extension() || path.extension() != ".ogg")
+                        {
+                            cro::FileSystem::showMessageBox("Error", "File must be ogg encoded");
+                        }
+                        else
+                        {
+                            cro::MusicPlayer music;
+                            if (!music.loadFromFile(path))
+                            {
+                                cro::FileSystem::showMessageBox("Error", "Unable to open audio file");
+                            }
+                            else if (music.getChannelCount() != 1)
+                            {
+                                cro::FileSystem::showMessageBox("Error", "Audio must be mono");
+                            }
+                            else
+                            {
+                                previews[i].inputFile = path;
+                            }
+                        }
+                    }
+                }
+                helpMarker(previews[i].toolTip);
+                
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(150.f);
+                if (ImGui::SliderFloat(("Vol" + id).c_str(), &previews[i].volume, 0.f, 2.f))
+                {
+                    previews[i].volume = std::clamp(previews[i].volume, 0.f, 2.f);
+                }
+                if (i == (previews.size() - 3))
+                {
+                    ImGui::NewLine();
+                }
+            }
+        };
+
+    setModalSizeAndPos(DisplaySize);
     if (ImGui::BeginPopupModal("Audio Editor", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
     {
-
-        if (ImGui::Button("Close"))
+        ImGui::BeginTabBar("##audio");
+        if (ImGui::BeginTabItem("Day Audio"))
         {
+            ImGui::BeginChild("##day_child", { -1.f, DisplaySize.y - 120.f });
+
+            drawInputs(m_audioPreviewsDay);
+            ImGui::EndChild();
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Night Audio"))
+        {
+            ImGui::BeginChild("##night_child", { -1.f, DisplaySize.y - 120.f });
+            drawInputs(m_audioPreviewsNight);
+            ImGui::EndChild();
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
+
+        ImGui::Text("Audio files should be mono, encoded as ogg and under 2mb in size.");
+        ImGui::NewLine();
+        ImGui::BeginChild("##button_left", {DisplaySize.x / 2.f, 0.f});
+        if (ImGui::Button("Preview"))
+        {
+            //TODO play audio preview and allow setting volume
+        }
+        ImGui::EndChild();//button_left
+        ImGui::SameLine();
+
+        if (ImGui::Button("Save##audio"))
+        {
+            //TODO validate files are mono
+            //TODO validate files are ogg
+            //TODO validate files are less than 2mb
+            //TODO validate all files exist
+            exportAudioFile();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Close##audio"))
+        {
+            //TODO stop audio? Or will we always
+            //play audio based on current selection?
+
+            if (cro::FileSystem::showMessageBox("Confirm", "Save audio configuration?", cro::FileSystem::YesNo))
+            {
+                //save file
+                exportAudioFile();
+            }
+
             m_windowStates[WindowID::AudioEditor].first = false;
             ImGui::CloseCurrentPopup();
             refreshAudioFiles();
