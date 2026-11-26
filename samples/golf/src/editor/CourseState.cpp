@@ -62,16 +62,16 @@ CourseState::CourseState(cro::StateStack& stack, cro::State::Context context, co
             AudioPreview("Environment 01", "Must be mono, loopable and ogg encoded"), AudioPreview("Environment 02", "Must be mono, loopable and ogg encoded"),
             AudioPreview("Environment 03", "Must be mono, loopable and ogg encoded"), AudioPreview("Environment 04", "Must be mono, loopable and ogg encoded"),
             AudioPreview("Environment 05", "Must be mono, loopable and ogg encoded"), AudioPreview("Environment 06", "Must be mono, loopable and ogg encoded"),
-            AudioPreview("Incidental  01", "Must be mono and ogg encoded, used for occasional sounds such as planes flying overhead"),
-            AudioPreview("Incidental  02", "Must be mono and ogg encoded, used for occasional sounds such as planes flying overhead"),
+            AudioPreview("Incidental  01", "Must be stereo and ogg encoded, used for occasional sounds such as planes flying overhead", 2),
+            AudioPreview("Incidental  02", "Must be stereo and ogg encoded, used for occasional sounds such as planes flying overhead", 2),
         };
         m_audioPreviewsNight =
         {
             AudioPreview("Environment 01", "Must be mono, loopable and ogg encoded"), AudioPreview("Environment 02", "Must be mono, loopable and ogg encoded"),
             AudioPreview("Environment 03", "Must be mono, loopable and ogg encoded"), AudioPreview("Environment 04", "Must be mono, loopable and ogg encoded"),
             AudioPreview("Environment 05", "Must be mono, loopable and ogg encoded"), AudioPreview("Environment 06", "Must be mono, loopable and ogg encoded"),
-            AudioPreview("Incidental  01", "Must be mono and ogg encoded, used for occasional sounds such as planes flying overhead"),
-            AudioPreview("Incidental  02", "Must be mono and ogg encoded, used for occasional sounds such as planes flying overhead"),
+            AudioPreview("Incidental  01", "Must be stereo and ogg encoded, used for occasional sounds such as planes flying overhead", 2),
+            AudioPreview("Incidental  02", "Must be stereo and ogg encoded, used for occasional sounds such as planes flying overhead", 2),
         };
 
         addSystems();
@@ -91,18 +91,18 @@ bool CourseState::handleEvent(const cro::Event& evt)
     {
         if (evt.key.mod & SDL_KMOD_CTRL)
         {
-            switch (evt.key.scancode)
+            switch (evt.key.key)
             {
             default: break;
-            case SDL_SCANCODE_N:
+            case SDLK_N:
                 //new project
                 menuNewProject();
                 break;
-            case SDL_SCANCODE_O:
+            case SDLK_O:
                 //open project
                 menuOpenProject();
                 break;
-            case SDL_SCANCODE_S:
+            case SDLK_S:
                 //save project
                 if (!m_projectSettings.workingDirectory.empty())
                 {
@@ -110,8 +110,21 @@ bool CourseState::handleEvent(const cro::Event& evt)
                 }
                 LogI << "Project Saved..." << std::endl;
                 break;
-            case SDL_SCANCODE_Q:
+            case SDLK_Q:
                 confirmQuit();
+                break;
+            }
+        }
+        else if (evt.key.mod & SDL_KMOD_SHIFT)
+        {
+            switch (evt.key.key)
+            {
+            default: break;
+            case SDLK_A:
+                if (!m_projectSettings.id.empty())
+                {
+                    m_windowStates[WindowID::AudioEditor].first = true;
+                }
                 break;
             }
         }
@@ -658,7 +671,7 @@ void CourseState::refreshAudioFiles()
                 //we only want ambience files, and not the night version
                 //as these aren't specified in the data file
                 if (file.extension() == ".xas"
-                    && file.string().find("ambience") == 0
+                    && (file.string().find("ambience") == 0 || file.string().find(m_projectSettings.name) == 0)
                     && file.string().find("_n") == std::string::npos)
                 {
                     m_audioFiles.emplace_back(p / file);
@@ -829,8 +842,8 @@ void CourseState::exportAudioFile()
         std::string("incidental02"),
     };
 
-    cro::ConfigFile dayCfg("audioscape", m_projectSettings.id);
-    cro::ConfigFile nightCfg("audioscape", m_projectSettings.id + "_n");
+    cro::ConfigFile dayCfg("audioscape", m_projectSettings.name);
+    cro::ConfigFile nightCfg("audioscape", m_projectSettings.name + "_n");
     
     const auto processConfig = 
         [this, &EmitterNames](cro::ConfigFile& cfg, const std::array<AudioPreview, AudioID::Count>& previews)
@@ -889,10 +902,10 @@ CourseState::AudioPaths CourseState::getAudioFilePaths() const
 
     const auto audioPath = m_projectSettings.workingDirectory / "golf/sound" / m_projectSettings.id;
 
-    auto pathDay = audioPath / m_projectSettings.id;
+    auto pathDay = audioPath / m_projectSettings.name;
     pathDay.replace_extension(".xas");
 
-    auto pathNight = audioPath / (m_projectSettings.id + "_n");
+    auto pathNight = audioPath / (m_projectSettings.name + "_n");
     pathNight.replace_extension(".xas");
 
     return { audioPath, pathDay, pathNight };

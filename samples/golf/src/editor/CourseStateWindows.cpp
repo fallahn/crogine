@@ -98,7 +98,7 @@ void CourseState::drawMenuBar()
                 requestStackPush(StateID::EditorBush);
             }
 
-            if (ImGui::MenuItem("Audio Editor", nullptr, false, enabled))
+            if (ImGui::MenuItem("Audio Editor", "Shift+A", false, enabled))
             {
                 m_windowStates[WindowID::AudioEditor].first = true;
             }
@@ -280,7 +280,7 @@ void CourseState::drawProjectProperties()
         {
             ImGui::NewLine();
             ImGui::Text("Skybox");
-            helpMarker("Select a skybox to use with this course. The selection of skyboxes includes the default ones provided with the game as well as any authoured for this projectusing the skybox editor");
+            helpMarker("Select a skybox to use with this course. The selection of skyboxes includes the default ones provided with the game as well as any authoured for this project using the skybox editor");
 
             ImGui::SetNextItemWidth(-1.f);
             if (ImGui::BeginCombo("##skybox", m_skyboxFiles[m_skyboxIndex].filename().string().c_str()))
@@ -487,9 +487,9 @@ void CourseState::drawAudioEditor()
                             {
                                 cro::FileSystem::showMessageBox("Error", "Unable to open audio file");
                             }
-                            else if (music.getChannelCount() != 1)
+                            else if (music.getChannelCount() != previews[i].channels)
                             {
-                                cro::FileSystem::showMessageBox("Error", "Audio must be mono");
+                                cro::FileSystem::showMessageBox("Error", "Audio must have " + std::to_string(previews[i].channels) + " channels");
                             }
                             else
                             {
@@ -502,7 +502,7 @@ void CourseState::drawAudioEditor()
                 
                 ImGui::SameLine();
                 ImGui::SetNextItemWidth(150.f);
-                if (ImGui::SliderFloat(("Vol" + id).c_str(), &previews[i].volume, 0.f, 2.f))
+                if (ImGui::SliderFloat(("Volume" + id).c_str(), &previews[i].volume, 0.f, 2.f))
                 {
                     previews[i].volume = std::clamp(previews[i].volume, 0.f, 2.f);
                 }
@@ -535,7 +535,7 @@ void CourseState::drawAudioEditor()
         }
         ImGui::EndTabBar();
 
-        ImGui::Text("Audio files should be mono, encoded as ogg and under 2mb in size.");
+        ImGui::Text("Audio files should be encoded as ogg and under 2mb in size.");
         ImGui::NewLine();
         ImGui::BeginChild("##button_left", {DisplaySize.x / 2.f, 0.f});
         if (ImGui::Button("Preview"))

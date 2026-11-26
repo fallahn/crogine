@@ -146,10 +146,11 @@ private:
         std::string toolTip;
 
         float volume = 1.f;
+        std::uint32_t channels = 1;
 
         AudioPreview() = default;
-        AudioPreview(const std::string& l, const std::string& t)
-            :label(l), toolTip(t) { }
+        AudioPreview(const std::string& l, const std::string& t, std::uint32_t c = 1)
+            :label(l), toolTip(t), channels (c) { }
     };
     std::array<AudioPreview, AudioID::Count> m_audioPreviewsDay;
     std::array<AudioPreview, AudioID::Count> m_audioPreviewsNight;
