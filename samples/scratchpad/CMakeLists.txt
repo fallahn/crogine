@@ -11,35 +11,36 @@ SET (PROJECT_STATIC_RUNTIME FALSE)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR APPLE)
   if(PROJECT_STATIC_RUNTIME)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17 -static")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++20 -static")
   else()
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++20")
   endif()
 endif()
 
 SET (CMAKE_CXX_FLAGS_DEBUG "-g -DCRO_DEBUG_")
 SET (CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
-# We're using c++17
-SET (CMAKE_CXX_STANDARD 17)
+# We're using c++20
+SET (CMAKE_CXX_STANDARD 20)
 SET (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 SET (OpenGL_GL_PREFERENCE "GLVND")
 
+find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
 find_package(CROGINE REQUIRED)
-find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(Bullet REQUIRED)
 find_package(ReactPhysics3D REQUIRED)
 
 include_directories(
+  SDL3::Headers
   ${CROGINE_INCLUDE_DIR}
-  ${SDL2_INCLUDE_DIR}
   ${OPENGL_INCLUDE_DIR}
   ${BULLET_INCLUDE_DIRS}
   ../../extlibs/polyvox
   src)
 
+# TODO this needs to be kept up to date.
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 include(${PROJECT_DIR}/CMakeLists.txt)
 include(${PROJECT_DIR}/animblend/CMakeLists.txt)
@@ -73,8 +74,8 @@ add_executable(${PROJECT_NAME}
                ${VATS_SRC})
 
 target_link_libraries(${PROJECT_NAME}
+  SDL3::SDL3
   ${CROGINE_LIBRARIES}
-  ${SDL2_LIBRARY}
   ${BULLET_LIBRARIES}
   ${OPENGL_LIBRARIES}
   ReactPhysics3D::ReactPhysics3D)

@@ -143,21 +143,21 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
 //public
 bool GameState::handleEvent(const cro::Event& evt)
 {
-    if (cro::ui::wantsMouse() 
-        || cro::ui::wantsKeyboard()
+    if (ImGui::GetIO().WantCaptureKeyboard
+        || ImGui::GetIO().WantCaptureMouse
         || cro::Console::isVisible())
     {
         return true;
     }
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_PAUSE:
         case SDLK_ESCAPE:
-        case SDLK_p:
+        case SDLK_P:
             requestStackPush(States::ID::Pause);
             break;
         case SDLK_F3:

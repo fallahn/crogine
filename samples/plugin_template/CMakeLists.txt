@@ -11,8 +11,8 @@ project(${PROJECT_NAME})
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/")
 SET(CMAKE_BUILD_TYPE        Debug CACHE STRING  "Choose the type of build (Debug or Release)")
 
-# We're using c++17
-set(CMAKE_CXX_STANDARD 17)
+# We're using c++20
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # enable some warnings in debug builds with gcc/clang
@@ -24,9 +24,9 @@ endif()
 
 SET (OpenGL_GL_PREFERENCE "GLVND")
 
-# Find crogine
+# Find deps
+find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
 find_package(CROGINE REQUIRED)
-find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 
 # X11 is required on unices
@@ -40,8 +40,8 @@ endif()
 
 # Project source files
 include_directories(
+  SDL3::Headers
   ${CROGINE_INCLUDE_DIR}
-  ${SDL2_INCLUDE_DIR}
   ${OPENGL_INCLUDE_DIR}
   include)
 
@@ -58,8 +58,8 @@ add_library(${PROJECT_NAME} SHARED ${PROJECT_SRC})
 
 # Linker settings
 target_link_libraries(${PROJECT_NAME} 
+  SDL3::SDL3
   ${CROGINE_LIBRARIES}
-  ${SDL2_LIBRARY}
   ${OPENGL_LIBRARIES})
 
 # Additional include directories

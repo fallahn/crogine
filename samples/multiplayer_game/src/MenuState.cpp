@@ -122,14 +122,14 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 //public
 bool MenuState::handleEvent(const cro::Event& evt)
 {
-    if(cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
+    if(ImGui::GetIO().WantCaptureKeyboard || ImGui::GetIO().WantCaptureMouse)
     {
         return true;
     }
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_1:
@@ -154,9 +154,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_KEYDOWN)
+    else if (evt.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_BACKSPACE:
@@ -164,7 +164,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_TEXTINPUT)
+    else if (evt.type == SDL_EVENT_TEXT_INPUT)
     {
         handleTextEdit(evt);
     }
@@ -193,7 +193,7 @@ bool MenuState::simulate(float dt)
     }
 
 
-    if (cro::Keyboard::isKeyPressed(SDLK_p))
+    if (cro::Keyboard::isKeyPressed(SDLK_P))
     {
         if (encodeAudio)
         {
@@ -607,7 +607,7 @@ void MenuState::handleTextEdit(const cro::Event& evt)
         return;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_EVENT_KEY_DOWN)
     {
         //assuming we're only handling backspace...
         if (!m_textEdit.string->empty())
@@ -615,7 +615,7 @@ void MenuState::handleTextEdit(const cro::Event& evt)
             m_textEdit.string->erase(m_textEdit.string->size() - 1);
         }
     }
-    else if (evt.type == SDL_TEXTINPUT)
+    else if (evt.type == SDL_EVENT_TEXT_INPUT)
     {
         //TODO decide on some max string length (need also for sending over network)
         if (m_textEdit.string->size() < ConstVal::MaxStringChars)
@@ -648,7 +648,7 @@ void MenuState::applyTextEdit()
         auto bounds = cro::Text::getLocalBounds(m_textEdit.entity);
         m_textEdit.entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -bounds.height / 2.f });
         m_textEdit.entity.getComponent<cro::Callback>().active = false;
-        SDL_StopTextInput();
+        SDL_StopTextInput(cro::App::getWindow());
     }
     m_textEdit = {};
 }

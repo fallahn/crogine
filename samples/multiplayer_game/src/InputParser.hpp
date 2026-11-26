@@ -37,7 +37,7 @@ them to both the local player controller and sending to the server.
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/Entity.hpp>
 
-#include <SDL_events.h>
+#include <SDL3/SDL_events.h>
 
 struct Input final
 {

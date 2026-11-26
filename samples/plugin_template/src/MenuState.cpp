@@ -47,14 +47,14 @@ MenuState::MenuState(cro::StateStack& ss, cro::State::Context ctx)
 bool MenuState::handleEvent(const cro::Event& evt)
 {
 	//prevents events being forwarded if the console wishes to consume them
-	if (cro::ui::wantsKeyboard() || cro::ui::wantsMouse())
+	if (ImGui::GetIO().WantCaptureKeyboard || ImGui::GetIO().WantCaptureMouse)
     {
         return true;
     }
 
-    if (evt.type == SDL_KEYUP)
+    if (evt.type == SDL_EVENT_KEY_UP)
     {
-        switch (evt.key.keysym.sym)
+        switch (evt.key.key)
         {
         default: break;
         case SDLK_ESCAPE:
