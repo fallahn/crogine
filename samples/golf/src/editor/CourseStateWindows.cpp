@@ -342,8 +342,14 @@ void CourseState::drawProjectProperties()
                         m_audioIndex = i;
                         m_courseData.audio = m_audioFiles[i];
 
+                        const bool wasPlaying = m_editorSettings.audioscapePlaying;
                         pauseAudioPreview();
                         m_editorSettings.audioscapeChanged = true;
+
+                        if (wasPlaying)
+                        {
+                            playAudioPreview();
+                        }
                     }
                 }
 
@@ -448,12 +454,23 @@ void CourseState::drawProjectProperties()
         {
             saveSettings();
 
-            //TODO update lighting and switch audioscape
+            //TODO update lighting
+
+
+            //switch between day / night versions
+            const bool wasPlaying = m_editorSettings.audioscapePlaying;
+            pauseAudioPreview();
+            m_editorSettings.audioscapeChanged = true;
+
+            if (wasPlaying)
+            {
+                playAudioPreview();
+            }
         }
 
         ImGui::NewLine();
         ImGui::Text("Audioscape");
-        if (/*isPlaying*/true)
+        if (m_editorSettings.audioscapePlaying)
         {
             if (ImGui::Button("Stop##audio", { -1.f, 0.f }))
             {

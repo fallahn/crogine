@@ -46,11 +46,11 @@ source distribution.
 #include <crogine/util/Constants.hpp>
 
 CourseState::CourseState(cro::StateStack& stack, cro::State::Context context, const SharedStateData&)
-    : cro::State    (stack, context),
-    m_gameScene     (context.appInstance.getMessageBus()),
-    m_skyboxIndex   (0),
-    m_shrubIndex    (0),
-    m_audioIndex    (0)
+    : cro::State            (stack, context),
+    m_gameScene             (context.appInstance.getMessageBus()),
+    m_skyboxIndex           (0),
+    m_shrubIndex            (0),
+    m_audioIndex            (0)
 {
     context.mainWindow.loadResources([this]() {
         setWindowTitle();

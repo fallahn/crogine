@@ -97,7 +97,8 @@ private:
         std::filesystem::path lastLoadDirectory;
 
         bool previewNightMode = false;
-        bool audioscapeChanged = false; //updated when selecting a new audioscape so we know if we need to rebuild on play
+        bool audioscapeChanged = true; //updated when selecting a new audioscape so we know if we need to rebuild on play
+        bool audioscapePlaying = false;
     }m_editorSettings;
 
     void loadSettings();
@@ -175,7 +176,7 @@ private:
     void createAudioPreview();
     void playAudioPreview();
     void pauseAudioPreview();
-
+    std::array<cro::Entity, 6u> m_audioEntities = {};
 
 
     cro::Texture m_previewTexture;
