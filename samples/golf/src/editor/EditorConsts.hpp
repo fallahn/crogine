@@ -35,6 +35,7 @@ static constexpr std::size_t MaxProjectNameChars = 128; //maxmimum number of cha
 static constexpr std::size_t MaxDescChar = 34; //maximum chars for title / desription strings
 static constexpr float ToolBarSize = 20.f; //menu bar size at top of windows + 2px padding
 static constexpr float ProjectPanelWidth = 300.f; //project properties panel
+static constexpr std::size_t MaxAudioFileSize = 1000000;
 
 //displays a tool tip when hovering an item
 static inline void toolTip(const std::string& desc)

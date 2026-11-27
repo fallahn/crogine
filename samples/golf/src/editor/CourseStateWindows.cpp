@@ -344,6 +344,9 @@ void CourseState::drawProjectProperties()
                         m_courseData.audio = m_audioFiles[i];
 
                         LogI << FILE_LINE << ": update 3D preview!!" << std::endl;
+
+                        pauseAudioPreview();
+                        m_editorSettings.audioscapeChanged = true;
                     }
                 }
 
@@ -440,6 +443,42 @@ void CourseState::drawProjectProperties()
     }
     toolTip("Select an image to be used as the in-game preview. This will automatically be resized to 640 x 480 so images should be 4:3 ratio");
 
+    //preview settings eg day/night or audio
+    ImGui::NewLine();
+    if (ImGui::CollapsingHeader("Scene Preview"))
+    {
+        if (ImGui::Checkbox("Night Time", &m_editorSettings.previewNightMode))
+        {
+            saveSettings();
+
+            //TODO update lighting and switch audioscape
+        }
+
+        ImGui::NewLine();
+        ImGui::Text("Audioscape");
+        if (/*isPlaying*/true)
+        {
+            if (ImGui::Button("Stop##audio", { -1.f, 0.f }))
+            {
+                pauseAudioPreview();
+            }
+        }
+        else
+        {
+            if (ImGui::Button("Play##audio", { -1.f, 0.f }))
+            {
+                playAudioPreview();
+            }
+        }
+
+        if (ImGui::Button("Show Volume", { -1.f, 0.f }))
+        {
+            //TODO find a way to switch to console volume tab
+            cro::Console::show();
+        }
+    }
+
+
     ImGui::End();
 }
 
@@ -479,6 +518,10 @@ void CourseState::drawAudioEditor()
                         if (!path.has_extension() || path.extension() != ".ogg")
                         {
                             cro::FileSystem::showMessageBox("Error", "File must be ogg encoded");
+                        }
+                        else if (std::filesystem::file_size(path) > MaxAudioFileSize)
+                        {
+                            cro::FileSystem::showMessageBox("Error", "Files must be less than 1MB");
                         }
                         else
                         {
@@ -535,22 +578,19 @@ void CourseState::drawAudioEditor()
         }
         ImGui::EndTabBar();
 
-        ImGui::Text("Audio files should be encoded as ogg and under 2mb in size.");
+        ImGui::Text("Audio files should be encoded as ogg and under 1MB in size.");
+        helpMarker("Audio can be previewed from the collapsible \'Scene Preview\' region in the Project Properties window on the left.");
         ImGui::NewLine();
-        ImGui::BeginChild("##button_left", {DisplaySize.x / 2.f, 0.f});
-        if (ImGui::Button("Preview"))
-        {
-            //TODO play audio preview and allow setting volume
-        }
+        ImGui::BeginChild("##button_left", {DisplaySize.x / 1.25f, 0.f});
+        //if (ImGui::Button("Preview"))
+        //{
+        //    //TODO play audio preview and allow setting volume
+        //}
         ImGui::EndChild();//button_left
         ImGui::SameLine();
 
         if (ImGui::Button("Save##audio"))
         {
-            //TODO validate files are mono
-            //TODO validate files are ogg
-            //TODO validate files are less than 2mb
-            //TODO validate all files exist
             exportAudioFile();
         }
         ImGui::SameLine();

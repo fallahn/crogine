@@ -90,6 +90,9 @@ private:
     {
         std::filesystem::path lastSaveDirectory;
         std::filesystem::path lastLoadDirectory;
+
+        bool previewNightMode = false;
+        bool audioscapeChanged = false; //updated when selecting a new audioscape so we know if we need to rebuild on play
     }m_editorSettings;
 
     void loadSettings();
@@ -163,6 +166,12 @@ private:
         std::filesystem::path night;
     };
     AudioPaths getAudioFilePaths() const;
+
+    void createAudioPreview();
+    void playAudioPreview();
+    void pauseAudioPreview();
+
+
 
     cro::Texture m_previewTexture;
     void loadPreviewTexture(const std::filesystem::path&);

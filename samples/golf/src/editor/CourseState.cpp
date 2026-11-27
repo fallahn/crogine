@@ -505,6 +505,9 @@ bool CourseState::validateProjectDirectories(const std::string& id) const
             }
         }
     }
+
+    //TODO search directories to make sure none exist which shouldn't
+
     return true;
 }
 
@@ -539,6 +542,10 @@ void CourseState::loadSettings()
             {
                 addToHistory(prop.getValue<std::filesystem::path>());
             }
+            else if (name == "night_mode")
+            {
+                m_editorSettings.previewNightMode = prop.getValue<bool>();
+            }
         }
     }
 }
@@ -548,6 +555,7 @@ void CourseState::saveSettings() const
     cro::ConfigFile cfg;
     cfg.addProperty("open_location").setValue(m_editorSettings.lastLoadDirectory.empty() ? std::filesystem::current_path() : m_editorSettings.lastLoadDirectory);
     cfg.addProperty("save_location").setValue(m_editorSettings.lastSaveDirectory.empty() ? std::filesystem::current_path() : m_editorSettings.lastSaveDirectory);
+    cfg.addProperty("nigh_mode").setValue(m_editorSettings.previewNightMode);
 
     for (const auto& item : m_history)
     {
@@ -710,16 +718,16 @@ void CourseState::refreshAudioFiles()
                                 if (const auto rel = std::filesystem::relative(path, "assets");
                                     !rel.empty())
                                 {
-                                    //must check files exists, are mono ogg and under 2mb
+                                    //must check files exists, are mono ogg and under 1mb
                                     std::error_code ec;
                                     if (cro::FileSystem::fileExists(m_projectSettings.workingDirectory / rel)
-                                        && std::filesystem::file_size(m_projectSettings.workingDirectory / rel, ec) < 2000000)
+                                        && std::filesystem::file_size(m_projectSettings.workingDirectory / rel, ec) < MaxAudioFileSize)
                                     {
                                         prev.inputFile = path;
                                     }
                                     else
                                     {
-                                        LogW << "Skipped " << path << ": file doesn't exist or is greater than 2MB" << std::endl;
+                                        LogW << "Skipped " << path << ": file doesn't exist or is greater than 1MB" << std::endl;
                                     }
 
                                     //TODO can't really check if files are mono here as it means
@@ -807,7 +815,8 @@ void CourseState::exportAudioFile()
         {
             for (auto& prev : previews)
             {
-                if (prev.inputFile.is_absolute())
+                if (prev.inputFile.is_absolute()
+                    && std::filesystem::file_size(prev.inputFile) < MaxAudioFileSize)
                 {
                     const std::filesystem::path dest = std::filesystem::path("golf/sound") / m_projectSettings.id / (std::to_string(i) + ".ogg");
                     std::error_code ec;
