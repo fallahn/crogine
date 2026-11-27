@@ -31,9 +31,13 @@ source distribution.
 
 #include <crogine/gui/detail/imgui.h>
 
+#include <crogine/core/App.hpp>
+#include <crogine/core/Console.hpp>
+
 static constexpr std::size_t MaxProjectNameChars = 128; //maxmimum number of chars for the project name
 static constexpr std::size_t MaxDescChar = 34; //maximum chars for title / desription strings
-static constexpr float ToolBarSize = 20.f; //menu bar size at top of windows + 2px padding
+static constexpr float ToolBarSize = 18.f; //menu bar size at top of windows
+static constexpr float InfoBarHeight = 32.f;
 static constexpr float ProjectPanelWidth = 300.f; //project properties panel
 static constexpr std::size_t MaxAudioFileSize = 1000000;
 
@@ -66,4 +70,24 @@ static inline void setModalSizeAndPos(glm::vec2 displaySize = glm::vec2(380.f, 1
 
     ImGui::SetNextWindowSize({ displaySize.x, displaySize.y });
     ImGui::SetNextWindowPos({ displayPos.x, displayPos.y });
+}
+
+static inline void drawInfoBar(ImVec4 colour)
+{
+    const auto winSize = glm::vec2(cro::App::getWindow().getSize());
+
+    ImGui::SetNextWindowSize({ winSize.x, InfoBarHeight });
+    ImGui::SetNextWindowPos({ 0.f, ToolBarSize });
+    ImGui::Begin("##infoBar", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove);
+    const auto& str = cro::Console::getLastOutput();
+    ImGui::Text("Console Message:");
+    ImGui::SameLine();
+    ImGui::PushStyleColor(ImGuiCol_Text, colour);
+    if (ImGui::Button(str.c_str(), {-1.f, 0.f}))
+    {
+        cro::Console::show(cro::Console::TabIndex::Console);
+    }
+    ImGui::PopStyleColor();
+
+    ImGui::End();
 }

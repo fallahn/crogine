@@ -31,7 +31,6 @@ source distribution.
 #include "EditorConsts.hpp"
 
 #include <crogine/audio/sound_system/MusicPlayer.hpp>
-#include <crogine/gui/Gui.hpp>
 
 namespace
 {
@@ -237,8 +236,8 @@ void CourseState::drawNewProject()
 void CourseState::drawProjectProperties()
 {
     const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
-    ImGui::SetNextWindowPos({ 0.f, ToolBarSize });
-    ImGui::SetNextWindowSize({ ProjectPanelWidth, windowSize.y - ToolBarSize });
+    ImGui::SetNextWindowPos({ 0.f, ToolBarSize + InfoBarHeight });
+    ImGui::SetNextWindowSize({ ProjectPanelWidth, windowSize.y - ToolBarSize - InfoBarHeight });
     ImGui::Begin("Project Properties", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
     //display title
@@ -342,8 +341,6 @@ void CourseState::drawProjectProperties()
                     {
                         m_audioIndex = i;
                         m_courseData.audio = m_audioFiles[i];
-
-                        LogI << FILE_LINE << ": update 3D preview!!" << std::endl;
 
                         pauseAudioPreview();
                         m_editorSettings.audioscapeChanged = true;

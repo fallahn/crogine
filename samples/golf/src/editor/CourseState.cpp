@@ -43,7 +43,6 @@ source distribution.
 #include <crogine/ecs/systems/AudioSystem.hpp>
 
 #include <crogine/graphics/Image.hpp>
-#include <crogine/gui/Gui.hpp>
 #include <crogine/util/Constants.hpp>
 
 CourseState::CourseState(cro::StateStack& stack, cro::State::Context context, const SharedStateData&)
@@ -161,7 +160,10 @@ bool CourseState::handleEvent(const cro::Event& evt)
 
 void CourseState::handleMessage(const cro::Message& msg)
 {
-    if (msg.id == cro::Message::StateMessage)
+    switch (msg.id)
+    {
+    default: break;
+    case cro::Message::StateMessage:
     {
         const auto& data = msg.getData<cro::Message::StateEvent>();
         if (data.action == cro::Message::StateEvent::Popped)
@@ -169,12 +171,40 @@ void CourseState::handleMessage(const cro::Message& msg)
             setWindowTitle();
         }
     }
+        break;
+    case cro::Message::ConsoleMessage:
+    {
+        const auto& data = msg.getData<cro::Message::ConsoleEvent>();
+        if (data.type == cro::Message::ConsoleEvent::LinePrinted)
+        {
+            switch (data.level)
+            {
+            default:
+            case cro::Message::ConsoleEvent::Info:
+                m_messageColour = { 0.f,1.f,0.f,1.f };
+                break;
+            case cro::Message::ConsoleEvent::Warning:
+                m_messageColour = { 1.f,0.5f,0.f,1.f };
+                break;
+            case cro::Message::ConsoleEvent::Error:
+                m_messageColour = { 1.f,0.f,0.f,1.f };
+                break;
+            }
+        }
+    }
+        break;
+    }
 
     m_gameScene.forwardMessage(msg);
 }
 
 bool CourseState::simulate(float dt)
 {
+    m_messageColour.w = 1.f;
+    m_messageColour.x = std::min(m_messageColour.x + dt, 1.f);;
+    m_messageColour.y = std::min(m_messageColour.y + dt, 1.f);;
+    m_messageColour.z = std::min(m_messageColour.z + dt, 1.f);;
+
     m_gameScene.simulate(dt);
     return true;
 }
@@ -241,6 +271,8 @@ void CourseState::createUI()
                         window();
                     }
                 }
+
+                drawInfoBar(m_messageColour);
             }
         });
 

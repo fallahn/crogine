@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/gui/GuiClient.hpp>
+#include <crogine/gui/Gui.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 
 #include <deque>
@@ -57,6 +58,10 @@ private:
 
     cro::Scene m_gameScene;
     cro::ResourceCollection m_resources;
+
+    //hmm seems a shame to have to maintain this outside
+    //of the gui parts :/
+    ImVec4 m_messageColour;
 
     void addSystems();
     void loadAssets();
