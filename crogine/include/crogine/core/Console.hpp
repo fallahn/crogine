@@ -76,9 +76,25 @@ namespace cro
         static void print(const std::string&);
 
         /*!
-        \brief Toggles the console window visibility
+        \brief Default tab indices.
+        Custom tabs added with addConsoleTab() are indexed
+        from TabIndex::Count onwards
         */
-        static void show();
+        struct TabIndex final
+        {
+            enum
+            {
+                Console, Video, Audio, Stats,
+                Count
+            };
+        };
+
+        /*!
+        \brief Toggles the console window visibility.
+        \param tabIndex The tab index to open this console to
+        or -1 to open to the last active tab
+        */
+        static void show(std::int32_t tabIndex = -1);
 
         /*!
         \brief Executes the given command line.

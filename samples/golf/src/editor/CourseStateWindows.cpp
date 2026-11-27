@@ -473,8 +473,7 @@ void CourseState::drawProjectProperties()
 
         if (ImGui::Button("Show Volume", { -1.f, 0.f }))
         {
-            //TODO find a way to switch to console volume tab
-            cro::Console::show();
+            cro::Console::show(cro::Console::TabIndex::Audio);
         }
     }
 

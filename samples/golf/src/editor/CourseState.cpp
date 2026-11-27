@@ -40,6 +40,7 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
+#include <crogine/ecs/systems/AudioSystem.hpp>
 
 #include <crogine/graphics/Image.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -201,6 +202,7 @@ void CourseState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+    m_gameScene.addSystem<cro::AudioSystem>(mb);
 }
 
 void CourseState::loadAssets()

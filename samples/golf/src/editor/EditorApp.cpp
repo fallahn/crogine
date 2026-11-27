@@ -35,6 +35,7 @@ source distribution.
 #include "../ImTheme.hpp"
 #include "../StateIDs.hpp"
 #include "../Colordome-32.hpp"
+#include "../golf/CommonConsts.hpp"
 
 #include <crogine/core/Clock.hpp>
 
@@ -135,6 +136,19 @@ bool EditorApp::initialise()
 
     const auto borderColour = CD32::Colours[CD32::MauveDark].getVec4();
     ImGui::GetStyle().Colors[ImGuiCol_Border] = ImVec4(borderColour.r, borderColour.g, borderColour.b, 1.f);
+
+
+
+    cro::AudioMixer::setLabel("Menu Music", MixerChannel::Music);
+    cro::AudioMixer::setLabel("Effects", MixerChannel::Effects);
+    cro::AudioMixer::setLabel("Menu", MixerChannel::Menu);
+    cro::AudioMixer::setLabel("Voices", MixerChannel::Voice);
+    cro::AudioMixer::setLabel("Vehicles", MixerChannel::Vehicles);
+    cro::AudioMixer::setLabel("Environment", MixerChannel::Environment);
+    cro::AudioMixer::setLabel("Game Music", MixerChannel::UserMusic);
+    cro::AudioMixer::setLabel("Text To Speech", MixerChannel::TextToSpeech);
+
+
 
     m_stateStack.pushState(StateID::EditorCourse);
 

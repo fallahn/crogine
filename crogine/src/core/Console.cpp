@@ -55,6 +55,7 @@ namespace
     int currentResolution = 0;
     std::vector<Console::ResolutionData> resolutionData;
     
+    std::int32_t tabIndex = -1;
 
     constexpr std::size_t MAX_INPUT_CHARS = 400;
     char input[MAX_INPUT_CHARS];
@@ -155,8 +156,9 @@ void Console::print(const std::string& line)
     }
 }
 
-void Console::show()
+void Console::show(std::int32_t tIndex)
 {
+    tabIndex = tIndex;
     visible = !visible;
 
     auto* msg = App::getInstance().getMessageBus().post<Message::ConsoleEvent>(Message::ConsoleMessage);
@@ -351,8 +353,11 @@ void Console::draw()
         {
             if (ImGui::BeginTabBar("Tabs"))
             {
+                std::int32_t currIndex = 0;
+                std::int32_t tabFlags = (currIndex == tabIndex) ? ImGuiTabItemFlags_SetSelected : 0;
+
                 //console
-                if (ImGui::BeginTabItem("Console"))
+                if (ImGui::BeginTabItem("Console", nullptr, tabFlags))
                 {
                     ImGui::BeginChild("ScrollingRegion", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()), false/*, ImGuiWindowFlags_HorizontalScrollbar*/);
                     static bool scrollToEnd = false;
@@ -400,8 +405,11 @@ void Console::draw()
                     ImGui::EndTabItem();
                 }
 
+                currIndex++;
+                tabFlags = (currIndex == tabIndex) ? ImGuiTabItemFlags_SetSelected : 0;
+
                 //video options
-                if (ImGui::BeginTabItem("Video"))
+                if (ImGui::BeginTabItem("Video", nullptr, tabFlags))
                 {
                     if (ImGui::BeginCombo("Resolution", resolutionData[currentResolution].label.c_str()))
                     {
@@ -477,8 +485,11 @@ void Console::draw()
                     ImGui::EndTabItem();
                 }
 
+                currIndex++;
+                tabFlags = (currIndex == tabIndex) ? ImGuiTabItemFlags_SetSelected : 0;
+
                 //audio
-                if (ImGui::BeginTabItem("Audio"))
+                if (ImGui::BeginTabItem("Audio", nullptr, tabFlags))
                 {
                     ImGui::Text("NOTE: only AudioSystem sounds are affected.");
 
@@ -498,8 +509,11 @@ void Console::draw()
                     ImGui::EndTabItem();
                 }
 
+                currIndex++;
+                tabFlags = (currIndex == tabIndex) ? ImGuiTabItemFlags_SetSelected : 0;
+
                 //stats
-                if (ImGui::BeginTabItem("Stats"))
+                if (ImGui::BeginTabItem("Stats", nullptr, tabFlags))
                 {
                     const auto fpsUncapped = 1.f / m_avgFrameTime;
 
@@ -588,14 +602,18 @@ void Console::draw()
                 //display registered tabs
                 for (const auto& tab : m_consoleTabs)
                 {
+                    currIndex++;
+                    tabFlags = (currIndex == tabIndex) ? ImGuiTabItemFlags_SetSelected : 0;
+
                     const auto& [name, func, c] = tab;
-                    if (ImGui::BeginTabItem(name.c_str()))
+                    if (ImGui::BeginTabItem(name.c_str(), nullptr, tabFlags))
                     {
                         func();
                         ImGui::EndTabItem();
                     }
                 }
 
+                tabIndex = -1;
                 ImGui::EndTabBar();
             }
         }
